@@ -158,10 +158,10 @@ function _isValidDate(obj, msg) {
     var monthsL = ["", "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
     var _dateFormat = $(obj).data("validateFormat") || "YMD";
     var dPattern = "^\\d{1,2}[\\/\\-\\.]\\d{1,2}[\\/\\-\\.]\\d{4}$";
-    var yyyy, mm, dd;
+    var yyyy, mm, dd, mIndex;
     var mName = elValue.replace(/[^a-z]/gi, "");
     if (mName) {
-      var mIndex = _.indexOf(monthsS, mName.toUpperCase());
+      mIndex = _.indexOf(monthsS, mName.toUpperCase());
       if (mIndex<=0) mIndex = _.indexOf(monthsL, mName.toUpperCase());
       if (mIndex>0) {
         elValue = elValue.replace(new RegExp(mName,"gi"), mIndex);

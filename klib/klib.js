@@ -100,7 +100,7 @@ var isKHashRouteOn=false;
   klib.noop = function(){};
 
   klib.debug = false;
-  klib.debugger = {
+  klib['debugger'] = {
       on:function(){ klib.debug = true; }
     , off:function(){ klib.debug = false; }
     , toggle:function() { klib.debug = !klib.debug; }
@@ -177,107 +177,86 @@ var isKHashRouteOn=false;
    ("     ").ifBlank()        = "";
    (str).ifBlank()            = "I am a      string";
    */
-  if (!(String).trim) {
-    String.prototype.trim = function (tStr) {
-      tStr = (tStr || "\\s+");
-      return (this.replace(new RegExp(("^" + tStr + "|" + tStr + "$"), "g"), ""))
-    };
-  }
+  
+  String.prototype.trimLeft = function (tStr) {
+    return (this.replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
+  };
+  klib.trimLeft = function (srcStr, tStr) {
+      return ((""+srcStr).replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
+  };
 
-  if (!(String).trimLeft) {
-    String.prototype.trimLeft = function (tStr) {
-      return (this.replace(new RegExp("^" + (tStr || "\\s+"), "g"), ""));
-    };
-  }
+  String.prototype.trimRight = function (tStr) {
+    return (this.replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
+  };
+  klib.trimRight = function (srcStr, tStr) {
+      return ((""+srcStr).replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
+  };
+  
+  String.prototype.trim = function (tStr) {
+    return this.trimLeft(tStr).trimRight(tStr);
+  };
+  klib.trim = klib.trimStr = function (srcStr, tStr) {
+    return klib.trimRight(klib.trimLeft(srcStr, tStr), tStr);
+  };
 
-  if (!(String).trimRight) {
-    String.prototype.trimRight = function (tStr) {
-      return (this.replace(new RegExp((tStr || "\\s+") + "$", "g"), ""));
-    };
-  }
+  String.prototype.isBlank = function () {
+    return (this.trim() == "");
+  };
 
-  if (!(String).isBlank) {
-    String.prototype.isBlank = function () {
-      return (this.trim() == "");
-    };
-  }
+  String.prototype.ifBlank = function (forNullStr) {
+    forNullStr = forNullStr || "";
+    return (this.isBlank() ? (("" + forNullStr).trim()) : (this.trim()));
+  };
 
-  if (!(String).ifBlank) {
-    String.prototype.ifBlank = function (forNullStr) {
-      forNullStr = forNullStr || "";
-      return (this.isBlank() ? (("" + forNullStr).trim()) : (this.trim()));
-    };
-  }
+  String.prototype.isNumber = function () {
+    return (((("" + this).replace(/[0-9.]/g, "")).trim()).length == 0);
+  };
 
-  if (!(String).isNumber) {
-    String.prototype.isNumber = function () {
-      return (((("" + this).replace(/[0-9.]/g, "")).trim()).length == 0);
-    };
-  }
+  String.prototype.normalizeStr = function () {
+    return (this).trim().replace(/\s+/g, ' ');
+  };
 
-  if (!(String).normalizeStr) {
-    String.prototype.normalizeStr = function () {
-      return (this).trim().replace(/\s+/g, ' ');
-    };
-  }
+  String.prototype.beginsWith = function (str, i) {
+    i = (i) ? 'i' : '';
+    var re = new RegExp('^' + str, i);
+    return ((this).normalizeStr().match(re)) ? true : false;
+  };
 
-  if (!(String).beginsWith) {
-    String.prototype.beginsWith = function (str, i) {
-      i = (i) ? 'i' : '';
-      var re = new RegExp('^' + str, i);
-      return ((this).normalizeStr().match(re)) ? true : false;
-    };
-  }
+  String.prototype.beginsWithIgnoreCase = function (str) {
+    var re = new RegExp('^' + str, 'i');
+    return ((this).normalizeStr().match(re)) ? true : false;
+  };
 
-  if (!(String).beginsWithIgnoreCase) {
-    String.prototype.beginsWithIgnoreCase = function (str) {
-      var re = new RegExp('^' + str, 'i');
-      return ((this).normalizeStr().match(re)) ? true : false;
-    };
-  }
+  String.prototype.endsWith = function (str, i) {
+    i = (i) ? 'gi' : 'g';
+    var re = new RegExp(str + '$', i);
+    return ((this).normalizeStr().match(re)) ? true : false;
+  };
 
-  if (!(String).endsWith) {
-    String.prototype.endsWith = function (str, i) {
-      i = (i) ? 'gi' : 'g';
-      var re = new RegExp(str + '$', i);
-      return ((this).normalizeStr().match(re)) ? true : false;
-    };
-  }
+  String.prototype.endsWithIgnoreCase = function (str, i) {
+    var re = new RegExp(str + '$', 'gi');
+    return ((this).normalizeStr().match(re)) ? true : false;
+  };
 
-  if (!(String).endsWithIgnoreCase) {
-    String.prototype.endsWithIgnoreCase = function (str, i) {
-      var re = new RegExp(str + '$', 'gi');
-      return ((this).normalizeStr().match(re)) ? true : false;
-    };
-  }
+  String.prototype.contains = function (str, i) {
+    i = (i) ? 'gi' : 'g';
+    var re = new RegExp('' + str, i);
+    return ((re).test(this));
+  };
 
-  if (!(String).contains) {
-    String.prototype.contains = function (str, i) {
-      i = (i) ? 'gi' : 'g';
-      var re = new RegExp('' + str, i);
-      return ((re).test(this));
-    };
-  }
+  String.prototype.equals = function (arg) {
+    return (this == arg);
+  };
 
-  if (!(String).equals) {
-    String.prototype.equals = function (arg) {
-      return (this == arg);
-    };
-  }
+  String.prototype.equalsIgnoreCase = function (arg) {
+    return ((String(this.toLowerCase()) == (String(arg)).toLowerCase()));
+  };
 
-  if (!(String).equalsIgnoreCase) {
-    String.prototype.equalsIgnoreCase = function (arg) {
-      return ((String(this.toLowerCase()) == (String(arg)).toLowerCase()));
-    };
-  }
-
-  if (!(String).toProperCase) {
-    String.prototype.toProperCase = function (normalize) {
-      return ( (((typeof normalize == "undefined") ||  normalize)? ((this).normalizeStr()) : (this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
-        return $1.toUpperCase();
-      }));
-    };
-  }
+  String.prototype.toProperCase = function (normalize) {
+    return ( (((typeof normalize == "undefined") ||  normalize)? ((this).normalizeStr()) : (this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
+      return $1.toUpperCase();
+    }));
+  };
 
   klib.toJSON = function (str) {
     var thisStr;
@@ -300,45 +279,37 @@ var isKHashRouteOn=false;
     }
     return (!_.isString(str) && _.isObject(str)) ? str : ( klib.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
   };
-  if (!(String).toJSON) {
-    String.prototype.toJSON = function () {
-      return klib.toJSON(this);
-    };
-  }
+  String.prototype.toJSON = function () {
+    return klib.toJSON(this);
+  };
 
-  if (!(String).toBoolean) {
-    String.prototype.toBoolean = function () {
-      var retValue = true;
-      switch (("" + this).trim().toLowerCase()) {
-        case          "":
-        case         "0":
-        case        "-0":
-        case       "nan":
-        case      "null":
-        case     "false":
-        case "undefined":
-          retValue = false;
-          break;
-      }
+  String.prototype.toBoolean = function () {
+    var retValue = true;
+    switch (("" + this).trim().toLowerCase()) {
+      case          "":
+      case         "0":
+      case        "-0":
+      case       "nan":
+      case      "null":
+      case     "false":
+      case "undefined":
+        retValue = false;
+        break;
+    }
 
-      if (retValue) retValue = (!("" + this).trim().beginsWith("-"));
-      return ( retValue );
-    };
-  }
+    if (retValue) retValue = (!("" + this).trim().beginsWith("-"));
+    return ( retValue );
+  };
 
-  if (!(Boolean).toValue) {
-    Boolean.prototype.toValue = function (tValue, fValue) {
-      if (typeof tValue == "undefined") tValue = true;
-      if (typeof fValue == "undefined") fValue = false;
-      return ((this.valueOf()) ? (tValue) : (fValue));
-    };
-  }
+  Boolean.prototype.toValue = function (tValue, fValue) {
+    if (typeof tValue == "undefined") tValue = true;
+    if (typeof fValue == "undefined") fValue = false;
+    return ((this.valueOf()) ? (tValue) : (fValue));
+  };
 
-  if (!(Boolean).toHtml) {
-    Boolean.prototype.toHtml = function (tElId, fElId) {
-      return $((this.valueOf()) ? tElId : fElId).html();
-    };
-  }
+  Boolean.prototype.toHtml = function (tElId, fElId) {
+    return $((this.valueOf()) ? tElId : fElId).html();
+  };
 
   /*
    * String.pad(length: Integer, [padString: String = " "], [type: Integer = 0]): String
@@ -347,14 +318,12 @@ var isKHashRouteOn=false;
    * padString: string that will be concatenated
    * type: specifies the side where the concatenation will happen, where: 0 = left, 1 = right and 2 = both sides
    */
-  if (!(String).pad) {
-    String.prototype.pad = function (l, s, t) {
-      for (var ps = "", i = 0; i < l; i++) {
-        ps += s;
-      }
-      return (((t === 0 || t === 2) ? ps : "") + this + ((t === 1 || t === 2) ? ps : ""));
-    };
-  }
+  String.prototype.pad = function (l, s, t) {
+    for (var ps = "", i = 0; i < l; i++) {
+      ps += s;
+    }
+    return (((t === 0 || t === 2) ? ps : "") + this + ((t === 1 || t === 2) ? ps : ""));
+  };
 
   klib.lastSplitResult = [];
   klib.getOnSplit = function (str, delimiter, pickIndex) {
@@ -415,14 +384,14 @@ var isKHashRouteOn=false;
   };
 
   /*Tobe Removed: replaced with toStr*/
-  //klib.toString = function (obj) {
-  //  klib.console.warn("klib.toString is deprecated. use klib.toStr instead.");
-  //  var retValue = "" + obj;
-  //  if (_.isObject(obj)) {
-  //    retValue = JSON.stringify(obj);
-  //  }
-  //  return (retValue);
-  //};
+  klib.toString = function (obj) {
+    klib.console.warn("klib.toString is deprecated. use klib.toStr instead.");
+    var retValue = "" + obj;
+    if (_.isObject(obj)) {
+      retValue = JSON.stringify(obj);
+    }
+    return (retValue);
+  };
 
   klib.toStr = function (obj) {
     var retValue = "" + obj;
@@ -2136,7 +2105,7 @@ var isKHashRouteOn=false;
     };
 
     if (!foundViewContainer) {
-      if (!klib.isElementExist("#kRunTimeHtmlContainer")) {
+      if (!klib.isElementExist("#kRunTimeLoadContainer")) {
         $("body").append("<div id='kRunTimeLoadContainer' style='display:none;'></div>");
       }
       $("#kRunTimeLoadContainer").append("<div id='" + viewContainerId.replace(/\#/gi, "") + "'></div>")
