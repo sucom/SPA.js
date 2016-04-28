@@ -1,0 +1,25 @@
+  { "memid": "368a4407-90df-49d3-ad47-b53f09a3a0e3",
+    "isActive": true,
+    "name": "Katharine Beasley",
+    "gender": "female",
+    "company": "Canopoly",
+    "email": "katharinebeasley@canopoly.com",
+    "phone": "+1 (900) 524-3632",
+    "address": {
+      "street": "201 Brooklyn Road",
+      "city": "Rivereno",
+      "state": "Mississippi",
+      "country": "US",
+      "zip": 11619
+    },
+    "registered": "1996-12-28T23:04:35 -06:-30",
+    "married": true,
+    "family":
+    { "spouse": "Maria Bennett",
+      "gender": "female",
+      "children":[
+        {"name": "Jackson Bennett", "age":10, "gender":"male"},
+        {"name": "Lillian Bennett", "age":5, "gender":"female"}
+      ]
+    }
+  }

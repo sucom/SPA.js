@@ -1,0 +1,63 @@
+<div class="hidden"><h1>Demo</h1></div>
+
+<div class="ui menu">
+  <div class="ui container" >
+    <div class="left menu">
+      <div class="item" ><a href="#spa/demo?action=refresh" onclick="spa.render('#viewMemberList');" data-i18n="{html_title:'common.lbl.refresh'}"></a></div>
+      <div class="item" ><a href="#spa/demo?action=clear"   onclick="clearViews();" data-i18n="{html:'common.lbl.clear'}"></a></div>
+    </div>
+    <div class="right menu">
+      <div class="item"><a href="#spa/demo?action=lang&id=en_US" onclick="appUiHelper.setLang('en_US');">EN</a></div>
+      <div class="item"><a href="#spa/demo?action=lang&id=ja_JP" onclick="appUiHelper.setLang('ja_JP');">JP</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- List Begins -->
+<section class="ui">
+  <div>
+    <table class="ui striped table">
+      <thead>
+        <tr>
+          <th data-i18n="html:'common.lbl.name'"></th>
+          <th><span data-i18n="html:'common.lbl.company'"></span> / <span data-i18n="html:'common.lbl.email'"></span> 
+            / <span data-i18n="html:'common.lbl.phone'"></span></th>
+          <th data-i18n="html:'common.lbl.address'"></th>
+          <th data-i18n="html:'common.lbl.status'"></th>
+          <th data-i18n="html:'common.lbl.action'"></th>
+        </tr>
+      </thead>
+      <tbody id="viewMemberList"
+             data-url="demo/lang/api/member/list.json"
+             data-templates="{tmplMemberList:'demo/lang/modules/memlist/memlist-view.html'}"
+             data-styles="{cssMemList:'demo/lang/modules/memlist/memlist-styles.css'}"
+             data-scripts="jsMemberList:'demo/lang/modules/memlist/memlist-actions.js'"
+             >
+      </tbody>
+    </table>
+  </div>
+</section>
+<!-- List Ends -->
+
+<section class="row-fluid" id="container_viewMemberDetails">
+  <!-- view begins -->
+  <div class="span1"></div>
+  <div class="span11" id="viewMemberDetails"
+       data-templates="{templateMemberView:'demo/lang/modules/memview/memview-view.html'}"
+       >
+  </div>
+  <!-- view ends -->
+</section>
+
+<section class="row-fluid" id="container_editMemberDetails">
+  <!-- edit begins -->
+  <div class="span1"></div>
+  <div class="span11" id="editMemberDetails"
+       data-templates="{templateMemberEdit:'demo/lang/modules/memedit/memedit-view.html'}"
+       data-template-engine="handlebars"
+       data-scripts="{actionsMemberEdit:'demo/lang/modules/memedit/memedit-actions.js'}"
+       data-render-engine="Backbone"
+       >
+  </div>
+  <!-- edit ends -->
+</section>

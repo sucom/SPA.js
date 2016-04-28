@@ -1,0 +1,25 @@
+  { "memid": "c6ef1aed-f09c-4831-b266-391fe614bb10",
+    "isActive": false,
+    "name": "Preston Forbes",
+    "gender": "male",
+    "company": "Earbang",
+    "email": "prestonforbes@earbang.com",
+    "phone": "+1 (921) 422-3430",
+    "address": {
+      "street": "444 Regent Place",
+      "city": "Sattley",
+      "state": "New Jersey",
+      "country": "US",
+      "zip": 11706
+    },
+    "registered": "1998-04-14T23:16:55 -06:-30",
+    "married": true,
+    "family":
+    { "spouse": "Maria Bennett",
+      "gender": "female",
+      "children":[
+        {"name": "Jackson Bennett", "age":10, "gender":"male"},
+        {"name": "Lillian Bennett", "age":5, "gender":"female"}
+      ]
+    }
+  }
