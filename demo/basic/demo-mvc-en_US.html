@@ -1,0 +1,52 @@
+<section class="ui container">
+<div class="ui menu">
+  <div class="ui container" >
+    <div class="left menu">
+      <div class="item" >
+        <a href="#demo/spa/modules/member/list" onclick="$('#viewMemberList').load('demo/basic/member/list.html')">List</a>
+      </div>
+      <div class="item" ><a href="#demo/spa/memlist-clear" onclick="$('#viewMemberList,#viewEditMemberDetails').html('')" >Clear</a></div>
+    </div>
+    <div class="right menu">
+      <div class="item"><a href="#demo/spa/lang/en_US">EN</a></div>
+      <div class="item"><a href="#demo/spa/lang/ja_JP">JP</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- List Begins -->
+<section class="ui">
+  <div>
+    <table class="ui striped table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th><span>Company</span> / <span>eMail</span> 
+            / <span>Phone</span></th>
+          <th>Address</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="viewMemberList">
+      </tbody>
+    </table>
+  </div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+</section>
+<!-- List Ends -->
+
+<section class="row" id="container_viewEditMemberDetails">
+  <!-- view begins -->
+  <div class="col-md-1"></div>
+  <div class="col-md-11" id="viewEditMemberDetails">
+  </div>
+  <!-- view ends -->
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+</section>
+
+</section>

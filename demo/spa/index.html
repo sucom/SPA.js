@@ -1,0 +1,97 @@
+<div class="ui container">
+  <div class="ui grid">
+    <div class="two wide column"><h1>Demo</h1></div>
+    <div class="fourteen wide column"><br>Though you don't see any difference in UI, watch the network tab in developer tool (F12)</div>
+  </div>
+</div>
+
+<p></p>
+
+<section class="ui container">
+  <div class="ui two column middle aligned very relaxed stackable grid">
+    <div class="center aligned column">
+      <a class="ui blue labeled icon button" href="#demo/spa/" data-sparoute="target:'#mainStage',scripts:'.'">
+        <i class="checkmark icon"></i>
+        using SPA.js
+      </a>
+    </div>
+
+    <div class="center aligned column">
+      <a class="ui grey button" href="#demo/basic/" data-sparoute="target:'#mainStage'">
+        w/o SPA.js
+      </a>
+    </div>
+  </div>
+</section>
+
+<p></p>
+
+<section class="ui container">
+<div class="ui menu">
+  <div class="ui container" >
+    <div class="left menu">
+      <div class="item" >
+        <a href="#demo/spa/modules/member/list" data-sparoute="target:'#viewMemberList',dataUrl:'demo/spa/api/member/list.json',scripts:'.'" data-i18n="{html_title:'common.lbl.refresh'}"></a>
+      </div>
+      <div class="item" ><a href="#demo/spa/memlist-clear" data-sparoute="template:'',callback:'clearViews'" data-i18n="{html:'common.lbl.clear'}"></a></div>
+    </div>
+    <div class="right menu">
+      <div class="item"><a href="#demo/spa/lang/en_US" data-sparoute="template:'',callback:'appUiHelper.setLang'">EN</a></div>
+      <div class="item"><a href="#demo/spa/lang/ja_JP" data-sparoute="template:'',callback:'appUiHelper.setLang'">JP</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- List Begins -->
+<section class="ui">
+  <div>
+    <table class="ui striped table">
+      <thead>
+        <tr>
+          <th data-i18n="html:'common.lbl.name'"></th>
+          <th><span data-i18n="html:'common.lbl.company'"></span> / <span data-i18n="html:'common.lbl.email'"></span> 
+            / <span data-i18n="html:'common.lbl.phone'"></span></th>
+          <th data-i18n="html:'common.lbl.address'"></th>
+          <th data-i18n="html:'common.lbl.status'"></th>
+          <th data-i18n="html:'common.lbl.action'"></th>
+        </tr>
+      </thead>
+      <tbody id="viewMemberList">
+      </tbody>
+    </table>
+  </div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+</section>
+<!-- List Ends -->
+
+<section class="row" id="container_viewMemberDetails">
+  <!-- view begins -->
+  <div class="col-md-1"></div>
+  <div class="col-md-11" id="viewMemberDetails"
+       data-templates="{templateMemberView:'demo/spa/modules/member/view.html'}"
+       >
+  </div>
+  <!-- view ends -->
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+</section>
+
+<section class="row" id="container_editMemberDetails">
+  <!-- edit begins -->
+  <div class="col-md-1"></div>
+  <div class="col-md-11" id="editMemberDetails"
+       data-templates="{templateMemberEdit:'demo/spa/modules/member/edit.html'}"
+       data-template-engine="handlebars"
+       data-render-engine="Backbone"
+       >
+  </div>
+  <!-- edit ends -->
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+  <div class="row">&nbsp;</div>
+</section>
+
+</section>

@@ -1,0 +1,427 @@
+/*html, body {*/
+  /*font-size: 100% !important;*/
+/*}*/
+
+
+/* Home Page begins */
+
+.hidden, .hide {
+  display: none;
+}
+
+.hidden.menu {
+  display: none;
+}
+
+.masthead.segment {
+  min-height: 700px;
+  padding: 1em 0em;
+}
+.masthead .logo.item img {
+  margin-right: 1em;
+}
+.masthead .ui.menu .ui.button {
+  margin-left: 0.5em;
+}
+.masthead h1.ui.header {
+  margin-top: 2em;
+  margin-bottom: 0em;
+  font-size: 4em;
+  font-weight: normal;
+}
+.masthead h2 {
+  font-size: 1.7em;
+  font-weight: normal;
+}
+
+.ui.vertical.stripe {
+  padding: 8em 0em;
+}
+.ui.vertical.stripe h3 {
+  font-size: 2em;
+}
+.ui.vertical.stripe .button + h3,
+.ui.vertical.stripe p + h3 {
+  margin-top: 3em;
+}
+.ui.vertical.stripe .floated.image {
+  clear: both;
+}
+.ui.vertical.stripe p {
+  font-size: 1.33em;
+}
+.ui.vertical.stripe .horizontal.divider {
+  margin: 3em 0em;
+}
+
+.quote.stripe.segment {
+  padding: 0em;
+}
+.quote.stripe.segment .grid .column {
+  padding-top: 5em;
+  padding-bottom: 5em;
+}
+
+.footer.segment {
+  padding: 5em 0em;
+}
+
+.secondary.pointing.menu .toc.item {
+  display: none;
+}
+
+@media only screen and (max-width: 700px) {
+  .ui.fixed.menu {
+    display: none !important;
+  }
+  .secondary.pointing.menu .item,
+  .secondary.pointing.menu .menu {
+    display: none;
+  }
+  .secondary.pointing.menu .toc.item {
+    display: block;
+  }
+  .masthead.segment {
+    min-height: 350px;
+  }
+  .masthead h1.ui.header {
+    font-size: 2em;
+    margin-top: 1.5em;
+  }
+  .masthead h2 {
+    margin-top: 0.5em;
+    font-size: 1.5em;
+  }
+}
+
+/* Home Page ends*/
+
+
+.top-bar li.name h1 a {
+  color: #0087ba !important;
+  font-weight: bold !important;
+}
+
+.fixed-bottom {
+  position:fixed !important;
+  bottom:0 !important;
+  padding: 20px 20px !important;
+  width: 100% !important;
+}
+
+.fixed-bottom-right {
+  position:fixed !important;
+  bottom:0 !important;
+  padding: 10px 20px !important;
+  width: 100% !important;
+  text-align: right !important;
+  color: #a3a3a3!important;
+}
+
+label.app-title {
+  color: #0087ba !important;
+  font-size: medium !important;
+  text-transform: none !important;
+  font-weight: normal !important;
+}
+
+.main {
+  padding: 10px;
+  min-height: 400px;
+}
+
+/* Modal Header and Actions Padding and Color*/
+.ui.modal>.header {
+  padding: 5px 5px 5px 10px !important;
+}
+.ui.modal>.actions {
+  padding: 10px !important
+}
+
+.brown.header {
+  background-color: #a5673f !important;
+}
+.black.header{
+  background-color: #1b1c1d !important;
+}
+.blue.header {
+  background-color: #2185d0 !important;
+}
+.grey.header {
+  background-color: #767676 !important;
+}
+.green.header {
+  background-color: #21ba45 !important;
+}
+.olive.header {
+  background-color: #b5cc18 !important;
+}
+.orange.header {
+  background-color: #f2711c !important;
+}
+.pink.header {
+  background-color: #e03997 !important;
+}
+.purple.header {
+  background-color: #a333c8 !important;
+}
+.red.header {
+  background-color: #db2828 !important;
+}
+.teal.header {
+  background-color: #00b5ad !important;
+}
+.violet.header {
+  background-color: #6435c9 !important;
+}
+.yellow.header {
+  background-color: #fbbd08 !important;
+}
+
+.white.header > h1,
+.white.header > h2,
+.white.header > h3,
+.white.header > h4,
+.white.header > h5,
+.white.header > h6 {
+  color: #ffffff;
+}
+
+/* mini Modal */
+.ui.mini.modal > .header:not(.ui) {
+  font-size: 1.3em;
+}
+@media only screen and (max-width: 767px) {
+  .ui.mini.modal {
+    width: 95%;
+    margin: 0 0 0 -47.5%;
+  }
+}
+@media only screen and (min-width: 768px) {
+  .ui.mini.modal {
+    width: 35.2%;
+    margin: 0 0 0 -17.6%;
+  }
+}
+@media only screen and (min-width: 992px) {
+  .ui.mini.modal {
+    width: 340px;
+    margin: 0 0 0 -170px;
+  }
+}
+@media only screen and (min-width: 1200px) {
+  .ui.mini.modal {
+    width: 360px;
+    margin: 0 0 0 -180px;
+  }
+}
+@media only screen and (min-width: 1920px) {
+  .ui.mini.modal {
+    width: 380px;
+    margin: 0 0 0 -190px;
+  }
+}
+
+/* maxi Modal */
+.ui.maxi.modal > .header:not(.ui) {
+  font-size: 1.3em;
+}
+@media only screen and (max-width: 767px) {
+  .ui.maxi.modal {
+    width: 95%;
+    margin: 0 0 0 -47.5%;
+  }
+}
+@media only screen and (min-width: 768px) {
+  .ui.maxi.modal {
+    width: 44%;
+    margin: 0 0 0 -22%;
+  }
+}
+@media only screen and (min-width: 992px) {
+  .ui.maxi.modal {
+    width: 425px;
+    margin: 0 0 0 -212.5px;
+  }
+}
+@media only screen and (min-width: 1200px) {
+  .ui.maxi.modal {
+    width: 450px;
+    margin: 0 0 0 -225px;
+  }
+}
+@media only screen and (min-width: 1920px) {
+  .ui.maxi.modal {
+    width: 475px;
+    margin: 0 0 0 -237.5px;
+  }
+}
+
+/* tiny Modal */
+.ui.tiny.modal > .header:not(.ui) {
+  font-size: 1.3em;
+}
+@media only screen and (max-width: 767px) {
+  .ui.tiny.modal {
+    width: 95%;
+    margin: 0 0 0 -47.5%;
+  }
+}
+@media only screen and (min-width: 768px) {
+  .ui.tiny.modal {
+    width: 52.8%;
+    margin: 0 0 0 -26.4%;
+  }
+}
+@media only screen and (min-width: 992px) {
+  .ui.tiny.modal {
+    width: 510px;
+    margin: 0 0 0 -255px;
+  }
+}
+@media only screen and (min-width: 1200px) {
+  .ui.tiny.modal {
+    width: 540px;
+    margin: 0 0 0 -270px;
+  }
+}
+@media only screen and (min-width: 1920px) {
+  .ui.tiny.modal {
+    width: 570px;
+    margin: 0 0 0 -285px;
+  }
+}
+
+/* medium Modal */
+.ui.medium.modal > .header:not(.ui) {
+  font-size: 1.3em;
+}
+@media only screen and (max-width: 767px) {
+  .ui.medium.modal {
+    width: 95%;
+    margin: 0 0 0 -47.5%;
+  }
+}
+@media only screen and (min-width: 768px) {
+  .ui.medium.modal {
+    width: 79.2%;
+    margin: 0 0 0 -39.6%;
+  }
+}
+@media only screen and (min-width: 992px) {
+  .ui.medium.modal {
+    width: 850px;
+    margin: 0 0 0 -425px;
+  }
+}
+@media only screen and (min-width: 1200px) {
+  .ui.medium.modal {
+    width: 900px;
+    margin: 0 0 0 -450px;
+  }
+}
+@media only screen and (min-width: 1920px) {
+  .ui.medium.modal {
+    width: 950px;
+    margin: 0 0 0 -475px;
+  }
+}
+
+input[type=search] {
+  box-sizing : inherit;
+}
+
+input[type="text"].mini,
+input[type="email"].mini,
+input[type="search"].mini,
+input[type="password"].mini {
+  width: 100px !important
+}
+
+input[type="text"].tiny,
+input[type="email"].tiny,
+input[type="search"].tiny,
+input[type="password"].tiny {
+  width: 150px !important
+}
+
+input[type="text"].small,
+input[type="email"].small,
+input[type="search"].small,
+input[type="password"].small {
+  width: 200px !important
+}
+
+input[type="text"].medium,
+input[type="email"].medium,
+input[type="search"].medium,
+input[type="password"].medium {
+  width: 225px !important
+}
+
+input[type="text"].large,
+input[type="email"].large,
+input[type="search"].large,
+input[type="password"].large {
+  width: 250px !important
+}
+
+input[type="text"].big,
+input[type="email"].big,
+input[type="search"].big,
+input[type="password"].big {
+  width: 375px !important
+}
+
+input[type="text"].bigger,
+input[type="email"].bigger,
+input[type="search"].bigger,
+input[type="password"].bigger {
+  width: 400px !important
+}
+
+input[type="text"].biggest,
+input[type="email"].biggest,
+input[type="search"].biggest,
+input[type="password"].biggest {
+  width: 450px !important
+}
+
+input[type="text"].max,
+input[type="email"].max,
+input[type="search"].max,
+input[type="password"].max {
+  width: 500px !important
+}
+
+.mainContentContainer {
+  display: none;
+}
+.mainContentContainer.active {
+  display: block;
+}
+
+.dtHiddenFilter {
+  display: none !important;
+}
+
+.base-container {
+  /*min-height: 400px !important;*/
+}
+
+.dataTables_scroll {
+  background-color: #F5F5F5;
+}
+
+.templates, .template {
+  display:none;
+}
+
+.labelb {
+  font-weight: bold
+}
+
+.boldK {
+  font-size: 16px;
+  font-weight: bold;
+}

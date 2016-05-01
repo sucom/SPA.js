@@ -1,0 +1,54 @@
+<form method="POST" action="" onsubmit="return(false);">
+
+  <div class="row" style="margin-left: 5px">
+    <div class="col-md-6">
+
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.name'}"></span>
+        <span class="col-md-10 col-xs-12">{{name}}</span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.active'}"></span>
+        <span class="col-md-10 col-xs-12">{{isActive}}</span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.gender'}"></span>
+        <span class="col-md-10 col-xs-12">{{gender}}</span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.company'}"></span>
+        <span class="col-md-10 col-xs-12">{{company}}</span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.email'}"></span>
+        <span class="col-md-10 col-xs-12">{{email}}</span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.phone'}"></span>
+        <span class="col-md-10 col-xs-12">{{phone}}</span>
+      </div>
+  
+    </div>
+
+    <div class="col-md-6">
+
+      <div class="row">
+        <div class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.address'}"></div>
+        <div class="col-md-10  col-xs-12">
+          <div>{{address.street}}</div>
+          <div>{{address.city}}</div>
+          <div>{{address.state}}</div>
+          <div>{{address.country}}</div>
+          <div>{{address.zip}}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12 col-xs-12 text-right">
+      <input type='button' data-i18n="{value:'common.lbl.close'}" value='' class="btn btn-small btn-inverse" data-focus-next='#editMemberName' onclick="closeMemberDetailsView();"/>
+    </div>
+  </div>
+</form>

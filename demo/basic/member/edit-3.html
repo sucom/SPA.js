@@ -1,0 +1,80 @@
+<form name="frmAddEditMember" id="frmAddEditMember" method="POST" action="" onsubmit="return(false);">
+
+  <div class="row" style="margin-left: 5px">
+    <div class="col-md-6">
+
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.name'}">Name</span>
+        <span class="col-md-10 col-xs-12"><input name="name" id="editMemberName" type="text" value="Hurst Head" data-disable-keys="9,+Shift" data-focus-next="#editMemberCompany" data-focus-back="#editMemberAddrZip"></span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.active'}">Active</span>
+        <span class="col-md-10 col-xs-12">
+          <input name="_isActive" id="editMemberStatus" type="checkbox" value="true">
+        </span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.gender'}">Gender</span>
+        <span class="col-md-1 col-xs-1">&nbsp;</span>
+        <span class="col-md-9 col-xs-11">
+          <label class="radio inline"><input name="gender" id="editMemberGenderMale" type="radio" value="male" checked=""> <span data-i18n="{html:'common.lbl.male'}">Male</span></label>
+          <label class="radio inline"><input name="gender" id="editMemberGenderFemale" type="radio" value="female"> <span data-i18n="{html:'common.lbl.female'}">Female</span></label>
+        </span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.company'}">Company</span>
+        <span class="col-md-10 col-xs-12"><input name="company" id="editMemberCompany" type="text" value="Endicil"></span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.email'}">eMail</span>
+        <span class="col-md-10 col-xs-12"><input name="email" id="editMemberEmail" type="text" value="hursthead@endicil.com"></span>
+      </div>
+      <div class="row">
+        <span class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.phone'}">Phone</span>
+        <span class="col-md-10 col-xs-12"><input name="phone" id="editMemberPhone" type="text" value="+1 (994) 567-2772"></span>
+      </div>
+
+    </div>
+
+    <div class="col-md-6">
+
+      <div class="row">
+        <div class="col-md-2 col-xs-12 labelb" data-i18n="{html:'common.lbl.address'}">Address</div>
+        <div class="col-md-10 col-xs-12">
+          <div class="row">
+            <span class="col-md-2 col-xs-12" data-i18n="{html:'common.lbl.street'}">Street</span>
+            <span class="col-md-10 col-xs-12"><input name="addressStreet" id="editMemberAddrStreet" type="text" value="385 Ridge Boulevard"></span>
+          </div>
+          <div class="row">
+            <span class="col-md-2 col-xs-12" data-i18n="{html:'common.lbl.city'}">City</span>
+            <span class="col-md-10 col-xs-12"><input name="addressCity" id="editMemberAddrCity" type="text" value="Nicholson"></span>
+          </div>
+          <div class="row">
+            <span class="col-md-2 col-xs-12" data-i18n="{html:'common.lbl.state'}">State</span>
+            <span class="col-md-10 col-xs-12"><input name="addressState" id="editMemberAddrState" type="text" value="California"></span>
+          </div>
+          <div class="row">
+            <span class="col-md-2 col-xs-12" data-i18n="{html:'common.lbl.country'}">Country</span>
+            <span class="col-md-10 col-xs-12">
+              <select name="addressCountry" id="editMemberAddrCountry">
+                <option value="">US</option>
+              </select>
+            </span>
+          </div>
+          <div class="row">
+            <span class="col-md-2 col-xs-12" data-i18n="{html:'common.lbl.zip'}">Zip</span>
+            <span class="col-md-10 col-xs-12"><input name="address.zip" id="editMemberAddrZip" type="text" value="14447"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+    
+  <div class="row">
+    <div class="col-md-12 col-xs-12 text-right">
+      <input type="button" class="btn btn-small btn-primary" data-i18n="{value:'common.lbl.save'}" value="Save">
+      <input type="button" class="btn btn-small btn-inverse" data-i18n="{value:'common.lbl.cancel'}" value="Cancel" onclick="$('#viewEditMemberDetails').html('')" data-focus-next="#editMemberName">
+    </div>
+  </div>
+</form>
