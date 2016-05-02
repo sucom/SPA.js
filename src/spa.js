@@ -3331,7 +3331,7 @@ var isSpaHashRouteOn=false;
         var scriptID = "__spaRouteScript_" + routeName;
         switch(true) {
           case (_.isString(oTagRouteOptions['scripts'])) :
-            spaRenderOptions.dataScripts[scriptID] = (_.indexOf(oTagRouteOptions['scripts'], '.')==0)? defaultScriptPath : oTagRouteOptions['scripts'];
+            spaRenderOptions.dataScripts[scriptID] = ((oTagRouteOptions['scripts']).equalsIgnoreCase('.'))? defaultScriptPath : oTagRouteOptions['scripts'];
             break;
           case (_.isArray(oTagRouteOptions['scripts'])) :
             if (_.indexOf(oTagRouteOptions['scripts'], '.')>=0) { //Include default script
