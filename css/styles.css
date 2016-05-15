@@ -1,3 +1,21 @@
+@import url("../xlib/bootstrap/3.3.6/css/bootstrap.min.css");
 @import url("../xlib/google-fonts/lato.min.css");
 @import url("../xlib/semanticui-2.1.8/dist/semantic.min.css");
+@import url("../xlib/highlight/styles/default.css");
 @import url("appstyles.css");
+
+.hljs-attr-spa {
+  color: red !important
+}
+
+.hljs-string-blue {
+  color: blue !important
+}
+
+#example section{
+  margin: 20px 0px;
+}
+
+.result {
+  background:#ddd;
+}

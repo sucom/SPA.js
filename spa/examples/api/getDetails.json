@@ -1,0 +1,19 @@
+{
+  "apicode" : 123456,
+  "apimsg":"Get Post Details",
+
+  "blog": {
+    "id"  : "1234-567-890",
+    "name": "Blog Name",
+    
+    "post": {
+      "title": "My 5th Blog Post!",
+      "body": "My 5th post. Hurray!",
+      "author": {
+        "id": 105,
+        "name": "Jack O Neil"
+      }
+    }
+    
+  }
+}

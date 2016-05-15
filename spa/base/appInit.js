@@ -1,3 +1,6 @@
+var _$  = document.querySelector.bind(document);
+var _$$ = document.querySelectorAll.bind(document);
+
 var appSettings = {
   langPath: 'demo/spa/language/'
 };

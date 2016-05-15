@@ -1,3 +1,179 @@
 <div class="ui container">
   <h1>API Doc</h1>
 </div>
+
+<div class="ui container">
+  <table class="ui celled striped table">
+    <thead>
+      <tr>
+        <th colspan="3"><h2>spa.render</h2>
+          Usage:<br>
+          <p>spa.render(targetContainerId, renderOptions)</p>
+          <p>spa.render(renderOptions)</p>
+          
+          Example:<br>
+          <p>spa.render( '#containerView', { dataUrl: 'api/module/data.json', template: 'templates/view.html' } )</p>
+          <p>spa.render( { target: '#containerView', dataUrl: 'api/module/data.json', template: 'templates/view.html' } )</p>
+        
+        </th>
+      </tr>
+      <tr>
+        <th>Options</th>
+        <th>HTML Tag Attributes</th>
+        <th>Comments/Examples</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td>-</td>
+        <td>data-render</td>
+        <td>
+          <p>to auto render the container on page load.</p>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> ... ... <span class="hljs-attr-spa">data-render</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+
+      <tr>
+        <td>target</td>
+        <td>id</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">target</span>: "#containerView", ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">id</span>=<span class="hljs-string">"containerView"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      
+      <tr>
+        <td>dataUrl</td>
+        <td>data-url</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">dataUrl</span>: "local:jsonObjectVariableName", ... ... }</code></pre>
+          <pre><code class='js'>{ <span class="hljs-name">dataUrl</span>: "api/module/data.json", ... ... }</code></pre>
+          <br/>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string">"local:jsonObjectVariableName"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string">"api/module/data.json"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+
+      </tr>
+      <tr>
+        <td>dataParams</td>
+        <td>-</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">dataParams</span>: { id: 1234, s:'some value' ... } , ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-attr-spa">NO equivalent tag attribute</span></code></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>dataModel</td>
+        <td>data-model</td>
+        <td>
+          <p>data model path on return JSON object of dataUrl</p>
+          <p>Example: if dataUrl returns:</p>
+<pre><code class='js'>{
+  keyA: {
+
+    keyB: {
+
+      keyC: {
+      ...
+      ...
+      }
+    }
+  }
+}
+</code></pre>
+          <p>and the template consumes the value of "KeyC"</p>
+          <br>
+          <pre><code class='js'>{ <span class="hljs-name">dataModel</span>: "keyA.keyB.KeyC", ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-model</span>=<span class="hljs-string">"keyA.keyB.KeyC"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>dataCache</td>
+        <td>data-cache</td>
+        <td>
+          <p>Default: false</p>
+
+          <pre><code class='js'>{ <span class="hljs-name">dataCache</span>: true, ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-cache</span>=<span class="hljs-string">"true"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      
+      <tr>
+        <td>template</td>
+        <td>data-template</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">template</span>: "inline", ... ... }</code></pre>
+          <pre><code class='js'>{ <span class="hljs-name">template</span>: "#TemplateContainerId", ... ... }</code></pre>
+          <pre><code class='js'>{ <span class="hljs-name">template</span>: "url/of/template.html", ... ... }</code></pre>
+          
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string">"inline"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string">"#TemplateContainerId"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string">"url/of/template.html"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>templatesCache</td>
+        <td>data-templates-cache</td>
+        <td>
+          <p>Default: true</p>
+          <pre><code class='js'>{ <span class="hljs-name">templatesCache</span>: false, ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-templates-cache</span>=<span class="hljs-string">"false"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      
+      <tr>
+        <td>scripts</td>
+        <td>data-scripts</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">scripts</span>: 'path/to/script.js', ... ... }</code></pre>
+          <pre><code class='js'>{ <span class="hljs-name">scripts</span>: { script1:'path/to/script1.js', script2:'path/to/script2.js', ... }, ... ... }</code></pre>
+          
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-scripts</span>=<span class="hljs-string">"path/to/script.js"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-scripts</span>=<span class="hljs-string">"{ script1:'path/to/script1.js', script2:'path/to/script2.js' }"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>scriptsCache</td>
+        <td>data-scripts-cache</td>
+        <td>
+          <p>Default: true</p>
+          <pre><code class='js'>{ <span class="hljs-name">scriptsCache</span>: false, ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-scripts-cache</span>=<span class="hljs-string">"false"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      
+      <tr>
+        <td>styles</td>
+        <td>data-styles</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">styles</span>: 'path/to/style.css', ... ... }</code></pre>
+          <pre><code class='js'>{ <span class="hljs-name">styles</span>: { style1:'path/to/style1.css', style2:'path/to/style2.css', ... }, ... ... }</code></pre>
+          
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-styles</span>=<span class="hljs-string">"path/to/style.css"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-styles</span>=<span class="hljs-string">"{ style1:'path/to/style1.css', style2:'path/to/style2.css' }"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>stylesCache</td>
+        <td>data-styles-cache</td>
+        <td>
+          <p>Default: true</p>
+          <pre><code class='js'>{ <span class="hljs-name">stylesCache</span>: false, ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-styles-cache</span>=<span class="hljs-string">"false"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+      
+      <tr>
+        <td>renderCallback</td>
+        <td>data-render-callback</td>
+        <td>
+          <pre><code class='js'>{ <span class="hljs-name">renderCallback</span>: "callbackFunctionName", ... ... }</code></pre>
+          <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-render-callback</span>=<span class="hljs-string">"callbackFunctionName"</span> ... ... &gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+<p>&nbsp;</p><p>&nbsp;</p>

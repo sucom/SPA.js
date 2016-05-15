@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SPA Boilerplate</title>
+  </head>
+
+  <body>
+
+    <h1>Hello, SPA!</h1>
+    
+    <div id="divViewPost"
+      data-template="templates/tmplPost.html"
+      >
+    </div>
+
+    <button onclick="loadMyPost();">Load</button>
+    
+    <!-- jQuery, lodash and handlebars - necessary for SPA. (from CDN repository) -->
+    <script src="//cdn.jsdelivr.net/jquery/2.2.3/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/lodash/4.12.0/lodash.min.js"></script>
+    <script src="//cdn.jsdelivr.net/handlebarsjs/4.0.5/handlebars.min.js"></script>
+
+    <!-- Include SPA (from local repository) -->
+    <script src="../../src/spa.min.js"></script>
+
+    <script>
+      function loadMyPost() {
+        spa.render( { 
+          target : "#divViewPost",
+          dataUrl: "api/myPost.json",
+          dataParams: { pid: 12345 }
+          } );
+      }
+    </script>
+
+  </body>
+</html>
