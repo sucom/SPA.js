@@ -9,7 +9,6 @@
  * 3. handlebars: http://handlebarsjs.com/ || https://github.com/wycats/handlebars.js/
  *
  * Optional
- * {backbone}     : http://backbonejs.org/
  * {i18n}         : https://code.google.com/p/jquery-i18n-properties/
  *
  * THIS CODE LICENSE: The MIT License (MIT)
@@ -171,7 +170,7 @@ var isSpaHashRouteOn=false;
    ("     ").ifBlankStr()               = "";
    (str).ifBlankStr()                   = "I am a      string";
    */
-  
+
   String.prototype.trimLeftStr = function (tStr) {
     return (this.replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
   };
@@ -179,7 +178,7 @@ var isSpaHashRouteOn=false;
   String.prototype.trimRightStr = function (tStr) {
     return (this.replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
   };
-  
+
   String.prototype.trimStr = function (tStr) {
     return this.trimLeftStr(tStr).trimRightStr(tStr);
   };
@@ -1371,49 +1370,6 @@ var isSpaHashRouteOn=false;
     return (tAjaxRequests);
   };
 
-  spa.loadTemplatesCollection = function (templateCollectionId, dataTemplatesCollectionUrl) {
-    templateCollectionId = (templateCollectionId.beginsWithStr("#") ? "" : "#") + templateCollectionId;
-    var retValue = {};
-    if (!spa.isElementExist(templateCollectionId)) {
-      spa.console.info(templateCollectionId + " NOT Found! Creating one...");
-      if (!spa.isElementExist("#spaViewTemplateCotainer")) {
-        spa.console.info("#spaViewTemplateCotainer NOT Found! Creating one...");
-        $('body').append("<div id='spaViewTemplateCotainer' style='display:none' rel='Template Container'></div>");
-      }
-      $("#spaViewTemplateCotainer").append("<div id='" + (templateCollectionId.substring(1)) + "' style='display:none' rel='Template Collection Container'></div>");
-
-      /*$.ajaxSetup({async: false});*/
-      /*wait till this template collection loads*/
-      $.ajax({
-        url: dataTemplatesCollectionUrl,
-        cache: true,
-        dataType: "html",
-        async: false,
-        success: function (result) {
-          /*$.ajaxSetup({async: true});*/
-          $(templateCollectionId).html(result);
-          spa.console.info("Loaded Template Collection [" + templateCollectionId + "] from [" + dataTemplatesCollectionUrl + "]");
-
-          /* Read all script id(s) in collection */
-          spa.console.info("Found following templates in Template Collection.");
-          $(templateCollectionId + " script").each(function (index, element) {
-            retValue[$(element).attr("id")] = 'script';
-          });
-          spa.console.info({o: retValue});
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-          /*$.ajaxSetup({async: true});*/
-          spa.console.error("Failed Loading Template Collection [" + templateCollectionId + "] from [" + dataTemplatesCollectionUrl + "]. [" + textStatus + ":" + errorThrown + "]");
-        }
-      });
-    }
-    else {
-      spa.console.info(templateCollectionId + " Found! skip template collection load from " + dataTemplatesCollectionUrl);
-    }
-    return (retValue);
-  };
-
-
   /*Get URL Parameters as Object
    * if url = http://xyz.com/page?param0=value0&param1=value1&paramX=valueA&paramX=valueB
    * spa.urlParams() => {param0: "value0", param1:"value1", paramX:["valueA", "valueB"]}
@@ -1593,86 +1549,6 @@ var isSpaHashRouteOn=false;
     }
   };
 
-  /* Backbone.Model extended for CRUD specific URLs support
-   * urlRoot: URL or {default:URL, create:URL, read:URL, update:URL, delete:URL, patch:URL}
-   *
-   * URL: String with optional template-variables
-   * {crud} ==> create|read|update|delete|patch
-   * {model keys}
-   *
-   * example:
-   *
-   * urlRoot: "/api/member.json?action={crud}&id={memid}"
-   *
-   * */
-  spa.extendBackbone = function () {
-    if (window.Backbone) {
-      spa.console.info("Found Backbone. Extending ...");
-      // override the Model prototype for CRUD specific URLs.
-      _.extend(Backbone.Model.prototype, Backbone.Events, {
-
-        activeCRUD: "",
-
-        diffAttributes: function (dOptions) {
-          return (window.jsondiffpatch) ? jsondiffpatch.diff(this.previousAttributes(), this.toJSON(), dOptions) : this.changedAttributes();
-        },
-
-        sync: function () {
-          this.activeCRUD = arguments[0];
-          return Backbone.sync.apply(this, arguments);
-        },
-
-        url: function () {
-          var baseURL, ajaxURL, qryParams, xURLs, paramName;
-          var urlRoot = _.result(this, 'urlRoot') || _.result(this.collection, 'url') || urlError();
-          if (urlRoot) {
-            xURLs = (typeof urlRoot === "object") ? urlRoot : {'defaulturl': urlRoot};
-            xURLs['patch'] = xURLs['patch'] || xURLs['update'];
-
-            baseURL = _.result(xURLs, this.activeCRUD.toLowerCase() + "url") || _.result(xURLs, 'defaulturl') || urlError();
-            ajaxURL = (baseURL.replace(/\{crud\}/gi, this.activeCRUD.toUpperCase()).replace(/\{now\}/gi, spa.now()))
-              + ((this.isNew() || (baseURL.indexOf("?") > 0)) ? '' : ((((baseURL.charAt(baseURL.length - 1) === '/') ? '' : '/') + encodeURIComponent(this.id))));
-            while ((qryParams = ajaxURL.match(/{([\s\S]*?)}/g)) && qryParams && qryParams[0]) {
-              paramName = qryParams[0].replace(/[{}]/g, '');
-              ajaxURL = ajaxURL.replace(new RegExp(qryParams[0], "g"), ((paramName.indexOf(".") >= 0) ? spa.find(this.toJSON(), paramName) : this.get(paramName)) || "");
-            }
-          }
-          spa.console.info("Backbone Sync Url: " + ajaxURL);
-          return (ajaxURL);
-        }
-      });
-    }
-    else {
-      spa.console.warn("Backbone not found. NOT extending...");
-    }
-  };
-
-  /*Load Backbone Model Class from a remote location*/
-  spa.loadBackboneModelClass = function (bbModelClassUrl, options) {
-    options || (options = {});
-    var retValue = {url: bbModelClassUrl, bbclass: Backbone.Model.extend({'defaults': {}}), success: false};
-    /*$.ajaxSetup({async: false});*/
-    /*wait till this data loads*/
-    $.ajax({
-      url: retValue.url,
-      dataType: "text",
-      async: false,
-      success: function (result) {
-        /*$.ajaxSetup({async: true});*/
-        result = result.substring(result.indexOf('{'));
-        retValue.bbclass = Backbone.Model.extend(spa.toJSON(result));
-        retValue.success = true;
-        if (options.success) options.success(result);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        /*$.ajaxSetup({async: true});*/
-        spa.console.error("Failed loading backbone class from [" + (retValue.url) + "]. [" + textStatus + ":" + errorThrown + "]");
-        if (options.fail) options.fail(retValue.url, jqXHR, textStatus, errorThrown);
-      }
-    });
-    return (retValue);
-  };
-
   spa.getModifiedElement = function (elSelector) {
     var modified, modifiedEl=undefined;
     var $elements = $(elSelector || "form:not([data-ignore-change]) :input:not(:disabled,:button,[data-ignore-change])");
@@ -1745,6 +1621,7 @@ var isSpaHashRouteOn=false;
 
     var fillOptions = {
       dataParams: {},
+      async:true,
       dataCache: false,
       keyFormat: "aBc",
       selectPattern: "[name='?']",
@@ -1757,26 +1634,27 @@ var isSpaHashRouteOn=false;
     $.extend(fillOptions, options);
 
     if (!ready2Fill) { //make Ajax call to load remote data and apply....
-      /*$.ajaxSetup({async: false});*/
+
       /*wait till this data loads*/
       $.ajax({
         url: data,
         data: fillOptions.dataParams,
         cache: fillOptions.dataCache,
+        async: fillOptions.async,
         dataType: "text",
-        async: false,
         success: function (result) {
-          /*$.ajaxSetup({async: true});*/
           data = spa.toJSON(result);
           ready2Fill = ((typeof data) == "object");
+          _fillData();
         },
         error: function (jqXHR, textStatus, errorThrown) {
-          /*$.ajaxSetup({async: true});*/
+
           spa.console.error("Failed loading data from [" + data + "]. [" + textStatus + ":" + errorThrown + "]");
         }
       });
     }
-    if (ready2Fill) {
+    
+    function _fillData() {
       var keyFormat = fillOptions.keyFormat;
 
       keyFormat = (keyFormat.match(/^[a-z]/) != null) ? "aBc" : keyFormat;
@@ -2014,8 +1892,6 @@ var isSpaHashRouteOn=false;
    ,dataUrlErrorHandle        : ""    // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
    ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
    ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
-   ,dataModelType             : ""    // "Backbone" applicable only for local data eg: data or dataUrl:"local:XXXXXX"
-   // "Backbone:{classpath:'path-to-backbone-model-class.js', classsuccess:jsFunctionName, classerror:jsFunctionName, defaults:{}, fetchsuccess:jsFunctionName, fetcherror:jsFunctionName}"
    ,dataCache                 : false // External Data(JSON) Cache
 
    ,dataCollection            : {}    // { urls: [ {
@@ -2032,9 +1908,7 @@ var isSpaHashRouteOn=false;
    //    , error:fn
    // }
 
-   ,dataTemplatesCollectionUrl: ""    // location of single file containing all the templates; helps to load all templates in single request. use "dataTemplate" to define primary tempate to be used for rendering
    ,dataTemplates             : {}    // Templates to be used for rendering {tmplID:'inline', tmplID:'script', tmplID:'URL'}
-   ,dataTemplateEngine        : ""    // handlebars (*default*) | underscore | underscore-as-mustache | mustache | hogan
    ,dataTemplate              : ""    // Primary Template ID ==> content may be inline or <script>
                                       // dataTemplate = dataTemplates[0]; if dataTemplate is not defined
 
@@ -2046,7 +1920,6 @@ var isSpaHashRouteOn=false;
    ,dataStyles                : {}    // styles (css) to be loaded along with templates
    ,dataStylesCache           : true  // cache of dataStyles
 
-   ,dataRenderEngine          : ""    // Backbone | hogan
    ,dataRenderCallback        : ""    // single javascript function name to run after render
 
    ,dataRenderId              : ""    // Render Id, may be used to locate in spa.renderHistory[dataRenderId], auto-generated key if not defined
@@ -2058,7 +1931,7 @@ var isSpaHashRouteOn=false;
   spa.render = function (viewContainerId, uOptions) {
 
     if (!arguments.length) return;
-    
+
     //render with single argument with target
     if ((arguments.length===1) && (typeof viewContainerId === "object")) {
       uOptions = _.merge({}, viewContainerId);
@@ -2078,14 +1951,12 @@ var isSpaHashRouteOn=false;
         var keyMaps = {
                         template              : "dataTemplate"
                       , templates             : "dataTemplates"
-                      , templateEngine        : "dataTemplateEngine"
+                      , templateCache         : "dataTemplatesCache"
                       , templatesCache        : "dataTemplatesCache"
-                      , templatesCollectionUrl: "dataTemplatesCollectionUrl"
                       , scripts               : "dataScripts"
                       , scriptsCache          : "dataScriptsCache"
                       , styles                : "dataStyles"
                       , stylesCache           : "dataStylesCache"
-                      , renderEngine          : "dataRenderEngine"
                       , renderType            : "dataRenderType"
                       , dataRenderCallBack    : "dataRenderCallback"
                       , renderCallback        : "dataRenderCallback"
@@ -2111,15 +1982,6 @@ var isSpaHashRouteOn=false;
       retValue.elDataAttr = $(viewContainerId).data();
     }
 
-    //key: RenderEngine
-    var spaDefaultTemplateConfig = {
-      "backbone": {"engine": "underscore", "template": "x-underscore-template"}
-      , "hogan": {"engine": "hogan", "template": "x-hogan-template"}
-      , "unknown": {"engine": "unknown", "template": "x-unknown-template"}
-    };
-    /*spaDefaultTemplateConfig[spaRenderEngineKey].engine
-     spaDefaultTemplateConfig[spaRenderEngineKey].template*/
-
     var noOfArgs = arguments.length;
     var useOptions = (noOfArgs > 1);
     var useParamData = (useOptions && uOptions.hasOwnProperty('data'));
@@ -2131,14 +1993,11 @@ var isSpaHashRouteOn=false;
       , dataUrlErrorHandle: ""
       , dataParams: {}
       , dataModel: ""
-      , dataModelType: ""
       , dataCache: false
 
       , dataCollection: {}
 
-      , dataTemplatesCollectionUrl: ""
       , dataTemplates: {}
-      , dataTemplateEngine: ""
       , dataTemplate: ""
       , dataTemplatesCache: true
 
@@ -2148,7 +2007,6 @@ var isSpaHashRouteOn=false;
       , dataStyles: {}
       , dataStylesCache: true
 
-      , dataRenderEngine: ""
       , dataRenderCallback: ""
 
       , dataRenderId: ""
@@ -2171,7 +2029,6 @@ var isSpaHashRouteOn=false;
       }
     }
 
-
     /*Render Id*/
     var spaRenderId = ("" + $(viewContainerId).data("renderId")).replace(/undefined/, "");
     if (!spa.isBlank(spaRVOptions.dataRenderId)) {
@@ -2179,56 +2036,10 @@ var isSpaHashRouteOn=false;
     }
     retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (spa.now()) + (spa.rand(1000, 9999)))));
 
-    /* Render Engine */
-    var spaRenderEngine = ("" + $(viewContainerId).data("renderEngine")).replace(/undefined/, "");
-    if (!spa.isBlank(spaRVOptions.dataRenderEngine)) {
-      spaRenderEngine = spaRVOptions.dataRenderEngine;
-    }
-    spaRenderEngine = (spaRenderEngine.ifBlankStr("unknown")).toLowerCase();
-    var spaRenderEngineKey = spaRenderEngine;
-    if (!spaDefaultTemplateConfig.hasOwnProperty(spaRenderEngineKey)) {
-      spaRenderEngineKey = "unknown";
-      spaRenderEngine += "-unknown";
-    }
-    var spaTemplateType = spaDefaultTemplateConfig[spaRenderEngineKey].template;
-
-    var spaTemplateEngine = ("" + $(viewContainerId).data("templateEngine")).replace(/undefined/, "");
-    if (!spa.isBlank(spaRVOptions.dataTemplateEngine)) {
-      spaTemplateEngine = spaRVOptions.dataTemplateEngine;
-    }
-    if (spa.isBlank(spaTemplateEngine)) //No TemplateEngine specified
-    {
-      if (spaRenderEngineKey.equalsIgnoreCase("unknown")) //or NO RenderEngine Specified;
-      {
-        spaTemplateEngine = (spa.defaults.dataTemplateEngine || "handlebars");
-      }
-      else //set TemplateEngine based on RenderEngine
-      {
-        spaTemplateEngine = (spaTemplateEngine.ifBlankStr(spaDefaultTemplateConfig[spaRenderEngineKey].engine)).toLowerCase();
-      }
-    }
-    switch (spaTemplateEngine) {
-      case "hogan":
-        if (spaRenderEngine == "unknown") {
-          spaRenderEngineKey = spaRenderEngine = spaTemplateEngine;
-          spaTemplateType = spaDefaultTemplateConfig[spaRenderEngineKey].template;
-        }
-        break;
-    }
-    var spaBackboneModelOption = {};
-    var spaViewDataModelType = ("" + $(viewContainerId).data("modelType")).replace(/undefined/, "");
-    if (!spa.isBlank(spaRVOptions.dataModelType)) {
-      spaViewDataModelType = spaRVOptions.dataModelType;
-    }
-    if (spaViewDataModelType.beginsWithStrIgnoreCase("backbone:")) {
-      spaBackboneModelOption = spa.toJSON(spaViewDataModelType.substring(9));
-      spaViewDataModelType = "backbone";
-      if (spaRenderEngine.equalsIgnoreCase("unknown")) spaRenderEngine = "backbone";
-    }
-    spaViewDataModelType = (spaViewDataModelType.ifBlankStr()).toLowerCase();
+    var spaTemplateType = "x-spa-template";
+    var spaTemplateEngine = (spa.defaults.dataTemplateEngine || "handlebars");
 
     /* Load Scripts Begins */
-
     spa.console.group("spaLoadingViewScripts");
     if (!(useOptions && uOptions.hasOwnProperty('dataScriptsCache'))) /* NOT provided in Render Request */
     { /* Read from view container [data-scripts-cache='{true|false}'] */
@@ -2256,7 +2067,7 @@ var isSpaHashRouteOn=false;
       };
       spaRVOptions.dataScripts = spa.toJSON(vScriptsList);
     }
-      
+
     if (!$.isEmptyObject(spaRVOptions.dataScripts)) {
       vScripts = spaRVOptions.dataScripts;
     }
@@ -2459,59 +2270,17 @@ var isSpaHashRouteOn=false;
             eval("(localDataModelObj=" + localDataModelName + ")");
           }
           spa.console.info("Using LOCAL Data Model: " + localDataModelName);
-          if (spa.isBlank(spaViewDataModelType)) {
-            if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
-              spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
-            } else {
-              try {
-                spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
-              } catch(e) {
-                spa.console.error("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
-              }
+          
+          if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
+            spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
+          } else {
+            try {
+              spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
+            } catch(e) {
+              spa.console.error("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
             }
           }
-          else {
-            spa.console.info("Local Data: " + localDataModelName + " not found.");
-            /*spaViewDataModelType is Backbone with its Class.js on server */
-            if ($.isEmptyObject(localDataModelObj) && !$.isEmptyObject(spaBackboneModelOption)) {
-              var bbClassUrl = spaBackboneModelOption['classpath'] || "";
-              if (!spa.isBlank(bbClassUrl)) {
-                if (bbClassUrl.beginsWithStrIgnoreCase("local:")) {
-                  var bbClassLocal = bbClassUrl.substring(6);
-                  eval("( localDataModelObj = new " + bbClassLocal + "() )");
-                }
-                else {
-                  spa.console.info("loading Backbone Model Class from: " + (bbClassUrl) + ".");
-                  var noop = function () {
-                  };
-                  var loadBackboneModelClassResult = spa.loadBackboneModelClass(bbClassUrl, {
-                    success: spaBackboneModelOption['classsuccess'] || noop,
-                    fail: spaBackboneModelOption['classerror'] || noop
-                  });
-                  localDataModelObj = new loadBackboneModelClassResult.bbclass();
-                  if (loadBackboneModelClassResult.success) {
-                    if (spaBackboneModelOption.defaults) {
-                      localDataModelObj.set(spaBackboneModelOption.defaults);
-                    }
-                    localDataModelObj.fetch({
-                      async: false,
-                      cache: false,
-                      success: spaBackboneModelOption['fetchsuccess'] || noop,
-                      error: spaBackboneModelOption['fetcherror'] || noop
-                    });
-                  }
-                }
-                eval("(" + localDataModelName + "=localDataModelObj)");
-                spaTemplateModelData[viewDataModelName] = localDataModelObj.toJSON();
-              }
-              else {
-                spa.console.error("Backbone 'classpath' NOT defined. Please check the 'dataModelType' option.");
-              }
-            }
-            else {
-              spaTemplateModelData[viewDataModelName] = spaViewDataModelType.equalsIgnoreCase("backbone") ? localDataModelObj.toJSON() : localDataModelObj;
-            }
-          }
+            
         }
         else { /*External Data Source*/
           spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
@@ -2645,14 +2414,6 @@ var isSpaHashRouteOn=false;
 
       spa.console.group("spaView");
 
-      var dataTemplatesCollectionUrl = ("" + $(viewContainerId).data("templatesCollectionUrl")).replace(/undefined/, "");
-      if (!spa.isBlank(spaRVOptions.dataTemplatesCollectionUrl)) {
-        dataTemplatesCollectionUrl = spaRVOptions.dataTemplatesCollectionUrl;
-      }
-      if (!spa.isBlank(dataTemplatesCollectionUrl)) {
-        var templateCollectionId = viewContainerId + "_TemplatesCollection";
-        spa.loadTemplatesCollection(templateCollectionId, dataTemplatesCollectionUrl);
-      }
       if (vTemplates && (!$.isEmptyObject(vTemplates))) {
         spa.console.info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
         var vTemplateNames = _.keys(vTemplates);
@@ -2682,33 +2443,6 @@ var isSpaHashRouteOn=false;
         });
 
         var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
-
-        //spa.console.error(vTemplate2RenderID);
-        //if (vTemplate2RenderID.containsStr("__spaRouteTemplate_ui_home")) {
-        //  debugger;
-        //}
-        //
-        //vTemplatesList = (""+vTemplatesList).replace(/undefined/, "");
-        //spa.console.info("Templates: <"+vTemplatesList+">");
-        //if (!spa.isBlank(vTemplatesList)) {
-        //  if (spa.isBlank(spaRVOptions.dataTemplate)) { /* Check in data-template property if any */
-        //    if (!spa.isBlank(vTemplate2RenderInTag)) {
-        //      vTemplate2RenderID = "#"+(vTemplate2RenderInTag.trimStr("#"));
-        //    }
-        //  }
-        //  else { /* Check in Options if any */
-        //    vTemplate2RenderID = "#"+((spaRVOptions.dataTemplate).trimStr("#"));
-        //  }
-        //
-        //  //TODO: Verify when given Templates and Template
-        //  spa.console.info("Primary TemplateID: <"+vTemplate2RenderID+">");
-        //  /* Loading Primary Template if needed */
-        //  var vTemplate2RenderName = vTemplate2RenderID.replace(/#/g, "");
-        //  if (vTemplatesList.indexOf(vTemplate2RenderName) < 0) {
-        //    spa.console.info("Loading Primary Template: <"+vTemplate2RenderName+">");
-        //    spaAjaxRequestsQue = spa.loadTemplate(vTemplate2RenderName, '', spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache);
-        //  }
-        //}
 
         spa.console.info("External Data/Templates Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
         spa.console.groupEnd("spaLoadingTemplates");
@@ -2777,102 +2511,45 @@ var isSpaHashRouteOn=false;
         $.when.apply($, spaAjaxRequestsQue)
           .then(function () {
 
-            spa.console.group("spaRender[" + spaRenderEngine + "*" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+            spa.console.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
             spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
             $(viewContainerId).html("");
             try {
               retValue.model = spaTemplateModelData[viewDataModelName];
               var spaViewModel = spaTemplateModelData[viewDataModelName], compiledTemplate;
-              switch (spaRenderEngine) {
-                case "backbone"  :
-                  if (!(isLocalDataModel && (!spa.isBlank(spaViewDataModelType)))) {
-                    retValue.model = new Backbone.Model(retValue.model);
-                    spaViewModel = retValue.model.toJSON();
-                  }
-                  break;
-
-                default :
-                  if (isLocalDataModel && (!spa.isBlank(spaViewDataModelType))) {
-                    switch (spaViewDataModelType) {
-                      case "backbone" :
-                        spaViewModel = retValue.model.toJSON();
-                        break;
-                    }
-                  }
-                  break;
-              }
               spa.viewModels[retValue.id] = retValue.model;
 
               var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
-              switch (spaTemplateEngine) {
-                case "handlebar"  :
-                case "handlebars" :
+              compiledTemplate = templateContentToBindAndRender;
+              if (!spa.isBlank(spaViewModel)) {
+                if (Handlebars) {
                   compiledTemplate = (Handlebars.compile(templateContentToBindAndRender))(spaViewModel);
-                  break;
-
-                case "underscore":
-                  compiledTemplate = (_.template(templateContentToBindAndRender))(spaViewModel);
-                  break;
-
-                case "underscore-as-mustache" :
-                  var tSettings = {
-                      interpolate: /\{\{(.+?)\}\}/g  /* {{ title }}    => <strong>pancakes<strong> */
-                    , escape: /\{\{\{(.+?)\}\}\}/g   /* {{{ title }}}  => &lt;strong&gt;pancakes&lt;strong&gt; */
-                  };
-                  compiledTemplate = _.template(templateContentToBindAndRender, spaViewModel, tSettings);
-                  break;
-
-                case "mustache" :
-                  compiledTemplate = (Mustache.compile(templateContentToBindAndRender))(spaViewModel);
-                  break;
-
-                case "hogan" :
-                  compiledTemplate = (Hogan.compile(templateContentToBindAndRender)).render(spaViewModel);
-                  break;
-
-                default :
-                  compiledTemplate = templateContentToBindAndRender;
-                  break;
+                } else {
+                  spa.console.error("handlebars.js is not loaded.");
+                }
               }
+
               doDeepRender = false;
-              switch (spaRenderEngine) {
-                //Tobe removed
-                case "backbone":
-                  { retValue.view = new (Backbone.View.extend({
-                      el: viewContainerId
-                      , render: function () {
-                        this.$el.html(compiledTemplate);
-                        return this;
-                      }
-                    }));
-                    (retValue.view).render();
-                    doDeepRender = true;
-                  }
+              retValue.view = compiledTemplate;
+
+              var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
+              if (!spa.isBlank(spaRVOptions.dataRenderType)) {
+                targetRenderContainerType = spaRVOptions.dataRenderType;
+              };
+              switch(targetRenderContainerType) {
+                case "value" :
+                  $(viewContainerId).val(retValue.view);
+                  break;
+                case "text" :
+                  $(viewContainerId).text(retValue.view);
                   break;
 
-                default : /*others*/
-                  { retValue.view = compiledTemplate;
-
-                    var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
-                    if (!spa.isBlank(spaRVOptions.dataRenderType)) {
-                      targetRenderContainerType = spaRVOptions.dataRenderType;
-                    };
-                    switch(targetRenderContainerType) {
-                      case "value" :
-                        $(viewContainerId).val(retValue.view);
-                        break;
-                      case "text" :
-                        $(viewContainerId).text(retValue.view);
-                        break;
-
-                      default:
-                        doDeepRender = true;
-                        $(viewContainerId).html(retValue.view);
-                        break;
-                    };
-                  }
+                default:
+                  doDeepRender = true;
+                  $(viewContainerId).html(retValue.view);
                   break;
-              }
+              };
+
               spa.console.info("Render: SUCCESS");
               var rhKeys = _.keys(spa.renderHistory);
               var rhLen = rhKeys.length;
@@ -2907,7 +2584,7 @@ var isSpaHashRouteOn=false;
               }
               var isCallbackDisabled = _fnCallbackAfterRender.equalsIgnoreCase("off");
               spa.console.info("Processing callback: " + _fnCallbackAfterRender);
-              
+
               if (!isCallbackDisabled) {
                 if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
                   spa.console.info("calling default callback: spa.routes._renderCallback");
@@ -2936,7 +2613,7 @@ var isSpaHashRouteOn=false;
                   }
                 }
               }
-              
+
               /*Deep/Child Render*/
               if (doDeepRender) {
                 //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
@@ -2946,7 +2623,7 @@ var isSpaHashRouteOn=false;
             catch(e) {
               spa.console.error("Error Rendering.\n" + e.stack);
             }
-            spa.console.groupEnd("spaRender[" + spaRenderEngine + "*" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+            spa.console.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
           })
           .fail(function () {
             spa.console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
@@ -3188,7 +2865,6 @@ var isSpaHashRouteOn=false;
       target                                    : '#targetRenderID' //Optional; default: autoGeneratedHiddenContainer based on routePath
       template | templates                      : '' or []          //Optional; default: pathFrom Route with extension; use '.' to load default template
       [ext | tmplext | tmplExt]                 : '.jsp'            //Optional; default: '.html'; html template extension with dot(.)
-      [tmplengine | tmplEngine]                 : 'handlebars'      //Optional; default: 'handlebars'
       scripts                                   : '' or [] or false //Optional; default: same as templatePath with extension .js; use '.' to load default script
       [dataurl | dataUrl]                       : ''                //Optional; default: NO-DATA
       [after | callback | callBack]             : '' or function(){} or functionName //Optional: default: spa.routes.<ROUTE-PATH>_renderCallback
@@ -3242,7 +2918,6 @@ var isSpaHashRouteOn=false;
       //foundRenderTarget = oTagRouteOptions['target'] && spa.isElementExist(oTagRouteOptions['target'])
       var renderTarget      = ""+((oTagRouteOptions['target']||"").trimStr())
         , tmplExt           = (foundRouteTmplExt)? (oTagRouteOptions['ext'] || oTagRouteOptions['tmplext'] || oTagRouteOptions['tmplExt']) : (spa.routesOptions["defaultTemplateExt"]||"")
-        , tmplEngine        = oTagRouteOptions['tmplengine'] || oTagRouteOptions['tmplEngine'] || ""
         , defaultTmplPath   = (routeNameWithPath+tmplExt+"?"+routeParams).trimRightStr("\\?")
         , defaultScriptPath = routeNameWithPath+".js"
         , defaultCallBeforeRoute = "spa.routes."+routeName+"_before"
@@ -3320,10 +2995,6 @@ var isSpaHashRouteOn=false;
         spaRenderOptions.dataTemplates[tmplID] = "none";
       }
 
-      if (tmplEngine) {
-        spaRenderOptions['dataTemplateEngine'] = tmplEngine;
-      }
-
       /*Scripts*/
       var useScripts = (!oTagRouteOptions.hasOwnProperty("scripts") || (oTagRouteOptions['scripts']));
       if (useScripts) {
@@ -3397,9 +3068,6 @@ var isSpaHashRouteOn=false;
         if ($elTarget.data('scripts')) {
           delete spaRenderOptions['dataScripts'];
         }
-        if ($elTarget.data('templateEngine')) {
-          delete spaRenderOptions['dataTemplateEngine'];
-        }
         if ($elTarget.data('renderCallback')) {
           delete spaRenderOptions['dataRenderCallback'];
         }
@@ -3457,7 +3125,6 @@ var isSpaHashRouteOn=false;
       target                                    : '#targetRenderID' //Optional; default: autoGeneratedHiddenContainer based on routePath
       templates                                 : '' or []          //Optional; default: pathFrom Route with extension; use '.' to load default template
       [ext | tmplext | tmplExt]                 : '.jsp'            //Optional; default: '.html'; html template extension with dot(.)
-      [tmplengine | tmplEngine]                 : 'handlebars'      //Optional; default: 'handlebars'
       scripts                                   : '' or [] or false //Optional; default: same as templatePath with extension .js; use '.' to load default script
       [dataurl | dataUrl]                       : ''                //Optional; default: NO-DATA
       [after | callback | callBack]             : '' or function(){} or functionName //Optional: default: spa.routes.<ROUTE-PATH>_renderCallback
@@ -3571,7 +3238,7 @@ var isSpaHashRouteOn=false;
 
     /*Reflow Foundation*/
     spa.reflowFoundation();
-    
+
     var sparouteInitOptions = $("body").data("sparouteInit");
     if (sparouteInitOptions) {
       spa.initRoutes(spa.toJSON(sparouteInitOptions));
@@ -3579,9 +3246,6 @@ var isSpaHashRouteOn=false;
 
     /*Init spaRoutes*/
     spa.initRoutes("body");
-
-    /*Extending Backbone*/
-    spa.extendBackbone();
 
     /*Key Tracking*/
     spa.initKeyTracking();
