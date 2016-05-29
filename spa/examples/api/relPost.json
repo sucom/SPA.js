@@ -1,0 +1,13 @@
+{
+  "pid" : "12345",
+  "rposts": [ 
+      { "title": "Simplified Ajax",
+        "date": "3 Nov 2003"},
+      
+      { "title": "JS Tool Box",
+        "date": "3 May 2004"},
+      
+      { "title": "Web site vs app",
+        "date": "6 Aug 2005"}
+    ]
+}
