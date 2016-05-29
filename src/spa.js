@@ -1488,6 +1488,7 @@ var isSpaHashRouteOn=false;
         path: i18nSettings.path,
         encoding: i18nSettings.encoding,
         cache: i18nSettings.cache,
+        async: i18nSettings.async,
         mode: i18nSettings.mode,
         callback: function () {
           $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!$.isEmptyObject($.i18n.map)) : $.i18n.loaded;
@@ -1782,11 +1783,19 @@ var isSpaHashRouteOn=false;
     }
   };
 
-  spa.toRenderDataStructure = function(saoDataUrl, soParams) {
+  spa.toRenderDataStructure = function(saoDataUrl, soParams, hashParams) {
     var retObj = {}
       , dataCollection = {}
       , itemUrl = {}
-      , oParams = {};
+      , oParams = {}
+      , replaceKeysWithValues = function (srcStr, oKeyValue) {
+          if (oKeyValue && Object.keys(oKeyValue).length) {
+            _.each(Object.keys(oKeyValue), function(key){
+              srcStr = srcStr.replace(new RegExp("{" + key + "}", "gi"), oKeyValue[key]);
+            });
+          }
+          return srcStr;
+        };
 
     if (soParams){
       oParams = (_.isString(soParams))? spa.queryStringToJson(soParams) : ((_.isObject(soParams))? soParams : {});
@@ -1800,7 +1809,7 @@ var isSpaHashRouteOn=false;
           retObj['dataModel'] = spa.getOnSplit(saoDataUrl, "|", 0);
           saoDataUrl = spa.getOnLastSplit(1);
         }
-        retObj['dataUrl'] = saoDataUrl;
+        retObj['dataUrl'] = replaceKeysWithValues(saoDataUrl, hashParams);
         if (!_.isEmpty(oParams)) retObj['dataParams'] = oParams;
         break;
       case (_.isArray(saoDataUrl)) :
@@ -1825,10 +1834,10 @@ var isSpaHashRouteOn=false;
         dataCollection = {urls:[]};
         itemUrl = {};
         _.each(saoDataUrl, function(apiUrl, urlIndex){
-          itemUrl = {url:apiUrl, params:oParams};
+          itemUrl = {url:replaceKeysWithValues(apiUrl, hashParams), params:oParams};
           if (apiUrl.containsStr("\\|")) {
             itemUrl['target'] = spa.getOnSplit(apiUrl, "|", 0);
-            itemUrl['url'] = spa.getOnLastSplit(1);
+            itemUrl['url'] = replaceKeysWithValues(spa.getOnLastSplit(1), hashParams);
           }
           dataCollection.urls.push(itemUrl);
         });
@@ -1857,10 +1866,10 @@ var isSpaHashRouteOn=false;
         dataCollection = {urls:[]};
         itemUrl = {};
         _.each(_.keys(saoDataUrl), function(dName, kIndex){
-          itemUrl = {name:dName, url:saoDataUrl[dName], params:oParams};
+          itemUrl = {name:dName, url:replaceKeysWithValues(saoDataUrl[dName], hashParams), params:oParams};
           if (saoDataUrl[dName].containsStr("\\|")) {
             itemUrl['target'] = spa.getOnSplit(saoDataUrl[dName], "|", 0);
-            itemUrl['url'] = spa.getOnLastSplit(1);
+            itemUrl['url'] = replaceKeysWithValues(spa.getOnLastSplit(1), hashParams);
           }
           dataCollection.urls.push(itemUrl);
         });
@@ -3027,7 +3036,7 @@ var isSpaHashRouteOn=false;
       /*Data and Params*/
       if (oTagRouteOptions['dataUrl'] || oTagRouteOptions['dataurl']) {
         var tagDataUrl = oTagRouteOptions['dataurl'] || oTagRouteOptions['dataUrl'];
-        var spaRenderDataUrls = spa.toRenderDataStructure(tagDataUrl, routeParams);
+        var spaRenderDataUrls = spa.toRenderDataStructure(tagDataUrl, routeParams, spa.findSafe(routeOptions, "urlhash.urlParams.params", {}) );
         if (!_.isEmpty(spaRenderDataUrls)) {
           _.merge(spaRenderOptions, spaRenderDataUrls);
         }

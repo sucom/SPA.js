@@ -1,3 +1,21 @@
+spa.routePatterns.register([
+  
+  { name:"memberDetailsView", pattern:"#demo/spa/modules/member/view?id=:memid", routeoptions:{
+        target:"#viewMemberDetails"
+      , dataUrl:"demo/spa/api/member/get-{memId}.json"
+      , before: function(){
+        $("#container_editMemberDetails").hide();
+        $("#container_viewMemberDetails").show();
+      }
+  }}
+  
+]);
+
+//spa.routes.demo_spa_modules_member_view = function(){
+//  console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+//  console.log(arguments);
+//}
+
 function viewMemberDetails(memId)
 { $("#container_editMemberDetails").hide();
   $("#container_viewMemberDetails").show();

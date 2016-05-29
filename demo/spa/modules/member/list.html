@@ -13,9 +13,9 @@
   </td>
   <td><span>{{isActive}}</span></td>
   <td>
-    <a href="#spa/demo?action=viwMemberDetails&id={{memid}}" onclick="viewMemberDetails('{{memid}}')"   data-i18n="html:'common.lbl.view'"></a> |
-    <a href="#spa/demo?action=edtMemberDetails&id={{memid}}" onclick="editMemberDetails('{{memid}}')"   data-i18n="html:'common.lbl.edit'"></a> |
-    <a href="#spa/demo?action=delMemberDetails&id={{memid}}" onclick="removeMemberDetails('{{memid}}')" data-i18n="html:'common.lbl.remove'"></a>
+    <a href="#demo/spa/modules/member/view?id={{memid}}" data-i18n="html:'common.lbl.view'"></a> |
+    <a href="#member/edit?{{memid}}" onclick="editMemberDetails('{{memid}}')"   data-i18n="html:'common.lbl.edit'"></a> |
+    <a href="#member/del?{{memid}}" onclick="removeMemberDetails('{{memid}}')" data-i18n="html:'common.lbl.remove'"></a>
   </td>
 </tr>
 {{/each}}

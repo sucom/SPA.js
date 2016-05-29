@@ -79,6 +79,6 @@ var appUiHelper = {
       if (!_.isString(uLang)) {
         uLang = _.last(spa.urlHash([]));
       };
-      spa.i18n.setLanguage(uLang, {cache:true, path:appSettings.langPath});
+      spa.i18n.setLanguage(uLang, {cache:true, async:true, path:appSettings.langPath});
     }
 };
