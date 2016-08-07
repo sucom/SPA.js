@@ -1902,6 +1902,7 @@ var isSpaHashRouteOn=false;
   };
 
   /* each spaRender's view and model will be stored in renderHistory */
+  spa.compiledTemplates={};
   spa.viewModels = {};
   spa.renderHistory = {};
   spa.renderHistoryMax = 0;
@@ -2566,7 +2567,9 @@ var isSpaHashRouteOn=false;
               spa.console.log("Template Source:", templateContentToBindAndRender);
               if (!spa.isBlank(spaViewModel)) {
                 if (Handlebars) {
-                  compiledTemplate = (Handlebars.compile(templateContentToBindAndRender))(spaViewModel);
+                  var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
+                  if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
+                  compiledTemplate = preCompiledTemplate(spaViewModel);
                 } else {
                   spa.console.error("handlebars.js is not loaded.");
                 }
@@ -2641,7 +2644,7 @@ var isSpaHashRouteOn=false;
               if (spaRVOptions.dataRenderCallback) {
                 _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
               }
-              var isCallbackDisabled = _fnCallbackAfterRender.equalsIgnoreCase("off");
+              var isCallbackDisabled = (_.isString(fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
               spa.console.info("Processing callback: " + _fnCallbackAfterRender);
 
               if (!isCallbackDisabled) {
