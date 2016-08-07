@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <!-- jQuery, jQuery.ui -->
+    <link href="xlib/jquery-ui-smoothness-1.12.0/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+    <script src="xlib/jquery/jquery-3.1.0.min.js"></script>
+    <script src="xlib/jquery-ui-smoothness-1.12.0/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="xlib/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <script src="xlib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- lodash,handlebars,SPA -->
+    <script src="xlib/lodash/lodash-4.14.1.min.js"></script>
+    <script src="xlib/handlebars/handlebars-v4.0.5.min.js"></script>
+    <script src="../../src/spa.min.js"></script>
+
+    <!--Custom Styles -->
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
+    <title>SPA Bulletin Board</title>
+</head>
+<body>
+  <div id="react-container">
+    <div id="containerBoard" class="board"></div>
+    <button class="btn btn-sm btn-success glyphicon glyphicon-plus" onclick="board.addNote();"/>
+  </div>
+
+  <script id="tmplNote" type="text/template">
+    <div id="note_{{id}}" class="note"></div>
+  </script>
+  <script id="tmplNoteView" type="text/template">
+    <p>{{text}}</p>
+    <span>
+      <button class="btn btn-primary glyphicon glyphicon-pencil" onclick="note.renderForm({{id}})"/>
+      <button class="btn btn-danger glyphicon glyphicon-trash" onclick="note.remove({{id}})"/>
+    </span>
+  </script>
+  <script id="tmplNoteEdit" type="text/template">
+    <form id="formNoteEdit_{{id}}">
+      <input type="hidden" name="id" value="{{id}}"/>
+      <textarea name="text" class="form-control">{{text}}</textarea>
+    </form>
+    <button class="btn btn-success btn-sm glyphicon glyphicon-floppy-disk" onclick="note.save({{id}})"/>
+  </script>
+
+  <script src="js/spaNote.js"></script>
+</body>
+</html>
