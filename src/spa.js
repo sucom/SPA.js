@@ -1506,13 +1506,31 @@ var isSpaHashRouteOn=false;
     }
   };
 
+  spa.i18n.value = function(i18nKey) {
+    i18nKey = (''+i18nKey).trim();
+    if (i18nKey.beginsWithStrIgnoreCase('@')) {
+      i18nKey = ((i18nKey.substr(1)).trim());
+      try { i18nKey = eval('('+i18nKey+')');
+      } catch(e) {
+        spa.console.error(e);
+      };
+    }
+    var retValue = i18nKey;
+    try {
+      retValue = (!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(i18nKey) : $.i18n.prop(i18nKey);
+    }catch(e) {
+      spa.console.error(e);
+    };
+    return retValue;
+  };
+
   spa.i18n.text = function (i18nKey, data) {
-    var dMessage = $.i18n.prop(i18nKey);
+    var dMessage = spa.i18n.value(i18nKey);
     if (data) {
       var msgParamValue = "";
       _.each(_.keys(data), function (key) {
         msgParamValue = "" + data[key];
-        if (msgParamValue && msgParamValue.beginsWithStrIgnoreCase("i18n:")) msgParamValue = $.i18n.prop(msgParamValue.replace(/i18n:/gi, ""));
+        if (msgParamValue && msgParamValue.beginsWithStrIgnoreCase("i18n:")) msgParamValue = spa.i18n.value(msgParamValue.replace(/i18n:/gi, ""));
         dMessage = dMessage.replace(new RegExp("{" + key + "}", "gi"), msgParamValue);
       });
     }
@@ -1520,11 +1538,13 @@ var isSpaHashRouteOn=false;
   };
 
   spa.i18n.apply = spa.i18n.render = function (contextRoot, elSelector) {
-    if (spa.i18n.loaded) {
+    if (spa.i18n.loaded || window['Liferay']) {
       contextRoot = contextRoot || "body";
       elSelector = elSelector || "";
-      $(elSelector + "[data-i18n]", contextRoot).each(function (indes, el) {
-        var i18nSpec = spa.toJSON($(el).data("i18n") || "{}");
+      $(contextRoot).find(elSelector + "[data-i18n]").each(function (indes, el) {
+        var i18nSpecStr = $(el).data("i18n") || '';
+        if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
+        var i18nSpec = spa.toJSON(i18nSpecStr || "{}");
         var i18nData = i18nSpec['i18ndata'];
         if (i18nData) delete i18nSpec['i18ndata'];
         if (i18nSpec && !$.isEmptyObject(i18nSpec)) {
@@ -1654,7 +1674,7 @@ var isSpaHashRouteOn=false;
         }
       });
     }
-    
+
     function _fillData() {
       var keyFormat = fillOptions.keyFormat;
 
@@ -1930,6 +1950,7 @@ var isSpaHashRouteOn=false;
    ,dataStylesCache           : true  // cache of dataStyles
 
    ,dataRenderCallback        : ""    // single javascript function name to run after render
+   ,dataRenderMode            : ""    // "":Replace target | "append" : Append to target | "prepend" : Prepend to target
 
    ,dataRenderId              : ""    // Render Id, may be used to locate in spa.renderHistory[dataRenderId], auto-generated key if not defined
    ,saveOptions               : false // Save options in render-container element
@@ -1972,6 +1993,8 @@ var isSpaHashRouteOn=false;
                       , renderCallBack        : "dataRenderCallback"
                       , callback              : "dataRenderCallback"
                       , callBack              : "dataRenderCallback"
+                      , dataRenderMode        : "dataRenderMode"
+                      , renderMode            : "dataRenderMode"
                       , renderId              : "dataRenderId"
                       };
         _.forEach(keyMaps, function(value, key) {
@@ -2017,6 +2040,7 @@ var isSpaHashRouteOn=false;
       , dataStylesCache: true
 
       , dataRenderCallback: ""
+      , dataRenderMode: ""
 
       , dataRenderId: ""
     };
@@ -2044,6 +2068,12 @@ var isSpaHashRouteOn=false;
       spaRenderId = spaRVOptions.dataRenderId;
     }
     retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (spa.now()) + (spa.rand(1000, 9999)))));
+
+    var targetRenderMode = ("" + $(viewContainerId).data("renderMode")).replace(/undefined/, "");
+    if (!spa.isBlank(spaRVOptions.dataRenderMode)) {
+      targetRenderMode = spaRVOptions.dataRenderMode;
+    }
+    spa.console.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
     var spaTemplateEngine = (spa.defaults.dataTemplateEngine || "handlebars");
@@ -2279,7 +2309,7 @@ var isSpaHashRouteOn=false;
             eval("(localDataModelObj=" + localDataModelName + ")");
           }
           spa.console.info("Using LOCAL Data Model: " + localDataModelName);
-          
+
           if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
             spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
           } else {
@@ -2289,7 +2319,7 @@ var isSpaHashRouteOn=false;
               spa.console.error("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
             }
           }
-            
+
         }
         else { /*External Data Source*/
           spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
@@ -2522,7 +2552,10 @@ var isSpaHashRouteOn=false;
 
             spa.console.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
             spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
-            $(viewContainerId).html("");
+            if (spa.isBlank(targetRenderMode)) {
+              $(viewContainerId).html("");
+            }
+
             try {
               retValue.model = spaTemplateModelData[viewDataModelName];
               var spaViewModel = spaTemplateModelData[viewDataModelName], compiledTemplate;
@@ -2530,6 +2563,7 @@ var isSpaHashRouteOn=false;
 
               var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
               compiledTemplate = templateContentToBindAndRender;
+              spa.console.log("Template Source:", templateContentToBindAndRender);
               if (!spa.isBlank(spaViewModel)) {
                 if (Handlebars) {
                   compiledTemplate = (Handlebars.compile(templateContentToBindAndRender))(spaViewModel);
@@ -2537,6 +2571,7 @@ var isSpaHashRouteOn=false;
                   spa.console.error("handlebars.js is not loaded.");
                 }
               }
+              spa.console.log("Template Compiled:", compiledTemplate);
 
               doDeepRender = false;
               retValue.view = compiledTemplate;
@@ -2545,6 +2580,7 @@ var isSpaHashRouteOn=false;
               if (!spa.isBlank(spaRVOptions.dataRenderType)) {
                 targetRenderContainerType = spaRVOptions.dataRenderType;
               };
+
               switch(targetRenderContainerType) {
                 case "value" :
                   $(viewContainerId).val(retValue.view);
@@ -2555,7 +2591,19 @@ var isSpaHashRouteOn=false;
 
                 default:
                   doDeepRender = true;
-                  $(viewContainerId).html(retValue.view);
+                  if (spa.isBlank(targetRenderMode)) {
+                    $(viewContainerId).html(retValue.view);
+                  } else {
+                    switch (true) {
+                      case (targetRenderMode.equalsIgnoreCase("append")):
+                        $(viewContainerId).append(retValue.view);
+                        break;
+                      case (targetRenderMode.equalsIgnoreCase("prepend")):
+                        $(viewContainerId).prepend(retValue.view);
+                        break;
+                      default: $(viewContainerId).html(retValue.view); break;
+                    }
+                  }
                   break;
               };
 
@@ -2585,6 +2633,8 @@ var isSpaHashRouteOn=false;
                 /*init spaRoute*/
                 spa.initRoutes(viewContainerId);
               };
+
+              spa.console.log(retValue);
 
               /*run callback if any*/
               var _fnCallbackAfterRender = ("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
@@ -2697,7 +2747,7 @@ var isSpaHashRouteOn=false;
       $el.attr("id", ("_el_" + (spa.now()) + "_" + spa.rand(1000, 9999)));
     }
     return ($el.attr("id"));
-  }
+  };
   function __renderView(obj, opt) {
     var retValue;
     var viewContainerId = spa.setElIdIfNot(obj);
@@ -2709,8 +2759,10 @@ var isSpaHashRouteOn=false;
     }
     return retValue;
   }
+
+  spa.Foundation = {'autoReflow': false};
   spa.reflowFoundation = function(context) {
-    if ("Foundation" in window) $(context || document).foundation('reflow');
+    if (("Foundation" in window) && (spa.Foundation.autoReflow)) $(context || document).foundation('reflow');
   };
 
   /* regex support on jQuery selector
