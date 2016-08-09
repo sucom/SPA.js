@@ -1,7 +1,7 @@
 var game = {
   data : {
     maxNumbers:9,
-    maxLife:10,
+    maxLife:5,
     lifeLeft:0,
     stars:[],
     numbers:[],
