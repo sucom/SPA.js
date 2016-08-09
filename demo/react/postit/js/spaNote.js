@@ -1,5 +1,4 @@
 var _$  = document.querySelector.bind(document);
-var _$$ = document.querySelectorAll.bind(document);
 
 var note = {
     renderView: function(id) {
