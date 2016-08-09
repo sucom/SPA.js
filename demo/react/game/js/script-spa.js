@@ -20,7 +20,7 @@ var game = {
     if (isGameOver) {
       game.finish();
     } else {
-      $('#containerLifeState').html(game.data.lifeLeft+1);
+      $('#containerLifeLeft').html(game.data.lifeLeft+1);
       game.showStars();
       game.unselectNumbers();
     };
