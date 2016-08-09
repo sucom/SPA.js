@@ -119,7 +119,7 @@ var NumbersFrame = React.createClass({
     }
     return (
       <div id="numbers-frame">
-        <div className="well">
+        <div className="well text-center">
           {numbers}
         </div>
       </div>
