@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Learn - Js</title>
+    <link rel="stylesheet" type="text/css" href="xlib/CodeMirror/lib/codemirror.css" />
+    <link rel="stylesheet" type="text/css" href="xlib/CodeMirror/doc/docs.css" />
+    <link rel="stylesheet" type="text/css" href="base/css/base.css" />
+  </head>
+  <body data-sparoute-init="useHashRoute:true, defaultPageRoute:'#learn/home', loadDefaultScript:false">
+    <div id=nav>
+      <a href="#learn/home" data-sparoute="target:'#containerCodeBase'"><h1>Learn by Examples</h1></a>
+      <a href='#' onclick="reloadSPA();"><img class="logo" src="base/img/logo-js.png" /></a>
+      <hr/>
+      
+      <div id="containerToc" data-render data-template="toc.html" data-render-callback="renderCallback.toc"></div>
+
+      <div>&nbsp;</div>
+    </div>
+
+    <article>
+      <div>
+        <div style="float:right;">
+          <div id="containerNavBtns" style="float:left;">
+            <button onclick="navigateExamples(-1)">&lt;</button> <button onclick="navigateExamples(1)">&gt;</button>
+            &nbsp;
+          </div>
+          <div style="float:right;">
+            <input id="chkBxAutoRun" type="checkbox" /><label for="chkBxAutoRun">Auto</label>
+            <button onclick="openSrc()">View</button>
+            <button id="btnRunJs" onclick="runJS()">Run</button> <input id="chkBxClearConsole" type="checkbox" /><label for="chkBxClearConsole">Clear Console</label>
+          </div>
+        </div>
+        <div style="clear:both;"></div>
+      </div>
+      
+      <div id="containerCode"></div>
+      <div id="containerLessons"></div>
+      <div id="containerView"></div>
+
+      <div class="hidden">
+        <textarea id="containerCodeBase"
+                  data-template-engine="none"
+                  data-templates-cache="false"
+                  data-render-type="value"
+                  ></textarea>
+      </div>
+
+    </article>
+
+    <footer>
+      <script src="xlib/CodeMirror/lib/codemirror.js"></script>
+      <script src="xlib/CodeMirror/mode/xml/xml.js"></script>
+      <script src="xlib/CodeMirror/mode/javascript/javascript.js"></script>
+      <script src="xlib/CodeMirror/mode/css/css.js"></script>
+      <script src="xlib/CodeMirror/mode/htmlmixed/htmlmixed.js"></script>
+      <script src="xlib/CodeMirror/addon/edit/matchbrackets.js"></script>
+                   
+      <script src="xlib/jquery/jquery-2.2.3.min.js"></script>
+      <script src="xlib/lodash/lodash-4.11.1.min.js"></script>
+      <script src="xlib/handlebars/handlebars-4.0.5.min.js"></script>
+      <script src="xlib/spa/spa.min.js"></script>
+
+      <script src="base/appRoutes.js"></script>
+      <script src="base/appInit.js"></script>
+
+      <script>
+        $(document).ready(initSPA);
+      </script>
+    </footer>
+  </body>
+</html>

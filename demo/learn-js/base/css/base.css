@@ -1,0 +1,57 @@
+.CodeMirror { height: 400px; border: 1px solid #ddd; }
+.CodeMirror pre { padding-left: 7px; line-height: 1.25; }
+div.CodeMirror span.CodeMirror-matchingbracket {color: #080; font-weight: bold;}
+
+.logo{width:30px;margin-right:20px}
+
+body {
+  background: #fff !important;
+}
+
+article {
+  border-right: none !important;
+  padding: 0px !important;
+}
+
+#nav {
+  background: #ddd !important;
+}
+
+#nav h2, h3, h4 {
+  margin: 7px 7px 2px 0px;
+  font-weight: bold; 
+}
+
+.templates, .hide, .hidden {display: none;}
+
+#nav a {
+  display: block;
+  color: black;
+  padding: 0 15px 1px 11px;
+}
+
+#nav a.active {
+  border-bottom: 1px solid #E30808;
+  margin-bottom: -1px;
+  color: #E30808;
+}
+
+#nav a:hover {
+  color: #E30808;
+}
+
+#containerLessons a {
+  color: black;
+  padding: 0 15px 1px 11px;
+}
+
+#containerLessons a.active {
+  color: #E30808;
+  font-weight: bold;
+}
+
+#containerLessons a:hover {
+  color: #E30808;
+}
+
+iframe { height: 200px; width:100%; border: 1px solid #ddd; }

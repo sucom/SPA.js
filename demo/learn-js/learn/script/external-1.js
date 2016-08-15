@@ -1,0 +1,1 @@
+console.log("External Script - 1 loaded.");

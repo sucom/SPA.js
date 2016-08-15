@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <script src="external-1.js"></script>
+    
+  </head>
+
+  <body>
+    <h1>Press F12 for console view</h1>
+
+    <script src="external-2.js">
+      console.log("Called after loading Module2.");
+    </script>
+
+    <script>
+      console.log("Inline Script in HTML");
+    </script>
+    
+    <!-- How about self closing script tag on external script tags? -->
+  </body>
+</html>
