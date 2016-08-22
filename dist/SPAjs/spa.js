@@ -841,6 +841,17 @@ var isSpaHashRouteOn=false;
     return $('<div/>').html(value).text();
   };
 
+  spa.appendToObj = function(xObj, oKey, oValue) {
+    if (_.has(xObj, oKey)) {
+      if (!_.isArray(xObj[oKey])) {
+        xObj[oKey] = [xObj[oKey]];
+      }
+      xObj[oKey].push(oValue);
+    } else {
+      xObj[oKey] = oValue;
+    };
+  };
+
   spa.parseKeyStr = function (keyName, changeToLowerCase) {
     return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z]/g, ""));
   };
@@ -862,7 +873,8 @@ var isSpaHashRouteOn=false;
       }
     }
     oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
-    xObj[oKey] = propValue;
+    
+    spa.appendToObj(xObj, oKey, propValue);
 
     return obj;
   };
@@ -921,7 +933,7 @@ var isSpaHashRouteOn=false;
     var disabledElementsKeyValues, unchkvalue, retValue = $(formSelector).serialize();
 
     //include unchecked checkboxes
-    $(formSelector).find("input:checkbox:enabled:not(:checked)[name]").each(function () {
+    $(formSelector).find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function () {
       unchkvalue = $(this).data("unchecked");
       retValue += ((retValue) ? '&' : '') + $(this).attr('name') + '=' + ((typeof unchkvalue === 'undefined') ? '' : unchkvalue);
     });
@@ -941,14 +953,7 @@ var isSpaHashRouteOn=false;
     _.each((qStringWithParams.split('&')), function (nvp) {
       nvp = nvp.split('=');
       if (nvp[0]) {
-        if (_.has(retValue, nvp[0])) {
-          if (!_.isArray(retValue[nvp[0]])) {
-            retValue[nvp[0]] = [retValue[nvp[0]]];
-          }
-          retValue[nvp[0]].push(decodeURIComponent(nvp[1] || ''));
-        } else {
-          retValue[nvp[0]] = decodeURIComponent(nvp[1] || '');
-        }
+        spa.appendToObj(retValue, nvp[0], decodeURIComponent(nvp[1] || ''));
       }
     });
     return retValue;
@@ -960,20 +965,13 @@ var isSpaHashRouteOn=false;
       , retObj = (toJSON) ? appendTo : {}
       , retStr = (toJSON && !appendTo) ? ('') : (appendTo);
 
-    $(this).find("input:checkbox:enabled:not(:checked)[name]").each(function (index, el) {
+    $(this).find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function (index, el) {
       $chkBox = $(el);
       keyName = $chkBox.attr('name');
       unchkvalue = $chkBox.data("unchecked");
       keyValue = ((typeof unchkvalue === 'undefined') ? '' : unchkvalue);
       if (toJSON) {
-        if (_.has(retObj, keyName)) {
-          if (!_.isArray(retObj[keyName])) {
-            retObj[keyName] = [retObj[keyName]];
-          }
-          retObj[keyName].push(keyValue);
-        } else {
-          retObj[keyName] = keyValue;
-        }
+        spa.appendToObj(retObj, keyName, keyValue);
       }
       else {
         retStr += ((retStr) ? '&' : '') + keyName + '=' + keyValue;
@@ -1003,7 +1001,7 @@ var isSpaHashRouteOn=false;
     });
 
     //include unchecked checkboxes
-    $(this).find("input:checkbox:enabled:not(:checked)").each(function () {
+    $(this).find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function () {
       oKeyName = $(this).attr('name');
       if (oKeyName) {
         oKeyValue = $(this).data("unchecked");
@@ -1028,19 +1026,19 @@ var isSpaHashRouteOn=false;
       , oKeyName, oKeyValue;
 
     $.each(a, function () {
-      o[this.name] = this.value;
+      spa.appendToObj(o, this.name, this.value);
     });
     if (c) {
       $(this).find("[disabled][name]").each(function () {
-        o[this.name] = spa.getElValue(this);
+        spa.appendToObj(o, this.name, spa.getElValue(this));
       });
     }
     //include unchecked checkboxes
-    $(this).find("input:checkbox:enabled:not(:checked)[name]").each(function () {
+    $(this).find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function () {
       oKeyName = $(this).attr('name');
       oKeyValue = $(this).data("unchecked");
       oKeyValue = '' + ((typeof oKeyValue == 'undefined') ? '' : oKeyValue);
-      o[oKeyName] = oKeyValue;
+      spa.appendToObj(o, oKeyName, oKeyValue);
     });
 
     $(this).find("[data-to-json-group][name]").each(function () {
@@ -1048,7 +1046,7 @@ var isSpaHashRouteOn=false;
       oGrpStr = $(this).data("toJsonGroup");
       if (oGrpStr) {
         if (!o[oGrpStr]) o[oGrpStr] = {};
-        o[oGrpStr][oKeyStr] = spa.getElValue(this);
+        spa.appendToObj(o[oGrpStr], oKeyStr, spa.getElValue(this));
       }
     });
     return o;
