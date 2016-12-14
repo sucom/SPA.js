@@ -248,6 +248,37 @@ var isSpaHashRouteOn=false;
     }));
   };
 
+  String.prototype.extractStrBetweenIn = function (bS, eS) {
+    eS = eS || bS;
+    return this.match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
+  };
+
+  String.prototype.extractStrBetweenEx = function (bS, eS) {
+    eS = eS || bS;
+    var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
+    return (this.match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
+      return x.replace(rx,'');
+    });
+  };
+
+  //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
+  //bS: '{'
+  //eS: '}'
+  //unique: false ==> ['{param1}','{param2}','{param3}','{param1}']
+  //unique: true  ==> ['{param1}','{param2}','{param3}']
+  spa.extractStrBetweenIn = function (srcStr, bS, eS, unique){
+    return (srcStr||'').extractStrBetweenInc(bS, eS);
+  };
+
+  //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
+  //bS: '{'
+  //eS: '}'
+  //unique: false ==> ['param1','param2','param3','param1']
+  //unique: true  ==> ['param1','param2','param3']
+  spa.extractStrBetweenEx = function (srcStr, bS, eS, unique){
+    return (srcStr||'').extractStrBetweenExc(bS, eS);
+  };
+
   spa.toJSON = function (str) {
     var thisStr;
     if (_.isString(str)) {
@@ -780,24 +811,24 @@ var isSpaHashRouteOn=false;
     }
     return (retValue);
   };
-  spa.isChecked = function (formId, eName) {
-    return (($("input[name=" + eName + "]:checked", formId).length) > 0);
+  spa.isChecked = function (elScope, eName) {
+    return (($(elScope).find("input[name=" + eName + "]:checked").length) > 0);
   };
-  spa.radioSelectedValue = function (formId, rName) {
-    var retValue = ($("input[name=" + rName + "]:checked", formId).val());
+  spa.radioSelectedValue = function (elScope, rName) {
+    var retValue = ($(elScope).find("input[name=" + rName + "]:checked").val());
     return (retValue ? retValue : "");
   };
-  spa.radioClearSelection = function (formId, rName) {
-    ($("input[name=" + rName + "]:checked", formId).attr("checked", false));
+  spa.radioClearSelection = function (elScope, rName) {
+    ($(elScope).find("input[name=" + rName + "]:checked").attr("checked", false));
   };
-  spa.radioSelectForValue = function (formId, rName, sValue) {
-    $("input[name=" + rName + "]:radio", formId).each(function(el) {
+  spa.radioSelectForValue = function (elScope, rName, sValue) {
+    $(elScope).find("input[name=" + rName + "]:radio").each(function(el) {
       el.checked = ((el.value).equalsIgnoreCase(sValue));
     });
   };
-  spa.checkboxCheckedValues = function (formId, cbName, delimiter) {
+  spa.checkboxCheckedValues = function (elScope, cbName, delimiter) {
     delimiter = delimiter || ",";
-    return ($("input[name=" + cbName + "]:checked", formId).map(function () {
+    return ($(elScope).find("input[name=" + cbName + "]:checked").map(function () {
       return this.value;
     }).get().join(delimiter));
   };
@@ -873,13 +904,13 @@ var isSpaHashRouteOn=false;
       }
     }
     oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
-    
+
     spa.appendToObj(xObj, oKey, propValue);
 
     return obj;
   };
 
-  spa.getElValue = function (el) {
+  spa.getElValue = function (el, escHTML) {
     el = $(el).get(0);
     var elValue, unchkvalue;
     switch ((el.tagName).toUpperCase()) {
@@ -909,10 +940,47 @@ var isSpaHashRouteOn=false;
         break;
 
       default:
-        elValue = $(el).html();
+        elValue = escHTML? $(el).text() : $(el).html();
         break;
     }
     return elValue;
+  };
+
+  spa.serialize = function(scope, context, escHTML){
+    if (_.isBoolean(scope)) { //making scope optional
+      escHTML = scope;
+      scope = '';
+    }
+    if (_.isBoolean(context)) { //making context optional
+      escHTML = context;
+      context = '';
+    }
+    scope = scope || 'body';
+    var retObj = {}, keyName, elValue, $elData, escElHTML
+      , contextSelector = (context)? '[data-serialize-context*="'+context+'"]' : '';
+    $(scope).find('[data-serialize]'+contextSelector+',input[name]'+contextSelector+',select[name]'+contextSelector+',textarea[name]'+contextSelector+'').each(function(i, el){
+      $elData = $(el).data();
+      keyName = el.name || $elData['serialize'];
+      escElHTML = $elData['serializeType']? ($elData['serializeType'].equalsIgnoreCase('text')) : escHTML;
+      elValue = spa.getElValue(el, escElHTML);
+
+      if (!retObj.hasOwnProperty(keyName)) {
+        retObj[keyName] = elValue;
+      } else if (!spa.isBlank(elValue)) {
+        if (spa.isBlank(retObj[keyName])) {
+          retObj[keyName] = elValue;
+        } else if (_.isArray(retObj[keyName])) {
+          retObj[keyName].push(elValue);
+        } else {
+          retObj[keyName] = [retObj[keyName], elValue];
+        };
+      };
+    });
+    return retObj;
+  };
+
+  spa.serializeToQueryString = function(scope, context){
+    return spa.toQueryString(spa.serialize(scope, context));
   };
 
   spa.serializeDisabled = function (formSelector) {
@@ -945,7 +1013,7 @@ var isSpaHashRouteOn=false;
     return retValue;
   };
 
-  spa.queryStringToJson = function (qStr) {
+  spa.queryStringToJson = spa.queryStringToObject = function (qStr) {
     var retValue = {}, qStringWithParams = (qStr || location.search), qIndex = ('' + qStringWithParams).indexOf('?'), ampIndex = ('' + qStringWithParams).indexOf('&');
     if (qStringWithParams && (qStringWithParams.length > 0) && (qIndex >= 0) && ((qIndex == 0) || (ampIndex > qIndex))) {
       qStringWithParams = qStringWithParams.substring(qIndex + 1);
@@ -957,6 +1025,16 @@ var isSpaHashRouteOn=false;
       }
     });
     return retValue;
+  };
+
+  spa.toQueryString = spa.ObjectToQueryString = spa.JsonToQueryString = function (obj) {
+    return _.isObject(obj)? (Object.keys(obj).reduce(function (str, key, i) {
+      var delimiter, val;
+      delimiter = (i === 0) ? '' : '&';
+      key = encodeURIComponent(key);
+      val = _.isArray(obj[key])? obj[key].map(function(item){ return encodeURIComponent(item) }).join(',') : encodeURIComponent(obj[key]);
+      return [str, delimiter, key, '=', val].join('');
+    }, '')) : '';
   };
 
   $.fn.serializeUncheckedCheckboxes = function (appendTo) {
@@ -1194,9 +1272,9 @@ var isSpaHashRouteOn=false;
   };
 
   /* Add Script Tag */
-  spa.addScript = function (scriptId, scriptSrc) {
+  spa.addScriptTag = function (scriptId, scriptSrc) {
     scriptId = scriptId.replace(/#/, "");
-    spa.console.group("spaAddScript");
+    spa.console.group("spaAddScriptTag");
     if (!spa.isElementExist("#spaScriptsCotainer")) {
       spa.console.info("#spaScriptsCotainer NOT Found! Creating one...");
       $('body').append("<div id='spaScriptsCotainer' style='display:none' rel='Dynamic Scripts Container'></div>");
@@ -1206,9 +1284,10 @@ var isSpaHashRouteOn=false;
     }
     else {
       spa.console.info("script [" + scriptId + "] NOT found. Added script tag with src [" + scriptSrc + "]");
-      $("#spaScriptsCotainer").append("<script id='" + (scriptId) + "' type='text/javascript' src='" + scriptSrc + "'><\/script>");
+      var scriptSrcAttr = (scriptSrc)? "src='" + scriptSrc + "'" : "";
+      $("#spaScriptsCotainer").append("<script id='" + (scriptId) + "' type='text/javascript' "+scriptSrcAttr+"><\/script>");
     }
-    spa.console.groupEnd("spaAddScript");
+    spa.console.groupEnd("spaAddScriptTag");
   };
 
   /* Add Style Tag */
@@ -1240,7 +1319,7 @@ var isSpaHashRouteOn=false;
     }
     else {
       if (useScriptTag) {
-        spa.addScript(scriptId, scriptPath);
+        spa.addScriptTag(scriptId, scriptPath);
       }
       else { /* load script script-URL */
         tAjaxRequests.push(
@@ -1471,6 +1550,7 @@ var isSpaHashRouteOn=false;
   spa.i18n.settings = {
     name: 'Language',
     path: 'language/',
+    ext: '.txt',
     encoding: 'UTF-8',
     cache: true,
     mode: 'map',
@@ -1484,6 +1564,7 @@ var isSpaHashRouteOn=false;
         name: i18nSettings.name,
         language: lang,
         path: i18nSettings.path,
+        ext: i18nSettings.ext,
         encoding: i18nSettings.encoding,
         cache: i18nSettings.cache,
         async: i18nSettings.async,
@@ -1726,9 +1807,10 @@ var isSpaHashRouteOn=false;
             fillOptions.formatterOnKeys[dataKeyForFormatterFnSpec] = fillOptions.keysMap[dataKeyForFormatterFnSpec].formatter;
           }
         }
-        spa.console.info(">> " + elSelector + " found: " + $(elSelector, context).length);
+        var elCountInContext = $(context).find(elSelector).length;
+        spa.console.info(">> " + elSelector + " found: " + elCountInContext);
         var dataValue = null;
-        if ($(elSelector, context).length > 0) {
+        if (elCountInContext > 0) {
           dataValue = spa.find(data, dataKeyPath);
           if ((!fillOptions.formatterOnKeys) && (fillOptions.formatterCommon)) {
             dataValue = fillOptions.formatterCommon(dataValue, dataKeyPath, data);
@@ -1742,7 +1824,7 @@ var isSpaHashRouteOn=false;
           }
           spa.console.info({value: dataValue});
         }
-        $(elSelector, context).each(function (index, el) {
+        $(context).find(elSelector).each(function (index, el) {
           spa.console.info(el);
           switch ((el.tagName).toUpperCase()) {
             case "INPUT":
@@ -1904,10 +1986,132 @@ var isSpaHashRouteOn=false;
   spa.viewModels = {};
   spa.renderHistory = {};
   spa.renderHistoryMax = 0;
+  spa.components = {};
   spa.defaults = {
-    dataTemplateEngine: "handlebars"
+      dataTemplateEngine: "handlebars"
+    , components: {
+          rootPath: 'app/components/'
+        , templateExt: '.html'
+      }
   };
 
+  spa.renderComponent = function (componentName, options) {
+    spa.console.info('Called renderComponent: '+componentName+' with below options');
+    spa.console.info(options);
+
+    var _cFilesPath  = spa.defaults.components.rootPath+componentName+"/"+componentName
+      , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
+      , _cScriptFile = _cFilesPath+".js"
+      , _renderComp  = function(){
+          spa.console.info('_renderComp > '+componentName+' with below options');
+          spa.console.info(options);
+          if (!spa.components[componentName].hasOwnProperty('template')) {
+            spa.components[componentName]['template'] = _cTmplFile;
+          }
+          spa.console.info('spa.components['+componentName+']');
+          spa.console.info(spa.components[componentName]);
+          if (options) {
+            if (!options.hasOwnProperty('mountComponent')) {
+              delete spa.components[componentName]['mountComponent'];
+            }
+            $.extend(spa.components[componentName], options);
+            spa.console.info('UPDATED> spa.components['+componentName+']');
+            spa.console.info(spa.components[componentName]);
+          }
+          spa.render(spa.components[componentName]);
+        }
+      , _parseComp = function(){
+          spa.console.info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
+          spa.console.info('In Source> spa.components['+componentName+']');
+          spa.console.info(spa.components[componentName]);
+          if (!spa.components.hasOwnProperty(componentName)) {
+            spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+_cScriptFile+']. Defining *NEW*');
+            spa.components[componentName] = options;
+            spa.console.info('NEW> spa.components['+componentName+']');
+            spa.console.info(spa.components[componentName]);
+          }
+          _renderComp();
+        };
+
+    if (spa.components.hasOwnProperty(componentName)) {
+      spa.console.info('Re-rending spa.components['+componentName+']');
+      spa.console.info(spa.components[componentName]);
+      _renderComp();
+    } else {
+      spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
+      $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop);
+    }
+  };
+
+  spa.renderComponents = function () {
+    if (arguments.length){
+      var compList = arguments; //spa.renderComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) { //spa.renderComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else { //spa.renderComponents('compName3');
+          compList = [arguments[0]];
+        };
+      }
+
+      if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Rendering spa-component:['+compName+']');
+          spa.renderComponent(compName);
+        });
+      }
+    }
+
+  };
+
+  spa.renderComponentsInHtml = function (scope, componentName, noDefer) {
+    scope = scope||'body';
+
+    var $spaCompList = $(scope).find('[data-spa-component'+(componentName?('='+componentName):(''))+']')
+      , renderList = {}, deferRender = !noDefer;
+    if ($spaCompList.length){
+      $spaCompList.each(function( index, el ) {
+        var spaCompName, spaCompOptions, newElId;
+
+        spaCompName = $(el).data('spaComponent');
+        if (!el.id) {
+          newElId = 'spaCompContainer_'+spaCompName+'_'
+                      + ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
+          el.id = newElId;
+          el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
+        }
+        spaCompOptions = {target: "#"+el.id };
+
+        if (deferRender) {
+          if (!renderList.hasOwnProperty(spaCompName)) {
+            $sameCompRenderList = $(scope).find('[data-spa-component='+spaCompName+']');
+            spa.console.log("component: "+spaCompName+" to render : "+$sameCompRenderList.length);
+            if ($sameCompRenderList.length>1) {
+              spaCompOptions['mountComponent'] = {scope: scope, name: spaCompName};
+            }
+            renderList[spaCompName] = spa.renderComponent(spaCompName, spaCompOptions);
+          }
+        } else {
+          spa.renderComponent(spaCompName, spaCompOptions);
+        }
+
+      });
+    }
+  };
+
+  spa.renderUtils = {
+    array2ObjWithKeyPrefix: function(arrayList, keyPrefix, targetId){
+      var retObj = {};
+      _.each(arrayList, function(item){
+        item = (''+item).trimStr();
+        if (item) {
+          retObj[(keyPrefix + ((item.equals('.')? targetId : item).replace(/[^a-z0-9]/gi,'_')))] = (''+item);
+        }
+      });
+      spa.console.log([keyPrefix, retObj]);
+      return retObj;
+    }
+  };
   /*
    * spa.render("#containerID")
    *
@@ -1982,9 +2186,17 @@ var isSpaHashRouteOn=false;
                       , templates             : "dataTemplates"
                       , templateCache         : "dataTemplatesCache"
                       , templatesCache        : "dataTemplatesCache"
+                      , html                  : "dataTemplate"
+                      , htmls                 : "dataTemplates"
+                      , htmlCache             : "dataTemplatesCache"
+                      , htmlsCache            : "dataTemplatesCache"
+                      , script                : "dataScripts"
                       , scripts               : "dataScripts"
+                      , scriptCache           : "dataScriptsCache"
                       , scriptsCache          : "dataScriptsCache"
+                      , style                 : "dataStyles"
                       , styles                : "dataStyles"
+                      , styleCache            : "dataStylesCache"
                       , stylesCache           : "dataStylesCache"
                       , renderType            : "dataRenderType"
                       , dataRenderCallBack    : "dataRenderCallback"
@@ -2023,6 +2235,7 @@ var isSpaHashRouteOn=false;
       , dataUrl: ""
       , dataUrlErrorHandle: ""
       , dataParams: {}
+      , dataExtra:{}
       , dataModel: ""
       , dataCache: false
 
@@ -2116,14 +2329,15 @@ var isSpaHashRouteOn=false;
     if (vScripts && (!$.isEmptyObject(vScripts))) {
       if (_.isArray(vScripts)) {
         spa.console.info("Convert array of script(s) without scriptID to object with scriptID(s).");
-        var newScriptsObj = {};
-        var dynScriptIDForContainer = "__scripts_"+(viewContainerId.trimStr("#"))+"_";
-        _.each(vScripts, function(scriptUrl, sIndex){
-          spa.console.log(scriptUrl);
-          if (scriptUrl) {
-            newScriptsObj[dynScriptIDForContainer + (sIndex)] = (""+scriptUrl);
-          }
-        });
+        var newScriptsObj = spa.renderUtils.array2ObjWithKeyPrefix(vScripts, '__scripts_', viewContainerId);
+//        var dynScriptIDForContainer;
+//        _.each(vScripts, function(scriptUrl, sIndex){
+//          spa.console.log(scriptUrl);
+//          if (scriptUrl) {
+//            dynScriptIDForContainer = "__scripts_" + ((''+scriptUrl).replace(/[^a-z0-9]/gi,'_'));
+//            newScriptsObj[dynScriptIDForContainer] = (""+scriptUrl);
+//          }
+//        });
         spa.console.info("Scripts(s) with scriptID(s).");
         spa.console.log(newScriptsObj);
         vScripts = (_.isEmpty(newScriptsObj))? {} : newScriptsObj;
@@ -2202,11 +2416,10 @@ var isSpaHashRouteOn=false;
         var dataModelUrls = dataModelCollection['urls'];
 
         if (spa.isBlank(dataModelUrls)) {
-          spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with empty data {}.");
+          spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
+          spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions);
         }
         else { //Processing data-collection
-
-
           if (!_.isArray(dataModelUrls)) {
             spa.console.warn("Invalid [data-urls].Check the arguments or html markup. Rendering with empty data {}.");
           }
@@ -2363,8 +2576,8 @@ var isSpaHashRouteOn=false;
 
     if (dataFound) { /* Load Templates */
 
-      var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "");
-      var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "");
+      var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "") || ("" + $(viewContainerId).data("html")).replace(/undefined/, "");
+      var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
       if (vTemplatesList && spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
         vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'"
       }
@@ -2392,14 +2605,15 @@ var isSpaHashRouteOn=false;
       //Handle if array without templateID, convert to object with auto templateID
       if (_.isArray(vTemplates) && !_.isEmpty(vTemplates)) {
         spa.console.info("Array of template(s) without templateID(s).");
-        var newTemplatesObj = {};
-        var dynTmplIDForContainer = "__tmpl_"+(viewContainerId.trimStr("#"))+"_";
-        _.each(vTemplates, function(templateUrl, sIndex){
-          spa.console.log(templateUrl);
-          if (templateUrl) {
-            newTemplatesObj[dynTmplIDForContainer + (sIndex)] = (""+templateUrl);
-          }
-        });
+        var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
+//        var dynTmplIDForContainer;
+//        _.each(vTemplates, function(templateUrl, sIndex){
+//          spa.console.log(templateUrl);
+//          if (templateUrl) {
+//            dynTmplIDForContainer = "__tmpl_" + ((''+templateUrl).replace(/[^a-z0-9]/gi,'_'));
+//            newTemplatesObj[dynTmplIDForContainer] = (""+templateUrl);
+//          }
+//        });
         spa.console.info("Template(s) with template ID(s).");
         spa.console.log(newTemplatesObj);
         if (_.isEmpty(newTemplatesObj)) {
@@ -2437,13 +2651,8 @@ var isSpaHashRouteOn=false;
           _tmplKey = _dataTemplate.trimStr("#");
         } else {
           spa.console.info("External path <"+_dataTemplate+"> content as template.");
-          if (_dataTemplate.containsStr(":") && !_dataTemplate.beginsWithIgnoreCase("http")){
-            _tmplKey = spa.getOnSplit(_dataTemplate, ":", 0).replace(/[^a-z0-9]/gi,'');
-            _tmplLoc = spa.getOnLastSplit(1);
-          } else {
-            _tmplKey = (("__tmpl_"+(viewContainerId.trimStr("#"))+"_") + (spa.now()) + (spa.rand(1000, 9999)));
-            _tmplLoc = _dataTemplate;
-          }
+          _tmplKey = "__tmpl_" + ((''+_dataTemplate).replace(/[^a-z0-9]/gi,'_'));
+          _tmplLoc = _dataTemplate;
         }
 
         vTemplates[_tmplKey] = _tmplLoc.replace(/['\"]/g,'');
@@ -2462,7 +2671,7 @@ var isSpaHashRouteOn=false;
         spa.console.group("spaLoadingTemplatesCache");
         if (!(useOptions && uOptions.hasOwnProperty('dataTemplatesCache'))) /* NOT provided in Render Request */
         { /* Read from view container [data-templates-cache='{true|false}'] */
-          var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "");
+          var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
           if (!spa.isBlank(templatesCacheInTagData)) {
             spaRVOptions.dataTemplatesCache = templatesCacheInTagData.toBoolean();
             spa.console.info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
@@ -2517,14 +2726,15 @@ var isSpaHashRouteOn=false;
         if (vStyles && (!$.isEmptyObject(vStyles))) {
           if (_.isArray(vStyles)) {
             spa.console.info("Convert array of style(s) without styleID to object with styleID(s).");
-            var newStylesObj = {};
-            var dynStyleIDForContainer = "__styles_"+(viewContainerId.trimStr("#"))+"_";
-            _.each(vStyles, function(styleUrl, sIndex){
-              spa.console.log(styleUrl);
-              if (styleUrl) {
-                newStylesObj[dynStyleIDForContainer + (sIndex)] = (""+styleUrl);
-              }
-            });
+            var newStylesObj = spa.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
+//            var dynStyleIDForContainer;
+//            _.each(vStyles, function(styleUrl, sIndex){
+//              spa.console.log(styleUrl);
+//              if (styleUrl) {
+//                dynStyleIDForContainer = "__styles_" + ((''+styleUrl).replace(/[^a-z0-9]/gi,'_'));
+//                newStylesObj[dynStyleIDForContainer] = (""+styleUrl);
+//              }
+//            });
             spa.console.info("Style(s) with styleID(s).");
             spa.console.log(newStylesObj);
             vStyles = (_.isEmpty(newStylesObj))? {} : newStylesObj;
@@ -2567,7 +2777,7 @@ var isSpaHashRouteOn=false;
                 if (Handlebars) {
                   var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
                   if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                  compiledTemplate = preCompiledTemplate(spaViewModel);
+                  compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
                 } else {
                   spa.console.error("handlebars.js is not loaded.");
                 }
@@ -2575,7 +2785,7 @@ var isSpaHashRouteOn=false;
               spa.console.log("Template Compiled:", compiledTemplate);
 
               doDeepRender = false;
-              retValue.view = compiledTemplate;
+              retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
               var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
               if (!spa.isBlank(spaRVOptions.dataRenderType)) {
@@ -2678,6 +2888,14 @@ var isSpaHashRouteOn=false;
               if (doDeepRender) {
                 //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
                 $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+
+                if (spaRVOptions.hasOwnProperty('mountComponent')) {
+                  spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                  $(viewContainerId).removeAttr('data-spa-component');
+                  spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                };
+
+                spa.renderComponentsInHtml(viewContainerId);
               };
             }
             catch(e) {
@@ -2991,6 +3209,7 @@ var isSpaHashRouteOn=false;
           , rElDataAttr: ($elRouteBase)? $elRouteBase.data() : {}
         };
 
+      //TODO: support for html
       if (oTagRouteOptions.hasOwnProperty('template') && !oTagRouteOptions.hasOwnProperty('templates')) {
         oTagRouteOptions['templates'] = oTagRouteOptions['template'];
         delete oTagRouteOptions['template'];
@@ -3008,14 +3227,15 @@ var isSpaHashRouteOn=false;
       if (oTagRouteOptions.hasOwnProperty("dataCache")) {
         spaRenderOptions['dataCache'] = oTagRouteOptions['dataCache'];
       }
-      if (oTagRouteOptions.hasOwnProperty("templatesCache")) {
-        spaRenderOptions['dataTemplatesCache'] = oTagRouteOptions['templatesCache'];
+      if (oTagRouteOptions.hasOwnProperty("templatesCache") || oTagRouteOptions.hasOwnProperty("templateCache") || oTagRouteOptions.hasOwnProperty("htmlsCache") || oTagRouteOptions.hasOwnProperty("htmlCache")) {
+        spaRenderOptions['dataTemplatesCache'] = oTagRouteOptions['templatesCache'] || oTagRouteOptions['templateCache'] || oTagRouteOptions['htmlsCache'] || oTagRouteOptions['htmlCache'];
       }
-      if (oTagRouteOptions.hasOwnProperty("scriptsCache")) {
-        spaRenderOptions['dataScriptsCache'] = oTagRouteOptions['scriptsCache'];
+      if (oTagRouteOptions.hasOwnProperty("scriptsCache") || oTagRouteOptions.hasOwnProperty("scriptCache")) {
+        spaRenderOptions['dataScriptsCache'] = oTagRouteOptions['scriptsCache'] || oTagRouteOptions['scriptCache'];
       }
 
       /*Templates*/
+      //TODO: support for htmls
       spaRenderOptions['dataTemplates'] = {};
       var tmplID= "__spaRouteTemplate_" + routeName;
       if (!oTagRouteOptions.hasOwnProperty("templates") || (oTagRouteOptions['templates'])) {
@@ -3294,6 +3514,87 @@ var isSpaHashRouteOn=false;
     });
   };
 
+  //API Section begins
+  spa.api = {
+    urls:{},
+    urlKeyIndicator:'@',
+    url: function(apiKey, urlReplaceKeyValues){
+      apiKey = (apiKey||'').trimLeftStr(spa.api.urlKeyIndicator);
+      urlReplaceKeyValues = urlReplaceKeyValues || {};
+
+      var apiUrl = (spa.api.urls[apiKey] || apiKey)
+        , paramsInUrl = _.uniq(apiUrl.extractStrBetweenIn('{', '}'))
+        , pKey;
+
+      if (!spa.isBlank(paramsInUrl)) {
+        _.each(paramsInUrl, function(param){
+          pKey = param.replace(/[{}]/g, '');
+          if (pKey && urlReplaceKeyValues.hasOwnProperty(pKey)) {
+            apiUrl = apiUrl.replace(new RegExp(param, 'g'), (urlReplaceKeyValues[pKey]));
+          }
+        });
+      }
+      return apiUrl;
+    },
+    isCallSuccess : function(axResponse) {
+      return true;
+    },
+    onReqError : function (jqXHR, textStatus, errorThrown) {
+      //This function is to handles if Ajax request itself failed due to network error / server error
+      //like 404 / 500 / timeout etc.
+      spa.console.error($(jqXHR.responseText).text());
+    },
+    onResError : function (axRes) {
+      //This function is to handle when spa.api.isCallSuccess returns false
+    },
+    _call : function(ajaxOptions){
+      /* set additional options dataType, error, success */
+      ajaxOptions = $.extend(ajaxOptions, {
+        dataType: 'text',
+        error: spa.api.onReqError,
+        success: function(axResponse) {
+          axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
+          if (spa.api['isCallSuccess'](axResponse)) {
+            ajaxOptions._success(axResponse);
+          }
+          else {
+            spa.api.onResError(axResponse);
+          }
+        }
+      });
+
+      if ((ajaxOptions.url).beginsWithStr(spa.api.urlKeyIndicator)){
+        ajaxOptions.url = spa.api.url((ajaxOptions.url).trimLeftStr(spa.api.urlKeyIndicator), ajaxOptions.data);
+      };
+
+      spa.console.info('API(ajax) call with options', ajaxOptions);
+      //console.info(['API(ajax) call with options', ajaxOptions]);
+      $.ajax(ajaxOptions);
+    },
+    _params2AxOptions : function(){
+      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true };
+      _.each(arguments, function(arg){
+        switch(true){ //NOTE: DON'T CHANGE THE ORDER
+          case (_.isString(arg))  : oKey='url' ; break;
+          case (_.isFunction(arg)): oKey='_success'; break;
+          case (_.isBoolean(arg)) : oKey='async'; break;
+          case (_.isObject(arg))  : oKey='data'; break;
+          default: oKey = 'unknown'; break;
+        }
+        axOptions[oKey] = arg;
+      });
+      return (axOptions);
+    },
+    get : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
+      spa.api._call(spa.api._params2AxOptions.apply(undefined, arguments));
+    },
+    post : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
+      spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
+    }
+
+  };//End of spa.api{}
+  //API Section Ends
+
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
@@ -3323,6 +3624,7 @@ var isSpaHashRouteOn=false;
       $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off'></div>");
       $("#initSpaRender0").spaRender();
     }
+    spa.renderComponentsInHtml();
   });
 
 })(this);

@@ -50,6 +50,7 @@
       name: 'Messages',
       language: '',
       path: '',
+      ext: '.properties',
       mode: 'vars',
       cache: false,
       encoding: 'UTF-8',
@@ -101,16 +102,16 @@
         if (settings.language.length >= 5) {
           var longCode = settings.language.substring(0, 5);
           if (languages.length == 0 || $.inArray(longCode, languages) != -1) {
-            loadAndParseFile(settings.path + files[k] + '_' + longCode + '.properties', settings);
+            loadAndParseFile(settings.path + files[k] + '_' + longCode + (settings.ext || '.properties'), settings);
           }
         } else {
           // 2. with language code (eg, Messages_pt.properties)
           var shortCode = settings.language.substring(0, 2);
           if (languages.length == 0 || $.inArray(shortCode, languages) != -1) {
-            loadAndParseFile(settings.path + files[k] + '_' + shortCode + '.properties', settings);
+            loadAndParseFile(settings.path + files[k] + '_' + shortCode + (settings.ext || '.properties'), settings);
           } else {
             // 3. load base (eg, Messages.properties)
-            loadAndParseFile(settings.path + files[k] + '.properties', settings);
+            loadAndParseFile(settings.path + files[k] + (settings.ext || '.properties'), settings);
           }
         }
         
