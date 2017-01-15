@@ -363,6 +363,9 @@ var isSpaHashRouteOn=false;
         case (_.isString(src)):
           retValue = ((src).trimStr().length == 0);
           break;
+        case (_.isFunction(src)):
+            retValue = false;
+          break;
         case (_.isArray(src)) :
         case (_.isObject(src)):
           retValue = _.isEmpty(src);
@@ -2008,17 +2011,18 @@ var isSpaHashRouteOn=false;
           if (!spa.components[componentName].hasOwnProperty('template')) {
             spa.components[componentName]['template'] = _cTmplFile;
           }
-          spa.console.info('spa.components['+componentName+']');
+          spa.console.info('render-options: spa.components['+componentName+']');
           spa.console.info(spa.components[componentName]);
+          var renderOptions = (options && options['saveOptions'])?  spa.components[componentName] : $.extend({}, spa.components[componentName]);
           if (options) {
             if (!options.hasOwnProperty('mountComponent')) {
-              delete spa.components[componentName]['mountComponent'];
+              delete renderOptions['mountComponent'];
             }
-            $.extend(spa.components[componentName], options);
-            spa.console.info('UPDATED> spa.components['+componentName+']');
-            spa.console.info(spa.components[componentName]);
+            $.extend(renderOptions, options);
+            spa.console.info('Extended> render-options: spa.components['+componentName+']');
+            spa.console.info(renderOptions);
           }
-          spa.render(spa.components[componentName]);
+          spa.render(renderOptions);
         }
       , _parseComp = function(){
           spa.console.info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
@@ -2125,6 +2129,7 @@ var isSpaHashRouteOn=false;
    ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
    ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
    ,dataCache                 : false // External Data(JSON) Cache
+   ,dataProcess               : function or Function name in String
 
    ,dataCollection            : {}    // { urls: [ {
    //              name   : 'string:dataApi'; if no (name or target) auto-keys: data0..dataN
@@ -2237,6 +2242,7 @@ var isSpaHashRouteOn=false;
       , dataParams: {}
       , dataExtra:{}
       , dataModel: ""
+      , dataProcess: ''
       , dataCache: false
 
       , dataCollection: {}
@@ -2274,17 +2280,27 @@ var isSpaHashRouteOn=false;
       }
     }
 
-    /*Render Id*/
-    var spaRenderId = ("" + $(viewContainerId).data("renderId")).replace(/undefined/, "");
-    if (!spa.isBlank(spaRVOptions.dataRenderId)) {
-      spaRenderId = spaRVOptions.dataRenderId;
+    var $viewContainerId = $(viewContainerId);
+    var _renderOptionInAttr = function(dataAttrKey) {
+      return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
     }
+    var _renderOption = function(optionKey, dataAttrKey) {
+      return (spa.isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
+    };
+
+    /*Render Id*/
+//    var spaRenderId = ("" + $(viewContainerId).data("renderId")).replace(/undefined/, "");
+//    if (!spa.isBlank(spaRVOptions.dataRenderId)) {
+//      spaRenderId = spaRVOptions.dataRenderId;
+//    }
+    var spaRenderId = _renderOption('dataRenderId', 'renderId');
     retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (spa.now()) + (spa.rand(1000, 9999)))));
 
-    var targetRenderMode = ("" + $(viewContainerId).data("renderMode")).replace(/undefined/, "");
-    if (!spa.isBlank(spaRVOptions.dataRenderMode)) {
-      targetRenderMode = spaRVOptions.dataRenderMode;
-    }
+//    var targetRenderMode = ("" + $(viewContainerId).data("renderMode")).replace(/undefined/, "");
+//    if (!spa.isBlank(spaRVOptions.dataRenderMode)) {
+//      targetRenderMode = spaRVOptions.dataRenderMode;
+//    }
+    var targetRenderMode = _renderOption('dataRenderMode', 'renderMode');
     spa.console.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
@@ -2294,7 +2310,7 @@ var isSpaHashRouteOn=false;
     spa.console.group("spaLoadingViewScripts");
     if (!(useOptions && uOptions.hasOwnProperty('dataScriptsCache'))) /* NOT provided in Render Request */
     { /* Read from view container [data-scripts-cache='{true|false}'] */
-      var scriptsCacheInTagData = ("" + $(viewContainerId).data("scriptsCache")).replace(/undefined/, "");
+      var scriptsCacheInTagData = _renderOptionInAttr('scriptsCache'); //("" + $(viewContainerId).data("scriptsCache")).replace(/undefined/, "");
       if (!spa.isBlank(scriptsCacheInTagData)) {
         spaRVOptions.dataScriptsCache = scriptsCacheInTagData.toBoolean();
         spa.console.info("Override [data-scripts-cache] with [data-scripts-cache] option in tag-attribute: " + spaRVOptions.dataScriptsCache);
@@ -2304,7 +2320,7 @@ var isSpaHashRouteOn=false;
       spa.console.info("Override [data-scripts-cache] with user option [dataScriptsCache]: " + spaRVOptions.dataScriptsCache);
     }
 
-    var vScriptsList = (""+ $(viewContainerId).data("scripts")).replace(/undefined/, "");
+    var vScriptsList = _renderOptionInAttr('scripts'); //(""+ $(viewContainerId).data("scripts")).replace(/undefined/, "");
     if (vScriptsList && spa.isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
       vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'"
     }
@@ -2371,16 +2387,20 @@ var isSpaHashRouteOn=false;
 
     /* Load Data */
     spa.console.group("spaDataModel");
-    var dataModelName = ("" + $(viewContainerId).data("model")).replace(/undefined/, ""), viewDataModelName;
-    if (!spa.isBlank(spaRVOptions.dataModel)) {
-      dataModelName = spaRVOptions.dataModel;
-    }
-    var dataModelUrl = ("" + $(viewContainerId).data("url")).replace(/undefined/, ""); //from HTML
-    if (!spa.isBlank(spaRVOptions.dataUrl)) {
-      dataModelUrl = spaRVOptions.dataUrl;
-    }
-    var isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")));
-    var defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data";
+    
+    //var dataModelName = ("" + $(viewContainerId).data("model")).replace(/undefined/, ""), viewDataModelName;
+    //if (!spa.isBlank(spaRVOptions.dataModel)) {
+    //  dataModelName = spaRVOptions.dataModel;
+    //}
+    //var dataModelUrl = ("" + $(viewContainerId).data("url")).replace(/undefined/, ""); //from HTML
+    //if (!spa.isBlank(spaRVOptions.dataUrl)) {
+    //  dataModelUrl = spaRVOptions.dataUrl;
+    //}
+    var dataModelName = _renderOption('dataModel', 'model')
+      , dataModelUrl  = _renderOption('dataUrl', 'url')
+      , viewDataModelName
+      , isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")))
+      , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data";
     dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
     viewDataModelName = dataModelName.replace(/\./g, "_");
 
@@ -2392,7 +2412,7 @@ var isSpaHashRouteOn=false;
     else {
       if (!(useOptions && uOptions.hasOwnProperty('dataCache'))) /* NOT provided in Render Request */
       { /* Read from view container [data-cache='{true|false}'] */
-        var dataCacheInTagData = ("" + $(viewContainerId).data("cache")).replace(/undefined/, "");
+        var dataCacheInTagData = _renderOptionInAttr('cache');//("" + $(viewContainerId).data("cache")).replace(/undefined/, "");
         if (!spa.isBlank(dataCacheInTagData)) {
           spaRVOptions.dataCache = dataCacheInTagData.toBoolean();
           spa.console.info("Override [data-cache] with [data-cache] option in tag-attribute: " + spaRVOptions.dataCache);
@@ -2405,11 +2425,10 @@ var isSpaHashRouteOn=false;
         spaTemplateModelData[viewDataModelName] = {};
 
         //Check dataCollection
-        var dataModelCollection = ("" + $(viewContainerId).data("collection")).replace(/undefined/, ""); //from HTML
+        var dataModelCollection = _renderOptionInAttr('collection');//("" + $(viewContainerId).data("collection")).replace(/undefined/, ""); //from HTML
         if (dataModelCollection) dataModelCollection = spa.toJSON(dataModelCollection); //convert to json if found
         if (!spa.isBlank(spaRVOptions.dataCollection)) //override with javascript
-        {
-          dataModelCollection = spaRVOptions.dataCollection;
+        { dataModelCollection = spaRVOptions.dataCollection;
         }
         if (_.isArray(dataModelCollection)) dataModelCollection = {urls: dataModelCollection};
 
@@ -2557,10 +2576,11 @@ var isSpaHashRouteOn=false;
               },
               error: function (jqXHR, textStatus, errorThrown) {
                 //Call user defined function on Data URL Error
-                var fnOnDataUrlErrorHandle = ("" + $(viewContainerId).data("urlErrorHandle")).replace(/undefined/, "");
-                if (!spa.isBlank(spaRVOptions.dataUrlErrorHandle)) {
-                  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
-                }
+                //var fnOnDataUrlErrorHandle = ("" + $(viewContainerId).data("urlErrorHandle")).replace(/undefined/, "");
+                //if (!spa.isBlank(spaRVOptions.dataUrlErrorHandle)) {
+                //  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
+                //}
+                var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
                 if (!spa.isBlank(fnOnDataUrlErrorHandle)) {
                   eval("(" + fnOnDataUrlErrorHandle + "(jqXHR, textStatus, errorThrown))");
                 }
@@ -2576,8 +2596,10 @@ var isSpaHashRouteOn=false;
 
     if (dataFound) { /* Load Templates */
 
-      var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "") || ("" + $(viewContainerId).data("html")).replace(/undefined/, "");
-      var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
+      //var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "") || ("" + $(viewContainerId).data("html")).replace(/undefined/, "");
+      //var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
+      var vTemplate2RenderInTag = _renderOptionInAttr("template") || _renderOptionInAttr("html");
+      var vTemplatesList = _renderOptionInAttr("templates") || _renderOptionInAttr("htmls");
       if (vTemplatesList && spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
         vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'"
       }
@@ -2671,7 +2693,8 @@ var isSpaHashRouteOn=false;
         spa.console.group("spaLoadingTemplatesCache");
         if (!(useOptions && uOptions.hasOwnProperty('dataTemplatesCache'))) /* NOT provided in Render Request */
         { /* Read from view container [data-templates-cache='{true|false}'] */
-          var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
+          //var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
+          var templatesCacheInTagData = _renderOptionInAttr("templatesCache") || _renderOptionInAttr("templateCache") || _renderOptionInAttr("htmlsCache") || _renderOptionInAttr("htmlCache");
           if (!spa.isBlank(templatesCacheInTagData)) {
             spaRVOptions.dataTemplatesCache = templatesCacheInTagData.toBoolean();
             spa.console.info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
@@ -2700,7 +2723,7 @@ var isSpaHashRouteOn=false;
         spa.console.group("spaLoadingViewStyles");
         if (!(useOptions && uOptions.hasOwnProperty('dataStylesCache'))) /* NOT provided in Render Request */
         { /* Read from view container [data-styles-cache='{true|false}'] */
-          var stylesCacheInTagData = ("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
+          var stylesCacheInTagData = _renderOptionInAttr("stylesCache"); //("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
           if (!spa.isBlank(stylesCacheInTagData)) {
             spaRVOptions.dataStylesCache = stylesCacheInTagData.toBoolean();
             spa.console.info("Override [data-styles-cache] with [data-styles-cache] option in tag-attribute: " + spaRVOptions.dataStylesCache);
@@ -2710,7 +2733,7 @@ var isSpaHashRouteOn=false;
           spa.console.info("Override [data-styles-cache] with user option [dataStylesCache]: " + spaRVOptions.dataStylesCache);
         }
 
-        var vStylesList = (""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
+        var vStylesList = _renderOptionInAttr("styles"); //(""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
         if (vStylesList && spa.isBlank((vStylesList || "").replace(/[^:'\"]/g,''))){
           vStylesList = "'"+ ((vStylesList).split(",").join("','")) + "'"
         }
@@ -2766,8 +2789,26 @@ var isSpaHashRouteOn=false;
             }
 
             try {
-              retValue.model = spaTemplateModelData[viewDataModelName];
-              var spaViewModel = spaTemplateModelData[viewDataModelName], compiledTemplate;
+
+              //dataProcess
+              //var fnDataProcess = ((""+ $(viewContainerId).data("process")).replace(/undefined/, "")).toLowerCase();
+              //if (!spa.isBlank(spaRVOptions.dataProcess)) {
+              //  fnDataProcess = spaRVOptions.dataProcess;
+              //};
+              var fnDataProcess = _renderOption('dataProcess', 'process');
+              if (fnDataProcess && (_.isString(fnDataProcess))) {
+                fnDataProcess = spa.findSafe(window, fnDataProcess);
+              }
+              retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
+              retValue['model'] = spaTemplateModelData[viewDataModelName];
+              if (fnDataProcess && _.isFunction(fnDataProcess)) {
+                retValue['model'] = fnDataProcess.call(undefined, spaTemplateModelData[viewDataModelName]);
+                if (!_.isObject(retValue['model'])) {
+                  retValue['model'] = retValue['modelOriginal'];
+                }
+              }
+
+              var spaViewModel = retValue.model, compiledTemplate;
               spa.viewModels[retValue.id] = retValue.model;
 
               var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
@@ -2787,10 +2828,11 @@ var isSpaHashRouteOn=false;
               doDeepRender = false;
               retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
-              var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
-              if (!spa.isBlank(spaRVOptions.dataRenderType)) {
-                targetRenderContainerType = spaRVOptions.dataRenderType;
-              };
+              //var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
+              //if (!spa.isBlank(spaRVOptions.dataRenderType)) {
+              //  targetRenderContainerType = spaRVOptions.dataRenderType;
+              //};
+              var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
 
               switch(targetRenderContainerType) {
                 case "value" :
@@ -2848,7 +2890,7 @@ var isSpaHashRouteOn=false;
               spa.console.log(retValue);
 
               /*run callback if any*/
-              var _fnCallbackAfterRender = ("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
+              var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
               if (spaRVOptions.dataRenderCallback) {
                 _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
               }
@@ -3517,20 +3559,26 @@ var isSpaHashRouteOn=false;
   //API Section begins
   spa.api = {
     urls:{},
+    mock:false,
+    forceParamValuesInMockUrls:false,
     urlKeyIndicator:'@',
     url: function(apiKey, urlReplaceKeyValues){
       apiKey = (apiKey||'').trimLeftStr(spa.api.urlKeyIndicator);
       urlReplaceKeyValues = urlReplaceKeyValues || {};
 
       var apiUrl = (spa.api.urls[apiKey] || apiKey)
+        , isStaticUrl = apiUrl.beginsWithStr('!') || spa.api.mock
+        , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || spa.api.forceParamValuesInMockUrls
         , paramsInUrl = _.uniq(apiUrl.extractStrBetweenIn('{', '}'))
-        , pKey;
+        , pKey, pValue;
 
       if (!spa.isBlank(paramsInUrl)) {
+
         _.each(paramsInUrl, function(param){
-          pKey = param.replace(/[{}]/g, '');
+          pKey = param.replace(/[{}<>]/g, '');
           if (pKey && urlReplaceKeyValues.hasOwnProperty(pKey)) {
-            apiUrl = apiUrl.replace(new RegExp(param, 'g'), (urlReplaceKeyValues[pKey]));
+            pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? urlReplaceKeyValues[pKey] : ('_'+pKey)) : urlReplaceKeyValues[pKey]);
+            apiUrl = apiUrl.replace(new RegExp(param, 'g'), pValue);
           }
         });
       }
