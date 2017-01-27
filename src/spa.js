@@ -183,6 +183,22 @@ var isSpaHashRouteOn=false;
     return this.trimLeftStr(tStr).trimRightStr(tStr);
   };
 
+  String.prototype.getLeftStr = function (fromIndex) {
+    if (typeof fromIndex === 'string') {
+      fromIndex = this.indexOf(fromIndex);
+    }
+    return (fromIndex)? this.substr(0, fromIndex) : '';
+  };
+
+  String.prototype.getRightStr = function (fromIndex) {
+    var sLen = 1;
+    if (typeof fromIndex === 'string') {
+      sLen = fromIndex.length;
+      fromIndex = this.indexOf(fromIndex);
+    }
+    return (fromIndex<0)? '' : this.substr(fromIndex+sLen);
+  };
+
   String.prototype.isBlankStr = function () {
     return (this.trimStr() == "");
   };
@@ -333,17 +349,20 @@ var isSpaHashRouteOn=false;
   };
 
   /*
-   * String.padStr(length: Integer, [padString: String = " "], [type: Integer = 0]): String
+   * String.padStr([padString: String = " "], length: Integer=1, [type: Integer = 0]): String
    * Returns: the string with a padString padded on the left, right or both sides.
    * length: amount of characters that the string must have
    * padString: string that will be concatenated
-   * type: specifies the side where the concatenation will happen, where: 0 = left, 1 = right and 2 = both sides
+   * type: specifies the side where the concatenation will happen, where: -1 = left, 1 = right and 0 = both sides
    */
-  String.prototype.padStr = function (l, s, t) {
+  String.prototype.padStr = function (s, l, t) {
+      s = s || '';
+      l = l || 1;
+      t = t || 2;
       for (var ps = "", i = 0; i < l; i++) {
         ps += s;
       }
-      return (((t === 0 || t === 2) ? ps : "") + this + ((t === 1 || t === 2) ? ps : ""));
+      return (((t === -1 || t === 2) ? ps : "") + this + ((t === 1 || t === 2) ? ps : ""));
     };
 
   spa.lastSplitResult = [];
@@ -487,7 +506,7 @@ var isSpaHashRouteOn=false;
     if (!disableKeys) disableKeys = "";
     var withShiftKey = (disableKeys.indexOf("+shift") >= 0)
       , keyCode  = ""+e.keyCode
-      , retValue = (( ((disableKeys.padStr(1, ',', 2)).indexOf(keyCode.padStr(1, ',', 2)) >= 0) && (withShiftKey ? ((e.shiftKey) ? true : false) : ((!e.shiftKey)? true : false))));
+      , retValue = (( ((disableKeys.padStr(',')).indexOf(keyCode.padStr(',')) >= 0) && (withShiftKey ? ((e.shiftKey) ? true : false) : ((!e.shiftKey)? true : false))));
     if (retValue) {
       e.preventDefault();
       spa.console.info("Key [" + keyCode + (withShiftKey ? "+Shift" : "") + "] has been disabled in this element.");
@@ -1995,6 +2014,7 @@ var isSpaHashRouteOn=false;
     , components: {
           rootPath: 'app/components/'
         , templateExt: '.html'
+        , callback:''
       }
   };
 
@@ -2114,6 +2134,28 @@ var isSpaHashRouteOn=false;
       });
       spa.console.log([keyPrefix, retObj]);
       return retObj;
+    },
+    runCallbackFn: function (fn2Call, fnArg) {
+      if (fn2Call) {
+        var _fn2Call = fn2Call;
+        if (_.isString(_fn2Call)) {
+          _fn2Call = spa.findSafe(window, _fn2Call);
+        }
+        if (_fn2Call) {
+          if (_.isFunction(_fn2Call)) {
+            spa.console.info("calling callback: " + fn2Call);
+            _fn2Call.call(undefined, fnArg);
+          } else {
+            spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
+          }
+        } else {
+          if (("" + fn2Call).beginsWithStr("spa") && (("" + fn2Call).endsWithStr("_renderCallback"))) {
+            spa.console.warn("Default Route renderCallback function <" + fn2Call + "> is NOT defined.");
+          } else {
+            spa.console.error("CallbackFunction <" + fn2Call + "> is NOT defined.");
+          }
+        }
+      }
     }
   };
   /*
@@ -2387,7 +2429,7 @@ var isSpaHashRouteOn=false;
 
     /* Load Data */
     spa.console.group("spaDataModel");
-    
+
     //var dataModelName = ("" + $(viewContainerId).data("model")).replace(/undefined/, ""), viewDataModelName;
     //if (!spa.isBlank(spaRVOptions.dataModel)) {
     //  dataModelName = spaRVOptions.dataModel;
@@ -2890,11 +2932,16 @@ var isSpaHashRouteOn=false;
               spa.console.log(retValue);
 
               /*run callback if any*/
+              /*
+               * Default component's callback
+               */
+              spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue);
+
               var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
               if (spaRVOptions.dataRenderCallback) {
                 _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
               }
-              var isCallbackDisabled = (_.isString(fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
+              var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
               spa.console.info("Processing callback: " + _fnCallbackAfterRender);
 
               if (!isCallbackDisabled) {
@@ -2903,27 +2950,30 @@ var isSpaHashRouteOn=false;
                   spa.routes['_renderCallback'].call(undefined, retValue);
                 }
 
-                if (_fnCallbackAfterRender) {
-                  var fnCallbackAfterRender = _fnCallbackAfterRender;
-                  if (_.isString(fnCallbackAfterRender)) {
-                    fnCallbackAfterRender = spa.findSafe(window, fnCallbackAfterRender);
-                  }
-                  if (fnCallbackAfterRender) {
-                    if (_.isFunction(fnCallbackAfterRender)) {
-                      spa.console.info("calling callback: " + _fnCallbackAfterRender);
-                      fnCallbackAfterRender.call(undefined, retValue);
-                      //eval("("+fnCallbackAfterRender+"(retValue))");
-                    } else {
-                      spa.console.error("CallbackFunction <" + _fnCallbackAfterRender + " = " + fnCallbackAfterRender + "> is NOT a valid FUNCTION.");
-                    }
-                  } else {
-                    if (("" + _fnCallbackAfterRender).beginsWithStr("spa") && (("" + _fnCallbackAfterRender).endsWithStr("_renderCallback"))) {
-                      spa.console.warn("Default Route renderCallback function <" + _fnCallbackAfterRender + "> is NOT defined.");
-                    } else {
-                      spa.console.error("CallbackFunction <" + _fnCallbackAfterRender + "> is NOT defined.");
-                    }
-                  }
-                }
+                spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+
+//                if (_fnCallbackAfterRender) {
+//                  var fnCallbackAfterRender = _fnCallbackAfterRender;
+//                  if (_.isString(fnCallbackAfterRender)) {
+//                    fnCallbackAfterRender = spa.findSafe(window, fnCallbackAfterRender);
+//                  }
+//                  if (fnCallbackAfterRender) {
+//                    if (_.isFunction(fnCallbackAfterRender)) {
+//                      spa.console.info("calling callback: " + _fnCallbackAfterRender);
+//                      fnCallbackAfterRender.call(undefined, retValue);
+//                      //eval("("+fnCallbackAfterRender+"(retValue))");
+//                    } else {
+//                      spa.console.error("CallbackFunction <" + _fnCallbackAfterRender + " = " + fnCallbackAfterRender + "> is NOT a valid FUNCTION.");
+//                    }
+//                  } else {
+//                    if (("" + _fnCallbackAfterRender).beginsWithStr("spa") && (("" + _fnCallbackAfterRender).endsWithStr("_renderCallback"))) {
+//                      spa.console.warn("Default Route renderCallback function <" + _fnCallbackAfterRender + "> is NOT defined.");
+//                    } else {
+//                      spa.console.error("CallbackFunction <" + _fnCallbackAfterRender + "> is NOT defined.");
+//                    }
+//                  }
+//                }
+
               }
 
               /*Deep/Child Render*/
