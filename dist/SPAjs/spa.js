@@ -2012,7 +2012,7 @@ var isSpaHashRouteOn=false;
   spa.defaults = {
       dataTemplateEngine: "handlebars"
     , components: {
-          rootPath: 'app/components/'
+          rootPath: 'components/'
         , templateExt: '.html'
         , callback:''
       }
