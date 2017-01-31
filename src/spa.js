@@ -2063,7 +2063,12 @@ var isSpaHashRouteOn=false;
       _renderComp();
     } else {
       spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
-      $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop);
+      $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
+        .fail(function(){
+          spa.console.error('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']');
+          spa.console.warn('Continue Loading component ['+componentName+'] without script source from ['+_cScriptFile+']');
+          _parseComp();
+        });
     }
   };
 
