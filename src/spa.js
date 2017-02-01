@@ -1355,6 +1355,58 @@ var isSpaHashRouteOn=false;
     return (tAjaxRequests);
   };
 
+  spa.loadScripts = function(scriptsLst, onDone, onFail) {
+
+    if (typeof scriptsLst === 'string'){
+      scriptsLst = spa.toJSON(scriptsLst);
+      if (typeof scriptsLst === 'string') {
+        scriptsLst = [scriptsLst];
+      }
+    }
+
+    if (!spa.isBlank(scriptsLst)) {
+      var ajaxQ = [];
+      _.each(scriptsLst, function(scriptPath) {
+        ajaxQ.push(
+          $.cachedScript(scriptPath).done(function (script, textStatus) {
+            spa.console.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
+          }).fail(function(){
+            spa.console.info("Failed Loading script from [" + scriptPath + "].");
+          })
+        );
+      });
+
+      $.when.apply($, ajaxQ)
+        .then(function(){
+          spa.renderUtils.runCallbackFn(onDone);
+        })
+        .fail(function(){
+          spa.renderUtils.runCallbackFn(onFail);
+        });
+    }
+  };
+
+  spa.loadScriptsSync = function(scriptsLst, onDone, onFail) {
+    if (typeof scriptsLst === 'string'){
+      scriptsLst = spa.toJSON(scriptsLst);
+      if (typeof scriptsLst === 'string') {
+        scriptsLst = [scriptsLst];
+      }
+    }
+    if (spa.isBlank(scriptsLst)) {
+      spa.renderUtils.runCallbackFn(onDone);
+    } else {
+      var scriptPath = scriptsLst.shift();
+      $.cachedScript(scriptPath).done(function (script, textStatus) {
+            spa.console.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
+            spa.loadScriptsSync(scriptsLst, onDone);
+          }).fail(function(){
+            spa.console.info("Failed Loading script from [" + scriptPath + "].");
+            spa.renderUtils.runCallbackFn(onFail);
+          });
+    }
+  };
+
   /* Loading style */
   spa.loadStyle = function (styleId, stylePath, useStyleTag, tAjaxRequests) {
     styleId = styleId.replace(/#/, "");
