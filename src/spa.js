@@ -131,7 +131,7 @@ var isSpaHashRouteOn=false;
     if ('onhashchange' in window) {
       isSpaHashRouteOn = true;
       spa.console.info("Registering HashRouting Listener");
-      window.onhashchange = function (ocEvent) {
+      window.onhashchange = function () {
         /* ocEvent
          .oldURL : "http://dev.semantic-test.com/ui/home.html#user/changePassword"
          .newURL : "http://dev.semantic-test.com/ui/home.html#user/profile"
@@ -150,6 +150,21 @@ var isSpaHashRouteOn=false;
   };
   spa._stopWindowOnHashChange = function(){
     window.onhashchange = undefined;
+  };
+
+  Date.prototype.yyyymmdd = function(sep) {
+    var mm = this.getMonth() + 1, dd = this.getDate();
+    return ([this.getFullYear(),
+            (mm>9 ? '' : '0') + mm,
+            (dd>9 ? '' : '0') + dd
+           ].join(sep||''));
+  };
+  Date.prototype.hhmmss = function(sep) {
+    var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
+    return ([(hh>9 ? '' : '0') + hh,
+             (mm>9 ? '' : '0') + mm,
+             (ss>9 ? '' : '0') + ss
+           ].join(sep||''));
   };
 
   /* ********************************************************* */
@@ -234,7 +249,7 @@ var isSpaHashRouteOn=false;
     return ((this).normalizeStr().match(re)) ? true : false;
   };
 
-  String.prototype.endsWithStrIgnoreCase = function (str, i) {
+  String.prototype.endsWithStrIgnoreCase = function (str) {
     var re = new RegExp(str + '$', 'i');
     return ((this).normalizeStr().match(re)) ? true : false;
   };
@@ -282,7 +297,7 @@ var isSpaHashRouteOn=false;
   //eS: '}'
   //unique: false ==> ['{param1}','{param2}','{param3}','{param1}']
   //unique: true  ==> ['{param1}','{param2}','{param3}']
-  spa.extractStrBetweenIn = function (srcStr, bS, eS, unique){
+  spa.extractStrBetweenIn = function (srcStr, bS, eS){
     return (srcStr||'').extractStrBetweenInc(bS, eS);
   };
 
@@ -291,7 +306,7 @@ var isSpaHashRouteOn=false;
   //eS: '}'
   //unique: false ==> ['param1','param2','param3','param1']
   //unique: true  ==> ['param1','param2','param3']
-  spa.extractStrBetweenEx = function (srcStr, bS, eS, unique){
+  spa.extractStrBetweenEx = function (srcStr, bS, eS){
     return (srcStr||'').extractStrBetweenExc(bS, eS);
   };
 
@@ -2007,7 +2022,7 @@ var isSpaHashRouteOn=false;
          */
         dataCollection = {urls:[]};
         itemUrl = {};
-        _.each(saoDataUrl, function(apiUrl, urlIndex){
+        _.each(saoDataUrl, function(apiUrl){
           itemUrl = {url:replaceKeysWithValues(apiUrl, hashParams), params:oParams};
           if (apiUrl.containsStr("\\|")) {
             itemUrl['target'] = spa.getOnSplit(apiUrl, "|", 0);
@@ -2039,7 +2054,7 @@ var isSpaHashRouteOn=false;
          * */
         dataCollection = {urls:[]};
         itemUrl = {};
-        _.each(_.keys(saoDataUrl), function(dName, kIndex){
+        _.each(_.keys(saoDataUrl), function(dName){
           itemUrl = {name:dName, url:replaceKeysWithValues(saoDataUrl[dName], hashParams), params:oParams};
           if (saoDataUrl[dName].containsStr("\\|")) {
             itemUrl['target'] = spa.getOnSplit(saoDataUrl[dName], "|", 0);
@@ -2982,6 +2997,13 @@ var isSpaHashRouteOn=false;
                 /*apply i18n*/
                 spa.i18n.apply(viewContainerId);
 
+                /*apply data-validation*/
+                if (spa.hasOwnProperty('initDataValidation')) {
+                  $(viewContainerId).find('[data-validate-scope]').each(function (i, el){
+                    spa.initDataValidation('#'+ ($(el).data('validateScope').replace(/#/g,'') || el.id));
+                  });
+                }
+
                 /*init spaRoute*/
                 spa.initRoutes(viewContainerId);
               };
@@ -3100,7 +3122,7 @@ var isSpaHashRouteOn=false;
           if (!_.isArray(spa.finallyOnRender)){ spa.finallyOnRender = [spa.finallyOnRender]; }
           spa.runOnceOnRenderFunctions = spa.runOnceOnRenderFunctions.concat(spa.finallyOnRender);
         }
-        _.each(spa.runOnceOnRenderFunctions, function(fn, index){
+        _.each(spa.runOnceOnRenderFunctions, function(fn){
           if (_.isFunction(fn)) fn();
         });
       }
@@ -3691,15 +3713,15 @@ var isSpaHashRouteOn=false;
       }
       return apiUrl;
     },
-    isCallSuccess : function(axResponse) {
+    isCallSuccess : function() {
       return true;
     },
-    onReqError : function (jqXHR, textStatus, errorThrown) {
+    onReqError : function (jqXHR) {
       //This function is to handles if Ajax request itself failed due to network error / server error
       //like 404 / 500 / timeout etc.
       spa.console.error($(jqXHR.responseText).text());
     },
-    onResError : function (axRes) {
+    onResError : function () {
       //This function is to handle when spa.api.isCallSuccess returns false
     },
     _call : function(ajaxOptions){
