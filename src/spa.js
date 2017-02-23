@@ -310,16 +310,28 @@ var isSpaHashRouteOn=false;
     return (srcStr||'').extractStrBetweenExc(bS, eS);
   };
 
+  spa.strToArray = function(srcStr) {
+    if (typeof srcStr == 'string') {
+      srcStr = [srcStr];
+    }
+    return srcStr;
+  };
+
   spa.toJSON = function (str) {
     var thisStr;
     if (_.isString(str)) {
       thisStr = str.trimStr();
+
+      if (!(thisStr.containsStr("{") || thisStr.containsStr(":") || thisStr.containsStr("\\[") || thisStr.containsStr("'") || thisStr.containsStr('\"') ))
+      { return (thisStr.containsStr(",") || thisStr.containsStr(";"))? thisStr.replace(/ /g,'').replace(/;/g, ',').split(',') : thisStr;
+      }
+
       if (thisStr.containsStr(":") && !thisStr.containsStr(",") && thisStr.containsStr(";")) {
         thisStr = thisStr.replace(/\;/g,',');
       }
       if (!(thisStr.beginsWithStr("{") || thisStr.beginsWithStr("\\["))) {
         if (thisStr.containsStr(":")) {
-          thisStr = "{"+thisStr+"}"
+          thisStr = "{"+thisStr+"}";
         } else if (thisStr.containsStr("=")) {
           thisStr = "{"+thisStr.replace(/=/g,':')+"}";
         } else {
@@ -1069,7 +1081,7 @@ var isSpaHashRouteOn=false;
       var delimiter, val;
       delimiter = (i === 0) ? '' : '&';
       key = encodeURIComponent(key);
-      val = _.isArray(obj[key])? obj[key].map(function(item){ return encodeURIComponent(item) }).join(',') : encodeURIComponent(obj[key]);
+      val = _.isArray(obj[key])? obj[key].map(function(item){ return encodeURIComponent(item); }).join(',') : encodeURIComponent(obj[key]);
       return [str, delimiter, key, '=', val].join('');
     }, '')) : '';
   };
@@ -1370,14 +1382,26 @@ var isSpaHashRouteOn=false;
     return (tAjaxRequests);
   };
 
-  spa.loadScripts = function(scriptsLst, onDone, onFail) {
+  spa.getComponentsFullPath = function(compNameLst){
+    compNameLst = spa.strToArray(spa.toJSON(compNameLst));
+    return _.map(compNameLst, function(compName){ return (spa.defaults.components.rootPath)+compName+'/'+compName+'.js'; });
+  };
 
-    if (typeof scriptsLst === 'string'){
-      scriptsLst = spa.toJSON(scriptsLst);
-      if (typeof scriptsLst === 'string') {
-        scriptsLst = [scriptsLst];
-      }
-    }
+  spa.loadComponents = function(compNameLst, onDone, onFail) {
+    var unloadedComponents = _.filter(spa.strToArray(spa.toJSON(compNameLst)), function(compName){
+      return (!spa.components.hasOwnProperty(compName));
+    });
+    spa.loadScripts(spa.getComponentsFullPath(unloadedComponents), onDone, onFail);
+  };
+
+  spa.loadScripts = function(scriptsLst, onDone, onFail) {
+    scriptsLst = spa.strToArray(spa.toJSON(scriptsLst));
+//    if (typeof scriptsLst === 'string'){
+//      scriptsLst = spa.toJSON(scriptsLst);
+//      if (typeof scriptsLst === 'string') {
+//        scriptsLst = [scriptsLst];
+//      }
+//    }
 
     if (!spa.isBlank(scriptsLst)) {
       var ajaxQ = [];
@@ -1402,12 +1426,13 @@ var isSpaHashRouteOn=false;
   };
 
   spa.loadScriptsSync = function(scriptsLst, onDone, onFail) {
-    if (typeof scriptsLst === 'string'){
-      scriptsLst = spa.toJSON(scriptsLst);
-      if (typeof scriptsLst === 'string') {
-        scriptsLst = [scriptsLst];
-      }
-    }
+    scriptsLst = spa.strToArray(spa.toJSON(scriptsLst));
+//    if (typeof scriptsLst === 'string'){
+//      scriptsLst = spa.toJSON(scriptsLst);
+//      if (typeof scriptsLst === 'string') {
+//        scriptsLst = [scriptsLst];
+//      }
+//    }
     if (spa.isBlank(scriptsLst)) {
       spa.renderUtils.runCallbackFn(onDone);
     } else {
@@ -1627,7 +1652,7 @@ var isSpaHashRouteOn=false;
       retValue = {
         hkeys: _keysSrc
         , params: _.zipObject(_keys, _values)
-      }
+      };
     }
     return (retValue);
   };
@@ -2085,6 +2110,29 @@ var isSpaHashRouteOn=false;
       }
   };
 
+  spa.component = function(componentName, options) {
+    options = options || {};
+    options['componentName'] = componentName;
+    if (!options.hasOwnProperty('renderCallback')) {
+      options['renderCallback'] = 'app.'+componentName+'.renderCallback';
+    }
+    if (options.hasOwnProperty('require')) {
+      spa.loadComponents(options['require'], function(){
+        spa.console.log('Required components successfully loaded.');
+      }, function(){
+        spa.console.log('Failed to load required components.');
+      });
+    }
+    spa.components[componentName] = options;
+  };
+
+  spa.extendComponent = spa.module = function(module, options) {
+    window['app'] = window['app'] || {};
+    window.app[module] = window.app[module] || {};
+    options = options || {};
+    $.extend(window.app[module], options);
+  };
+
   spa.renderComponent = function (componentName, options) {
     spa.console.info('Called renderComponent: '+componentName+' with below options');
     spa.console.info(options);
@@ -2381,7 +2429,7 @@ var isSpaHashRouteOn=false;
       if (!spa.isElementExist("#spaRunTimeHtmlContainer")) {
         $("body").append("<div id='spaRunTimeHtmlContainer' style='display:none;'></div>");
       }
-      $("#spaRunTimeHtmlContainer").append("<div id='" + viewContainerId.replace(/\#/gi, "") + "'></div>")
+      $("#spaRunTimeHtmlContainer").append("<div id='" + viewContainerId.replace(/\#/gi, "") + "'></div>");
     }
     if (useOptions) { /* for each user option set/override internal spaRVOptions */
       /* store options in container data properties if saveOptions == true */
@@ -2397,7 +2445,7 @@ var isSpaHashRouteOn=false;
     var $viewContainerId = $(viewContainerId);
     var _renderOptionInAttr = function(dataAttrKey) {
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
-    }
+    };
     var _renderOption = function(optionKey, dataAttrKey) {
       return (spa.isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
     };
@@ -2436,7 +2484,7 @@ var isSpaHashRouteOn=false;
 
     var vScriptsList = _renderOptionInAttr('scripts'); //(""+ $(viewContainerId).data("scripts")).replace(/undefined/, "");
     if (vScriptsList && spa.isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
-      vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'"
+      vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'";
     }
     var vScripts = spa.toJSON(vScriptsList || "{}");
 
@@ -2444,7 +2492,7 @@ var isSpaHashRouteOn=false;
     if ((!(_.isObject(spaRVOptions.dataScripts))) && (_.isString(spaRVOptions.dataScripts))) {
       vScriptsList = (spaRVOptions.dataScripts || "").trimStr();
       if (spa.isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
-        vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'"
+        vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'";
       };
       spaRVOptions.dataScripts = spa.toJSON(vScriptsList);
     }
@@ -2715,14 +2763,14 @@ var isSpaHashRouteOn=false;
       var vTemplate2RenderInTag = _renderOptionInAttr("template") || _renderOptionInAttr("html");
       var vTemplatesList = _renderOptionInAttr("templates") || _renderOptionInAttr("htmls");
       if (vTemplatesList && spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
-        vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'"
+        vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
       }
       var vTemplates = spa.toJSON(vTemplatesList || "{}");//eval("(" + vTemplatesList + ")");//
       /* Check the option to override */
       if ((!(_.isObject(spaRVOptions.dataTemplates))) && (_.isString(spaRVOptions.dataTemplates))) {
         vTemplatesList = (spaRVOptions.dataTemplates || "").trimStr();
         if (spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
-          vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'"
+          vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
         };
         spaRVOptions.dataTemplates = spa.toJSON(vTemplatesList);
       }
@@ -2849,7 +2897,7 @@ var isSpaHashRouteOn=false;
 
         var vStylesList = _renderOptionInAttr("styles"); //(""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
         if (vStylesList && spa.isBlank((vStylesList || "").replace(/[^:'\"]/g,''))){
-          vStylesList = "'"+ ((vStylesList).split(",").join("','")) + "'"
+          vStylesList = "'"+ ((vStylesList).split(",").join("','")) + "'";
         }
         var vStyles = spa.toJSON(vStylesList || "{}");
 
@@ -3252,7 +3300,7 @@ var isSpaHashRouteOn=false;
       if (_.isArray(rPatternOptions)){
         _.each(rPatternOptions, function(rOpt){
           pushRoutePattern(rOpt, overwrite);
-        })
+        });
       } else if (_.isObject(rPatternOptions)) {
         pushRoutePattern(rPatternOptions, overwrite);
       } else {
@@ -3281,7 +3329,7 @@ var isSpaHashRouteOn=false;
       if (_.isArray(rNamesOrPatterns)){
         _.each(rNamesOrPatterns, function(rNorP){
           removeRoutePattern(rNorP);
-        })
+        });
       } else if (_.isString(rNamesOrPatterns)) {
         removeRoutePattern(rNamesOrPatterns);
       } else {
