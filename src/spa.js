@@ -1672,6 +1672,7 @@ var isSpaHashRouteOn=false;
   };
   spa.i18n.setLanguage = function (lang, i18nSettings) {
     if ($.i18n) {
+      $.i18n.map = {}; //empty dictionary before loading lang file
       lang = lang || ($.i18n.browserLang()).replace(/-/g, "_");
       i18nSettings = $.extend(spa.i18n.settings, i18nSettings);
       $.i18n.properties({
@@ -1700,7 +1701,7 @@ var isSpaHashRouteOn=false;
   };
 
   spa.i18n.value = function(i18nKey) {
-    i18nKey = (''+i18nKey).trim();
+    i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
     if (i18nKey.beginsWithStrIgnoreCase('@')) {
       i18nKey = ((i18nKey.substr(1)).trim());
       try { i18nKey = eval('('+i18nKey+')');
@@ -1727,15 +1728,18 @@ var isSpaHashRouteOn=false;
         dMessage = dMessage.replace(new RegExp("{" + key + "}", "gi"), msgParamValue);
       });
     }
-    return dMessage;
+    return (''+dMessage).trimLeftStr('[').trimRightStr('\\]');
   };
 
   spa.i18n.apply = spa.i18n.render = function (contextRoot, elSelector) {
     if (spa.i18n.loaded || window['Liferay']) {
       contextRoot = contextRoot || "body";
       elSelector = elSelector || "";
-      $(contextRoot).find(elSelector + "[data-i18n]").each(function (indes, el) {
-        var i18nSpecStr = $(el).data("i18n") || '';
+      var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
+      if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
+      $i18nElements.each(function (indes, el) {
+        var $el = $(el),
+            i18nSpecStr = $el.data("i18n") || '';
         if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
         var i18nSpec = spa.toJSON(i18nSpecStr || "{}");
         var i18nData = i18nSpec['i18ndata'];
@@ -1747,13 +1751,13 @@ var isSpaHashRouteOn=false;
             _.each(attrSpec.split("_"), function (attribute) {
               switch (attribute.toLowerCase()) {
                 case "html":
-                  $(el).html(i18nValue);
+                  $el.html(i18nValue);
                   break;
                 case "text":
-                  $(el).text(i18nValue);
+                  $el.text(i18nValue);
                   break;
                 default:
-                  $(el).attr(attribute, i18nValue);
+                  $el.attr(attribute, i18nValue);
                   break;
               }
             });
@@ -1761,6 +1765,61 @@ var isSpaHashRouteOn=false;
         }
       });
     }
+  };
+
+  spa.dataBind = spa.bindData = function (contextRoot, data, elFilter) {
+    contextRoot = contextRoot || 'body';
+    elFilter = elFilter || '';
+
+    var $dataBindEls = $(contextRoot).find(elFilter + '[data-bind]');
+    if (!$dataBindEls.length) $dataBindEls = $(contextRoot).filter(elFilter + '[data-bind]');
+
+    var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormatData, bindValue, dataAttrKey, bindCallback;
+
+    _.each($dataBindEls, function(el) {
+      $el = $(el);
+      bindSpecStr = $el.data('bind') || '';
+      if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = "html:'"+bindSpecStr+"'";
+      bindSpec = spa.toJSON(bindSpecStr || '{}');
+      bindCallback = spa.renderUtils.getFn($el.data('bindCallback') || '');
+
+      if (bindSpec && !$.isEmptyObject(bindSpec)) {
+
+        _.each(_.keys(bindSpec), function (attrSpec) {
+          bindKeyFn = (bindSpec[attrSpec]+'|').split('|');
+          bindKey      = bindKeyFn[0].trimStr();
+          fnFormatData = spa.renderUtils.getFn(bindKeyFn[1].trimStr());
+
+          bindValue = spa.findSafe(data, bindKey);
+          if (fnFormatData) {
+            bindValue = fnFormatData(bindValue, el);
+          }
+
+          _.each(attrSpec.split("_"), function (attribute) {
+            switch (attribute.toLowerCase()) {
+              case 'html':
+                $el.html(bindValue);
+                break;
+              case 'text':
+                $el.text(bindValue);
+                break;
+              default:
+                $el.attr(attribute, bindValue);
+                if (attribute.beginsWithStr('data-')) {
+                  dataAttrKey = spa.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
+                  if (dataAttrKey) $el.data(dataAttrKey, bindValue);
+                }
+                break;
+            }
+          });
+
+          if (bindCallback) {
+            bindCallback(el);
+          }
+        });
+
+      }
+    });
   };
 
   spa.getModifiedElement = function (elSelector) {
@@ -1862,8 +1921,8 @@ var isSpaHashRouteOn=false;
           _fillData();
         },
         error: function (jqXHR, textStatus, errorThrown) {
-
           spa.console.error("Failed loading data from [" + data + "]. [" + textStatus + ":" + errorThrown + "]");
+          spa.api.onReqError(jqXHR, textStatus, errorThrown);
         }
       });
     }
@@ -2254,6 +2313,15 @@ var isSpaHashRouteOn=false;
       });
       spa.console.log([keyPrefix, retObj]);
       return retObj;
+    },
+    getFn:function(fnName) {
+      var _fn = fnName, _undefined;
+      if (fnName) {
+        if (_.isString(fnName)) {
+          _fn = spa.findSafe(window, fnName);
+        }
+      }
+      return (_fn && _.isFunction(_fn))? _fn : _undefined;
     },
     runCallbackFn: function (fn2Call, fnArg) {
       if (fn2Call) {
@@ -2681,6 +2749,8 @@ var isSpaHashRouteOn=false;
                         else if (_.isString(fnOnApiDataUrlErrorHandle)) {
                           eval("(" + fnOnApiDataUrlErrorHandle + "(jqXHR, textStatus, errorThrown))");
                         }
+                      } else {
+                        spa.api.onReqError(jqXHR, textStatus, errorThrown);
                       }
                     }
                   })
@@ -2743,7 +2813,9 @@ var isSpaHashRouteOn=false;
                 //  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
                 //}
                 var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
-                if (!spa.isBlank(fnOnDataUrlErrorHandle)) {
+                if (spa.isBlank(fnOnDataUrlErrorHandle)){
+                  spa.api.onReqError(jqXHR, textStatus, errorThrown);
+                } else {
                   eval("(" + fnOnDataUrlErrorHandle + "(jqXHR, textStatus, errorThrown))");
                 }
               }
