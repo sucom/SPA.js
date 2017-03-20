@@ -1,0 +1,79 @@
+<div id="containerGitLabIssue" class="container-component">
+
+  <div class="ui menu search mr0">
+    <div class="item">
+      <div class="ui form">
+        <div class="inline fields">
+          <div class="field">
+            <a target="_blank" href="{{web_url}}"><strong>Issue #{{id}}</strong></a>
+          </div>
+          <div class="field">
+            <a class="user" href="{{author.web_url}}" target="_blank" title="utc: {{created_at}}">
+              <div class="user-pic"><img src="{{author.avatar_url}}"></div>
+              <span class="name">{{author.name}}</span>
+              <span class="desc">{{utcToLocal created_at}}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right item">
+      <form>
+        <div class="ui form">
+          <div class="inline fields">
+            <div class="field pd0">
+              <label>Assigned To</label>
+              <select name="assignToNewMember" id="assignToNewMember" class="ui fluid dropdown" onchange="app.gitLabIssue.assignTo();">
+                <option value="">-select-</option>
+              </select>
+              <button type="button" class="ui button primary" data-i18n="lbl.btn.issues.assignToMe" onclick="app.gitLabIssue.assignToMe();"></button>
+              <a href="javascript:app.gitLabIssue.refresh();" class="ui button icon" data-i18n="title:'lbl.title.refresh'" ><i id="btnIssueFullRefresh" class="icon repeat loading"></i></a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="advanced-content pd15">
+    <div class="ui comments">
+      <form class="ui reply form">
+        <div class="fields">
+        <div class="field fourteen wide">
+          <textarea id="issueNewNoteBody"></textarea>
+        </div>
+        <div class="field">
+          <div class="ui checkbox">
+            <input id="closeIssue" type="checkbox" tabindex="0" class="hidden">
+            <label>Close Issue</label>
+          </div>
+          <button type="button" class="ui button icon primary mrt5" onclick="app.gitLabIssue.postNewNote();"><i id="btnIssuePost" class="send icon"></i> Post</button>
+        </div>
+        </div>
+      </form>
+      <div class="comment-scroll">
+        <a href="javascript:app.gitLabIssue.listNotes();" class="ui button icon refresh" data-i18n="title:'lbl.title.refresh'" ><i id="btnCommentsFullRefresh" class="icon repeat"></i></a>
+        <div class="ui styled accordion">
+          <div class="active title">
+            <i class="dropdown icon"></i>
+            <span id="issueNotesCount">{{user_notes_count}}</span> <span data-i18n="lbl.member.comments"></span>  <span class="ui italic grey"> + <span id="sysNotesCount">0</span> <span data-i18n="lbl.issue.actions"></span></span>
+          </div>
+          <div class="active content">
+           <div id="container4issueNotes"></div>
+          </div>
+        </div>
+
+        <a target="_blank" href="{{web_url}}"><h2 class="ui header">#{{id}} {{title}}</h2></a>
+        <div>Milestone: {{milestone.title}}</div>
+        <hr/>
+        <div>{{labels}}</div>
+        <hr/>
+
+        <div class="sub header">{{{description}}}</div>
+
+      </div>
+    </div>
+  </div>
+</div>

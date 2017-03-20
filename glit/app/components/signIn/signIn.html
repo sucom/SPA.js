@@ -1,0 +1,46 @@
+<div id="containersignIn" class="container-component">
+ <div class="ui two column centered grid">
+  <div class="one column centered row signin-page">
+    <div class="column five wide">
+      <div class="ui card">
+        <div class="header" data-i18n="html:'common.lbl.signIn'"></div>
+        <div class="content">
+          <form class="ui form" name="fm_signIn" id="fm_signIn" method="post" onsubmit="return(false);" data-validate-scope="" data-validate-common="{ onFocus:[{fn:_clearSpaValidateMsg}, {fn:app.uiHelper.clearSignInServerErrorMsg}] }" >
+            <div class="field">
+              <label data-i18n="html:'lbl.signinName'"></label>
+              <input type="text" name="UserName" id="userName" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.userName', offline:true}] }">
+            </div>
+            <div class="field">
+              <label data-i18n="html:'lbl.signinPassword'"></label>
+              <input type="password" name="UserPwd" id="userPwd" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.password', offline:true}] }">
+            </div>
+            <div class="two fields">
+              <div class="field">
+                <div class="ui checkbox">
+                  <input id="rememberMe" type="checkbox" tabindex="0" class="hidden">
+                  <label><span data-i18n="lbl.signin.remember"></span></label>
+                </div>
+              </div>
+              <div class="field right"><span data-i18n="lbl.signup.newUser"></span></div>
+            </div>
+            <div class="two fields">
+              <div class="field">
+                <button class="ui button primary" id="signInButton" type="submit" onclick="app.auth.signIn()"><i class="icon sign in icon"></i><span data-i18n="html:'lbl.btn.signIn'"></span></button>
+              </div>
+              <div class="field">
+                <button class="ui button primary right floated" id="signUpButton" onclick="app.auth.signUp()"><i class="icon user"></i><span data-i18n="html:'lbl.btn.signUp'"></span></button>
+              </div>
+            </div>
+
+          </form>
+          <div class="ui icon message warning mrt10 hide" id="signInError">
+            <i class="stl-icons warning"></i>
+            <div class="content SS-ERR-MSG"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--<div class="column" data-spa-component="quickHelp"></div>-->
+  </div>
+</div>
+</div>

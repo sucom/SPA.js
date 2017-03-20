@@ -1,0 +1,19 @@
+<div id="container_issueNotes" class="container-component">
+  {{#each iNotes}}
+    <div class="comment system-{{system}}">
+      <div class="content">
+        <span class="author">{{author.name}}</span>
+        <div class="note-actions">
+          <a href="javascript:;" class="ui button icon"><i class="icon trash"></i></a>
+          <a href="javascript:;" class="ui button icon"><i class="icon write"></i></a>
+        </div>
+        <div class="metadata">
+          <a href="javascript:;" class="date" title="utc: {{updated_at}}">{{utcToLocal updated_at}}</a>
+        </div>
+        <div class="text">
+          <p>{{{toHtml body}}}</p>
+        </div>
+      </div>
+    </div>
+  {{/each}}
+</div>

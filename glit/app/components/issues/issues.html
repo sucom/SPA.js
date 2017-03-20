@@ -1,0 +1,12 @@
+<div id="containerIssues" class="container-component">
+  <div>
+    <h2 class="page-header"><i class="ui block icons stl-icons issues"></i><span data-i18n="lbl.comp.title.issues"></span> <a href="javascript:app.header.issues();" class="ui button icon right" data-i18n="title:'lbl.title.refresh'" ><i id="btnIssuesFullRefresh"  class="icon repeat loading"></i></a></h2>
+  </div>
+
+  <div class="ui pointing secondary menu">
+    <a class="item active" data-tab="all" onclick="app.issues.gitLabIssues()" data-i18n="lbl.comp.title.issuesAll"></a>
+    <a class="item" data-tab="todo" onclick="app.issues.gitLabIssuesToMe()" data-i18n="lbl.comp.title.issuesAssignedToMe"></a>
+    <a class="item" data-tab="mine" onclick="app.issues.gitLabIssuesMine()" data-i18n="lbl.comp.title.issuesMine"></a>
+  </div>
+  <div class="ui tab active" data-tab="gitLabIssues" id="tabContainer_gitLabIssues" data-spa-component="gitLabIssues"></div>
+</div>

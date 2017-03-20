@@ -1,0 +1,21 @@
+<div id="container_gitLabProjects" class="container-component">
+  <div class="ui column stackable grid instances">
+    {{#each projects}}
+    <div class="column">
+      <div class="ui cards">
+        <div class="card" data-pid="{{id}}" onclick="app.gitLabProjects.selectProject({{id}}, '{{web_url}}');">
+          <div class="content">
+            <div class="field label" data-i18n="lbl.project.id"></div>
+            <div class="field">{{id}}</div>
+
+            <div class="field label" data-i18n="lbl.project.name"></div>
+            <div class="field">{{path_with_namespace}}</div>
+
+            <div class="thirteen wide field"><a target="_blank" href="{{web_url}}"><i class="world icon"></i></a></div>
+            </div>
+        </div>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+</div>

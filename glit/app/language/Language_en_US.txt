@@ -1,0 +1,749 @@
+lbl.topMenu.AllIssues = Issues
+lbl.topMenu.MyIssues = My Issues
+lbl.topMenu.issuesAssignedToMe = To Do
+lbl.topMenu.settiings = Settings
+
+lbl.comp.title.settings           = Settings
+lbl.comp.title.issues             = Issues - Open
+lbl.comp.title.issuesAll          = All
+lbl.comp.title.issuesMine         = Mine
+lbl.comp.title.issuesAssignedToMe = To Do
+lbl.comp.title.issueDetails       = Details
+
+lbl.tooltip.issues = Issues
+
+tbl.col.title.issue.Status = Status
+tbl.col.title.issue.Severity = Severity
+tbl.col.title.issue.assignTo = Assigned To
+tbl.col.title.issue.createdBy = created By
+tbl.col.title.issue.title = Title
+tbl.col.title.issue.labels = Labels
+tbl.col.title.issue.updateDt = Updated On
+tbl.col.title.issue.notes = Notes
+
+lbl.btn.issues.assignTo = Assign
+lbl.btn.issues.assignToMe = To Me
+lbl.btn.issues.refresh = Refresh
+lbl.btn.issues.close = Close
+lbl.btn.issues.reopen = Re-Open
+
+lbl.btn.signIn = Sign In
+lbl.btn.signUp = Sign Up
+
+lbl.btn.resetApp = Reset &amp; Restart
+lbl.btn.resetApp.title = Re-set All User Settings and Re-start
+
+msg.confirm.resetApp = Are you really want to remove *All* Users Settings?
+lbl.btn.yes.resetApp = Sure, Erase all settings and re-start.
+lbl.btn.no.resetApp = No, keep it.
+
+
+msg.confirm.assignTo = Are you sure to assign issue #<b>{iid}</b> to <b>{name}</b>
+lbl.btn.yes.assignTo = Yes, Assign.
+lbl.btn.no.assignTo = No.
+
+msg.confirm.closeIssue = Are you sure to close issue #<b>{iid}</b>
+lbl.btn.yes.closeIssue = Yes, Close Issue.
+lbl.btn.no.closeIssue = No, Leave it open.
+
+
+lbl.signin.remember = Remember me
+lbl.signup.newUser = New User?
+
+err.signIn.usrNameNotFound = User Not Found.
+err.signIn.incorrectPwd = Incorrect Password.
+err.signIn.usrNameAlreadyFound = User already exists.
+
+lbl.title.settings.primary = Connection Settings
+
+lbl.form.settings.conName    = Connection Name
+lbl.form.settings.gitLabUrl  = GitLab Web URL
+lbl.form.settings.privateKey = Access Key
+
+lbl.btn.saveConSettings = Save
+
+lbl.title.settings.project = Select a project
+lbl.btn.fetch = Fetch
+
+lbl.profile.name = Full Name
+lbl.profile.username = User Name
+
+msg.validate.required.conName = Required Connection Name
+msg.validate.required.gitLabUrl = Required GitLab Web Url
+msg.validate.required.gitLabKey = Required GitLab Access Key
+
+msg.flyout.saveSettingsPrimary = Connection settings have been saved.
+msg.flyout.saveSettingsPrimary.failed = Failed to save connection settings. Unable to fetch!
+msg.flyout.projectSelectionSaved = Selected Project has been saved for issues tracking.
+
+msg.flyout.issue.assignedToX = Issue #{iid} has been assigned to {name}
+msg.flyout.issue.notePosted  = New note has been posted.
+msg.flyout.issue.closed = Issue #{iid} has been closed.
+
+msg.warning.missing.pid = GitLab project is not selected.<br/>Configure GitLab connection and select a project to continue.
+
+validation.alert.issue.note.blank = Enter note
+
+lbl.btn.new = New
+
+lbl.issue.actions  = Action(s)
+lbl.member.comments = Member comment(s)
+
+lbl.app.version = 1.0.0
+
+lbl.project.id = Project ID
+lbl.project.name = Project Name
+lbl.project.url  = Web
+
+common.lbl.signIn = Sign In
+common.lbl.signOut = Sign Out
+common.lbl.help = Help
+common.lbl.view = View
+common.lbl.edit = Edit
+common.lbl.remove = Remove
+common.lbl.close = Close
+common.lbl.save = Save
+common.lbl.ok = OK
+common.lbl.cancel = Cancel
+common.lbl.yes = Yes
+common.lbl.no = No
+common.lbl.confirm = Confirm
+common.lbl.agree = Agree
+common.lbl.disagree = Disagree
+common.lbl.status = Status
+common.lbl.active = Active
+common.lbl.action = Action
+common.lbl.name = Name
+common.lbl.company = Company
+common.lbl.email = eMail
+common.lbl.phone = Phone
+common.lbl.zip = Zip
+common.lbl.address = Address
+common.lbl.street = Street
+common.lbl.city = City
+common.lbl.state = State
+common.lbl.country = Country
+common.lbl.start = Start
+common.lbl.end = End
+common.lbl.viewDetails = View Details
+common.lbl.all = All
+common.lbl.none = None
+common.lbl.select = Select
+common.lbl.informational = Informational
+common.lbl.warning = Warning
+common.lbl.critical = Critical
+common.lbl.actionAlert = Action/Alert
+common.lbl.initiated = Initiated
+common.lbl.success = Success
+common.lbl.failed = Failed
+common.lbl.description = Description
+common.lbl.type = Type
+common.lbl.audit = Audit
+common.lbl.alert = Alert
+common.lbl.eventSource = Event Source
+common.lbl.stmUI = STM UI
+common.lbl.stm = STM
+common.lbl.eventStatus = Event Status
+common.lbl.open = Open
+common.lbl.accepted = Accepted
+common.lbl.closed = Closed
+common.lbl.user = User
+common.lbl.reportedDate = Reported Date
+common.lbl.eventsLimit = Events Limit
+common.lbl.go = Go
+common.lbl.triggered = Triggered
+common.lbl.status = Status
+common.lbl.accept = Accept
+common.lbl.reopen = Reopen
+common.lbl.selected = Selected
+common.lbl.reportedDateTime = Reported Date &amp; Time
+common.lbl.trigger = Trigger
+common.lbl.notified = Notified: Windows Log Channel
+common.lbl.information = Information
+common.lbl.fileName = File Name
+common.lbl.dateTime = Date &amp; Time
+common.lbl.sizeInMB = Size (MB)
+common.lbl.generate = Generate
+common.lbl.download = Download
+
+
+lbl.critical.infoPaneStorage = You are at the limit, Check your repository
+lbl.associatedEvents = Associated Events
+lbl.settings = Settings
+lbl.changePassword = Change Password
+lbl.signinName = User Name
+lbl.signinPassword = Password
+lbl.quickGuide = Quick Guide
+lbl.manageHostInstances = Manage OS2200 Host Instances
+lbl.viewDevices = View Devices
+lbl.tapeDevices = Tape Devices
+lbl.hostName = OS 2200 Host Name
+lbl.serialNo = Serial No.
+lbl.ipAddress = IP Address
+lbl.mount = Mount
+lbl.unmount = Unmount
+lbl.mountTape = Mount Tape
+lbl.tapeDeviceName = Tape Device Name
+lbl.mountType = Mount Type
+lbl.blankTape = Blank Tape
+lbl.existingTape = Existing Tape
+lbl.blankTapeDetails = Blank Tape Details
+lbl.labelType = Label Type
+lbl.labeled = Labeled
+lbl.unlabeled = Unlabeled
+lbl.tapeName = Tape / Volume Name
+lbl.tapeSize = Max. Tape Size
+lbl.permission = Mount Permission
+lbl.readOnly = Read-Only
+lbl.readWrite = Read & Write
+lbl.mounted = Mounted
+lbl.menu = Menu
+lbl.dashboard = Dashboard
+lbl.manage = Manage
+lbl.OS2200HostInstance = OS 2200 Host Instance
+lbl.tapes = Tapes
+lbl.diagnostics = Diagnostics
+lbl.help = Help
+lbl.events = Events
+lbl.storage = Storage
+lbl.summary = Summary
+lbl.search = Search
+lbl.sortBy = Sort by
+lbl.clear = Clear
+lbl.advancedSearch = Advanced Search
+lbl.welcome =
+lbl.inUse = In-use
+lbl.storageUtilization = Repository Storage Utilization
+lbl.host = Host
+lbl.dateTime = Date & Time
+lbl.severity = Severity
+lbl.viewAllEvents = VIEW ALL EVENTS
+lbl.repositorySize = Repository Size :
+lbl.drive = Drive :
+lbl.diskCapacity = Disk Capacity for STM:
+lbl.resize = RESIZE
+lbl.detach = Detach
+lbl.OS2200HostInstances = OS 2200 Host Instances
+lbl.approved = Approved
+lbl.pending = Pending
+lbl.rejected = Rejected
+lbl.advanceSettings = Advanced Settings
+lbl.networkConfiguration = Network Configuration
+lbl.storageConfiguration = Storage Configuration
+lbl.retentionConfiguration = Retention Configuration
+lbl.changePwdWarningMsg = For security reasons, it is mandatory to change your password.
+lbl.currentPassword = Current Password
+lbl.newPassword = New Password
+lbl.confirmPassword = Confirm Password
+lbl.os2200HostInstances = OS2200 Host Instances
+lbl.version = Version :
+lbl.supportedBrowsers = <b> Supported Browsers </b>
+lbl.browser.chrome.version = 57+
+lbl.browser.firefox.version = 52+
+
+lbl.app.copyright = Copyright &copy; 2017.<br/>All Rights Reserved.<br/><br/>GitLabIssuesTracker@gmail.com
+lbl.copyright = Copyright &copy; 2017.
+lbl.cs2200.hostName = Host Name
+lbl.cs2200.serialNumber = Serial Number
+lbl.createBlankTape = Create Blank Tape
+lbl.maxTapeSizeValue = 20 GB
+lbl.cssHostSerialNo = OS 2200 Host Serial No.
+lbl.alertsTriggered = Alerts Triggered
+lbl.stmResourceUtilization = STM Resource Utilization
+lbl.utilized = Utilized
+lbl.totalSize = Total Size
+lbl.currentSize = Current Size
+lbl.eventsAlerts = Events &amp; Alerts
+lbl.stmDumps = STM Dumps
+lbl.severityColon = Severity:
+btn.lbl.inventory.generate = Generate Inventory
+
+lbl.title.ok.createBlankTape = Create Blank Tape
+lbl.title.cancel.createBlankTape = Cancel Create Blank Tape Operation
+lbl.title.viewMore = View More
+lbl.title.confirmUnmount = Unmount Tape from the selected Tape Device
+lbl.title.confirmMount = Mount Tape on the selected Tape Device
+lbl.title.close.tapeDevices = Close Tape Devices View
+lbl.title.cancel.mountTape = Cancel Mount Tape Operation
+lbl.title.sort = Sort
+lbl.title.refresh = Refresh
+lbl.title.moreActions = More Actions
+lbl.title.detachTapeDevice = Detach Tape Device
+lbl.title.approve = Approve
+lbl.title.reject = Reject
+lbl.title.cancel.changePassword = Cancel Change Password Operation
+lbl.title.save.changepassword = Save Change Password
+lbl.title.edit.retentionConfiguration = Edit Retention Configuration
+lbl.title.save.retentionConfiguration = Save Retention Configuration
+lbl.title.cancel.retentionConfiguration = Cancel Edit Retention Configuration Operation
+lbl.title.storageConfiguration = Edit Storage Configuration
+lbl.title.save.storageConfiguration = Save Storage Configuration
+lbl.title.cancel.storageConfigurationEdit = Cancel Edit Storage Configuration Operation
+
+tbl.col.title.eventsAlerts.Status = Status
+tbl.col.title.tapeDevices.Status = Status
+
+lbl.tapeDetails = Tape Details
+lbl.tapeStatus = Tape Status
+lbl.tapeType = Tape Type
+lbl.currentTapeSize = Tape Size
+lbl.tapeUsedSize = Used Size
+lbl.tapeDeviceName = Device Name
+
+lbl.configuredStatus.dashbaordCss2000 = Configured Status
+
+lbl.create = Create
+lbl.scratch = Scratch
+lbl.unscratch = Unscratch
+lbl.erase = Erase
+lbl.delete = Delete
+lbl.mountPermission = Mount Permission
+lbl.owner = Owner
+lbl.dateAccessed = Date Accessed
+lbl.dateAssigned = Date Assigned
+lbl.dateWritten = Date Written
+lbl.dateFreed = Date Freed
+lbl.dateErased = Date Erased
+
+lbl.content.storageConfigurationEdit = Storage Drive is disabled as there is atleast one OS2200 Host instance connected.
+lbl.content.storageConfiguration = There is atleast one host instance attached with Soft Tape Manager which does not use the current max Tape Size:
+lbl.repositoryDetails.storageConfigurationEdit = Repository Details
+lbl.storageDrive.storageConfigurationEdit = Storage Drive
+lbl.maxTapeSize.storageConfigurationEdit = Max. Tape Size
+lbl.repositorySize.storageConfigurationEdit = Repository Size
+lbl.storageThresholdLimit.storageConfigurationEdit =  Storage Threshold Limit
+lbl.critical.storageConfigurationEdit = Critical
+lbl.Warning.storageConfigurationEdit = Warning
+lbl.inconsistent.storageConfiguration = There is insufficent space on the drive containing repository. Please free the drive.
+lbl.errorMessage.storageConfigurationEdit = Critical Alert value should be greater than Warning Alert value.
+
+lbl.deviceStatus = Device Status
+lbl.permission = Permission
+
+lbl.hostDetails = Host Details
+lbl.tapeDeviceDetails = Tape Device Details
+lbl.tapeDevicePhysicalName = Physical Name
+
+lbl.manageTapes = Manage Tapes
+lbl.repositoryTapes = Repository Tapes
+lbl.mountedTapes = Mounted Tapes
+lbl.allTapes = All Tapes
+lbl.twentyGB = 20 GB
+lbl.zeroGB = 0 GB
+lbl.lastUsageDetails = Last Usage Details
+
+lbl.mountedTapeDetails = Mounted Tape Details
+lbl.usageDetails = Usage Details
+
+lbl.corrupted = Corrupted
+lbl.blank = Blank
+lbl.scratched = Scratched
+lbl.mounted = Mounted
+lbl.data = Data
+
+lbl.stlDumpRetentionLimit = STM Dump Retention
+lbl.files = files
+lbl.days = days
+lbl.stlLogRetentionLimit = STM Log Retention
+
+lbl.repositoryDetails = Repository Details
+lbl.storageDrive = Storage Drive
+lbl.max.TapeSize = Max. Tape Size
+lbl.sizeRepository = Repository Size
+lbl.estimatedTapesAllowed = Estimated Tapes Allowed
+lbl.two = 2
+lbl.one = 1
+lbl.thresholdAlerts = Storage Threshold Alerts
+lbl.criticalAlert = Critical Alert
+lbl.warningAlert = Warning Alert
+lbl.edit = Edit
+
+
+lbl.instances.rejected = Rejected Instance
+lbl.instances.pending = New Instance(Approval Pending)
+lbl.instances.faileddetach = Failed Detach Instance
+
+lbl.networkConfigurationMessage = A new network configuration has been detected. Click Edit to update the settings.
+lbl.managementLanDetails = Management LAN Details
+lbl.nicInterface = NIC Interface
+lbl.operationalLanDetails = Operations LAN Details
+
+lbl.networkConfigurationEditMessage = New network settings has been set as default configuration. Click Save to apply the new settings.
+lbl.sameAsAbove = Same as Above
+
+
+msg.validate.required.tapeName = Tape / Volume Name is required.
+msg.validate.format.tapeName = Invalid Tape / Volume Name. Must be Alphanumeric only.
+msg.validate.minLength.tapeName = Invalid Tape / Volume Name. Min Length 2.
+msg.validate.maxLength.tapeName = Invalid Tape / Volume Name. Max Length 6.
+msg.validate.required.currentPassword = Current Password is required.
+msg.validate.required.newPassword = New Password is required.
+msg.validate.required.confirmPassword = Confirm Password is required.
+msg.validate.required.userName = Username is required.
+msg.validate.required.password = Password is required.
+msg.validate.required.stlDumpRetentionLimit = STL Dump Retention Limit is required.
+msg.validate.format.stlDumpRetentionLimit = Enter numbers.
+msg.validate.required.criticalAlert = Critical Alert is required.
+msg.validate.format.storageConfiguration = Enter numbers.
+msg.validate.required.warningAlert = Warning Alert is required.
+msg.validate.required.ipAddress = IpAddress is required.
+msg.validate.format.ipAddress = Please enter proper IpAddress.
+msg.validate.required.managementHostName = Management Host Name is required.
+msg.validate.required.operationHostName = Management Host Name is required.
+msg.validate.format.storageConfigurationEdit = Please enter numbers.
+msg.validate.range.storageConfigurationEdit = Please enter 1 to 100 only.
+tbl.col.title.tapedevice.devicename = Device Name
+
+tbl.col.title.tape.tapename = Tape / Volume Name
+tbl.col.title.repositoryTapes.TapeFileName = Tape / Volume Name
+tbl.col.title.repositoryTapes.TapeStatus = Tape Status
+tbl.col.title.repositoryTapes.TapeType = Tape Type
+tbl.col.title.repositoryTapes.MaxFileSize = Max Tape Size
+tbl.col.title.repositoryTapes.UsedSize = Used Size
+tbl.col.title.repositoryTapes.DateAccessed = Date Accessed
+tbl.col.title.repositoryTapes.ViewDetails = View Details
+tbl.col.title.repositoryTapes.Status         = Status
+
+lbl.title.editNetworkConfiguration = Edit Network Configuration
+lbl.title.save.networkConfiguration = Save Network Configuration
+lbl.title.cancel.editNetworkConfiguration = Cancel Edit Network Configuration Operation
+
+
+
+tbl.col.title.stlDumps.FileName = File Name
+tbl.col.title.stlDumps.DateTime = Date &amp; Time
+tbl.col.title.stlDumps.Size     = Size
+
+tbl.col.title.mountedTape.TapeFileName   = Tape / Volume Name
+tbl.col.title.mountedTape.TapeType = Tape Type
+tbl.col.title.mountedTape.MaxFileSize = Max Tape Size
+tbl.col.title.mountedTape.TapeDeviceName  = Device Name
+tbl.col.title.mountedTape.CSS2200HostName = OS 2200 Host Name
+tbl.col.title.mountedTape.DateAccessed    = Date Accessed
+tbl.col.title.mountedTape.ViewDetails     = View Details
+
+
+tbl.col.title.mountTape.TapeFileName   = Tape / Volume Name
+tbl.col.title.mountTape.MaxFileSize    = Tape Size
+tbl.col.title.mountTape.UsedSize       = Used Size
+tbl.col.title.mountTape.Status         = Status
+tbl.col.title.mountTape.TapeStatus     = Tape Status
+tbl.col.title.mountTape.ViewDetails    = View Details
+tbl.col.title.mountTape.TapeType = Tape Type
+tbl.col.title.mountTape.DateAccessed = Date Accessed
+
+tbl.col.title.allTapes.TapeFileName    = Tape / Volume Name
+tbl.col.title.allTapes.Status          = Status
+tbl.col.title.allTapes.TapeStatus      = Tape Status
+tbl.col.title.allTapes.TapeType        = Tape Type
+tbl.col.title.allTapes.MaxFileSize     = Max Tape Size
+tbl.col.title.allTapes.UsedSize        = Used Size
+tbl.col.title.allTapes.TapeDeviceName  = Device Name
+tbl.col.title.allTapes.CSS2200HostName = OS 2200 Host Name
+tbl.col.title.allTapes.DateAccessed    = Date Accessed
+tbl.col.title.allTapes.ViewDetails     = View Details
+
+tbl.col.title.eventsAlerts.Severity = Severity
+tbl.col.title.eventsAlerts.Action = Action/Alert
+tbl.col.title.eventsAlerts.OS2200HostName = OS 2200 Host Name
+tbl.col.title.eventsAlerts.Description = Description
+tbl.col.title.eventsAlerts.Trigger = Trigger
+tbl.col.title.eventsAlerts.ReportDateTime = Reported Date &amp; Time
+tbl.col.title.eventsAlerts.Type = Type
+tbl.col.title.eventsAlerts.Status = Event Status
+tbl.col.title.eventsAlerts.VIEW-COL = View Details
+tbl.col.title.eventsAlerts.OS2200HostSerialNo = OS 2200 Host Serial No.
+
+tbl.col.title.tapeDevices.TapeDeviceUserName = Device Name
+tbl.col.title.tapeDevices.TapeDeviceStatus = Device Status
+tbl.col.title.tapeDevices.AssignedTapeName = Tape / Volume Name
+tbl.col.title.tapeDevices.AssignedTape = Permission
+tbl.col.title.tapeDevices.ViewDetails = View Details
+
+tbl.col.title.eventsAlertsDetails.Status         = Status
+tbl.col.title.eventsAlertsDetails.Action    = Action/Alert
+tbl.col.title.eventsAlertsDetails.Description    = Description
+tbl.col.title.eventsAlertsDetails.ReportDateTime = Report Date &amp; Time
+
+
+tbl.no.row.selected.dumpsDownload = Select file(s) download.
+tbl.no.row.selected.dumpsDelete   = Select file(s) to delete.
+tbl.no.row.selected.eventsExport  = Select event(s) to export.
+
+alert.msg.req.error.400      = Unable to verify this session. Try signing in again.
+alert.msg.req.error.401      = Cannot perform this operation. You do not have appropriate STM permissions to perform this operation.
+alert.msg.req.error.403      = Invalid request: Request received from a different source. Try signing in again.
+alert.msg.req.error.404      = Invalid request: Resource not found. Please check browser console for more info.
+alert.msg.req.error.408      = You have been signed out due to inactivity. Try signing in again.
+alert.msg.req.error.Unknown  = Unable to perform the request.<br/>Check the Network or GitLab Connection Settings.
+
+validation.alert.password.nomatch = Passwords do not match. Re-enter the password correctly.
+
+common.dialog.btn.Ok     = Ok
+common.dialog.btn.Cancel = Cancel
+common.dialog.btn.Yes    = Yes
+common.dialog.btn.No     = No
+
+confirm.title.warning = Warning
+confirm.title.success = Success
+confirm.title.informational = Informational
+confirm.title.error = Error
+confirm.title.unmountTape = Unmount Tape?
+
+
+common.msg.success = Operation {op} has been successfully completed.
+
+88.lbl.error.common.unknown        = Unknown Error Occured. Contact Unisys Support Center.
+
+201.lbl.error.common.dbcreate      = Internal Module Error. Contact Unisys Support Center.
+201.lbl.error.common.dbupdate      = Internal Module Error. Contact Unisys Support Center.
+202.lbl.error.common.dbfetch       = Internal Module Error. Contact Unisys Support Center.
+
+90.lbl.error.common.nullargumentpassed     = Required request argument(s) is(are) null
+91.lbl.error.common.invalidargumentpassed  = Required request argument(s) is(are) invalid
+
+520.lbl.error.instanceinvoke.argnull        = Certain Parameter(s) is(are) null or not passed
+521.lbl.error.instanceinvoke.argoutofrange  = Value or Count of certain Parameter(s) is(are) not supported
+522.lbl.error.instanceinvoke.argempty       = Value or Count of certain Parameter(s) is(are)empty
+523.lbl.error.instanceinvoke.unauthaccess   = Attempt of Unauthorized Access
+524.lbl.error.instanceinvoke.fileotfound    = File could not be located
+525.lbl.error.instanceinvoke.dirnotfound    = Directory could not be located
+526.lbl.error.instanceinvoke.longpath       = Path was too long to access/create
+527.lbl.error.instanceinvoke.io             = IO Error has occured
+528.lbl.error.instanceinvoke.db             = Database Error has occured
+529.lbl.error.instanceinvoke.mgmt           = Network Share has failed. Check Admin privillages
+530.lbl.error.instanceinvoke.system         = A required user is not present in the system
+531.lbl.error.instanceinvoke.stackoverflow  = Maximum supported Instances are already connected to the application
+532.lbl.error.instanceinvoke.rollback       = Rollback, which was triggered due to some error, has failed
+533.lbl.error.instanceinvoke.failure        = Activate/Deactive has resulted in an Error. Try Again
+534.lbl.error.css2200ops.formatexception    = The Management LAN settings (IP Address) were not configured properly
+535.lbl.error.instanceinvoke.failure        = Previous Connection was not Found
+
+550.lbl.error.detach.failed                 = Detach resulted in error. Try Again
+551.lbl.error.detach.rollback               = Rollback, which was triggered due to some error, has failed
+552.lbl.error.detach.system                 = A required user is not present in the system
+553.lbl.error.detach.failure                = Previous Connection was not Found
+554.lbl.error.detach.mgmt                   = Network Share has failed. Check Admin privillages
+555.lbl.error.detach.db                     = Database Error has occured
+556.lbl.error.detach.io                     = IO Error has occured
+557.lbl.error.detach.argnull                = Certain Parameter(s) is(are) null or not passed
+558.lbl.error.detach.argempty               = Value or Count of certain Parameter(s) is(are)empty
+559.lbl.error.detach.unauthaccess           = Attempt of Unauthorized Access
+560.lbl.error.detach.fileotfound            = File could not be located
+561.lbl.error.detach.dirnotfound            = Directory could not be located
+562.lbl.error.detach.longpath               = Path was too long to access/create
+
+805.lbl.error.tapeNotFoundInDatabase        = Tape does not exists in database
+804.lbl.error.common.tapeNotFound           = Tape does not exists in repository
+803.lbl.error.deleteTape.fileDeletion       = File Deletion Exception
+802.lbl.error.deleteTape.databaseDeletion   = DataBase Deletion Exception
+801.lbl.error.deleteTape.invalidtapestatus  = Deletion is allowed for only blank/corrupted tapes
+
+600.lbl.error.common.tapeNotFoundInDatabase      = Tape does not exists in database
+601.lbl.error.common.tapeNotScratched            = Tape is not Scratched
+603.lbl.error.common.tapeNotExists               = Tape does not exists
+602.lbl.error.common.tapeDbUpdateFailure         = Tape Database update failure
+604.lbl.error.common.tapeBlankTemplateNotExists  = Blank Tape template does not exists
+605.lbl.error.common.tapeTrashDirectoryNotExists = Trash Directory does not exists
+606.lbl.error.common.tapeMoveToTrashFailure      = Moving the Tape to Trash folder failed
+607.lbl.error.exception.threadStateException     = Erasing Tape in Trash failed
+608.lbl.error.exception.outOfMemoryException     = Erasing Tape in Trash failed
+
+70.lbl.error.mount.tapenotfound                                = Mount failed as Tape does not exists.
+71.lbl.error.mount.tapedevicenotfound                          = Mount failed as Tape Device for given OS2200 Host does not exists.
+72.lbl.error.mount.devicefull                                  = Mount failed as Tape Device already mounted.
+73.lbl.error.mount.tapeinUse                                   = Mount failed as Tape in use by some other OS2200 Host.
+74.lbl.error.mount.tapefilenotfoundorinaccessible              = Mount failed as Tape file does not exists in Repository or user does not have permission to access this Tape.
+75.lbl.error.mount.tapedevicedirectorynotfoundorinaccessible   = Mount failed as Tape Device directory does not exists or user does not have permission to access.
+76.lbl.error.mount.invalidtapename                             = Mount failed as Tape is corrupt because Tape name is not valid.
+77.lbl.error.mount.labelmismatch                               = Mount failed as Tape is corrupt because mismatch of label name and Tape name.
+78.lbl.error.mount.segheaderinvalid                            = Mount failed as Tape is corrupt because of invalid Segment Header.
+79.lbl.error.mount.segsetinvalid                               = Mount failed as Tape is corrupt because of invalid Segment Descriptors.
+80.lbl.error.mount.segdescinvalid                              = Mount failed as Tape is corrupt because of invalid Segment Current.Segment Previous.Segment Next or Segment Max.
+81.lbl.error.mount.corruptioncheckfailed                       = Mount failed as corruption check for the Tape has failed.
+82.lbl.error.mount.emptyargument                               = Mount failed as empty argument(s) is(are) passed in request.
+83.lbl.error.mount.css2200notapproved                          = Mount failed as OS2200 Host is not approved for mount.
+84.lbl.error.mount.invalidpathcharacters                       = Mount failed as path for Tape or Tape Device has invalid path characters.
+85.lbl.error.mount.nullpath                                    = Mount failed as path for Tape or the Tape Device path is not provided.
+86.lbl.error.mount.pathtoolong                                 = Mount failed as path of Tape or Tape Device is too long to be recognized by windows.
+87.lbl.error.mount.invalidpath                                 = Mount failed as Tape or Tape Device not found at the given path.It may be on unmapped Windows drive.
+88.lbl.error.mount.invalidwindowspath                          = Mount failed as Windows does not recognize the format of path for Tape or Tape Device.
+89.lbl.error.mount.auth                                        = Mount failed as user doesn't have the permission to move the Tape file or the operation is not supported on Windows current platform.
+91.lbl.error.mount.rollbackfailed                              = Mount failed as rollback has failed.
+92.lbl.error.mount.databasefailure                             = Mount failed as database updation failed.
+93.lbl.error.mount.failed                                      = Unable to perform mount.
+94.lbl.error.mount.osehostnotfound                             = Mount failed as OS2200 Host not found.
+95.lbl.error.mount.configmountedtapesizenotfound               = Mount failed as configuration regarding mounted tape size is missing in database.
+96.lbl.error.mount.usernotfound                                = Mount failed as Windows user either doesn't not exists for this OS2200 Host or unable to fetch Windows user information.
+
+
+901.lbl.error.unmount.tapedevicenotfound                        = Unmount failed as Tape Device for given OS2200 Host does not exists.
+902.lbl.error.unmount.deviceempty                               = Unmount failed as Tape Device already unmounted.
+903.lbl.error.unmount.tapefilenotfoundorinaccessible            = Unmount failed as Tape file does not exists in Tape Device or user does not have permission to access this Tape.
+904.lbl.error.unmount.tapedevicedirectorynotfoundorinaccessible = Unmount failed as Tape Device directory does not exists or user does not have permission to access.
+906.lbl.error.unmount.emptyargument                             = Unmount failed as empty argument(s) is(are) passed in request.
+907.lbl.error.unmount.invalidpathcharacters                     = Unmount failed as path for Tape or Tape Device has invalid path characters.
+908.lbl.error.unmount.nullpath                                  = Unmount failed as path for Tape or the Tape Device path is not provided.
+909.lbl.error.unmount.pathtoolong                               = Unmount failed as path of Tape or Tape Device is too long to be recognized by windows.
+910.lbl.error.unmount.invalidpath                               = Unmount failed as Tape or Tape Device not found at the given path.It may be on unmapped Windows drive.
+911.lbl.error.unmount.invalidwindowspath                        = Unmount failed as Windows does not recognize the format of path for Tape or Tape Device.
+912.lbl.error.unmount.auth                                      = Unmount failed as user doesn't have the permission to move the Tape file or the operation is not supported on Windows current platform.
+913.lbl.error.unmount.rollbackfailed                            = Unmount failed as rollback has failed.
+914.lbl.error.unmount.databasefailure                           = Unmount failed as database updation failed.
+915.lbl.error.unmount.failed                                    = Unable to perform unmount.
+916.lbl.error.unmount.osehostnotfound                           = Unmount failed as OS2200 Host not found.
+917.lbl.error.unmount.configmountedtapesizenotfound             = Unmount failed as configuration regarding unmounted tape size is missing in database.
+918.lbl.error.unmount.usernotfound                              = Unmount failed as Windows user either doesn't not exists for this OS2200 Host or unable to fetch Windows user information.
+
+499.lbl.error.createblanktape.tapenameinvalid             = Blank Tape cannot be created. Tape name contains character that windows does not recognize.
+500.lbl.error.createblanktape.tapenameempty               = Blank Tape cannot be created. No Tape name passed.
+501.lbl.error.createblanktape.tapenamelengthinvalid       = Blank Tape cannot be created. Tape name does not meet the requirement of Tape name length.It should be of length between 2 to 6 alphanumerics.
+502.lbl.error.createblanktape.tapenameinvalid             = Blank Tape cannot be created. Either you entered wrong extension or the Tape name is not alphanumeric.
+503.lbl.error.createblanktape.tapetypeinvalid             = Blank Tape cannot be created. Tape type passed is invalid: Tape type should be either labeled or unlabeled.
+504.lbl.error.createblanktape.auth                        = Blank Tape cannot be created. Unauthorize to perform the operation of creating blank tape.
+505.lbl.error.createblanktape.invalidargument             = Blank Tape cannot be created. Tape name contains invalid characters or unable to write header information to the file.
+506.lbl.error.createblanktape.tapepathtoolong             = Blank Tape cannot be created. Path of the Repository or Template directory is too long according to windows specification.
+507.lbl.error.createblanktape.repositorynotfound          = Blank Tape cannot be created. Repository or Template directory could not be found.
+508.lbl.error.createblanktape.windowCreateBlankTapefailed = Blank Tape cannot be created. Template files for creating blank tape are missing or some other error occured. Make sure Template files are present in configured STM Templates directory.
+509.lbl.error.createblanktape.generic                     = Unable to create blank Tape. Reason not known.
+510.lbl.error.createblanktape.repositoryoutofmemory       = Blank Tape cannot be created. There is not enough storage space in Repository.
+511.lbl.error.blanktape.duplicate                         = Blank Tape cannot be created. Tape with same name already exists in database.
+512.lbl.error.blanktape.creation                          = Unable to create blank Tape. Reason not known.
+
+200.lbl.error.common.filepermissionerror                  = Permission to the tape file cannot be granted
+
+350.lbl.error.getmaxtapesize.unabletofetch                = Unable to fetch configured max tape size.
+
+273.lbl.error.scratch.invalidtapestatus    = Tape Status is invalid for Scratch Operation
+283.lbl.error.scratch.invalidtapestatus    = Tape is invalid or Not Present for Scratch Operation
+
+374.lbl.error.unscratch.invalidtapestatus  = Tape status is invalid for Un-Scratch
+383.lbl.error.unscratch.invalidtapestatus  = Tape Status is invalid or Not Present for Un-Scratch Operation
+
+999.Error                                  = Log Level Not Changed
+
+113.lbl.error.listalltapedevice.invalid_Ose          = Invalid CSS2200 Instance or OSE not Attached
+112.lbl.error.listalltapedevice.db_connection_failed = Unable to connect to Database
+111.lbl.error.listalltapedevice.nullarguement        = No OSE Serial Number passed
+
+401.lbl.error.viewtapedetail.getDeviceObjectByTape   = Error in getting tape device detail
+
+303.lbl.error.nullargumentpassed                     = Username is null
+304.lbl.error.nullargumentpassed                     = Password is null
+302.lbl.error.Authenticate                           = Invalid Username or password
+306.lbl.error.nostlgroupfound                        = You are not part of any STM Group
+301.lbl.error.Authenticate                           = Authentication Failed: User account got locked. Contact Windows Administrator.
+305.lbl.error.Authenticate                           = User must change the password on next login.
+307.lbl.error.InternalServerError                    = Configuration File is corrupted. Contact Unisys Support Center.
+308.lbl.error.InternalServerError                    = Internal Server Error. Try Again. For more information about this error, refer the server application log. If you still face the issue, Contact Unisys Support Center.
+309.lbl.error.InternalServerError                    = Internal Server Error. Try Again. For more information about this error, refer the server application log. If you still face the issue, Contact Unisys Support Center.
+310.lbl.error.signinaccessdenied                     = User does not have the permission to access this computer from network. Contact Windows Administrator.
+
+40.lbl.error.invalidRequest                          = Values in Database and Session doesnot match
+41.lbl.error.HttpRequestError                        = Network Connection Error
+42.lbl.error.invalidsessionortoken                   = Invalid Session
+
+701.lbl.error.common.nullargumentpassed                = Current Password is required.
+702.lbl.error.common.nullargumentpassed                = New Password is required.
+703.lbl.error.common.nullargumentpassed                = Confirm Password is required.
+704.lbl.error.changepassword.nonewpassword             = New Password is same as Current Password. Try again.
+705.lbl.error.changepassword.passworddoesnotmatch      = Passwords do not match! Re-enter the password correctly.
+706.lbl.error.changepassword.usernotfoundinhttprequest = Unable to find User information from Http Request.
+707.lbl.error.changepassword.accessdenied              = Access is denied: User does not have the permission to change password. Contact Windows Administrator.
+708.lbl.error.changepassword.policyrequirements        = The password does not meet the password policy requirements. Check the minimum password length, password complexity and password history requirements. Contact Windows Administrator.
+709.lbl.error.changepassword.invaliduser               = User is not configured in Windows
+710.lbl.error.changepassword.nostmgroupfound           = You are not part of any STM Group
+712.lbl.error.changepassword.useraccountlock           = User account got locked. Contact Windows Administrator.
+711.lbl.error.changepassword.incorrectCurrentPassword  = Incorrect password. Re-enter the password correctly.
+
+620.lbl.error.rejectinstance.invalidapprovalstatus   = The Instance has the incorrect approval status and cannot be Rejected
+803.lbl.error.advancedsetting.noavailablesize        = There is available size for selected drive
+
+950.lbl.error.eventsalerts.invalideventstatus        = Invalid events are selected for event status change request
+
+980.lbl.error.stmdump.exeNotFound = Request for generate dumps failed due to the STMDump exe not found/not started.
+
+
+info.msg.estimate.tapes = Estimate: Repository Size  of {tapeSize} GB can create maximum {noOfTapes} tape(s) with Max. Tape Size of {maxTapeSize} GB
+
+
+dtLang.sEmptyTable        = Nothing to display
+dtLang.sInfoEmpty         = Nothing to display
+dtLang.sInfo.showing      = Showing
+dtLang.sInfo.to           = to
+dtLang.sInfo.of           = of
+dtLang.sInfo.noOfRows     = Number of entries per page
+dtLang.sInfo.entries      = entries
+dtLang.sInfo.filteredFrom = filtered from
+dtLang.sZeroRecords       = No matching records found
+dtLang.selected           = Selected
+
+dtLang.sLoadingRecords = Loading...
+dtLang.sProcessing     = Processing...
+dtLang.sSearch         = Search:
+
+dtLang.SearchLbl         = Search
+dtLang.refresh           = Refresh
+dtLang.showHideCols      = Show / Hide Columns
+dtLang.clearBtnLbl       = Clear
+dtLang.clearBtnTitle     = Clear Search Text
+
+dtLang.AdvSearchBtnLbl        = Advanced Search
+dtLang.AdvSearchBtnTitle      = Search on Multiple Fields
+dtLang.closeAdvSearchBtnLbl   = Close Advanced Search
+dtLang.closeAdvSearchBtnTitle = Close Search on Multiple Fields
+dtLang.AdvSearchFldTxt        = Type to select
+dtLang.title.trigger          = Window Log Channel
+
+dialog.title.scratchTape   = Scratch Tape?
+dialog.msg.scratchTape     = This operation will scratch tape {tapeName}, the tape will be put in the pool where it can be rewritten.  Do you want to continue?
+dialog.btn.yes.scratchTape = Yes, Scratch Tape
+dialog.btn.no.scratchTape  = No, Keep Tape
+
+dialog.title.unscratchTape   = Unscratch Tape?
+dialog.msg.unscratchTape     = This operation will unscratch tape {tapeName}, this will recover the tape contents if it has not been written.  Do you want to continue?
+dialog.btn.yes.unscratchTape = Yes, Unscratch Tape
+dialog.btn.no.unscratchTape  = No, Keep Tape
+
+dialog.title.eraseTape   = Erase Tape?
+dialog.msg.eraseTape     = This operation will erase tape {tapeName}, the contents of the tape will be lost.  Do you want to continue?
+dialog.btn.yes.eraseTape = Yes, Erase Tape
+dialog.btn.no.eraseTape  = No, Keep Tape
+
+dialog.title.deleteTape   = Delete Tape?
+dialog.msg.deleteTape     = This operation will delete tape {tapeName}, the tape will no longer be accessible.  Do you want to continue?
+dialog.btn.yes.deleteTape = Yes, Delete Tape
+dialog.btn.no.deleteTape  = No, Keep Tape
+
+dialog.title.mountTape   = Mount Tape?
+dialog.msg.mountTape     = Are you sure you want to mount tape {tapeName} on tape drive {tapeDriveName} in Host {OS2200HostName}?
+dialog.btn.yes.mountTape = Yes, Mount Tape
+dialog.btn.no.mountTape  = No
+
+dialog.title.unmountTape   = Unmount Tape?
+dialog.msg.unmountTape     = Unmount (or free) of a tape from a tape drive should be done from the OS 2200 Host, if the OS 2200 Host is running continuing with the unmount may cause OS 2200 host reported errors.  Do you want to continue?
+dialog.btn.yes.unmountTape = Yes, Unmount Tape
+dialog.btn.no.unmountTape  = No, Keep Tape
+
+dialog.title.detachHost   = Detach OS2200 Host?
+dialog.msg.detachHost     = Detach of "{OS2200HostName}" through the STM should only be done if this OS2200 instance cannot be deactivated through SMC. Do you want to continue?
+dialog.btn.yes.detachHost = Yes, Detach OS2200 Host
+dialog.btn.no.detachHost  = No, Keep OS2200 Host
+
+dialog.title.approveHost   = Approve OS 2200 Host Instance?
+dialog.msg.approveHost     = Are you sure you want to Approve Host "{OS2200HostName}"?
+dialog.btn.yes.approveHost = Yes, Approve Host
+dialog.btn.no.approveHost  = No, Don&#39;t Approve
+
+dialog.title.rejectHost   = Reject OS 2200 Host Instance?
+dialog.msg.rejectHost     = Once the reject of the Host "{OS2200HostName}" has been done, a Detach through STM or Deactivate through SMC must be done and then an Activate through SMC to be able to attach the host to the STM.  Do you want to continue?
+dialog.btn.yes.rejectHost = Yes, Reject Host
+dialog.btn.no.rejectHost  = No, Don&#39;t Reject
+
+dialog.title.deleteDumps   = Delete Dumps?
+dialog.msg.deleteDumps     = This operation will delete the selected dumps.  Do you want to continue?
+dialog.btn.yes.deleteDumps = Yes, Delete Dump(s)
+dialog.btn.no.deleteDumps  = No, Keep Dumps
+
+##############################################################
+lbl.appName = GitLab Issues Tracker - <i>Lite</i>
