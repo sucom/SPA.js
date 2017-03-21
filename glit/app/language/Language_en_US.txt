@@ -20,6 +20,7 @@ tbl.col.title.issue.title = Title
 tbl.col.title.issue.labels = Labels
 tbl.col.title.issue.updateDt = Updated On
 tbl.col.title.issue.notes = Notes
+tbl.col.title.issue.milestone = Milestone
 
 lbl.btn.issues.assignTo = Assign
 lbl.btn.issues.assignToMe = To Me
