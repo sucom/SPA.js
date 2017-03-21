@@ -469,7 +469,7 @@ tbl.col.title.eventsAlertsDetails.ReportDateTime = Report Date &amp; Time
 
 tbl.no.row.selected.dumpsDownload = Select file(s) download.
 tbl.no.row.selected.dumpsDelete   = Select file(s) to delete.
-tbl.no.row.selected.eventsExport  = Select event(s) to export.
+tbl.no.row.selected.eventsExport  = Select issue(s) to export.
 
 alert.msg.req.error.400      = Unable to verify this session. Try signing in again.
 alert.msg.req.error.401      = Cannot perform this operation. You do not have appropriate STM permissions to perform this operation.
