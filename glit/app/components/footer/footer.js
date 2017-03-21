@@ -1,1 +1,0 @@
-spa.component("footer",{target:"#mainContent"}),spa.extendComponent("footer",{aboutApp:function(){"use strict";spa.renderComponent("aboutApp")}});
