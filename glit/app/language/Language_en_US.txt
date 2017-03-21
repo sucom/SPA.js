@@ -60,10 +60,11 @@ lbl.form.settings.conName    = Connection Name
 lbl.form.settings.gitLabUrl  = GitLab Web URL
 lbl.form.settings.privateKey = Access Key
 
-lbl.btn.saveConSettings = Save
+lbl.btn.saveConSettings = Save &amp; Verify
 
 lbl.title.settings.project = Select a project
-lbl.btn.fetch = Fetch
+lbl.btn.fetch = Fetch Project(s)
+lbl.tooltip.selectProject = Click to select
 
 lbl.profile.name = Full Name
 lbl.profile.username = User Name
