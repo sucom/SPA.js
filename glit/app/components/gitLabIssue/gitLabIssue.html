@@ -5,13 +5,13 @@
       <div class="ui form">
         <div class="inline fields">
           <div class="field">
-            <a target="_blank" href="{{web_url}}"><strong>Issue<br/>#{{iid}}</strong></a>
+            <a target="_blank" href="{{web_url}}" title="Click to view this issue at GitLab"><strong>Issue<br/>#{{iid}}</strong></a>
           </div>
           <div class="field">
-            <a class="user" href="{{author.web_url}}" target="_blank" title="utc: {{created_at}}">
-              <div class="user-pic"><img src="{{author.avatar_url}}"></div>
-              <span class="name">{{author.name}}</span>
-              <span class="desc">{{utcToLocal created_at}}</span>
+            <a class="user" href="{{author.web_url}}" target="_blank">
+              <div class="user-pic" title="Click to view Author's profile"><img src="{{author.avatar_url}}"></div>
+              <span class="name" title="Click to view Author's profile">{{author.name}}</span>
+              <span class="desc" title="utc: {{created_at}}">{{utcToLocal created_at}}</span>
             </a>
           </div>
         </div>
@@ -24,10 +24,10 @@
           <div class="inline fields">
             <div class="field pd0">
               <label>Assigned To</label>
-              <select name="assignToNewMember" id="assignToNewMember" class="ui fluid dropdown" onchange="app.gitLabIssue.assignTo();">
+              <select name="assignToNewMember" id="assignToNewMember" class="ui fluid dropdown" onchange="app.gitLabIssue.assignTo();" title="Select member to Assign To">
                 <option value="">-select-</option>
               </select>
-              <button type="button" class="ui button primary" data-i18n="lbl.btn.issues.assignToMe" onclick="app.gitLabIssue.assignToMe();"></button>
+              <button type="button" class="ui button primary" data-i18n="lbl.btn.issues.assignToMe" onclick="app.gitLabIssue.assignToMe();" title="Assign this issue to me"></button>
               <a href="javascript:app.gitLabIssue.refresh();" class="ui button icon" data-i18n="title:'lbl.title.refresh'" ><i id="btnIssueFullRefresh" class="icon repeat loading"></i></a>
             </div>
           </div>
@@ -55,7 +55,7 @@
           <div class="inline fields">
             <div class="field pd0">
               <label>Labels</label>
-              {{labels}}             
+              {{labels}}
             </div>
           </div>
         </div>
@@ -63,7 +63,7 @@
     </div>
 -->
       </div>
-      
+
     </div>
     <div class="ui comments">
       <form class="ui reply form">
@@ -92,7 +92,7 @@
           </div>
         </div>
 
-        <a target="_blank" href="{{web_url}}"><h2 class="ui header">#{{iid}} {{title}}</h2></a>
+        <a target="_blank" href="{{web_url}}"><h2 class="ui header" title="Click to view this issue at GitLab">#{{iid}} {{title}}</h2></a>
         <div>{{labels}}</div>
         <hr/>
 
