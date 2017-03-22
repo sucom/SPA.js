@@ -5,11 +5,11 @@
     <input id="isLiveCheck" type="checkbox" tabindex="0" class="hidden">
   </div>
   <div class="menu right">
-    <a href="javascript:app.header.issues()" data-menu="issues" class="item authBlock hide"><i class="stl-icons issues"></i><span data-i18n="html:'lbl.topMenu.AllIssues'"></span></a>
-    <a href="javascript:app.header.settings()" data-menu="settings" class="item authBlock hide"><i class="stl-icons advanced-settings"></i><span data-i18n="html:'lbl.topMenu.settiings'"></span></a>
+    <a href="javascript:app.header.issues()" data-menu="issues" class="item authBlock hide"><i class="file text icon"></i><span data-i18n="html:'lbl.topMenu.AllIssues'"></span></a>
+    <a href="javascript:app.header.settings()" data-menu="settings" class="item authBlock hide"><i class="settings icon"></i><span data-i18n="html:'lbl.topMenu.settiings'"></span></a>
 
     <div class="ui dropdown item authBlock hide" id="userBlock">
-      <span id="welcome" data-i18n="html:'lbl.welcome'"></span>&nbsp; <span id="userDisplayName"></span> <i class="angle down icon"></i>
+      <span id="welcome" data-i18n="html:'lbl.welcome'"></span>&nbsp; <i class="user icon"></i><span id="userDisplayName"></span> <i class="angle down icon"></i>
       <div class="menu">
         <a class="item" data-i18n="html:'lbl.changePassword'" onclick="app.header.changePassword()"></a>
         <a class="item" data-i18n="html:'common.lbl.signOut'" onclick="app.auth.signOut()"></a>

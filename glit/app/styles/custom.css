@@ -313,6 +313,7 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .container-component.max .advanced-search-flex{height:100%; width:calc(100% - 600px);}
 #containerGitLabIssue{height: 100%;}
 .advanced-search{width:0px; background:#fff; height:100%; float:right; overflow:hidden; -webkit-transition:width .6s ease-in-out; -moz-transition:width .6s ease-in-out; -o-transition:width .6s ease-in-out; transition:width .6s ease-in-out;}
+.advanced-search .ui.menu.search{background:#d0d5ed;}
 .container-component.max .advanced-search{width:600px;}
 .advanced-search .title{background:#45495f; height:42px; padding:10px 15px; font-weight:bold; color:#fff; white-space: nowrap; border-top:1px solid #efefef;}
 .advanced-content{padding-top:10px; height:calc(100% - 41px);}
@@ -323,6 +324,8 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .advanced-content .ui.horizontal.divider .select{width:20px; height:20px; line-height:20px; position: absolute; top:-5px; background:#fff; z-index:1; cursor:pointer; display:none;}
 .advanced-content .ui.horizontal.divider .select.all{right:40px;}
 .advanced-content .ui.horizontal.divider .select.none{right:10px;}
+.advanced-content .labels{margin:-15px -15px 10px -15px;}
+.advanced-content .labels .ui.menu.search{background:#e8e8e8;}
 
 .dashboard{ display:flex; display:-webkit-flex; display:-ms-flexbox; flex-wrap:wrap;-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;}
 .dashboard .column{width:450px; margin-left:15px; margin-right:15px;}

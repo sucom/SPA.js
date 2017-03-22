@@ -38,6 +38,33 @@
   </div>
 
   <div class="advanced-content pd15">
+    <div class="labels">
+      <div class="ui menu search mr0">
+        <div class="item">
+          <div class="ui form">
+            <div class="inline fields">
+              <div class="field">Milestone:</div>
+              <div class="field">{{milestone.title}}</div>
+            </div>
+          </div>
+        </div>
+<!--
+        <div class="right item">
+      <form>
+        <div class="ui form">
+          <div class="inline fields">
+            <div class="field pd0">
+              <label>Labels</label>
+              {{labels}}             
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+-->
+      </div>
+      
+    </div>
     <div class="ui comments">
       <form class="ui reply form">
         <div class="fields">
@@ -66,8 +93,6 @@
         </div>
 
         <a target="_blank" href="{{web_url}}"><h2 class="ui header">#{{iid}} {{title}}</h2></a>
-        <div>Milestone: {{milestone.title}}</div>
-        <hr/>
         <div>{{labels}}</div>
         <hr/>
 
