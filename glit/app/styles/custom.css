@@ -403,7 +403,7 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .ui.comments .reply.form textarea{height:50px; border-radius: 0px; min-height:55px; resize:none;}
 .ui.comments .ui.header{font-size:14px; margin:15px 0px 5px 0px;}
 .ui.comments > .reply.form{margin-top: 0px;}
-.ui.comments .comment-scroll{height:calc(100% - 48px); overflow:auto; position: relative;}
+.ui.comments .comment-scroll{height:calc(100% - 90px); overflow:auto; position: relative;}
 .ui.comments .comment-scroll .refresh{position: absolute; right:0px; top: 5px;}
 .ui.comments .comment-scroll .refresh:hover, .ui.comments .comment-scroll .refresh:focus{background:none;}
 .user-pic{width:30px; height:30px; float: left; margin:-10px 10px !important; background: #999; overflow:hidden;}
