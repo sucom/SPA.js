@@ -44,26 +44,40 @@
           <div class="ui form">
             <div class="inline fields">
               <div class="field">Milestone:</div>
-              <div class="field">{{milestone.title}}</div>
+              <div class="field"><b>{{milestone.title}}</b></div>
             </div>
           </div>
         </div>
-<!--
-        <div class="right item">
-      <form>
-        <div class="ui form">
-          <div class="inline fields">
-            <div class="field pd0">
-              <label>Labels</label>
-              {{labels}}
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
--->
-      </div>
 
+        <div class="item center">
+          <div class="ui form">
+            <div class="inline fields">
+              <div class="field">Severity:</div>
+              <div class="field"><b>{{toIssueSeverity labels}}</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="item right">
+          <div class="ui form">
+            <div class="inline fields">
+              <div class="field">Status:</div>
+              <div class="field"><b>{{toIssueStatus labels}}</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="labels">
+      <div class="ui menu search mr0">
+        <div class="item">
+          <div class="ui form">
+            <div class="inline fields">
+              <div class="field"><b>{{labels}}</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="ui comments">
       <form class="ui reply form">
@@ -93,7 +107,6 @@
         </div>
 
         <a target="_blank" href="{{web_url}}"><h2 class="ui header" title="Click to view this issue at GitLab">#{{iid}} {{title}}</h2></a>
-        <div>{{labels}}</div>
         <hr/>
 
         <div class="sub header">{{{description}}}</div>

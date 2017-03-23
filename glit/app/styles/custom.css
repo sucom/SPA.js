@@ -324,8 +324,8 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .advanced-content .ui.horizontal.divider .select{width:20px; height:20px; line-height:20px; position: absolute; top:-5px; background:#fff; z-index:1; cursor:pointer; display:none;}
 .advanced-content .ui.horizontal.divider .select.all{right:40px;}
 .advanced-content .ui.horizontal.divider .select.none{right:10px;}
-.advanced-content .labels{margin:-15px -15px 10px -15px;}
-.advanced-content .labels .ui.menu.search{background:#e8e8e8;}
+.advanced-content .labels{margin:-15px -15px 10px -15px; border-top:1px dotted #a4a4a7; }
+.advanced-content .labels .ui.menu.search{background:#e8e8e8; border-top:1px dotted #a4a4a7; }
 
 .dashboard{ display:flex; display:-webkit-flex; display:-ms-flexbox; flex-wrap:wrap;-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;}
 .dashboard .column{width:450px; margin-left:15px; margin-right:15px;}
@@ -403,7 +403,7 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .ui.comments .reply.form textarea{height:50px; border-radius: 0px; min-height:55px; resize:none;}
 .ui.comments .ui.header{font-size:14px; margin:15px 0px 5px 0px;}
 .ui.comments > .reply.form{margin-top: 0px;}
-.ui.comments .comment-scroll{height:calc(100% - 90px); overflow:auto; position: relative;}
+.ui.comments .comment-scroll{height:calc(100% - 125px); overflow:auto; position: relative;}
 .ui.comments .comment-scroll .refresh{position: absolute; right:0px; top: 5px;}
 .ui.comments .comment-scroll .refresh:hover, .ui.comments .comment-scroll .refresh:focus{background:none;}
 .user-pic{width:30px; height:30px; float: left; margin:-10px 10px !important; background: #999; overflow:hidden;}
