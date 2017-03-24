@@ -1767,6 +1767,21 @@ var isSpaHashRouteOn=false;
     }
   };
 
+  /* Extend to jQuery as
+   *
+   * $("el-selector").i18n('i18n.key')
+   *
+   * */
+  $.fn.extend({
+    i18n: function (opt) {
+      this.each(function () {
+        if (opt) $(this).attr('data-i18n', opt).data('i18n', opt);
+        spa.i18n.apply(this);
+      });
+      return this;
+    }
+  });
+
   spa.dataBind = spa.bindData = function (contextRoot, data, elFilter) {
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
@@ -2165,6 +2180,7 @@ var isSpaHashRouteOn=false;
     , components: {
           rootPath: 'components/'
         , templateExt: '.html'
+        , scriptExt: '.js'
         , callback:''
       }
   };
@@ -2198,7 +2214,7 @@ var isSpaHashRouteOn=false;
 
     var _cFilesPath  = spa.defaults.components.rootPath+componentName+"/"+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
-      , _cScriptFile = _cFilesPath+".js"
+      , _cScriptFile = _cFilesPath+spa.defaults.components.scriptExt
       , _renderComp  = function(){
           spa.console.info('_renderComp > '+componentName+' with below options');
           spa.console.info(options);
@@ -3333,6 +3349,7 @@ var isSpaHashRouteOn=false;
     , defaultPageRoute : ""
     , beforeRoute : ""
     , defaultTemplateExt : ".html"
+    , defaultScriptExt : ".js"
     , loadDefaultScript:true
     , defaultRouteTargetContainerIdPrefix  : "routeContainer_"
     , defaultRouteTemplateContainerIdPrefix: "template_"
@@ -3490,7 +3507,7 @@ var isSpaHashRouteOn=false;
       var renderTarget      = ""+((oTagRouteOptions['target']||"").trimStr())
         , tmplExt           = (foundRouteTmplExt)? (oTagRouteOptions['ext'] || oTagRouteOptions['tmplext'] || oTagRouteOptions['tmplExt']) : (spa.routesOptions["defaultTemplateExt"]||"")
         , defaultTmplPath   = (routeNameWithPath+tmplExt+"?"+routeParams).trimRightStr("\\?")
-        , defaultScriptPath = routeNameWithPath+".js"
+        , defaultScriptPath = routeNameWithPath+(spa.routesOptions["defaultScriptExt"]||".js")
         , defaultCallBeforeRoute = "spa.routes."+routeName+"_before"
         , defaultRenderCallback  = "spa.routes."+routeName+"_renderCallback"
         , useTargetOptions = spa.findIgnoreCase(oTagRouteOptions, "usetargetoptions")
@@ -3887,6 +3904,9 @@ var isSpaHashRouteOn=false;
     },
     post : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
       spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
+    },
+    put : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
+      spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
     }
 
   };//End of spa.api{}
