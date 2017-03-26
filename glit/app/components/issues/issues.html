@@ -1,12 +1,57 @@
 <div id="containerIssues" class="container-component">
   <div>
-    <h2 class="page-header"><i class="ui block icons stl-icons issues"></i><span data-i18n="lbl.comp.title.issues"></span> <a href="javascript:app.header.issues();" class="ui button icon right" data-i18n="title:'lbl.title.refresh'" ><i id="btnIssuesFullRefresh"  class="icon repeat loading"></i></a></h2>
+    <div class="page-header">
+      <i class="ui block icons stl-icons issues"></i>
+      <form name="fmIssuesFilter" id="fmIssuesFilter" onsubmit="return false;">
+        <div class="ui form">
+          <div class="inline fields">
+            <label class="title" data-i18n="lbl.comp.title.issues"></label>
+            <div class="field">
+              <div class="ui radio checkbox" onclick="app.issues.getIssuesFromServerFor(this)">
+                <input type="radio" name="issuesFilter" class="hidden" value="opened" checked="">
+                <label>Open</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox" onclick="app.issues.getIssuesFromServerFor(this)">
+                <input type="radio" name="issuesFilter" class="hidden" value="closed">
+                <label>Closed</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui radio checkbox" onclick="app.issues.getIssuesFromServerFor(this)">
+                <input type="radio" name="issuesFilter" class="hidden" value="">
+                <label>All</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="ui">
+                <label onclick="javascript:dt.reloadDatatable(true);" class="ui button icon right" data-i18n="title:'lbl.title.refresh'" ><i id="btnIssuesFullRefreshLink"  class="icon repeat loading"></i></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="ui pointing secondary menu">
     <a class="item active" data-tab="all" onclick="app.issues.gitLabIssues()" data-i18n="lbl.comp.title.issuesAll"></a>
     <a class="item" data-tab="todo" onclick="app.issues.gitLabIssuesToMe()" data-i18n="lbl.comp.title.issuesAssignedToMe"></a>
     <a class="item" data-tab="mine" onclick="app.issues.gitLabIssuesMine()" data-i18n="lbl.comp.title.issuesMine"></a>
+
+    <div class="right menu">
+    <div class="item">
+      <form onsubmit="app.issues.searchIssues();return false;">
+        <div class="ui icon labeled input" id="containerIssueSearch">
+          <div class="ui label" title="Clear Search"><a href="javascript:;" onclick="$('#issueSearchTxt').val('')">X</a></div>
+          <input id="issueSearchTxt" name="issueSearchTxt" type="text" placeholder="Enter Issue No." autocomplete="off">
+          <i id="btnIssueSearch" class="search link icon" title="Search" onclick="app.issues.searchIssues();"></i>
+        </div>
+      </form>
+    </div>
+  </div>
+
   </div>
   <div class="ui tab active" data-tab="gitLabIssues" id="tabContainer_gitLabIssues" data-spa-component="gitLabIssues"></div>
 </div>

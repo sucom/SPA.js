@@ -1,27 +1,35 @@
-<div id="container_gitLabIssues" class="container-component max hide">
+<div id="container_gitLabIssues" class="container-component max">
   <div class="advanced-search-flex">
   <div class="content dtresize events">
     <div class="grid-filters-buttons">
       <label class="bold mrr5" data-i18n="lbl.severityColon"></label>
       <button class="ui button" data-filter="Severity_CRITICAL" id="btn_Severity_CRITICAL" onclick="app.gitLabIssues.quickFilter(this, '#btn_Severity_WARNING');"><i class="stl-icons critical"></i><span class="label" data-i18n="common.lbl.critical"></span> <span class="count"></span></button>
       <button class="ui button" data-filter="Severity_WARNING" id="btn_Severity_WARNING" onclick="app.gitLabIssues.quickFilter(this, '#btn_Severity_CRITICAL');"><i class="stl-icons warning"></i><span class="label" data-i18n="common.lbl.warning"></span> <span class="count"></span></button>
+      <button class="ui button" id="btnLayoutChange" onclick="app.gitLabIssues.toggleLayout();"><i class="icon maximize mr0"></i></button>
     </div>
     <table id="gitLabIssues"></table>
   </div>
   <div class="actions">
-    <button type="button" data-access="Accept_Event" class="ACTION hide ui button primary OPEN"             id="btnAction4Accept" onclick="app.gitLabIssues.action('accept');" data-i18n="common.lbl.accept"></button>
-    <button type="button" data-access="Reopen_Event" class="ACTION hide ui button primary CLOSED"           id="btnAction4Reopen" onclick="app.gitLabIssues.action('reopen');" data-i18n="common.lbl.reopen"></button>
-    <button type="button" data-access="Close_Event"  class="ACTION ui button primary OPEN ACCEPTED -CLOSED" id="btnAction4Close"  onclick="app.gitLabIssues.action('close');" data-i18n="common.lbl.close"></button>
+    <div class="ui floated left container-progress">
+      Time <span id="containerTimer">00:00</span> / <span id="progressMsg"></span>
+    </div>
+    <div>
+      <button type="button" data-access="Accept_Event" class="ACTION hide ui button primary OPEN"             id="btnAction4Accept" onclick="app.gitLabIssues.action('accept');" data-i18n="common.lbl.accept"></button>
+      <button type="button" data-access="Reopen_Event" class="ACTION hide ui button primary CLOSED"           id="btnAction4Reopen" onclick="app.gitLabIssues.action('reopen');" data-i18n="common.lbl.reopen"></button>
+      <button type="button" data-access="Close_Event"  class="ACTION ui button primary OPEN ACCEPTED -CLOSED" id="btnAction4Close"  onclick="app.gitLabIssues.action('close');" data-i18n="common.lbl.close"></button>
 
-    <button type="button" class="ui button primary"  id="btnAction4NewIssue" onclick="app.gitLabIssues.openNewIssue();" data-i18n="lbl.btn.new"></button>
-    <div data-access="Export_Event" class="ui icon bottom right pointing dropdown button primary dt-export">Export <i class="dropdown icon"></i>
-      <div class="menu">
-        <a class="item dt-export" data-export="selected" data-i18n="common.lbl.selected"></a>
-        <a class="item dt-export" data-export="all" data-i18n="common.lbl.all"></a>
+      <button type="button" class="ui button primary"  id="btnAction4NewIssue" onclick="app.gitLabIssues.openNewIssue();" data-i18n="lbl.btn.new"></button>
+      <div data-access="Export_Event" class="ui icon bottom right pointing dropdown button primary dt-export">Export <i class="dropdown icon"></i>
+        <div class="menu">
+          <a class="item dt-export" data-export="selected" data-i18n="common.lbl.selected"></a>
+          <a class="item dt-export" data-export="all" data-i18n="common.lbl.all"></a>
+        </div>
       </div>
     </div>
   </div>
   </div>
-  <div class="advanced-search" id="gitLabIssue" data-i18n="dtLang.sLoadingRecords"></div>
+  <div class="advanced-search" id="gitLabIssue">
+    Select an issue to view it's details
+  </div>
 </div>
 

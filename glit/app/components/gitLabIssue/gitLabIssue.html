@@ -22,12 +22,18 @@
       <form>
         <div class="ui form">
           <div class="inline fields">
-            <div class="field pd0">
+            <div class="field pdlr2">
               <label>Assigned To</label>
+            </div>
+            <div class="field pdlr2 wth150">
               <select name="assignToNewMember" id="assignToNewMember" class="ui fluid dropdown" onchange="app.gitLabIssue.assignTo();" title="Select member to Assign To">
-                <option value="">-select-</option>
+                <option value="0">-None-</option>
               </select>
+            </div>
+            <div class="field pdlr2">
               <button type="button" class="ui button primary" data-i18n="lbl.btn.issues.assignToMe" onclick="app.gitLabIssue.assignToMe();" title="Assign this issue to me"></button>
+            </div>
+            <div class="field pdlr2">
               <a href="javascript:app.gitLabIssue.refresh();" class="ui button icon" data-i18n="title:'lbl.title.refresh'" ><i id="btnIssueFullRefresh" class="icon repeat loading"></i></a>
             </div>
           </div>
@@ -44,7 +50,11 @@
           <div class="ui form">
             <div class="inline fields">
               <div class="field">Milestone:</div>
-              <div class="field"><b>{{milestone.title}}</b></div>
+              <div class="field">
+                <select class="ui fluid dropdown min-selection-width-100" name="issueMilestone" id="issueMilestone" onchange="javascript:app.gitLabIssue.updateMilestone();">
+                  <option value="0">-None-</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -53,7 +63,7 @@
           <div class="ui form">
             <div class="inline fields">
               <div class="field">Severity:</div>
-              <div class="field"><b>{{toIssueSeverity labels}}</b></div>
+              <div class="field"><b>{{{toIssueSeverity labels}}}</b></div>
             </div>
           </div>
         </div>
@@ -61,39 +71,46 @@
         <div class="item right">
           <div class="ui form">
             <div class="inline fields">
-              <div class="field">Status:</div>
-              <div class="field"><b>{{toIssueStatus labels}}</b></div>
+              <div class="field">Status ({{state}}):</div>
+              <div class="field"><b>{{{toIssueStatus labels}}}</b></div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="labels">
+    <div class="labels lists">
       <div class="ui menu search mr0">
-        <div class="item">
           <div class="ui form">
             <div class="inline fields">
-              <div class="field"><b>{{labels}}</b></div>
+              <div class="field sixteen wide">
+                <select multiple="" class="ui fluid normal dropdown mh60" name="issueLabels" id="issueLabels" onchange="javascript:app.gitLabIssue.updateLblSelection();">
+                  <option value="0">-None-</option>
+                </select>
+                <div>
+                  <button type="button" class="ui button icon primary mrt5" onclick="javascript:app.gitLabIssue.clearLabels();"><i id="btnClearLabels" class="remove icon"></i> clear</button>
+                  <button type="button" class="ui button icon primary mrt5" onclick="javascript:app.gitLabIssue.updateLabels();"><i id="btnSaveLabels" class="save icon"></i> save</button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
       </div>
     </div>
     <div class="ui comments">
       <form class="ui reply form">
         <div class="fields">
-        <div class="field fourteen wide">
-          <textarea id="issueNewNoteBody"></textarea>
-        </div>
-        <div class="field">
-          <div class="ui checkbox">
-            <input id="closeIssue" type="checkbox" tabindex="0" class="hidden">
-            <label>Close Issue</label>
+          <div class="field fourteen wide">
+            <textarea id="issueNewNoteBody"></textarea>
           </div>
-          <button type="button" class="ui button icon primary mrt5" onclick="app.gitLabIssue.postNewNote();"><i id="btnIssuePost" class="send icon"></i> Post</button>
-        </div>
+          <div class="field">
+            <div class="ui checkbox">
+              <input id="closeIssue" type="checkbox" tabindex="0" class="hidden">
+              <label id="closeIssueActionLbl" data-i18n="lbl.issue.action.on.state.{{state}}"></label>
+            </div>
+            <button type="button" class="ui button icon primary mrt5" onclick="app.gitLabIssue.postNewNote();"><i id="btnIssuePost" class="send icon"></i> Post</button>
+          </div>
         </div>
       </form>
+
       <div class="comment-scroll">
         <a href="javascript:app.gitLabIssue.listNotes();" class="ui button icon refresh" data-i18n="title:'lbl.title.refresh'" ><i id="btnCommentsFullRefresh" class="icon repeat"></i></a>
         <div class="ui styled accordion">
@@ -108,9 +125,7 @@
 
         <a target="_blank" href="{{web_url}}"><h2 class="ui header" title="Click to view this issue at GitLab">#{{iid}} {{title}}</h2></a>
         <hr/>
-
         <div class="sub header">{{{description}}}</div>
-
       </div>
     </div>
   </div>

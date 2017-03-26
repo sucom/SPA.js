@@ -4,7 +4,7 @@ lbl.topMenu.issuesAssignedToMe = To Do
 lbl.topMenu.settiings = Settings
 
 lbl.comp.title.settings           = Settings
-lbl.comp.title.issues             = Issues - Open
+lbl.comp.title.issues             = Issues
 lbl.comp.title.issuesAll          = All
 lbl.comp.title.issuesMine         = Mine
 lbl.comp.title.issuesAssignedToMe = To Do
@@ -43,9 +43,18 @@ msg.confirm.assignTo = Are you sure to assign issue #<b>{iid}</b> to <b>{name}</
 lbl.btn.yes.assignTo = Yes, Assign.
 lbl.btn.no.assignTo = No.
 
-msg.confirm.closeIssue = Are you sure to close issue #<b>{iid}</b>
-lbl.btn.yes.closeIssue = Yes, Close Issue.
-lbl.btn.no.closeIssue = No, Leave it open.
+
+msg.confirm.issue.action.state.opened     = Are you sure to close issue #<b>{iid}</b>
+msg.confirm.issue.action.state.opened.yes = Yes, Close Issue.
+msg.confirm.issue.action.state.opened.no = No, Leave it open.
+
+msg.confirm.issue.action.state.reopened     = Are you sure to close issue #<b>{iid}</b>
+msg.confirm.issue.action.state.reopened.yes = Yes, Close Issue.
+msg.confirm.issue.action.state.reopened.no  = No, Leave it open.
+
+msg.confirm.issue.action.state.closed     = Are you sure to reopen issue #<b>{iid}</b>
+msg.confirm.issue.action.state.closed.yes = Yes, Reopen Issue.
+msg.confirm.issue.action.state.closed.no  = No, Leave it closed.
 
 
 lbl.signin.remember = Remember me
@@ -78,18 +87,28 @@ msg.flyout.saveSettingsPrimary = Connection settings have been saved.
 msg.flyout.saveSettingsPrimary.failed = Failed to save connection settings. Unable to fetch!
 msg.flyout.projectSelectionSaved = Selected Project has been saved for issues tracking.
 
-msg.flyout.issue.assignedToX = Issue #{iid} has been assigned to {name}
+msg.flyout.issue.assignedToX = Issue #{iid} has been assigned to {name}.
+msg.flyout.issue.milestoneupdate = Issue #{iid} has been updated with Milestone: {milestone}.
+msg.flyout.issue.labelsupdate    = Issue #{iid} has been updated with new labels.
 msg.flyout.issue.notePosted  = New note has been posted.
+
 msg.flyout.issue.closed = Issue #{iid} has been closed.
+msg.flyout.issue.reopened = Issue #{iid} has been reopened.
 
 msg.warning.missing.pid = GitLab project is not selected.<br/>Configure GitLab connection and select a project to continue.
 
 validation.alert.issue.note.blank = Enter note
+validation.alert.issue.invalidNo  = Enter valid issue number
+validation.alert.issue.NotFound   = Could not find project issue # {iid}
 
 lbl.btn.new = New
 
 lbl.issue.actions  = Action(s)
 lbl.member.comments = Member comment(s)
+
+lbl.issue.action.on.state.closed = Reopen Issue
+lbl.issue.action.on.state.opened = Close Issue
+lbl.issue.action.on.state.reopened = Close Issue
 
 lbl.app.version = 1.0.0
 
