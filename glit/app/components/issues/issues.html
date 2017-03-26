@@ -41,16 +41,19 @@
     <a class="item" data-tab="mine" onclick="app.issues.gitLabIssuesMine()" data-i18n="lbl.comp.title.issuesMine"></a>
 
     <div class="right menu">
-    <div class="item">
-      <form onsubmit="app.issues.searchIssues();return false;">
-        <div class="ui icon labeled input" id="containerIssueSearch">
-          <div class="ui label" title="Clear Search"><a href="javascript:;" onclick="$('#issueSearchTxt').val('')">X</a></div>
-          <input id="issueSearchTxt" name="issueSearchTxt" type="text" placeholder="Enter Issue No." autocomplete="off">
-          <i id="btnIssueSearch" class="search link icon" title="Search" onclick="app.issues.searchIssues();"></i>
-        </div>
-      </form>
+      <div class="item">
+        <form onsubmit="app.issues.searchIssues();return false;">
+          <div class="ui icon labeled input" id="containerIssueSearch">
+            <div class="ui label" title="Clear Search"><a href="javascript:;" onclick="$('#issueSearchTxt').val('')">X</a></div>
+            <input id="issueSearchTxt" name="issueSearchTxt" type="text" placeholder="Enter Issue No." autocomplete="off">
+            <i id="btnIssueSearch" class="search link icon" title="Search" onclick="app.issues.searchIssues();"></i>
+          </div>
+        </form>
+      </div>
+      <div class="item mrb5">
+        <button class="ui button" id="btnLayoutChange" onclick="app.gitLabIssues.toggleLayout();"><i class="icon maximize mr0"></i></button>
+      </div>
     </div>
-  </div>
 
   </div>
   <div class="ui tab active" data-tab="gitLabIssues" id="tabContainer_gitLabIssues" data-spa-component="gitLabIssues"></div>

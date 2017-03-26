@@ -16,7 +16,7 @@ a:hover, button:hover{moz-transition:background 0.3s ease-in;-o-transition:backg
 .pdlr10{padding:0px 10px !important;}
 .pdlr15{padding:0px 15px !important;}
 .mr0{margin:0px !important;}
-.mrb10{margin-bottom:10px !important;}
+
 .mrt10{margin-top:10px !important;}
 .mrr5{margin-right:5px !important;}
 .mrr10{margin-right:10px !important;}
@@ -27,6 +27,18 @@ a:hover, button:hover{moz-transition:background 0.3s ease-in;-o-transition:backg
 .mrlr15{margin:0px 15px !important;}
 .mrb15{margin-bottom:15px !important;}
 .mrb20 { margin-bottom: 20px !important; }
+.mrb10{margin-bottom:10px !important;}
+.mrb9{margin-bottom:9px !important;}
+.mrb8{margin-bottom:8px !important;}
+.mrb7{margin-bottom:7px !important;}
+.mrb6{margin-bottom:6px !important;}
+.mrb5{margin-bottom:5px !important;}
+.mrb4{margin-bottom:4px !important;}
+.mrb3{margin-bottom:3px !important;}
+.mrb2{margin-bottom:2px !important;}
+.mrb1{margin-bottom:1px !important;}
+.mrb0{margin-bottom:0px !important;}
+
 .mr15{margin:15px !important;}
 .pdb0{padding-bottom:0px !important;}
 .pdb10 { padding-bottom: 10px !important; }
