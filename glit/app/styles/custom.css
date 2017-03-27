@@ -75,6 +75,11 @@ a:hover, button:hover{moz-transition:background 0.3s ease-in;-o-transition:backg
 .ui.vertical.menu .item .menu .item{padding: 0px;}
 .ui.vertical.menu .item .menu .item a{background:#0070c2; color:#eee; cursor: pointer;}
 
+td.issues.labels-all {padding: 2px; line-height: 2;}
+td.issues.labels-all span {color:#fff; padding: 4px;}
+div.issues.labels-all {padding: 2px; line-height: 2;}
+div.issues.labels-all span {color:#fff; padding: 4px;}
+
 .ui.vertical.menu .item .menu .item a:hover, .ui.vertical.menu .item .menu .item.active a{background:#004c97; color: #fff; font-weight: normal;}
 .ui.vertical.menu .item > i.icon, .ui.vertical.menu .item > .header:not(.ui) i.icon, .ui.vertical.menu .item .menu .item a i.icon, .ui.vertical.menu .item > i.stl-icons, .ui.vertical.menu .item > .header:not(.ui) i.stl-icons, .ui.vertical.menu .item .menu .item a i.stl-icons{margin:-3px 10px 0 0; float: left; width: 20px; height: 20px; font-size: 20px;}
 .ui.vertical.menu .item > i.stl-icons, .ui.vertical.menu .item > .header:not(.ui) i.stl-icons, .ui.vertical.menu .item .menu .item a i.stl-icons{margin-top: -6px;}
