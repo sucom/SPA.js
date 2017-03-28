@@ -712,7 +712,7 @@ dtLang.AdvSearchBtnLbl        = Advanced Search
 dtLang.AdvSearchBtnTitle      = Search on Multiple Fields
 dtLang.closeAdvSearchBtnLbl   = Close Advanced Search
 dtLang.closeAdvSearchBtnTitle = Close Search on Multiple Fields
-dtLang.AdvSearchFldTxt        = Type to select
+dtLang.AdvSearchFldTxt        = Type to filter
 dtLang.title.trigger          = Window Log Channel
 
 dialog.title.scratchTape   = Scratch Tape?
