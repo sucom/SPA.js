@@ -10,7 +10,7 @@
   </div>
   <div class="actions">
     <div class="ui floated left container-progress">
-      Time <span id="containerTimer">00:00</span> / <span id="progressMsg"></span>
+      <i id="iconTimer" class="wait icon"></i> <span id="containerTimer">00:00</span> / <span id="progressMsg"></span>
     </div>
     <div>
       <button type="button" data-access="Accept_Event" class="ACTION hide ui button primary OPEN"             id="btnAction4Accept" onclick="app.gitLabIssues.action('accept');" data-i18n="common.lbl.accept"></button>
@@ -27,8 +27,9 @@
     </div>
   </div>
   </div>
-  <div class="advanced-search" id="gitLabIssue">
-    <span>Select an issue to view it's details</span>
+  <div class="advanced-search issue-view-pane" id="gitLabIssue">
+    <span class="no-issue-selected">Select an issue to view it's details</span>
   </div>
+
 </div>
 

@@ -40,18 +40,18 @@
     <a class="item" data-tab="todo" onclick="app.issues.gitLabIssuesToMe()" data-i18n="lbl.comp.title.issuesAssignedToMe"></a>
     <a class="item" data-tab="mine" onclick="app.issues.gitLabIssuesMine()" data-i18n="lbl.comp.title.issuesMine"></a>
 
-    <div class="right menu">
-      <div class="item">
+    <div class="right menu mrr5">
+      <div class="item pd0 mr0">
         <form onsubmit="app.issues.searchIssues();return false;">
-          <div class="ui icon labeled input" id="containerIssueSearch">
-            <div class="ui label" title="Clear Search"><a href="javascript:;" onclick="$('#issueSearchTxt').val('')">X</a></div>
-            <input id="issueSearchTxt" name="issueSearchTxt" type="text" placeholder="Enter Issue No." autocomplete="off">
+          <div class="ui icon labeled input mrr5" id="containerIssueSearch">
+            <input id="issueSearchTxt" name="issueSearchTxt" type="text" placeholder="Enter Issue No." autocomplete="off" onkeyup="$('#btnIssueSearchClear')[spa.isBlank(this.value)?'addClass':'removeClass']('hide');">
             <i id="btnIssueSearch" class="search link icon" title="Search" onclick="app.issues.searchIssues();"></i>
+            <i id="btnIssueSearchClear" title="Clear Search" class="search link icon remove right30 hide" onclick="$(this).addClass('hide');$('#issueSearchTxt').val('').focus();"></i>
           </div>
         </form>
       </div>
-      <div class="item mrb5">
-        <button class="ui button" id="btnLayoutChange" onclick="app.gitLabIssues.toggleLayout();" title="Change Layout"><i class="icon maximize mr0"></i></button>
+      <div class="item pd0 mr0">
+        <button class="ui button mr0" id="btnLayoutChange" onclick="app.gitLabIssues.toggleLayout();" title="Change Layout"><i class="icon list mr0"></i></button>
       </div>
     </div>
 

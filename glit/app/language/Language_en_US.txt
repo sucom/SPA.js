@@ -21,6 +21,7 @@ tbl.col.title.issue.labels = Labels
 tbl.col.title.issue.updateDt = Updated On
 tbl.col.title.issue.notes = Notes
 tbl.col.title.issue.milestone = Milestone
+tbl.col.title.issue.priority  = Priority
 
 lbl.btn.issues.assignTo = Assign
 lbl.btn.issues.assignToMe = To Me
@@ -151,7 +152,7 @@ common.lbl.all = All
 common.lbl.none = None
 common.lbl.select = Select
 common.lbl.informational = Informational
-common.lbl.warning = Warning
+common.lbl.warning = Major
 common.lbl.critical = Critical
 common.lbl.actionAlert = Action/Alert
 common.lbl.initiated = Initiated
