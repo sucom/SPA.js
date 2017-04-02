@@ -6,6 +6,13 @@
         <div class="ui form">
           <div class="inline fields">
             <label class="title" data-i18n="lbl.comp.title.issues"></label>
+            <label class="title normal">Milestone:</label>
+            <div class="field">
+              <select class="ui fluid dropdown min-selection-width-100" name="activeMilestone" id="activeMilestone">
+                <option value="0">-All-</option>
+              </select>
+            </div>
+
             <div class="field">
               <div class="ui radio checkbox" onclick="app.issues.getIssuesFromServerFor(this)">
                 <input type="radio" name="issuesFilter" class="hidden" value="opened" checked="">

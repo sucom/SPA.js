@@ -68,7 +68,7 @@ err.signIn.usrNameAlreadyFound = User already exists.
 lbl.title.settings.primary = Connection Settings
 
 lbl.form.settings.conName    = Connection Name
-lbl.form.settings.gitLabUrl  = GitLab Web URL
+lbl.form.settings.gitLabUrl  = GitLab Web API URL
 lbl.form.settings.privateKey = Access Key
 
 lbl.btn.saveConSettings = Save &amp; Verify

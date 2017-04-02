@@ -1,26 +1,27 @@
-<div id="containerIssues" class="container-component">
+<div id="containerSettings" class="container-component">
   <h2 class="page-header"><i class="ui block icons stl-icons issues"></i><span data-i18n="lbl.comp.title.settings"></span></h2>
   <div class="content autoheight">
     <div class="ui block header"><div class="ui small circular label">1</div><span data-i18n="lbl.title.settings.primary"></span></div>
     <div class="ui grid">
       <div class="twelve wide column">
         <form name="fm_Settings" id="fm_Settings" method="post" onsubmit="return(false);" data-validate-scope="" data-validate-common="{ onFocus:[{fn:_clearSpaValidateMsg}] }">
-          <div class="ui form mrlr15" id="containerPrimaySettings">
-            <div class="inline fields">
-              <div class="two wide field label"><span class="colon" data-i18n="lbl.form.settings.conName"></span></div>
-              <div class="twelve wide field"><input type="text" name="conName" maxlength="10" id="conName" data-bind="value:'conName'" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.conName', offline:true}] }"/></div>
+          <div class="ui form" id="containerPrimaySettings">
+            <div class="fields">
+              <div class="field four wide">
+                <label data-i18n="lbl.form.settings.conName"></label>
+                <input type="text" name="conName" maxlength="10" id="conName" data-bind="value:'conName'" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.conName', offline:true}] }"/>
+              </div>
+              <div class="field eight wide">
+                <label data-i18n="lbl.form.settings.gitLabUrl"></label>
+                <input type="text" name="url" id="url" data-bind="value:'url'" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.gitLabUrl', offline:true}] }"/>
+              </div>
+              <div class="field four wide">
+                <label data-i18n="lbl.form.settings.privateKey"></label>
+                <input type="password" name="key" id="key" data-bind="value:'key'" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.gitLabKey', offline:true}] }"/>
+              </div>
             </div>
             <div class="inline fields">
-              <div class="two wide field label"><span class="colon" data-i18n="lbl.form.settings.gitLabUrl"></span></div>
-              <div class="twelve wide field"><input type="text" name="url" id="url" data-bind="value:'url'" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.gitLabUrl', offline:true}] }"/></div>
-            </div>
-            <div class="inline fields">
-              <div class="two wide field label"><span class="colon" data-i18n="lbl.form.settings.privateKey"></span></div>
-              <div class="twelve wide field"><input type="password" name="key" id="key" data-bind="value:'key'" data-validate="{onBlur:[{fn:_check.required, msg:'i18n:msg.validate.required.gitLabKey', offline:true}] }"/></div>
-            </div>
-            <div class="inline fields">
-              <div class="two wide field label"></div>
-              <div class="twelve wide field">
+              <div class="field">
                 <button type="button" class="ui button icon primary mrt5" onclick="app.settings.save();"><i id="btnSaveVerifyConnection" class="save icon"></i> <span data-i18n="lbl.btn.saveConSettings">Save &amp; Verify</span></button>
                 <button type="button" class="ui button icon primary mrt5" onclick="app.settings.fetchPrj();"><i id="btnFetchProjects" class="download icon"></i> <span data-i18n="lbl.btn.fetch">Fetch</span></button>
               </div>
@@ -28,15 +29,28 @@
           </div>
         </form>
       </div>
-      <div class="four wide column user-info" id="containerProfile">
-
-      </div>
+      <div class="four wide column user-info" id="containerProfile"></div>
     </div>
 
 
     <div class="ui block header"><div class="ui small circular label">2</div>
-      <span data-i18n="lbl.title.settings.project"></span>
+      <span data-i18n="lbl.title.settings.project"></span><a href="javascript:app.gitLabProjects.syncProjComponents();" class="ui button icon refresh floated right" title="Update Selected Project's Milestones, Labels and Members"><i id="btnRefreshPrjComponents" class="icon repeat"></i></a>
     </div>
-    <div class="ui form mrlr15" id="containerPrjList"></div>
+    <div class="ui grid">
+      <div class="eight wide column pd0">
+        <div class="ui form mrlr15" id="containerPrjList"></div>
+      </div>
+
+      <div class="eight wide column pd0">
+        <h4 class="ui dividing header"><span>Milestone</span> <a href="javascript:;" onclick="app.gitLabProjects.milestonesList();" class="ui button icon refresh floated right mrr10"  title="Update Milestones"><i id="btnRefreshPrjMilestones" class="icon download"></i></a></h4>
+        <div id="prjMilestones"></div>
+
+        <h4 class="ui dividing header"><span>Labels</span> <a href="javascript:;" onclick="app.gitLabProjects.labelsList();" class="ui button icon refresh floated right mrr10"  title="Update Labels"><i id="btnRefreshPrjLabels" class="icon download"></i></a></h4>
+        <div id="prjLabels"></div>
+
+        <h4 class="ui dividing header"><span>Members</span> <a href="javascript:;" onclick="app.gitLabProjects.membersList();" class="ui button icon refresh floated right mrr10"  title="Update Members"><i id="btnRefreshPrjMembers" class="icon download"></i></a></h4>
+        <div id="prjMembers"></div>
+      </div>
+    </div>
   </div>
 </div>

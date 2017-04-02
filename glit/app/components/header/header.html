@@ -5,6 +5,11 @@
     <input id="isLiveCheck" type="checkbox" tabindex="0" class="hidden">
   </div>
   <div class="menu right">
+
+    <a id="activeProjectContainer" target="_blank" href="" class="item authBlock hide mrr10">
+      <i class="world icon"></i><span id="activeProjectName"></span>
+    </a>
+
     <a href="javascript:app.header.issues()" data-menu="issues" class="item authBlock hide"><i id="btnIssuesFullRefresh" class="file text icon"></i><span data-i18n="html:'lbl.topMenu.AllIssues'"></span></a>
     <a href="javascript:app.header.settings()" data-menu="settings" class="item authBlock hide"><i class="settings icon"></i><span data-i18n="html:'lbl.topMenu.settiings'"></span></a>
 
@@ -16,11 +21,12 @@
         <a class="item hide"></a>
       </div>
     </div>
+    <!--
     <div class="ui dropdown item black"><span id="langSelection">EN <i class="dropdown us flag"></i></span>
       <div class="menu">
-        <!--<a class="item" onclick="app.settings.setLang('en_US')"><i class="us flag"></i> English</a>-->
-        <!--<a class="item" onclick="app.settings.setLang('ja_JP')"><i class="jp flag"></i> Japanese</a>-->
+        <a class="item" onclick="app.settings.setLang('en_US')"><i class="us flag"></i> English</a>
+        <a class="item" onclick="app.settings.setLang('ja_JP')"><i class="jp flag"></i> Japanese</a>
       </div>
-    </div>
+    </div>-->
   </div>
 </div>
