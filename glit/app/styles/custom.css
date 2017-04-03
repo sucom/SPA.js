@@ -255,7 +255,7 @@ div.page-header .ui.form .field div.ui{padding-bottom: 10px;}
 div.page-header .ui.form .field label{font-weight: normal !important;}
 #btnIssuesFullRefreshLink {margin-bottom: 8px;}
 
-.inverted.segment.footer{background:#1a1b27 url(images/logo/app-logo.png) no-repeat left center; text-align:right; font-size:11px; height:30px; line-height:30px; padding:0px 10px;}
+.inverted.segment.footer{background:#1a1b27 url(images/logo/app-logo.png) no-repeat left center; text-align:right; font-size:11px; height:30px; line-height:30px; padding:0px 40px;}
 
 .ui.form input:not([type]), .ui.form input[type=text], .ui.form input[type=email], .ui.form input[type=search], .ui.form input[type=password], .ui.form input[type=date], .ui.form input[type=datetime-local], .ui.form input[type=tel], .ui.form input[type=time], .ui.form input[type=file], .ui.form input[type=url], .ui.form input[type=number], .dataTables_wrapper input[type="search"], .ui.form select{font-size:12px; padding:7px 10px;}
 
@@ -413,7 +413,7 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .dashboard .ui.segment.three > .ui.statistics{width:32.5% !important;}
 .page-header .ui.button.icon{float: right; margin-top: -5px; background:none;}
 
-.flyout{position:fixed; bottom:73px; right:40px; max-height:500px; overflow:auto; z-index:9999;}
+.flyout{position:fixed; bottom:33px; right:40px; max-height:500px; overflow:auto; z-index:9999;}
 .flyout .flyout-wrap{float:left; width:100%;}
 .flyout .flyout-box{background:#fff; position:relative; display:inline-block; margin-top:3px; float:right;}
 .flyout .flyout-box .flyout-header{padding:5px 10px; font-size: 10px; color: #999;}
@@ -426,9 +426,9 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .flyout .success .content:before{content:'O';}
 .flyout .warning .content:before{content:'Y'; color: #df7312;}
 .flyout .informational .content:before{content:'3';}
-.flyout .flyout-control{width:26px; height:20px; position:fixed; bottom:31px; right:4px; background:#1e202e; color:#fff; text-align:center; cursor:pointer; font-weight:bold; line-height:20px;}
+.flyout .flyout-control{width:26px; height:20px; position:fixed; bottom:5px; right:4px; background:#fff; color:#1e202e; text-align:center; cursor:pointer; font-weight:bold; line-height:20px;}
 .flyout .flyout-control:before, .flyout .flyout-control:after{content:'';width:0px;height:0px; border-left:4px solid transparent; border-right:4px solid transparent;  position:absolute;}
-.flyout .flyout-control:before{border-bottom:4px solid #1e202e; top:-4px; left:8px;}
+.flyout .flyout-control:before{border-bottom:4px solid #fff; top:-4px; left:8px;}
 
 .block.icons{width: 28px; height: 28px; display: inline-block; margin-top:-5px; font-size: 24px; float: left;}
 .ui .header .icons.warning{color: #df7312;}
@@ -447,7 +447,7 @@ input::-moz-placeholder, .dataTable input[type="search"]::-moz-placeholder{color
 .ui.comments .reply.form textarea{height:50px; border-radius: 0px; min-height:55px; resize:none;}
 .ui.comments .ui.header{font-size:14px; margin:15px 0px 5px 0px;}
 .ui.comments > .reply.form{margin-top: 0px;}
-.ui.comments > .comment-scroll{height:calc(100% - 173px); overflow:auto; position: relative;}
+.ui.comments > .comment-scroll{height:calc(100% - 200px); overflow:auto; position: relative;}
 .ui.comments > .comment-scroll .refresh{position: absolute; right:0px; top: 5px;}
 .ui.comments > .comment-scroll .refresh:hover, .ui.comments .comment-scroll .refresh:focus{background:none;}
 .user-pic{width:30px; height:30px; float: left; margin:-10px 10px !important; background: #999; overflow:hidden;}
