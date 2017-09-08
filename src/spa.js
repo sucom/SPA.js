@@ -90,6 +90,2054 @@ var isSpaHashRouteOn=false;
   /*No Operation: a dummy function*/
   spa.noop = function(){};
 
+  /* ***** lodash ***** */
+  spa['__'] = {
+    MAX_INTEGER      : 1.7976931348623157e+308,
+    MAX_SAFE_INTEGER : 9007199254740991,
+    INFINITY         : 1/0,
+    reIsDeepProp     : /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
+    reIsPlainProp    : /^\w*$/,
+    reLeadingDot     :  /^\./,
+    rePropName       : /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g,
+    reEscapeChar     : /\\(\\)?/g,
+    reIsUint         : /^(?:0|[1-9]\d*)$/,
+
+    spreadableSymbol : window['Symbol'] ? Symbol.isConcatSpreadable : undefined,
+    symToStringTag   : window['Symbol'] ? Symbol.toStringTag : undefined,
+    nativeIsBuffer   : window['Buffer'] ? Buffer.isBuffer : undefined,
+    Uint8Array       : window['Uint8Array'],
+    Map              : window['Map']? window.Map : undefined,
+    Set              : window['Set']? window.Set : undefined,
+    nativeCreate     : window['Object']? (Object['create']? Object.create : undefined) : undefined,
+    nativeGetSymbols : Object.getOwnPropertySymbols,
+
+    arrayProto       : Array.prototype,
+    splice           : Array.prototype.splice,
+    funcProto        : Function.prototype,
+    objectProto      : Object.prototype,
+    objectCreate     : Object.create,
+
+    symbolProto      : window['Symbol'] ? Symbol['prototype'] : undefined,
+    symbolValueOf    : (window['Symbol'] && Symbol['prototype']) ? Symbol.prototype['valueOf'] : undefined,
+    symbolToString   : (window['Symbol'] && Symbol['prototype']) ? Symbol.prototype['toString'] : undefined,
+
+    HASH_UNDEFINED         : '__lodash_hash_undefined__',
+    COMPARE_PARTIAL_FLAG   : 1,
+    COMPARE_UNORDERED_FLAG : 2,
+
+    LARGE_ARRAY_SIZE : 200,
+    HOT_COUNT        : 800,
+    HOT_SPAN         : 16,
+
+    argsTag          : '[object Arguments]',
+    arrayTag         : '[object Array]',
+    asyncTag         : '[object AsyncFunction]',
+    boolTag          : '[object Boolean]',
+    dateTag          : '[object Date]',
+    domExcTag        : '[object DOMException]',
+    errorTag         : '[object Error]',
+    funcTag          : '[object Function]',
+    genTag           : '[object GeneratorFunction]',
+    mapTag           : '[object Map]',
+    numberTag        : '[object Number]',
+    nullTag          : '[object Null]',
+    objectTag        : '[object Object]',
+    promiseTag       : '[object Promise]',
+    proxyTag         : '[object Proxy]',
+    regexpTag        : '[object RegExp]',
+    setTag           : '[object Set]',
+    stringTag        : '[object String]',
+    symbolTag        : '[object Symbol]',
+    undefinedTag     : '[object Undefined]',
+    weakMapTag       : '[object WeakMap]',
+    weakSetTag       : '[object WeakSet]',
+
+    arrayBufferTag   : '[object ArrayBuffer]',
+    dataViewTag      : '[object DataView]',
+    float32Tag       : '[object Float32Array]',
+    float64Tag       : '[object Float64Array]',
+    int8Tag          : '[object Int8Array]',
+    int16Tag         : '[object Int16Array]',
+    int32Tag         : '[object Int32Array]',
+    uint8Tag         : '[object Uint8Array]',
+    uint8ClampedTag  : '[object Uint8ClampedArray]',
+    uint16Tag        : '[object Uint16Array]',
+    uint32Tag        : '[object Uint32Array]',
+
+    setToArray       : function _setToArray(set) {
+        var index = -1,
+            result = Array(set.size);
+        set.forEach(function(value) {
+          result[++index] = value;
+        });
+        return result;
+      },
+
+    apply     : function _apply(func, thisArg, args) {
+        switch (args.length) {
+          case 0: return func.call(thisArg);
+          case 1: return func.call(thisArg, args[0]);
+          case 2: return func.call(thisArg, args[0], args[1]);
+          case 3: return func.call(thisArg, args[0], args[1], args[2]);
+        }
+        return func.apply(thisArg, args);
+      },
+
+    overArg   : function _overArg(func, transform) {
+        return function(arg) {
+          return func(transform(arg));
+        };
+      },
+
+    stubFalse : function _stubFalse() { return false; },
+    stubArray : function _stubArray() { return []; },
+
+    constant  : function _constant(value) {
+        return function() {
+          return value;
+        };
+      },
+
+    defineProperty : (function() {
+        try {
+          var func = Object.defineProperty;
+          func({}, '', {});
+          return func;
+        } catch (e) {}
+      }()),
+
+    baseCreate     : (function() {
+      function object() {}
+      return function(proto) {
+        var protoType = typeof proto;
+        if (!((proto != null) && (protoType == 'object' || protoType == 'function'))) {
+          return {};
+        }
+        if (Object['create']) {
+          return Object.create(proto);
+        }
+        object.prototype = proto;
+        var result = new object;
+        object.prototype = undefined;
+        return result;
+      };
+    }()),
+
+    isKeyable : function _isKeyable(value) {
+      var type = typeof value;
+      return (type == 'string' || type == 'number' || type == 'symbol' || type == 'boolean')
+        ? (value !== '__proto__')
+        : (value === null);
+    },
+    getMapData : function _getMapData(map, key) {
+      var data = map.__data__;
+      return spa.__.isKeyable(key)
+        ? data[typeof key == 'string' ? 'string' : 'hash']
+        : data.map;
+    },
+
+    typedArrayTags : {}
+  };
+
+  spa.__.typedArrayTags[spa.__.float32Tag]      = spa.__.typedArrayTags[spa.__.float64Tag] =
+  spa.__.typedArrayTags[spa.__.int8Tag]         = spa.__.typedArrayTags[spa.__.int16Tag]   =
+  spa.__.typedArrayTags[spa.__.int32Tag]        = spa.__.typedArrayTags[spa.__.uint8Tag]   =
+  spa.__.typedArrayTags[spa.__.uint8ClampedTag] = spa.__.typedArrayTags[spa.__.uint16Tag]  =
+  spa.__.typedArrayTags[spa.__.uint32Tag]       = true;
+
+  spa.__.typedArrayTags[spa.__.argsTag]         = spa.__.typedArrayTags[spa.__.arrayTag]  =
+  spa.__.typedArrayTags[spa.__.arrayBufferTag]  = spa.__.typedArrayTags[spa.__.boolTag]   =
+  spa.__.typedArrayTags[spa.__.dataViewTag]     = spa.__.typedArrayTags[spa.__.dateTag]   =
+  spa.__.typedArrayTags[spa.__.errorTag]        = spa.__.typedArrayTags[spa.__.funcTag]   =
+  spa.__.typedArrayTags[spa.__.mapTag]          = spa.__.typedArrayTags[spa.__.numberTag] =
+  spa.__.typedArrayTags[spa.__.objectTag]       = spa.__.typedArrayTags[spa.__.regexpTag] =
+  spa.__.typedArrayTags[spa.__.setTag]          = spa.__.typedArrayTags[spa.__.stringTag] =
+  spa.__.typedArrayTags[spa.__.weakMapTag]      = false;
+
+  spa.__['baseSetToString'] = !spa.__.defineProperty
+    ? function(value){return value;}
+    : function(func, string) {
+        return spa.__.defineProperty(func, 'toString', {
+          'configurable': true,
+          'enumerable': false,
+          'value': spa.__.constant(string),
+          'writable': true
+        });
+      };
+
+  spa.__['shortOut'] = function _shortOut(func) {
+      var count = 0,
+          lastCalled = 0;
+
+      return function() {
+        var stamp = Date.now(),
+            remaining = spa.__.HOT_SPAN - (stamp - lastCalled);
+
+        lastCalled = stamp;
+        if (remaining > 0) {
+          if (++count >= spa.__.HOT_COUNT) {
+            return arguments[0];
+          }
+        } else {
+          count = 0;
+        }
+        return func.apply(undefined, arguments);
+      };
+    };
+
+  spa.__['overRest'] = function _overRest(func, start, transform) {
+      start = Math.max(start === undefined ? (func.length - 1) : start, 0);
+      return function() {
+        var args = arguments,
+            index = -1,
+            length = Math.max(args.length - start, 0),
+            array = Array(length);
+
+        while (++index < length) {
+          array[index] = args[start + index];
+        }
+        index = -1;
+        var otherArgs = Array(start + 1);
+        while (++index < start) {
+          otherArgs[index] = args[index];
+        }
+        otherArgs[start] = transform(array);
+        return spa.__.apply(func, this, otherArgs);
+      };
+    };
+
+  //Hash
+  spa.__['Hash'] = function _Hash(entries) {
+    var index = -1,
+        length = entries == null ? 0 : entries.length;
+    this.clear();
+    while (++index < length) {
+      var entry = entries[index];
+      this.set(entry[0], entry[1]);
+    }
+  };
+  spa.__['Hash'].prototype.clear = function hashClear() {
+    this.__data__ = spa.__.nativeCreate ? spa.__.nativeCreate(null) : {};
+    this.size = 0;
+  };
+  spa.__['Hash'].prototype['delete'] = function hashDelete(key) {
+    var result = this.has(key) && delete this.__data__[key];
+    this.size -= result ? 1 : 0;
+    return result;
+  };
+  spa.__['Hash'].prototype.get = function hashGet(key) {
+    var data = this.__data__;
+    if (spa.__.nativeCreate) {
+      var result = data[key];
+      return result === spa.__.HASH_UNDEFINED ? undefined : result;
+    }
+    return spa._.hasOwnProperty.call(data, key) ? data[key] : undefined;
+  };
+  spa.__['Hash'].prototype.has = function hashHas(key) {
+    var data = this.__data__;
+    return spa.__.nativeCreate ? (data[key] !== undefined) : spa._.hasOwnProperty.call(data, key);
+  };
+  spa.__['Hash'].prototype.set = function hashSet(key, value) {
+    var data = this.__data__;
+    this.size += this.has(key) ? 0 : 1;
+    data[key] = (spa.__.nativeCreate && value === undefined) ? spa.__.HASH_UNDEFINED : value;
+    return this;
+  };
+
+  //ListCache
+  spa.__['ListCache'] = function _ListCache(entries) {
+    var index = -1,
+        length = entries == null ? 0 : entries.length;
+
+    this.clear();
+    while (++index < length) {
+      var entry = entries[index];
+      this.set(entry[0], entry[1]);
+    }
+  };
+  spa.__['ListCache'].prototype.clear     = function _listCacheClear() {
+      this.__data__ = [];
+      this.size = 0;
+    };
+  spa.__['ListCache'].prototype['delete'] = function _listCacheDelete(key) {
+      var data = this.__data__,
+          index = spa._.assocIndexOf(data, key);
+
+      if (index < 0) {
+        return false;
+      }
+      var lastIndex = data.length - 1;
+      if (index == lastIndex) {
+        data.pop();
+      } else {
+        spa.__.splice.call(data, index, 1);
+      }
+      --this.size;
+      return true;
+    };
+  spa.__['ListCache'].prototype.get       = function _listCacheGet(key) {
+      var data = this.__data__,
+          index = spa._.assocIndexOf(data, key);
+
+      return index < 0 ? undefined : data[index][1];
+    };
+  spa.__['ListCache'].prototype.has       = function _listCacheHas(key) {
+      return spa._.assocIndexOf(this.__data__, key) > -1;
+    };
+  spa.__['ListCache'].prototype.set       = function _listCacheSet(key, value) {
+      var data = this.__data__,
+          index = spa._.assocIndexOf(data, key);
+
+      if (index < 0) {
+        ++this.size;
+        data.push([key, value]);
+      } else {
+        data[index][1] = value;
+      }
+      return this;
+    };
+
+  //Stack
+  spa.__['Stack'] = function _Stack(entries) {
+      var data = this.__data__ = new spa.__.ListCache(entries);
+      this.size = data.size;
+    };
+  spa.__['Stack'].prototype.clear = function stackClear() {
+    this.__data__ = new spa.__.ListCache;
+    this.size = 0;
+  };
+  spa.__['Stack'].prototype['delete'] = function _stackDelete(key) {
+    var data = this.__data__,
+        result = data['delete'](key);
+
+    this.size = data.size;
+    return result;
+  };
+  spa.__['Stack'].prototype.get = function _stackGet(key) {
+    return this.__data__.get(key);
+  };
+  spa.__['Stack'].prototype.has = function _stackHas(key) {
+    return this.__data__.has(key);
+  };
+  spa.__['Stack'].prototype.set = function _stackSet(key, value) {
+    var data = this.__data__;
+    if (data instanceof spa.__.ListCache) {
+      var pairs = data.__data__;
+      if (!spa.__.Map || (pairs.length < spa.__.LARGE_ARRAY_SIZE - 1)) {
+        pairs.push([key, value]);
+        this.size = ++data.size;
+        return this;
+      }
+      data = this.__data__ = new spa.__.MapCache(pairs);
+    }
+    data.set(key, value);
+    this.size = data.size;
+    return this;
+  };
+
+  //MapCache
+  spa.__['MapCache'] = function _MapCache(entries) {
+    var index = -1,
+        length = entries == null ? 0 : entries.length;
+    this.clear();
+    while (++index < length) {
+      var entry = entries[index];
+      this.set(entry[0], entry[1]);
+    }
+  };
+  spa.__['MapCache'].prototype.clear = function _mapCacheClear() {
+    this.size = 0;
+    this.__data__ = {
+      'hash'  : new spa.__.Hash,
+      'map'   : new (spa.__.Map || spa.__.ListCache),
+      'string': new spa.__.Hash
+    };
+  };
+  spa.__['MapCache'].prototype['delete'] = function _mapCacheDelete(key) {
+    var result = spa.__.getMapData(this, key)['delete'](key);
+    this.size -= result ? 1 : 0;
+    return result;
+  };
+  spa.__['MapCache'].prototype.get = function _mapCacheGet(key) {
+    return spa.__.getMapData(this, key).get(key);
+  };
+  spa.__['MapCache'].prototype.has = function _mapCacheHas(key) {
+    return spa.__.getMapData(this, key).has(key);
+  };
+  spa.__['MapCache'].prototype.set = function _mapCacheSet(key, value) {
+    var data = spa.__.getMapData(this, key),
+        size = data.size;
+    data.set(key, value);
+    this.size += data.size == size ? 0 : 1;
+    return this;
+  };
+
+  //SetCache
+  spa.__['SetCache'] = function _SetCache(values) {
+    var index = -1,
+        length = values == null ? 0 : values.length;
+    this.__data__ = new spa.__.MapCache;
+    while (++index < length) {
+      this.add(values[index]);
+    }
+  };
+  spa.__['SetCache'].prototype.add = spa.__['SetCache'].prototype.push = function _setCacheAdd(value) {
+    this.__data__.set(value, spa.__.HASH_UNDEFINED);
+    return this;
+  };
+  spa.__['SetCache'].prototype.has = function _setCacheHas(value) {
+    return this.__data__.has(value);
+  };
+
+  spa.__['createSet'] = !(spa.__.Set && (1 / spa.__.setToArray(new spa.__.Set([,-0]))[1]) == spa.__.INFINITY) ? function(){} : function(values) {
+      return new spa.__.Set(values);
+    };
+
+  spa.__['getSymbols'] = !spa.__.nativeGetSymbols ? spa.__.stubArray : function(object) {
+      if (object == null) {
+        return [];
+      }
+      object = Object(object);
+      return spa._.arrayFilter(spa.__.nativeGetSymbols(object), function(symbol) {
+        return spa._.propertyIsEnumerable.call(object, symbol);
+      });
+    };
+
+  //--------------------------------------------------
+  spa['_'] = {
+      isString       : function _isString(value) {
+        return typeof value == 'string' || (!spa._.isArray(value) && spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.stringTag);
+      }
+    , isObject       : function _isObject(value) {
+        var type = typeof value;
+        return ((value != null) && (type == 'object' || type == 'function'));
+      }
+    , isObjectLike   : function _isObjectLike(value) {
+        return value != null && typeof value == 'object';
+      }
+    , isFunction     : function _isFunction(value) {
+        return ((value != null) && (typeof value == 'function'));
+      }
+    , isArray        : function _isArray(value) {
+        return (Object.prototype.toString.call(value) === '[object Array]');
+      }
+    , isBoolean      : function _isBoolean(value) {
+        return (value === true) || (value === false) || (spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.boolTag);
+      }
+    , isNumber       : function _isNumber(value) {
+        return (typeof value == 'number') || (spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.numberTag);
+      }
+    , isLength       : function _isLength(value) {
+      return typeof value == 'number' &&
+        value > -1 && value % 1 == 0 && value <= spa.__.MAX_SAFE_INTEGER;
+    }
+    , isIndex        : function _isIndex(value, length) {
+        length = length == null ? spa.__.MAX_SAFE_INTEGER : length;
+        return !!length &&
+          (typeof value == 'number' || spa.__.reIsUint.test(value)) &&
+          (value > -1 && value % 1 == 0 && value < length);
+      }
+
+    , isPlainObject     : function _isPlainObject(value) {
+        if (!spa._.isObjectLike(value) || spa._.baseGetTag(value) != spa.__.objectTag) {
+          return false;
+        }
+        var proto = spa._.getPrototype(value);
+        if (proto === null) {
+          return true;
+        }
+        var Ctor = spa._.hasOwnProperty.call(proto, 'constructor') && proto.constructor;
+        return typeof Ctor == 'function' && Ctor instanceof Ctor &&
+          spa._.funcToString.call(Ctor) == spa._.objectCtorString;
+      }
+    , isArrayLike       : function _isArrayLike(value) {
+        return value != null && spa._.isLength(value.length) && !spa._.isFunction(value);
+      }
+    , isArrayLikeObject : function _isArrayLikeObject(value) {
+        return spa._.isObjectLike(value) && spa._.isArrayLike(value);
+      }
+    , isEmpty           : function _isEmpty(value) {
+        var vType = typeof value;
+        if ((vType == "undefined") || (value == null)) {
+          return true;
+        }
+        if ((vType == 'string') || (Object.prototype.toString.call(value) === '[object Array]')) {
+          return !value.length;
+        }
+        if (vType == 'object') {
+          return !Object.keys(value).length;
+        }
+        return false;
+      }
+    , isKey             : function _isKey(value, object) {
+      if (spa._.isArray(value)) {
+        return false;
+      }
+      var type = typeof value;
+      if (type == 'number' || type == 'symbol' || type == 'boolean' || value == null ) {
+        return true;
+      }
+      return spa.__.reIsPlainProp.test(value) || !spa.__.reIsDeepProp.test(value) || (object != null && value in Object(object));
+    }
+    , isPrototype       : function _isPrototype(value) {
+        var Ctor = value && value.constructor,
+            proto = (typeof Ctor == 'function' && Ctor.prototype) || spa.__.objectProto;
+        return value === proto;
+      }
+    , isSymbol          : function _isSymbol(value) {
+        return typeof value == 'symbol' ||
+          (spa._.isObjectLike(value) && spa._.getTag(value) == spa.__.symbolTag);
+      }
+    , isTypedArray      : function _isTypedArray(value) {
+        return spa._.isObjectLike(value) &&
+          spa._.isLength(value.length) && !!spa.__.typedArrayTags[spa._.getTag(value)];
+      }
+    , isFlattenable     : function _isFlattenable(value) {
+        return spa._.isArray(value) || !!(spa.__.spreadableSymbol && value && value[spa.__.spreadableSymbol]);
+      }
+    , isIterateeCall    : function _isIterateeCall(value, index, object) {
+        if (!spa._.isObject(object)) {
+          return false;
+        }
+        var type = typeof index;
+        if (type == 'number'
+              ? (spa._.isArrayLike(object) && spa._.isIndex(index, object.length))
+              : (type == 'string' && index in object)
+            ) {
+          return spa._.eq(object[index], value);
+        }
+        return false;
+      }
+
+    , isBuffer             : spa.__.nativeIsBuffer || spa.__.stubFalse
+    , nativeObjectToString : spa.__.objectProto.toString
+    , propertyIsEnumerable : spa.__.objectProto.propertyIsEnumerable
+    , hasOwnProperty       : spa.__.objectProto.hasOwnProperty
+    , allocUnsafe          : spa.__.nativeIsBuffer ? Buffer.allocUnsafe : undefined
+    , funcToString         : spa.__.funcProto.toString
+    , objectCtorString     : spa.__.funcProto.toString.call(Object)
+
+    , objectToString     : function _objectToString(value) {
+        return spa._.nativeObjectToString.call(value);
+      }
+    , isStrictComparable : function _isStrictComparable(value) {
+        return value === value && !spa._.isObject(value);
+      }
+    , toPlainObject      : function _toPlainObject(value) {
+        return spa._.copyObject(value, spa._.keysIn(value));
+      }
+    , identity           : function _identity(value) {
+        return value;
+      }
+    , eq                 : function _eq(value, other) {
+      return value === other || (value !== value && other !== other);
+    }
+    , assocIndexOf       : function _assocIndexOf(array, key) {
+        var length = array.length;
+        while (length--) {
+          if (spa._.eq(array[length][0], key)) {
+            return length;
+          }
+        }
+        return -1;
+      }
+    , baseIsNaN          : function _baseIsNaN(value) {
+        return value !== value;
+      }
+    , toFinite           : function _toFinite(value) {
+        var INFINITY = spa.__.INFINITY, MAX_INTEGER = spa.__.MAX_INTEGER;
+        if (!value) {
+          return value === 0 ? value : 0;
+        }
+        value = (value*1);
+        if (value === INFINITY || value === -INFINITY) {
+          var sign = (value < 0 ? -1 : 1);
+          return sign * MAX_INTEGER;
+        }
+        return value === value ? value : 0;
+      }
+    , toKey              : function _toKey(value) {
+      if (typeof value == 'string') {
+        return value;
+      }
+      var result = (value + '');
+      return (result == '0' && (1 / value) == -(spa.__.INFINITY)) ? '-0' : result;
+    }
+    , baseToString       : function _baseToString(value) {
+        // Exit early for strings to avoid a performance hit in some environments.
+        if (typeof value == 'string') {
+          return value;
+        }
+        if (spa._.isArray(value)) {
+          // Recursively convert values (susceptible to call stack limits).
+          return spa._.arrayMap(value, spa._.baseToString) + '';
+        }
+        var result = (value + '');
+        return (result == '0' && (1 / value) == -spa.__.INFINITY) ? '-0' : result;
+      }
+    , toString           : function _toString(value) {
+      return value == null ? '' : spa._.baseToString(value);
+    }
+    , toInteger          : function _toInteger(value) {
+        var result = spa._.toFinite(value),
+            remainder = result % 1;
+        return result === result ? (remainder ? result - remainder : result) : 0;
+      }
+    , arrayMap           : function _arrayMap(array, iteratee) {
+        var index = -1,
+            length = array == null ? 0 : array.length,
+            result = Array(length);
+        while (++index < length) {
+          result[index] = iteratee(array[index], index, array);
+        }
+        return result;
+      }
+    , last               : function _last(array) {
+        var length = (array == null)? 0 : array.length;
+        return length? array[length - 1] : undefined;
+      }
+    , baseRange          : function _baseRange(start, end, step, fromRight) {
+        var index = -1,
+            length = Math.max(Math.ceil((end - start) / (step || 1)), 0),
+            result = Array(length);
+
+        while (length--) {
+          result[fromRight ? length : ++index] = start;
+          start += step;
+        }
+        return result;
+      }
+    , range              : function _range(start, end, step) {
+        if (step && typeof step != 'number') {
+          step = undefined;
+        }
+        // Ensure the sign of `-0` is preserved.
+        start = spa._.toFinite(start);
+        if (end === undefined) {
+          end = start;
+          start = 0;
+        } else {
+          end = spa._.toFinite(end);
+        }
+        step = step === undefined ? (start < end ? 1 : -1) : spa._.toFinite(step);
+        return spa._.baseRange(start, end, step, false);
+      }
+    , strToPath          : function _strToPath(string) {
+        var result = [];
+        if (spa.__.reLeadingDot.test(string)) {
+          result.push('');
+        }
+        string.replace(spa.__.rePropName, function(match, number, quote, string) {
+          result.push(quote ? string.replace(spa.__.reEscapeChar, '$1') : (number || match));
+        });
+        return result;
+      }
+    , castPath           : function _castPath(value, object) {
+        if (spa._.isArray(value)) {
+          return value;
+        }
+        return spa._.isKey(value, object) ? [value] : spa._.strToPath(spa._.toString(value));
+      }
+    , hasPath            : function _hasPath(object, path, hasFunc) {
+        path = spa._.castPath(path, object);
+
+        var index = -1,
+            length = path.length,
+            result = false;
+
+        while (++index < length) {
+          var key = spa._.toKey(path[index]);
+          if (!(result = object != null && hasFunc(object, key))) {
+            break;
+          }
+          object = object[key];
+        }
+        if (result || ++index != length) {
+          return result;
+        }
+        length = (object == null) ? 0 : object.length;
+
+        return !!length && spa._.isLength(length) && spa._.isArray(object);
+      }
+    , baseHas            : function _baseHas(object, key) {
+        return object != null && spa._.hasOwnProperty.call(object, key);
+      }
+    , has                : function _has(object, path) {
+        return object != null && spa._.hasPath(object, path, spa._.baseHas);
+      }
+    , baseHasIn          : function _baseHasIn(object, key) {
+        return object != null && key in Object(object);
+      }
+    , hasIn              : function _hasIn(object, path) {
+        return object != null && spa._.hasPath(object, path, spa._.baseHasIn);
+      }
+    , nativeKeys         : spa.__.overArg(Object.keys, Object)
+    , getPrototype       : spa.__.overArg(Object.getPrototypeOf, Object)
+
+    , baseTimes          : function _baseTimes(n, iteratee) {
+        var index = -1,
+            result = Array(n);
+
+        while (++index < n) {
+          result[index] = iteratee(index);
+        }
+        return result;
+      }
+    , baseKeys           : function _baseKeys(object) {
+        if (!spa._.isPrototype(object)) {
+          return spa._.nativeKeys(object);
+        }
+        var result = [];
+        for (var key in Object(object)) {
+          if (spa._.hasOwnProperty.call(object, key) && key != 'constructor') {
+            result.push(key);
+          }
+        }
+        return result;
+      }
+    , keys               : function _keys(object) {
+        return spa._.isObject(object) ? spa._.baseKeys(object) : (spa._.isString(object)? spa._.baseKeys(object.split('')) : []);
+      }
+    , nativeKeysIn       : function _nativeKeysIn(object) {
+        var result = [];
+        if (object != null) {
+          for (var key in Object(object)) {
+            result.push(key);
+          }
+        }
+        return result;
+      }
+    , baseKeysIn         : function _baseKeysIn(object) {
+        if (!spa._.isObject(object)) {
+          return spa._.nativeKeysIn(object);
+        }
+        var isProto = spa._.isPrototype(object),
+            result = [];
+
+        for (var key in object) {
+          if (!(key == 'constructor' && (isProto || !spa._.hasOwnProperty.call(object, key)))) {
+            result.push(key);
+          }
+        }
+        return result;
+      }
+    , arrayLikeKeys      : function _arrayLikeKeys(value, inherited) {
+        var isArr  = spa._.isArray(value),
+            isArg  = !isArr && spa._.isArguments(value),
+            isBuff = !isArr && !isArg && spa._.isBuffer(value),
+            isType = !isArr && !isArg && !isBuff && spa._.isTypedArray(value),
+            skipIndexes = isArr || isArg || isBuff || isType,
+            result = skipIndexes ? spa._.baseTimes(value.length, String) : [],
+            length = result.length;
+
+        for (var key in value) {
+          if ((inherited || spa._.hasOwnProperty.call(value, key)) &&
+              !(skipIndexes && (
+                 // Safari 9 has enumerable `arguments.length` in strict mode.
+                 key == 'length' ||
+                 // Node.js 0.10 has enumerable non-index properties on buffers.
+                 (isBuff && (key == 'offset' || key == 'parent')) ||
+                 // PhantomJS 2 has enumerable non-index properties on typed arrays.
+                 (isType && (key == 'buffer' || key == 'byteLength' || key == 'byteOffset')) ||
+                 // Skip index properties.
+                 spa._.isIndex(key, length)
+              ))) {
+            result.push(key);
+          }
+        }
+        return result;
+      }
+    , keysIn             : function _keysIn(object) {
+        return spa._.isArrayLike(object) ? spa._.arrayLikeKeys(object, true) : spa._.baseKeysIn(object);
+      }
+    , baseSlice          : function _baseSlice(array, start, end) {
+        var index = -1,
+            length = array.length;
+
+        if (start < 0) {
+          start = -start > length ? 0 : (length + start);
+        }
+        end = end > length ? length : end;
+        if (end < 0) {
+          end += length;
+        }
+        length = start > end ? 0 : ((end - start) >>> 0);
+        start >>>= 0;
+
+        var result = Array(length);
+        while (++index < length) {
+          result[index] = array[index + start];
+        }
+        return result;
+      }
+    , baseGet            : function _baseGet(object, path) {
+        path = spa._.castPath(path, object);
+
+        var index = 0,
+            length = path.length;
+
+        while (object != null && index < length) {
+          object = object[spa._.toKey(path[index++])];
+        }
+        return (index && index == length) ? object : undefined;
+      }
+    , get                : function _get(object, path, defaultValue) {
+        var result = object == null ? undefined : spa._.baseGet(object, path);
+        return result === undefined ? defaultValue : result;
+      }
+    , parent             : function _parent(object, path) {
+        return path.length < 2 ? object : spa._.baseGet(object, spa._.baseSlice(path, 0, -1));
+      }
+    , baseGetTag         : function _baseGetTag(value) {
+        if (value == null) {
+          return value === undefined ? spa.__.undefinedTag : spa.__.nullTag;
+        }
+        return (spa.__.symToStringTag && spa.__.symToStringTag in Object(value))
+          ? spa._.getRawTag(value)
+          : spa._.objectToString(value);
+      }
+    , getRawTag          : function _getRawTag(value) {
+        var isOwn = spa._.hasOwnProperty.call(value, spa.__.symToStringTag),
+            tag = value[spa.__.symToStringTag];
+
+        try {
+          value[spa.__.symToStringTag] = undefined;
+          var unmasked = true;
+        } catch (e) {}
+
+        var result = spa._.nativeObjectToString.call(value);
+        if (unmasked) {
+          if (isOwn) {
+            value[spa.__.symToStringTag] = tag;
+          } else {
+            delete value[spa.__.symToStringTag];
+          }
+        }
+        return result;
+      }
+    , getTag             : function _getTag(value) {
+        if (value == null) {
+          return value === undefined ? spa.__.undefinedTag : spa.__.nullTag;
+        }
+        return (spa.__.symToStringTag && spa.__.symToStringTag in Object(value))
+          ? spa._.getRawTag(value)
+          : spa._.objectToString(value);
+      }
+    , baseAssignValue    : function _baseAssignValue(object, key, value) {
+        if (key == '__proto__' && spa.__.defineProperty) {
+          spa.__.defineProperty(object, key, {
+            'configurable': true,
+            'enumerable': true,
+            'value': value,
+            'writable': true
+          });
+        } else {
+          object[key] = value;
+        }
+      }
+    , assignValue        : function _assignValue(object, key, value) {
+        var objValue = object[key];
+        if (!(spa._.hasOwnProperty.call(object, key) && spa._.eq(objValue, value)) ||
+            (value === undefined && !(key in object))) {
+          spa._.baseAssignValue(object, key, value);
+        }
+      }
+    , baseZipObject      : function _baseZipObject(props, values, assignFunc) {
+        var index = -1,
+            length = props.length,
+            valsLength = values.length,
+            result = {};
+
+        while (++index < length) {
+          var value = index < valsLength ? values[index] : undefined;
+          assignFunc(result, props[index], value);
+        }
+        return result;
+      }
+    , zipObject          : function _zipObject(props, values) {
+        return spa._.baseZipObject(props || [], values || [], spa._.assignValue);
+      }
+
+    , baseAt             : function _baseAt(object, paths) {
+        var index = -1,
+            length = paths.length,
+            result = Array(length),
+            skip = object == null;
+
+        while (++index < length) {
+          result[index] = skip ? undefined : spa._.get(object, paths[index]);
+        }
+        return result;
+      }
+    , arrayPush          : function _arrayPush(array, values) {
+        var index = -1,
+            length = values.length,
+            offset = array.length;
+
+        while (++index < length) {
+          array[offset + index] = values[index];
+        }
+        return array;
+      }
+    , copyArray          : function _copyArray(source, array) {
+        var index = -1,
+            length = source.length;
+
+        array || (array = Array(length));
+        while (++index < length) {
+          array[index] = source[index];
+        }
+        return array;
+      }
+    , arrayEach          : function _arrayEach(array, iteratee) {
+        var index = -1,
+            length = array == null ? 0 : array.length;
+
+        while (++index < length) {
+          if (iteratee(array[index], index, array) === false) {
+            break;
+          }
+        }
+        return array;
+      }
+    , arrayEvery         : function _arrayEvery(array, predicate) {
+        var index = -1,
+            length = array == null ? 0 : array.length;
+
+        while (++index < length) {
+          if (!predicate(array[index], index, array)) {
+            return false;
+          }
+        }
+        return true;
+      }
+    , arrayMap           : function _arrayMap(array, iteratee) {
+        var index = -1,
+            length = array == null ? 0 : array.length,
+            result = Array(length);
+
+        while (++index < length) {
+          result[index] = iteratee(array[index], index, array);
+        }
+        return result;
+      }
+    , arraySome          : function _arraySome(array, predicate) {
+        var index = -1,
+            length = array == null ? 0 : array.length;
+
+        while (++index < length) {
+          if (predicate(array[index], index, array)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    , arrayIncludes      : function _arrayIncludes(array, value) {
+        var length = array == null ? 0 : array.length;
+        return !!length && spa._.baseIndexOf(array, value, 0) > -1;
+      }
+    , arrayIncludesWith  : function _arrayIncludesWith(array, value, comparator) {
+        var index = -1,
+            length = array == null ? 0 : array.length;
+
+        while (++index < length) {
+          if (comparator(value, array[index])) {
+            return true;
+          }
+        }
+        return false;
+      }
+    , arrayFilter        : function _arrayFilter(array, predicate) {
+      var index = -1,
+          length = array == null ? 0 : array.length,
+          resIndex = 0,
+          result = [];
+
+      while (++index < length) {
+        var value = array[index];
+        if (predicate(value, index, array)) {
+          result[resIndex++] = value;
+        }
+      }
+      return result;
+    }
+    , iteratorToArray    : function _iteratorToArray(iterator) {
+        var data,
+            result = [];
+
+        while (!(data = iterator.next()).done) {
+          result.push(data.value);
+        }
+        return result;
+      }
+    , mapToArray         : function _mapToArray(map) {
+        var index = -1,
+            result = Array(map.size);
+
+        map.forEach(function(value, key) {
+          result[++index] = [key, value];
+        });
+        return result;
+      }
+    , baseFlatten        : function _baseFlatten(array, depth, predicate, isStrict, result) {
+        var index = -1,
+            length = array.length;
+
+        predicate || (predicate = spa._.isFlattenable);
+        result || (result = []);
+
+        while (++index < length) {
+          var value = array[index];
+          if (depth > 0 && predicate(value)) {
+            if (depth > 1) {
+              // Recursively flatten arrays (susceptible to call stack limits).
+              spa._.baseFlatten(value, depth - 1, predicate, isStrict, result);
+            } else {
+              spa._.arrayPush(result, value);
+            }
+          } else if (!isStrict) {
+            result[result.length] = value;
+          }
+        }
+        return result;
+      }
+    , flatten            : function _flatten(array) {
+        var length = array == null ? 0 : array.length;
+        return length ? spa._.baseFlatten(array, 1) : [];
+      }
+    , setToString        : spa.__.shortOut(spa.__.baseSetToString)
+    , baseRest           : function _baseRest(func, start) {
+        return spa._.setToString(spa.__.overRest(func, start, spa._.identity), func + '');
+      }
+    , flatRest           : function _flatRest(func) {
+        return spa._.setToString(spa.__.overRest(func, undefined, spa._.flatten), func + '');
+      }
+
+    , baseGetAllKeys     : function _baseGetAllKeys(object, keysFunc, symbolsFunc) {
+        var result = keysFunc(object);
+        return spa._.isArray(object) ? result : spa._.arrayPush(result, symbolsFunc(object));
+      }
+    , getAllKeys         : function _getAllKeys(object) {
+        return baseGetAllKeys(object, keys, spa.__.getSymbols);
+      }
+    , equalArrays        : function _equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
+        var isPartial = bitmask & spa.__.COMPARE_PARTIAL_FLAG,
+            arrLength = array.length,
+            othLength = other.length;
+
+        if (arrLength != othLength && !(isPartial && othLength > arrLength)) {
+          return false;
+        }
+        // Assume cyclic values are equal.
+        var stacked = stack.get(array);
+        if (stacked && stack.get(other)) {
+          return stacked == other;
+        }
+        var index = -1,
+            result = true,
+            seen = (bitmask & spa.__.COMPARE_UNORDERED_FLAG) ? new spa.__.SetCache : undefined;
+
+        stack.set(array, other);
+        stack.set(other, array);
+
+        // Ignore non-index properties.
+        while (++index < arrLength) {
+          var arrValue = array[index],
+              othValue = other[index];
+
+          if (customizer) {
+            var compared = isPartial
+              ? customizer(othValue, arrValue, index, other, array, stack)
+              : customizer(arrValue, othValue, index, array, other, stack);
+          }
+          if (compared !== undefined) {
+            if (compared) {
+              continue;
+            }
+            result = false;
+            break;
+          }
+          // Recursively compare arrays (susceptible to call stack limits).
+          if (seen) {
+            if (!spa._.arraySome(other, function(othValue, othIndex) {
+                  if (!spa._.cacheHas(seen, othIndex) &&
+                      (arrValue === othValue || equalFunc(arrValue, othValue, bitmask, customizer, stack))) {
+                    return seen.push(othIndex);
+                  }
+                })) {
+              result = false;
+              break;
+            }
+          } else if (!(
+                arrValue === othValue ||
+                  equalFunc(arrValue, othValue, bitmask, customizer, stack)
+              )) {
+            result = false;
+            break;
+          }
+        }
+        stack['delete'](array);
+        stack['delete'](other);
+        return result;
+      }
+    , equalByTag         : function _equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
+        switch (tag) {
+          case spa.__.dataViewTag:
+            if ((object.byteLength != other.byteLength) ||
+                (object.byteOffset != other.byteOffset)) {
+              return false;
+            }
+            object = object.buffer;
+            other = other.buffer;
+
+          case spa.__.arrayBufferTag:
+            if ((object.byteLength != other.byteLength) ||
+                !equalFunc(new spa.__.Uint8Array(object), new spa.__.Uint8Array(other))) {
+              return false;
+            }
+            return true;
+
+          case spa.__.boolTag:
+          case spa.__.dateTag:
+          case spa.__.numberTag:
+            // Coerce booleans to `1` or `0` and dates to milliseconds.
+            // Invalid dates are coerced to `NaN`.
+            return spa._.eq(+object, +other);
+
+          case spa.__.errorTag:
+            return object.name == other.name && object.message == other.message;
+
+          case spa.__.regexpTag:
+          case spa.__.stringTag:
+            // Coerce regexes to strings and treat strings, primitives and objects,
+            // as equal. See http://www.ecma-international.org/ecma-262/7.0/#sec-regexp.prototype.tostring
+            // for more details.
+            return object == (other + '');
+
+          case spa.__.mapTag:
+            var convert = spa._.mapToArray;
+
+          case spa.__.setTag:
+            var isPartial = bitmask & spa.__.COMPARE_PARTIAL_FLAG;
+            convert || (convert = spa.__.setToArray);
+
+            if (object.size != other.size && !isPartial) {
+              return false;
+            }
+            // Assume cyclic values are equal.
+            var stacked = stack.get(object);
+            if (stacked) {
+              return stacked == other;
+            }
+            bitmask |= spa.__.COMPARE_UNORDERED_FLAG;
+
+            // Recursively compare objects (susceptible to call stack limits).
+            stack.set(object, other);
+            var result = spa._.equalArrays(convert(object), convert(other), bitmask, customizer, equalFunc, stack);
+            stack['delete'](object);
+            return result;
+
+          case spa.__.symbolTag:
+            if (spa.__.symbolValueOf) {
+              return spa.__.symbolValueOf.call(object) == spa.__.symbolValueOf.call(other);
+            }
+        }
+        return false;
+      }
+    , equalObjects       : function _equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
+        var isPartial = bitmask & spa.__.COMPARE_PARTIAL_FLAG,
+            objProps  = spa._.getAllKeys(object),
+            objLength = objProps.length,
+            othProps  = spa._.getAllKeys(other),
+            othLength = othProps.length;
+
+        if (objLength != othLength && !isPartial) {
+          return false;
+        }
+        var index = objLength;
+        while (index--) {
+          var key = objProps[index];
+          if (!(isPartial ? key in other : spa._.hasOwnProperty.call(other, key))) {
+            return false;
+          }
+        }
+        // Assume cyclic values are equal.
+        var stacked = stack.get(object);
+        if (stacked && stack.get(other)) {
+          return stacked == other;
+        }
+        var result = true;
+        stack.set(object, other);
+        stack.set(other, object);
+
+        var skipCtor = isPartial;
+        while (++index < objLength) {
+          key = objProps[index];
+          var objValue = object[key],
+              othValue = other[key];
+
+          if (customizer) {
+            var compared = isPartial
+              ? customizer(othValue, objValue, key, other, object, stack)
+              : customizer(objValue, othValue, key, object, other, stack);
+          }
+          // Recursively compare objects (susceptible to call stack limits).
+          if (!(compared === undefined
+                ? (objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack))
+                : compared
+              )) {
+            result = false;
+            break;
+          }
+          skipCtor || (skipCtor = key == 'constructor');
+        }
+        if (result && !skipCtor) {
+          var objCtor = object.constructor,
+              othCtor = other.constructor;
+
+          // Non `Object` object instances with different constructors are not equal.
+          if (objCtor != othCtor &&
+              ('constructor' in object && 'constructor' in other) &&
+              !(typeof objCtor == 'function' && objCtor instanceof objCtor &&
+                typeof othCtor == 'function' && othCtor instanceof othCtor)) {
+            result = false;
+          }
+        }
+        stack['delete'](object);
+        stack['delete'](other);
+        return result;
+      }
+
+    , cacheHas            : function _cacheHas(cache, key) {
+        return cache.has(key);
+      }
+    , compareAscending    : function _compareAscending(value, other) {
+        if (value !== other) {
+          var valIsDefined   = value !== undefined,
+              valIsNull      = value === null,
+              valIsReflexive = value === value,
+              valIsSymbol    = spa._.isSymbol(value);
+
+          var othIsDefined   = other !== undefined,
+              othIsNull      = other === null,
+              othIsReflexive = other === other,
+              othIsSymbol    = spa._.isSymbol(other);
+
+          if ((!othIsNull && !othIsSymbol && !valIsSymbol && value > other) ||
+              (valIsSymbol && othIsDefined && othIsReflexive && !othIsNull && !othIsSymbol) ||
+              (valIsNull && othIsDefined && othIsReflexive) ||
+              (!valIsDefined && othIsReflexive) ||
+              !valIsReflexive) {
+            return 1;
+          }
+          if ((!valIsNull && !valIsSymbol && !othIsSymbol && value < other) ||
+              (othIsSymbol && valIsDefined && valIsReflexive && !valIsNull && !valIsSymbol) ||
+              (othIsNull && valIsDefined && valIsReflexive) ||
+              (!othIsDefined && valIsReflexive) ||
+              !othIsReflexive) {
+            return -1;
+          }
+        }
+        return 0;
+      }
+    , compareMultiple     : function _compareMultiple(object, other, orders) {
+        var index        = -1,
+            objCriteria  = object.criteria,
+            othCriteria  = other.criteria,
+            length       = objCriteria.length,
+            ordersLength = orders.length;
+
+        while (++index < length) {
+          var result = spa._.compareAscending(objCriteria[index], othCriteria[index]);
+          if (result) {
+            if (index >= ordersLength) {
+              return result;
+            }
+            var order = orders[index];
+            return result * (order == 'desc' ? -1 : 1);
+          }
+        }
+        return object.index - other.index;
+      }
+    , strictIndexOf       : function _strictIndexOf(array, value, fromIndex) {
+        var index = fromIndex - 1,
+            length = array.length;
+
+        while (++index < length) {
+          if (array[index] === value) {
+            return index;
+          }
+        }
+        return -1;
+      }
+    , baseFindIndex       : function _baseFindIndex(array, predicate, fromIndex, fromRight) {
+        var length = array.length,
+            index = fromIndex + (fromRight ? 1 : -1);
+
+        while ((fromRight ? index-- : ++index < length)) {
+          if (predicate(array[index], index, array)) {
+            return index;
+          }
+        }
+        return -1;
+      }
+    , baseIndexOf         : function _baseIndexOf(array, value, fromIndex) {
+        return value === value
+          ? spa._.strictIndexOf(array, value, fromIndex)
+          : spa._.baseFindIndex(array, spa._.baseIsNaN, fromIndex);
+      }
+    , indexOf             : function _indexOf(array, value, fromIndex) {
+        var length = array == null ? 0 : array.length;
+        if (!length) {
+          return -1;
+        }
+        var index = fromIndex == null ? 0 : spa._.toInteger(fromIndex);
+        if (index < 0) {
+          index = Math.max(length + index, 0);
+        }
+        return spa._.baseIndexOf(array, value, index);
+      }
+    , matchesStrictComparable : function _matchesStrictComparable(key, srcValue) {
+        return function(object) {
+          if (object == null) {
+            return false;
+          }
+          return object[key] === srcValue &&
+            (srcValue !== undefined || (key in Object(object)));
+        };
+      }
+    , baseMatchesProperty     : function _baseMatchesProperty(path, srcValue) {
+        if (spa._.isKey(path) && spa._.isStrictComparable(srcValue)) {
+          return spa._.matchesStrictComparable(spa._.toKey(path), srcValue);
+        }
+        return function(object) {
+          var objValue = spa._.get(object, path);
+          return (objValue === undefined && objValue === srcValue)
+            ? spa._.hasIn(object, path)
+            : spa._.baseIsEqual(srcValue, objValue, spa.__.COMPARE_PARTIAL_FLAG | spa.__.COMPARE_UNORDERED_FLAG);
+        };
+      }
+    , baseIsEqualDeep     : function _baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
+        var objIsArr = spa._.isArray(object),
+            othIsArr = spa._.isArray(other),
+            objTag = objIsArr ? spa.__.arrayTag : spa._.getTag(object),
+            othTag = othIsArr ? spa.__.arrayTag : spa._.getTag(other);
+
+        objTag = objTag == spa.__.argsTag ? spa.__.objectTag : objTag;
+        othTag = othTag == spa.__.argsTag ? spa.__.objectTag : othTag;
+
+        var objIsObj = objTag == spa.__.objectTag,
+            othIsObj = othTag == spa.__.objectTag,
+            isSameTag = objTag == othTag;
+
+        if (isSameTag && spa._.isBuffer(object)) {
+          if (!spa._.isBuffer(other)) {
+            return false;
+          }
+          objIsArr = true;
+          objIsObj = false;
+        }
+        if (isSameTag && !objIsObj) {
+          stack || (stack = new spa.__.Stack);
+          return (objIsArr || spa._.isTypedArray(object))
+            ? spa._.equalArrays(object, other, bitmask, customizer, equalFunc, stack)
+            : spa._.equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
+        }
+        if (!(bitmask & spa.__.COMPARE_PARTIAL_FLAG)) {
+          var objIsWrapped = objIsObj && spa._.hasOwnProperty.call(object, '__wrapped__'),
+              othIsWrapped = othIsObj && spa._.hasOwnProperty.call(other, '__wrapped__');
+
+          if (objIsWrapped || othIsWrapped) {
+            var objUnwrapped = objIsWrapped ? object.value() : object,
+                othUnwrapped = othIsWrapped ? other.value() : other;
+
+            stack || (stack = new spa.__.Stack);
+            return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer, stack); //equalFunc: is local param
+          }
+        }
+        if (!isSameTag) {
+          return false;
+        }
+        stack || (stack = new spa.__.Stack);
+        return spa._.equalObjects(object, other, bitmask, customizer, equalFunc, stack);
+      }
+    , baseIsEqual         : function _baseIsEqual(value, other, bitmask, customizer, stack) {
+        if (value === other) {
+          return true;
+        }
+        if (value == null || other == null || (!spa._.isObjectLike(value) && !spa._.isObjectLike(other))) {
+          return value !== value && other !== other;
+        }
+        return spa._.baseIsEqualDeep(value, other, bitmask, customizer, spa._.baseIsEqual, stack);
+      }
+    , baseIsMatch         : function _baseIsMatch(object, source, matchData, customizer) {
+        var index = matchData.length,
+            length = index,
+            noCustomizer = !customizer;
+
+        if (object == null) {
+          return !length;
+        }
+        object = Object(object);
+        while (index--) {
+          var data = matchData[index];
+          if ((noCustomizer && data[2])
+                ? data[1] !== object[data[0]]
+                : !(data[0] in object)
+              ) {
+            return false;
+          }
+        }
+        while (++index < length) {
+          data = matchData[index];
+          var key = data[0],
+              objValue = object[key],
+              srcValue = data[1];
+
+          if (noCustomizer && data[2]) {
+            if (objValue === undefined && !(key in object)) {
+              return false;
+            }
+          } else {
+            var stack = new spa.__.Stack;
+            if (customizer) {
+              var result = customizer(objValue, srcValue, key, object, source, stack);
+            }
+            if (!(result === undefined
+                  ? spa._.baseIsEqual(srcValue, objValue, spa.__.COMPARE_PARTIAL_FLAG | spa.__.COMPARE_UNORDERED_FLAG, customizer, stack)
+                  : result
+                )) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+    , baseIsNaN           : function _baseIsNaN(value) {
+        return value !== value;
+      }
+    , baseIsArguments     : function _baseIsArguments(value) {
+        return spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.argsTag;
+      }
+    , getMatchData        : function _getMatchData(object) {
+        var result = spa._.keys(object),
+            length = result.length;
+
+        while (length--) {
+          var key = result[length],
+              value = object[key];
+
+          result[length] = [key, value, spa._.isStrictComparable(value)];
+        }
+        return result;
+      }
+    , baseMatches         : function _baseMatches(source) {
+        var matchData = spa._.getMatchData(source);
+        if (matchData.length == 1 && matchData[0][2]) {
+          return spa._.matchesStrictComparable(matchData[0][0], matchData[0][1]);
+        }
+        return function(object) {
+          return object === source || spa._.baseIsMatch(object, source, matchData);
+        };
+      }
+    , baseProperty        : function _baseProperty(key) {
+        return function(object) {
+          return object == null ? undefined : object[key];
+        };
+      }
+    , basePropertyDeep    : function _basePropertyDeep(path) {
+        return function(object) {
+          return spa._.baseGet(object, path);
+        };
+      }
+    , property            : function _property(path) {
+        return spa._.isKey(path) ? spa._.baseProperty(spa._.toKey(path)) : spa._.basePropertyDeep(path);
+      }
+    , baseIteratee        : function _baseIteratee(value) {
+        // Don't store the `typeof` result in a variable to avoid a JIT bug in Safari 9.
+        // See https://bugs.webkit.org/show_bug.cgi?id=156034 for more details.
+        if (typeof value == 'function') {
+          return value;
+        }
+        if (value == null) {
+          return spa._.identity;
+        }
+        if (typeof value == 'object') {
+          return spa._.isArray(value)
+            ? spa._.baseMatchesProperty(value[0], value[1])
+            : spa._.baseMatches(value);
+        }
+        return spa._.property(value);
+      }
+    , getIteratee         : function _getIteratee() {
+        var result = spa._.baseIteratee;
+        return arguments.length ? result(arguments[0], arguments[1]) : result;
+      }
+    , findIndex           : function _findIndex(array, predicate, fromIndex) {
+        var length = array == null ? 0 : array.length;
+        if (!length) {
+          return -1;
+        }
+        var index = fromIndex == null ? 0 : spa._.toInteger(fromIndex);
+        if (index < 0) {
+          index = Math.max(length + index, 0);
+        }
+        return spa._.baseFindIndex(array, spa._.getIteratee(predicate, 3), index);
+      }
+    , find                : function _find(collection, predicate, fromIndex) {
+        var iterable = Object(collection);
+        if (!spa._.isArrayLike(collection)) {
+          var iteratee = spa._.getIteratee(predicate, 3);
+          collection = spa._.keys(collection);
+          predicate = function(key) { return iteratee(iterable[key], key, iterable); };
+        }
+        var index = spa._.findIndex(collection, predicate, fromIndex);
+        return index > -1 ? iterable[iteratee ? collection[index] : index] : undefined;
+      }
+
+    , baseIndexOf         : function _baseIndexOf(array, value, fromIndex) {
+        return value === value
+          ? spa._.strictIndexOf(array, value, fromIndex)
+          : spa._.baseFindIndex(array, spa._.baseIsNaN, fromIndex);
+      }
+    , baseIndexOfWith     : function _baseIndexOfWith(array, value, fromIndex, comparator) {
+        var index = fromIndex - 1,
+            length = array.length;
+
+        while (++index < length) {
+          if (comparator(array[index], value)) {
+            return index;
+          }
+        }
+        return -1;
+      }
+    , baseUnset           : function _baseUnset(object, path) {
+        path = spa._.castPath(path, object);
+        object = spa._.parent(object, path);
+        return object == null || delete object[spa._.toKey(spa._.last(path))];
+      }
+    , basePullAt          : function _basePullAt(array, indexes) {
+        var length = array ? indexes.length : 0,
+            lastIndex = length - 1;
+
+        while (length--) {
+          var index = indexes[length];
+          if (length == lastIndex || index !== previous) {
+            var previous = index;
+            if (spa._.isIndex(index)) {
+              spa.__.splice.call(array, index, 1);
+            } else {
+              spa._.baseUnset(array, index);
+            }
+          }
+        }
+        return array;
+      }
+    , baseUnary           : function _baseUnary(func) {
+        return function(value) {
+          return func(value);
+        };
+      }
+    , baseFor             : function _baseFor(object, iteratee, keysFunc, fromRight) {
+        var index    = -1,
+            iterable = Object(object),
+            props    = keysFunc(object),
+            length   = props.length;
+
+        while (length--) {
+          var key = props[fromRight ? length : ++index];
+          if (iteratee(iterable[key], key, iterable) === false) {
+            break;
+          }
+        }
+        return object;
+      }
+    , baseForOwn          : function _baseForOwn(object, iteratee) {
+        return object && spa._.baseFor(object, iteratee, spa._.keys);
+      }
+    , createBaseEach      : function _createBaseEach(eachFunc, fromRight) {
+        return function(collection, iteratee) {
+          if (collection == null) {
+            return collection;
+          }
+          if (!spa._.isArrayLike(collection)) {
+            return eachFunc(collection, iteratee);
+          }
+          var length = collection.length,
+              index = fromRight ? length : -1,
+              iterable = Object(collection);
+
+          while ((fromRight ? index-- : ++index < length)) {
+            if (iteratee(iterable[index], index, iterable) === false) {
+              break;
+            }
+          }
+          return collection;
+        };
+      }
+    , remove              : function _remove(array, predicate) {
+        var result = [];
+        if (!(array && array.length)) {
+          return result;
+        }
+        var index = -1,
+            indexes = [],
+            length = array.length;
+
+        predicate = spa._.getIteratee(predicate, 3);
+        while (++index < length) {
+          var value = array[index];
+          if (predicate(value, index, array)) {
+            result.push(value);
+            indexes.push(index);
+          }
+        }
+        spa._.basePullAt(array, indexes);
+        return result;
+      }
+    , basePullAll         : function _basePullAll(array, values, iteratee, comparator) {
+        var indexOf = comparator ? spa._.baseIndexOfWith : spa._.baseIndexOf,
+            index = -1,
+            length = values.length,
+            seen = array;
+
+        if (array === values) {
+          values = spa._.copyArray(values);
+        }
+        if (iteratee) {
+          seen = spa._.arrayMap(array, spa._.baseUnary(iteratee));
+        }
+        while (++index < length) {
+          var fromIndex = 0,
+              value = values[index],
+              computed = iteratee ? iteratee(value) : value;
+
+          while ((fromIndex = indexOf(seen, computed, fromIndex, comparator)) > -1) {
+            if (seen !== array) {
+              spa.__.splice.call(seen, fromIndex, 1);
+            }
+            spa.__.splice.call(array, fromIndex, 1);
+          }
+        }
+        return array;
+      }
+    , pullAll             : function _pullAll(array, values) {
+        return (array && array.length && values && values.length)
+          ? spa._.basePullAll(array, values)
+          : array;
+      }
+
+    , each                : function _each(collection, iteratee) {
+        var func = spa._.isArray(collection) ? spa._.arrayEach : spa._.baseEach;
+        return func(collection, spa._.getIteratee(iteratee, 3));
+      }
+    , baseEvery           : function _baseEvery(collection, predicate) {
+        var result = true;
+        spa._.baseEach(collection, function(value, index, collection) {
+          result = !!predicate(value, index, collection);
+          return result;
+        });
+        return result;
+      }
+    , every               : function _every(collection, predicate, guard) {
+        var func = spa._.isArray(collection) ? spa._.arrayEvery : spa._.baseEvery;
+        if (guard && spa._.isIterateeCall(collection, predicate, guard)) {
+          predicate = undefined;
+        }
+        return func(collection, spa._.getIteratee(predicate, 3));
+      }
+
+    , baseMap             : function _baseMap(collection, iteratee) {
+        var index = -1,
+            result = spa._.isArrayLike(collection) ? Array(collection.length) : [];
+
+        spa._.baseEach(collection, function(value, key, collection) {
+          result[++index] = iteratee(value, key, collection);
+        });
+        return result;
+      }
+    , map                 : function _map(collection, iteratee) {
+        var func = spa._.isArray(collection) ? spa._.arrayMap : spa._.baseMap;
+        return func(collection, spa._.getIteratee(iteratee, 3));
+      }
+    , baseSome            : function _baseSome(collection, predicate) {
+        var result;
+
+        spa._.baseEach(collection, function(value, index, collection) {
+          result = predicate(value, index, collection);
+          return !result;
+        });
+        return !!result;
+      }
+    , some                : function _some(collection, predicate, guard) {
+        var func = spa._.isArray(collection) ? spa._.arraySome : spa._.baseSome;
+        if (guard && spa._.isIterateeCall(collection, predicate, guard)) {
+          predicate = undefined;
+        }
+        return func(collection, spa._.getIteratee(predicate, 3));
+      }
+    , baseUniq            : function _baseUniq(array, iteratee, comparator) {
+        var index = -1,
+            includes = spa._.arrayIncludes,
+            length = array.length,
+            isCommon = true,
+            result = [],
+            seen = result;
+
+        if (comparator) {
+          isCommon = false;
+          includes = spa._.arrayIncludesWith;
+        }
+        else if (length >= spa.__.LARGE_ARRAY_SIZE) {
+          var set = iteratee ? null : spa.__.createSet(array);
+          if (set) {
+            return spa.__.setToArray(set);
+          }
+          isCommon = false;
+          includes = spa._.cacheHas;
+          seen = new spa.__.SetCache;
+        }
+        else {
+          seen = iteratee ? [] : result;
+        }
+        outer:
+        while (++index < length) {
+          var value = array[index],
+              computed = iteratee ? iteratee(value) : value;
+
+          value = (comparator || value !== 0) ? value : 0;
+          if (isCommon && computed === computed) {
+            var seenIndex = seen.length;
+            while (seenIndex--) {
+              if (seen[seenIndex] === computed) {
+                continue outer;
+              }
+            }
+            if (iteratee) {
+              seen.push(computed);
+            }
+            result.push(value);
+          }
+          else if (!includes(seen, computed, comparator)) {
+            if (seen !== result) {
+              seen.push(computed);
+            }
+            result.push(value);
+          }
+        }
+        return result;
+      }
+    , uniq                : function _uniq(array) {
+        return (array && array.length) ? spa._.baseUniq(array) : [];
+      }
+
+    , baseSortBy          : function _baseSortBy(array, comparer) {
+        var length = array.length;
+
+        array.sort(comparer);
+        while (length--) {
+          array[length] = array[length].value;
+        }
+        return array;
+      }
+    , baseOrderBy         : function _baseOrderBy(collection, iteratees, orders) {
+        var index = -1;
+        iteratees = spa._.arrayMap(iteratees.length ? iteratees : [spa._.identity], spa._.baseUnary(spa._.getIteratee()));
+
+        var result = spa._.baseMap(collection, function(value) {
+          var criteria = spa._.arrayMap(iteratees, function(iteratee) {
+            return iteratee(value);
+          });
+          return { 'criteria': criteria, 'index': ++index, 'value': value };
+        });
+
+        return spa._.baseSortBy(result, function(object, other) {
+          return spa._.compareMultiple(object, other, orders);
+        });
+      }
+
+    , baseFilter          : function _baseFilter(collection, predicate) {
+        var result = [];
+        spa._.baseEach(collection, function(value, index, collection) {
+          if (predicate(value, index, collection)) {
+            result.push(value);
+          }
+        });
+        return result;
+      }
+    , filter              : function _filter(collection, predicate) {
+        var func = spa._.isArray(collection) ? spa._.arrayFilter : spa._.baseFilter;
+        return func(collection, spa._.getIteratee(predicate, 3));
+      }
+
+    , assignMergeValue    : function _assignMergeValue(object, key, value) {
+        if ((value !== undefined && !spa._.eq(object[key], value)) ||
+            (value === undefined && !(key in object))) {
+          spa._.baseAssignValue(object, key, value);
+        }
+      }
+
+    , initCloneObject     : function _initCloneObject(object) {
+        return (typeof object.constructor == 'function' && !spa._.isPrototype(object))
+          ? spa.__.baseCreate(spa._.getPrototype(object))
+          : {};
+      }
+    , copyObject          : function _copyObject(source, props, object, customizer) {
+        var isNew = !object;
+        object || (object = {});
+
+        var index = -1,
+            length = props.length;
+
+        while (++index < length) {
+          var key = props[index];
+
+          var newValue = customizer
+            ? customizer(object[key], source[key], key, object, source)
+            : undefined;
+
+          if (newValue === undefined) {
+            newValue = source[key];
+          }
+          if (isNew) {
+            spa._.baseAssignValue(object, key, newValue);
+          } else {
+            spa._.assignValue(object, key, newValue);
+          }
+        }
+        return object;
+      }
+    , cloneBuffer         : function _cloneBuffer(buffer, isDeep) {
+        if (isDeep) {
+          return buffer.slice();
+        }
+        var length = buffer.length,
+            result = spa._.allocUnsafe ? spa._.allocUnsafe(length) : new buffer.constructor(length);
+
+        buffer.copy(result);
+        return result;
+      }
+    , cloneArrayBuffer    : function _cloneArrayBuffer(arrayBuffer) {
+        var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
+        new spa.__.Uint8Array(result).set(new spa.__.Uint8Array(arrayBuffer));
+        return result;
+      }
+    , cloneTypedArray     : function _cloneTypedArray(typedArray, isDeep) {
+        var buffer = isDeep ? spa._.cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
+        return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
+      }
+    , baseMergeDeep       : function _baseMergeDeep(object, source, key, srcIndex, mergeFunc, customizer, stack) {
+        var objValue = object[key],
+            srcValue = source[key],
+            stacked  = stack.get(srcValue);
+
+        if (stacked) {
+          spa._.assignMergeValue(object, key, stacked);
+          return;
+        }
+        var newValue = customizer
+          ? customizer(objValue, srcValue, (key + ''), object, source, stack)
+          : undefined;
+
+        var isCommon = newValue === undefined;
+
+        if (isCommon) {
+          var isArr   = spa._.isArray(srcValue),
+              isBuff  = !isArr && spa._.isBuffer(srcValue),
+              isTyped = !isArr && !isBuff && spa._.isTypedArray(srcValue);
+
+          newValue = srcValue;
+          if (isArr || isBuff || isTyped) {
+            if (spa._.isArray(objValue)) {
+              newValue = objValue;
+            }
+            else if (spa._.isArrayLikeObject(objValue)) {
+              newValue = spa._.copyArray(objValue);
+            }
+            else if (isBuff) {
+              isCommon = false;
+              newValue = spa._.cloneBuffer(srcValue, true);
+            }
+            else if (isTyped) {
+              isCommon = false;
+              newValue = spa._.cloneTypedArray(srcValue, true);
+            }
+            else {
+              newValue = [];
+            }
+          }
+          else if (spa._.isPlainObject(srcValue) || spa._.isArguments(srcValue)) {
+            newValue = objValue;
+            if (spa._.isArguments(objValue)) {
+              newValue = spa._.toPlainObject(objValue);
+            }
+            else if (!spa._.isObject(objValue) || (srcIndex && spa._.isFunction(objValue))) {
+              newValue = spa._.initCloneObject(srcValue);
+            }
+          }
+          else {
+            isCommon = false;
+          }
+        }
+        if (isCommon) {
+          // Recursively merge objects and arrays (susceptible to call stack limits).
+          stack.set(srcValue, newValue);
+          mergeFunc(newValue, srcValue, srcIndex, customizer, stack);
+          stack['delete'](srcValue);
+        }
+        spa._.assignMergeValue(object, key, newValue);
+      }
+    , baseMerge           : function _baseMerge(object, source, srcIndex, customizer, stack) {
+        if (object === source) {
+          return;
+        }
+        spa._.baseFor(source, function(srcValue, key) {
+          if (spa._.isObject(srcValue)) {
+            stack || (stack = new spa.__.Stack);
+            spa._.baseMergeDeep(object, source, key, srcIndex, spa._.baseMerge, customizer, stack);
+          }
+          else {
+            var newValue = customizer
+              ? customizer(object[key], srcValue, (key + ''), object, source, stack)
+              : undefined;
+
+            if (newValue === undefined) {
+              newValue = srcValue;
+            }
+            spa._.assignMergeValue(object, key, newValue);
+          }
+        }, spa._.keysIn);
+      }
+    , createAssigner      : function _createAssigner(assigner) {
+      return spa._.baseRest(function(object, sources) {
+        var index      = -1,
+            length     = sources.length,
+            customizer = length > 1 ? sources[length - 1] : undefined,
+            guard      = length > 2 ? sources[2] : undefined;
+
+        customizer = (assigner.length > 3 && typeof customizer == 'function')
+          ? (length--, customizer)
+          : undefined;
+
+        if (guard && spa._.isIterateeCall(sources[0], sources[1], guard)) {
+          customizer = length < 3 ? undefined : customizer;
+          length = 1;
+        }
+        object = Object(object);
+        while (++index < length) {
+          var source = sources[index];
+          if (source) {
+            assigner(object, source, index, customizer);
+          }
+        }
+        return object;
+      });
+    }
+
+    , baseSet : function _baseSet(object, path, value, customizer) {
+        if (!spa._.isObject(object)) {
+          return object;
+        }
+        path = spa._.castPath(path, object);
+
+        var index     = -1,
+            length    = path.length,
+            lastIndex = length - 1,
+            nested    = object;
+
+        while (nested != null && ++index < length) {
+          var key = spa._.toKey(path[index]),
+              newValue = value;
+
+          if (index != lastIndex) {
+            var objValue = nested[key];
+            newValue = customizer ? customizer(objValue, key, nested) : undefined;
+            if (newValue === undefined) {
+              newValue = spa._.isObject(objValue)
+                ? objValue
+                : (spa._.isIndex(path[index + 1]) ? [] : {});
+            }
+          }
+          spa._.assignValue(nested, key, newValue);
+          nested = nested[key];
+        }
+        return object;
+      }
+    , basePickBy : function _basePickBy(object, paths, predicate) {
+        var index = -1,
+            length = paths.length,
+            result = {};
+
+        while (++index < length) {
+          var path = paths[index],
+              value = spa._.baseGet(object, path);
+
+          if (predicate(value, path)) {
+            spa._.baseSet(result, spa._.castPath(path, object), value);
+          }
+        }
+        return result;
+      }
+    , basePick : function _basePick(object, paths) {
+        return spa._.basePickBy(object, paths, function(value, path) {
+          return spa._.hasIn(object, path);
+        });
+      }
+
+    , pullAt              : undefined
+    , pull                : undefined
+    , sortBy              : undefined
+    , merge               : undefined
+    , at                  : undefined
+    , pick                : undefined
+
+  };
+
+  spa._['baseEach']    = spa._.createBaseEach(spa._.baseForOwn);
+  spa._['pull']        = spa._.baseRest(spa._.pullAll);
+  spa._['pullAt']      = spa._.flatRest(function(array, indexes) {
+    var length = array == null ? 0 : array.length,
+        result = spa._.baseAt(array, indexes);
+
+    spa._.basePullAt(array, spa._.arrayMap(indexes, function(index) {
+      return spa._.isIndex(index, length) ? +index : index;
+    }).sort(spa._.compareAscending));
+
+    return result;
+  });
+  spa._['at']          = spa._.flatRest(spa._.baseAt);
+  spa._['sortBy']      = spa._.baseRest(function(collection, iteratees) {
+      if (collection == null) {
+        return [];
+      }
+      var length = iteratees.length;
+      if (length > 1 && spa._.isIterateeCall(collection, iteratees[0], iteratees[1])) {
+        iteratees = [];
+      } else if (length > 2 && spa._.isIterateeCall(iteratees[0], iteratees[1], iteratees[2])) {
+        iteratees = [iteratees[0]];
+      }
+      return spa._.baseOrderBy(collection, spa._.baseFlatten(iteratees, 1), []);
+    });
+  spa._['merge']       = spa._.createAssigner(function(object, source, srcIndex) {
+      spa._.baseMerge(object, source, srcIndex);
+    });
+  spa._['pick']        = spa._.flatRest(function(object, paths) {
+      return object == null ? {} : spa._.basePick(object, paths);
+    });
+
+  spa._['isArguments'] = spa._.baseIsArguments(function() { return arguments; }()) ? spa._.baseIsArguments : function(value) {
+      return spa._.isObjectLike(value) && spa._.hasOwnProperty.call(value, 'callee') &&
+        !spa._.propertyIsEnumerable.call(value, 'callee');
+    };
+
+  //Alias
+  spa._['forEach'] = spa._['each'];
+
+  if (!window['_']) {
+    window['_'] = spa._;
+  }
+
+  /* *************** SPA begins *************** */
   spa.debug = false;
   spa['debugger'] = {
       on:function(){ spa.debug = true; }
@@ -219,9 +2267,9 @@ var isSpaHashRouteOn=false;
   };
 
   String.prototype.ifBlankStr = function (forNullStr, forNotNullStr) {
-    forNullStr = forNullStr || "";
-    forNotNullStr = (typeof forNotNullStr === "undefined")? this.trimStr() : forNotNullStr;
-    return (this.isBlankStr() ? ( ("" + forNullStr).trimStr() ) : ( forNotNullStr ) );
+    forNullStr    = (typeof forNullStr === "undefined")? '' : forNullStr;
+    forNotNullStr = (typeof forNotNullStr === "undefined")? ((''+this).trimStr()) : forNotNullStr;
+    return (this.isBlankStr() ? ( forNullStr ) : ( forNotNullStr ) );
   };
 
   String.prototype.isNumberStr = function () {
@@ -279,13 +2327,42 @@ var isSpaHashRouteOn=false;
     }));
   };
 
+  String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+  };
+
+  String.prototype.unCapitalize = function () {
+    return this.charAt(0).toLowerCase() + this.slice(1);
+  };
+
+  String.prototype.splitToArray = String.prototype.toArray = function (splitBy) {
+    return spa.isBlank(this) ? [] : this.split(splitBy);
+  };
+
+  function getMatchStr(str){
+    switch(str){
+      case '{': return '}';
+      case '[': return ']';
+      case '<': return '>';
+      default: return str;
+    }
+  }
+
   String.prototype.extractStrBetweenIn = function (bS, eS) {
-    eS = eS || bS;
+    if (!bS) {
+      bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
+      bS = (bS)? bS[0] : '';
+    };
+    eS = eS || getMatchStr(bS);
     return this.match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
   };
 
   String.prototype.extractStrBetweenEx = function (bS, eS) {
-    eS = eS || bS;
+    if (!bS) {
+      bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
+      bS = (bS)? bS[0] : '';
+    };
+    eS = eS || getMatchStr(bS);
     var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
     return (this.match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
       return x.replace(rx,'');
@@ -344,7 +2421,7 @@ var isSpaHashRouteOn=false;
     return (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
   };
   String.prototype.toJSON = function () {
-    return spa.toJSON(this);
+    return spa.toJSON(''+this);
   };
 
   String.prototype.toBoolean = function () {
@@ -393,11 +2470,11 @@ var isSpaHashRouteOn=false;
     };
 
   spa.lastSplitResult = [];
-  spa.getOnSplit = function (str, delimiter, pickIndex) {
+  spa.getOnSplit = spa.pickOnSplit = function (str, delimiter, pickIndex) {
     spa.lastSplitResult = str.split(delimiter);
     return (spa.getOnLastSplit(pickIndex));
   };
-  spa.getOnLastSplit = function (pickIndex) {
+  spa.getOnLastSplit = spa.pickOnLastSplit = function (pickIndex) {
     return ((pickIndex < 0) ? (_.last(spa.lastSplitResult)) : (spa.lastSplitResult[pickIndex]));
   };
 
@@ -953,10 +3030,37 @@ var isSpaHashRouteOn=false;
       }
     }
     oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
-
     spa.appendToObj(xObj, oKey, propValue);
 
     return obj;
+  };
+
+  spa.setSimpleObjProperty = function (obj, keyNameStr, propValue) {
+    keyNameStr = ('' + keyNameStr);
+    var xObj = obj, oKey;
+    var oKeys = keyNameStr.split('.');
+    while (oKeys.length > 1) {
+      oKey = spa.parseKeyStr(oKeys.shift(), false);
+      if ($.trim(oKey) != "") {
+        if (typeof xObj[oKey] == "undefined") xObj[oKey] = {};
+        xObj = xObj[oKey];
+      }
+    }
+    oKey = spa.parseKeyStr(oKeys.shift(), false);
+    xObj[oKey] = propValue;
+
+    return obj;
+  };
+
+  spa.objProp = spa.objProperty = spa.objectProp = spa.objectProperty = function(){
+    var obj=arguments[0], keyNameStr=arguments[1], propValue=arguments[2];
+    if (arguments.length == 3) {
+      return spa.setSimpleObjProperty(obj, keyNameStr, propValue);
+    } else if (arguments.length == 2) {
+      return spa.findSafe(obj, keyNameStr);
+    } else {
+      return obj;
+    }
   };
 
   spa.getElValue = function (el, escHTML) {
@@ -1214,7 +3318,7 @@ var isSpaHashRouteOn=false;
 
   spa.hasIgnoreCase = spa.hasKeyIgnoreCase = function (obj, pathStr) {
     var retValue = "", tObj = obj || {}, lookupPath = ""+spa.toDottedPath((pathStr));
-    var objKeys = spa.keysDottedAll(tObj); //getAllKeys with dotted notation
+    var objKeys = spa.keysDottedAll(tObj); //get AllKeys with dotted notation
     if (objKeys && !_.isEmpty(objKeys)) {
       spa.console.debug(objKeys);
       _.some(objKeys, function(oKey){
@@ -1384,7 +3488,7 @@ var isSpaHashRouteOn=false;
 
   spa.getComponentsFullPath = function(compNameLst){
     compNameLst = spa.strToArray(spa.toJSON(compNameLst));
-    return _.map(compNameLst, function(compName){ return (spa.defaults.components.rootPath)+compName+'/'+compName+'.js'; });
+    return _.map(compNameLst, function(compName){ return (spa.defaults.components.rootPath)+ ((spa.defaults.components.inFolder)? compName: '') +'/'+compName+'.js'; });
   };
 
   spa.loadComponents = function(compNameLst, onDone, onFail) {
@@ -1615,7 +3719,7 @@ var isSpaHashRouteOn=false;
         retValue = (hashArray && hashArray.length > returnOf) ? hashArray[returnOf] : "";
       }
       else if (_.isArray(returnOf)) {
-        retValue = (returnOf.length === 0) ? hashArray : _.object(returnOf, hashArray);
+        retValue = (returnOf.length === 0) ? hashArray : _.zipObject(returnOf, hashArray);
       } else if (_.isString(returnOf) && returnOf == "?") {
         retValue = (retValue.containsStr("\\?"))? spa.getOnSplit(retValue, "?", 1) : "";
       }
@@ -1685,6 +3789,9 @@ var isSpaHashRouteOn=false;
         async: i18nSettings.async,
         mode: i18nSettings.mode,
         callback: function () {
+          if (!spa.isElementExist('#i18nSpaRunTime')) {
+            $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
+          };
           $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!$.isEmptyObject($.i18n.map)) : $.i18n.loaded;
           spa.i18n.loaded = spa.i18n.loaded || $.i18n.loaded;
           if ((lang.length > 1) && (!$.i18n.loaded)) {
@@ -1735,6 +3842,12 @@ var isSpaHashRouteOn=false;
     if (spa.i18n.loaded || window['Liferay']) {
       contextRoot = contextRoot || "body";
       elSelector = elSelector || "";
+      var isTag = contextRoot.beginsWithStr("<");
+      if (isTag) {
+        $('#i18nSpaRunTime').html(contextRoot);
+        contextRoot = '#i18nSpaRunTime';
+      };
+
       var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
       if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
       $i18nElements.each(function (indes, el) {
@@ -1764,6 +3877,10 @@ var isSpaHashRouteOn=false;
           });
         }
       });
+    };
+
+    if (isTag) {
+      return $('#i18nSpaRunTime').html();
     }
   };
 
@@ -2178,14 +4295,24 @@ var isSpaHashRouteOn=false;
   spa.defaults = {
       dataTemplateEngine: "handlebars"
     , components: {
-          rootPath: 'components/'
+          rootPath: 'app/components/'
+        , inFolder: true
         , templateExt: '.html'
         , scriptExt: '.js'
         , callback:''
+      },
+      set: function(oNewValues, newValue) {
+        if (typeof oNewValues == 'object') {
+          if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
+          _.merge(this, oNewValues);
+        } else if (typeof oNewValues == 'string') {
+          spa.setSimpleObjProperty(this, oNewValues, newValue);
+        }
+        return this;
       }
   };
 
-  spa.component = function(componentName, options) {
+  spa.component = spa.registerComponent = function(componentName, options) {
     options = options || {};
     options['componentName'] = componentName;
     if (!options.hasOwnProperty('renderCallback')) {
@@ -2212,9 +4339,10 @@ var isSpaHashRouteOn=false;
     spa.console.info('Called renderComponent: '+componentName+' with below options');
     spa.console.info(options);
 
-    var _cFilesPath  = spa.defaults.components.rootPath+componentName+"/"+componentName
+    var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? componentName: '') +"/"+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
-      , _cScriptFile = _cFilesPath+spa.defaults.components.scriptExt
+      , _cScriptExt  = options.hasOwnProperty('scriptExt')? options['scriptExt'] : spa.defaults.components.scriptExt
+      , _cScriptFile = (_cScriptExt)? (_cFilesPath+_cScriptExt) : ''
       , _renderComp  = function(){
           spa.console.info('_renderComp > '+componentName+' with below options');
           spa.console.info(options);
@@ -2235,11 +4363,15 @@ var isSpaHashRouteOn=false;
           spa.render(renderOptions);
         }
       , _parseComp = function(){
-          spa.console.info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
+          if (_cScriptFile) {
+            spa.console.info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
+          } else {
+            spa.console.info('Skipped Loading component ['+componentName+'] source from script file.');
+          };
           spa.console.info('In Source> spa.components['+componentName+']');
           spa.console.info(spa.components[componentName]);
           if (!spa.components.hasOwnProperty(componentName)) {
-            spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+_cScriptFile+']. Defining *NEW*');
+            spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Defining *NEW*');
             spa.components[componentName] = options;
             spa.console.info('NEW> spa.components['+componentName+']');
             spa.console.info(spa.components[componentName]);
@@ -2252,13 +4384,17 @@ var isSpaHashRouteOn=false;
       spa.console.info(spa.components[componentName]);
       _renderComp();
     } else {
-      spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
-      $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
-        .fail(function(){
-          spa.console.error('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']');
-          spa.console.warn('Continue Loading component ['+componentName+'] without script source from ['+_cScriptFile+']');
-          _parseComp();
-        });
+      if (_cScriptFile) {
+        spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
+        $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
+          .fail(function(){
+            spa.console.error('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']');
+            spa.console.warn('Continue Loading component ['+componentName+'] without script source from ['+_cScriptFile+']');
+            _parseComp();
+          });
+      } else {
+        _parseComp();
+      }
     }
   };
 
@@ -2290,16 +4426,16 @@ var isSpaHashRouteOn=false;
       , renderList = {}, deferRender = !noDefer;
     if ($spaCompList.length){
       $spaCompList.each(function( index, el ) {
-        var spaCompName, spaCompOptions, newElId;
+        var $el = $(el), spaCompName, spaCompOptions, newElId;
 
-        spaCompName = $(el).data('spaComponent');
+        spaCompName = $el.data('spaComponent');
         if (!el.id) {
           newElId = 'spaCompContainer_'+spaCompName+'_'
                       + ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
           el.id = newElId;
           el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
         }
-        spaCompOptions = {target: "#"+el.id };
+        spaCompOptions = _.merge( {target: "#"+el.id }, spa.toJSON($el.data('spaComponentOptions') || '{}'));
 
         if (deferRender) {
           if (!renderList.hasOwnProperty(spaCompName)) {
@@ -2459,7 +4595,7 @@ var isSpaHashRouteOn=false;
                       , renderMode            : "dataRenderMode"
                       , renderId              : "dataRenderId"
                       };
-        _.forEach(keyMaps, function(value, key) {
+        _.each(keyMaps, function(value, key) {
           if (opt.hasOwnProperty(key)) {
             opt[value] = uOptions[key];
             delete opt[key];
@@ -2713,7 +4849,7 @@ var isSpaHashRouteOn=false;
                     success: function (result) {
                       var targetApiData
                         , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
-                        , oResult = ("" + result).toJSON();
+                        , oResult = spa.toJSON("" + result);
 
                       if (targetDataModelName.indexOf(".") > 0) {
                         targetApiData = spa.hasKey(oResult, targetDataModelName) ? spa.find(oResult, targetDataModelName) : oResult;
@@ -2809,12 +4945,16 @@ var isSpaHashRouteOn=false;
               cache: spaRVOptions.dataCache,
               dataType: "text",
               success: function (result) {
-                var oResult = ("" + result).toJSON();
+                var oResult = spa.toJSON(""+result);
                 if (dataModelName.indexOf(".") > 0) {
                   spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? spa.find(oResult, dataModelName) : oResult;
                 }
                 else {
                   try{
+                    if ((dataModelName == 'data') && !oResult.hasOwnProperty(dataModelName)) {
+                      dataModelName = 'Data';
+                      viewDataModelName = 'Data';
+                    };
                     spaTemplateModelData[viewDataModelName] = oResult.hasOwnProperty(dataModelName) ? oResult[dataModelName] : oResult;
                   } catch(e) {
                     spa.console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
@@ -3041,10 +5181,6 @@ var isSpaHashRouteOn=false;
             try {
 
               //dataProcess
-              //var fnDataProcess = ((""+ $(viewContainerId).data("process")).replace(/undefined/, "")).toLowerCase();
-              //if (!spa.isBlank(spaRVOptions.dataProcess)) {
-              //  fnDataProcess = spaRVOptions.dataProcess;
-              //};
               var fnDataProcess = _renderOption('dataProcess', 'process');
               if (fnDataProcess && (_.isString(fnDataProcess))) {
                 fnDataProcess = spa.findSafe(window, fnDataProcess);
@@ -3052,7 +5188,7 @@ var isSpaHashRouteOn=false;
               retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
               retValue['model'] = spaTemplateModelData[viewDataModelName];
               if (fnDataProcess && _.isFunction(fnDataProcess)) {
-                retValue['model'] = fnDataProcess.call(undefined, spaTemplateModelData[viewDataModelName]);
+                retValue['model'] = fnDataProcess.call(undefined, spaTemplateModelData[viewDataModelName], spaRVOptions);
                 if (!_.isObject(retValue['model'])) {
                   retValue['model'] = retValue['modelOriginal'];
                 }
@@ -3065,7 +5201,7 @@ var isSpaHashRouteOn=false;
               compiledTemplate = templateContentToBindAndRender;
               spa.console.log("Template Source:", templateContentToBindAndRender);
               if (!spa.isBlank(spaViewModel)) {
-                if (Handlebars) {
+                if ((typeof Handlebars != "undefined") && Handlebars) {
                   var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
                   if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
                   compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
@@ -3517,7 +5653,7 @@ var isSpaHashRouteOn=false;
           , rElDataAttr: ($elRouteBase)? $elRouteBase.data() : {}
         };
 
-      //TODO: support for html
+      //TODO: support for key 'html' instead of 'template'
       if (oTagRouteOptions.hasOwnProperty('template') && !oTagRouteOptions.hasOwnProperty('templates')) {
         oTagRouteOptions['templates'] = oTagRouteOptions['template'];
         delete oTagRouteOptions['template'];
@@ -3543,7 +5679,7 @@ var isSpaHashRouteOn=false;
       }
 
       /*Templates*/
-      //TODO: support for htmls
+      //TODO: support for key 'htmls' instead of 'templates'
       spaRenderOptions['dataTemplates'] = {};
       var tmplID= "__spaRouteTemplate_" + routeName;
       if (!oTagRouteOptions.hasOwnProperty("templates") || (oTagRouteOptions['templates'])) {
@@ -3853,9 +5989,10 @@ var isSpaHashRouteOn=false;
     isCallSuccess : function() {
       return true;
     },
-    onReqError : function (jqXHR) {
+    onReqError : function (jqXHR, textStatus, errorThrown) {
       //This function is to handles if Ajax request itself failed due to network error / server error
       //like 404 / 500 / timeout etc.
+      spa.console.error([textStatus, errorThrown]);
       spa.console.error($(jqXHR.responseText).text());
     },
     onResError : function () {
@@ -3866,13 +6003,13 @@ var isSpaHashRouteOn=false;
       ajaxOptions = $.extend(ajaxOptions, {
         dataType: 'text',
         error: spa.api.onReqError,
-        success: function(axResponse) {
+        success: function(axResponse, textStatus, jqXHR) {
           axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
           if (spa.api['isCallSuccess'](axResponse)) {
-            ajaxOptions._success(axResponse);
+            ajaxOptions._success(axResponse, textStatus, jqXHR);
           }
           else {
-            spa.api.onResError(axResponse);
+            spa.api.onResError(axResponse, textStatus, jqXHR);
           }
         }
       });
@@ -3883,7 +6020,7 @@ var isSpaHashRouteOn=false;
 
       spa.console.info('API(ajax) call with options', ajaxOptions);
       //console.info(['API(ajax) call with options', ajaxOptions]);
-      $.ajax(ajaxOptions);
+      return $.ajax(ajaxOptions);
     },
     _params2AxOptions : function(){
       var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true };
@@ -3900,13 +6037,16 @@ var isSpaHashRouteOn=false;
       return (axOptions);
     },
     get : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      spa.api._call(spa.api._params2AxOptions.apply(undefined, arguments));
+      return spa.api._call(spa.api._params2AxOptions.apply(undefined, arguments));
     },
     post : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
+      return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
     },
     put : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
+      return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
+    },
+    del : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
+      return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
     }
 
   };//End of spa.api{}
