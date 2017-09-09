@@ -1,0 +1,28 @@
+{
+  "name": "spa.js",
+  "version": "2.0.0",
+  "description": "Single Page Application (SPA) Simplified Framework/Library",
+  "main": "dist/spa-bundle.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sucom/SPA.js.git"
+  },
+  "keywords": [
+    "SPA",
+    "Single",
+    "Page",
+    "Web",
+    "Application",
+    "Framework",
+    "Library"
+  ],
+  "author": "Kumar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sucom/SPA.js/issues"
+  },
+  "homepage": "https://github.com/sucom/SPA.js#readme"
+}
