@@ -1,2 +1,2 @@
 # SPA.js
-Single Page Application (SPA) Front-End Framework/Library.
+Single Page Application (SPA) Simplified Front-End Framework/Library. Visit https://spa.js.org/ for more details.
