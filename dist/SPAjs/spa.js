@@ -4341,7 +4341,7 @@ var isSpaHashRouteOn=false;
 
     var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? componentName: '') +"/"+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
-      , _cScriptExt  = options.hasOwnProperty('scriptExt')? options['scriptExt'] : spa.defaults.components.scriptExt
+      , _cScriptExt  = (options && _.isObject(options) && options.hasOwnProperty('scriptExt'))? options['scriptExt'] : spa.defaults.components.scriptExt
       , _cScriptFile = (_cScriptExt)? (_cFilesPath+_cScriptExt) : ''
       , _renderComp  = function(){
           spa.console.info('_renderComp > '+componentName+' with below options');
