@@ -3579,6 +3579,7 @@ var isSpaHashRouteOn=false;
   /* Add Template script to BODY */
   spa.addTemplateScript = function (tmplId, tmplBody, tmplType) {
     tmplId = tmplId.replace(/#/, "");
+    tmplType = tmplType  || 'x-template';
     if (!spa.isElementExist("#spaViewTemplateCotainer")) {
       spa.console.info("#spaViewTemplateCotainer NOT Found! Creating one...");
       $('body').append("<div id='spaViewTemplateCotainer' style='display:none' rel='Template Container'></div>");
@@ -3587,6 +3588,14 @@ var isSpaHashRouteOn=false;
     tmplBody = tmplBody.replace(/<( )*script/gi,'<_SCRIPTTAGINTEMPLATE_').replace(/<( )*(\/)( )*script/gi,'</_SCRIPTTAGINTEMPLATE_')
             .replace(/<( )*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<( )*(\/)( )*link/gi,'</_LINKTAGINTEMPLATE_');
     $("#spaViewTemplateCotainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
+  };
+  spa.updateTemplateScript = function (tmplId, tmplBody, tmplType){
+    tmplId = tmplId.replace(/#/, "");
+    var $tmplScript = $('#spaViewTemplateCotainer').find('#'+tmplId);
+    if ($tmplScript.length) {
+      $tmplScript.remove();
+    }
+    spa.addTemplateScript(tmplId, tmplBody, tmplType);
   };
 
   /* Load external or internal (inline or #container) content as template script */
@@ -4339,6 +4348,13 @@ var isSpaHashRouteOn=false;
     spa.console.info('Called renderComponent: '+componentName+' with below options');
     spa.console.info(options);
 
+    var tmplId = '_rtt_'+componentName, tmplBody = '';
+    if (options && _.isObject(options) && (options.hasOwnProperty('templateStr') || options.hasOwnProperty('templateString')) ) {
+      tmplBody = options['templateStr'] || options['templateString'] || '';
+      spa.updateTemplateScript(tmplId, tmplBody);
+      options['template'] = '#'+tmplId;
+    }
+
     var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? componentName: '') +"/"+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
       , _cScriptExt  = (options && _.isObject(options) && options.hasOwnProperty('scriptExt'))? options['scriptExt'] : spa.defaults.components.scriptExt
@@ -4347,7 +4363,13 @@ var isSpaHashRouteOn=false;
           spa.console.info('_renderComp > '+componentName+' with below options');
           spa.console.info(options);
           if (!spa.components[componentName].hasOwnProperty('template')) {
-            spa.components[componentName]['template'] = _cTmplFile;
+            if (spa.components[componentName].hasOwnProperty('templateStr') || spa.components[componentName].hasOwnProperty('templateString')) {
+              tmplBody = spa.components[componentName]['templateStr'] || spa.components[componentName]['templateString'] || '';
+              spa.updateTemplateScript(tmplId, tmplBody);
+              spa.components[componentName]['template'] = '#'+tmplId;
+            } else {
+              spa.components[componentName]['template'] = _cTmplFile;
+            }
           }
           spa.console.info('render-options: spa.components['+componentName+']');
           spa.console.info(spa.components[componentName]);
@@ -4372,6 +4394,7 @@ var isSpaHashRouteOn=false;
           spa.console.info(spa.components[componentName]);
           if (!spa.components.hasOwnProperty(componentName)) {
             spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Defining *NEW*');
+            if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
             spa.components[componentName] = options;
             spa.console.info('NEW> spa.components['+componentName+']');
             spa.console.info(spa.components[componentName]);
@@ -4616,6 +4639,7 @@ var isSpaHashRouteOn=false;
     var useOptions = (noOfArgs > 1);
     var useParamData = (useOptions && uOptions.hasOwnProperty('data'));
     var dataFound = true;
+    var rCompName = (uOptions && uOptions['componentName'])? uOptions['componentName'] : '';
 
     var spaRVOptions = {
       data: {}
@@ -4623,6 +4647,7 @@ var isSpaHashRouteOn=false;
       , dataUrlErrorHandle: ""
       , dataParams: {}
       , dataExtra:{}
+      , dataDefaults:{}
       , dataModel: ""
       , dataProcess: ''
       , dataCache: false
@@ -5193,9 +5218,14 @@ var isSpaHashRouteOn=false;
                   retValue['model'] = retValue['modelOriginal'];
                 }
               }
+              retValue['model']['_global'] = window || {};
+              if (rCompName) {
+                retValue['model']['_this']  = spa.findSafe(window, 'app.'+rCompName, {});
+                retValue['model']['_this_'] = spa.components[rCompName] || {};
+              };
 
               var spaViewModel = retValue.model, compiledTemplate;
-              spa.viewModels[retValue.id] = retValue.model;
+              //spa.viewModels[retValue.id] = retValue.model;
 
               var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
               compiledTemplate = templateContentToBindAndRender;
@@ -5204,7 +5234,7 @@ var isSpaHashRouteOn=false;
                 if ((typeof Handlebars != "undefined") && Handlebars) {
                   var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
                   if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                  compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
+                  compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
                 } else {
                   spa.console.error("handlebars.js is not loaded.");
                 }
