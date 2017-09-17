@@ -4335,13 +4335,20 @@ var isSpaHashRouteOn=false;
       });
     }
     spa.components[componentName] = options;
+    spa.extendComponent(componentName);
   };
 
-  spa.extendComponent = spa.module = function(module, options) {
+  spa.extendComponent = spa.module = function(componentName, options) {
     window['app'] = window['app'] || {};
-    window.app[module] = window.app[module] || {};
+    window.app[componentName] = window.app[componentName] || {};
     options = options || {};
-    $.extend(window.app[module], options);
+    if (spa.components[componentName]) {
+      if (options['__prop__']) {
+        $.extend(spa.components[componentName], options['__prop__']);
+      }
+      options['__prop__'] = spa.components[componentName];
+    }
+    $.extend(window.app[componentName], options);
   };
 
   spa.renderComponent = function (componentName, options) {
