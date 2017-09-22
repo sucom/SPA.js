@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.0.0';
+  spa.VERSION = '2.2.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -3316,6 +3316,60 @@ var isSpaHashRouteOn=false;
     return retValue;
   };
 
+  function of (x) {
+    return (Object.prototype.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
+  }
+  function is(x, type) {
+    return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
+  }
+
+  spa.hasPrimaryKeys = function(obj, propNames){
+
+    function checkForAll(obj, propNames){
+      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = true;
+      for(var i=0;i<pKeys.length; i++) {
+        pKey = pKeys[i].trim();
+        if (pKey) {
+          pKeysCount++;
+          retValue = retValue && (obj.hasOwnProperty(pKey));
+        }
+      }
+
+      return pKeysCount && retValue;
+    }
+
+    function checkForAny(obj, propNames){
+      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = false;
+      for(var i=0;i<pKeys.length; i++) {
+        pKey = pKeys[i].trim();
+        if (pKey) {
+          pKeysCount++;
+          retValue = retValue || (obj.hasOwnProperty(pKey));
+        }
+        if (retValue) break;
+      }
+
+      return pKeysCount && retValue;
+    }
+
+    var retValue = false;
+    if (is(obj, 'object')){
+      if (propNames){
+        propNames =  ''+propNames;
+        switch(true) {
+          case (propNames.indexOf('&')>0) : retValue = checkForAll(obj, propNames.replace(/\&/g, ','));
+          break;
+          case (propNames.indexOf('|')>0) : retValue = checkForAny(obj, propNames.replace(/\|/g, ','));
+          break;
+          default: retValue = checkForAll(obj, propNames);
+          break;
+        }
+      }
+    }
+
+    return retValue;
+  };
+
   spa.hasIgnoreCase = spa.hasKeyIgnoreCase = function (obj, pathStr) {
     var retValue = "", tObj = obj || {}, lookupPath = ""+spa.toDottedPath((pathStr));
     var objKeys = spa.keysDottedAll(tObj); //get AllKeys with dotted notation
@@ -4321,8 +4375,35 @@ var isSpaHashRouteOn=false;
       }
   };
 
+  function adjustComponentOptions(componentName, options){
+    var tmplId = '_rtt_'+componentName, tmplBody = '';
+    if (options && _.isObject(options)  && spa.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
+      if (options.hasOwnProperty('template')) {
+        var givenTemplate = options['template'].trim();
+        var isContainerId = (givenTemplate.beginsWithStr('#') && !givenTemplate.containsStr(' '));
+        if (!isContainerId) {
+          options['templateStr'] = options['template'];
+        }
+      }
+      if (spa.hasPrimaryKeys(options, 'templateStr|templateString')) {
+        tmplBody = options['templateStr'] || options['templateString'] || '';
+        spa.updateTemplateScript(tmplId, tmplBody);
+        options['template'] = '#'+tmplId;
+      } else if (spa.hasPrimaryKeys(options, 'templateUrl')) {
+        options['template'] = options['templateUrl'];
+      }
+    }
+    return options;
+  }
+
   spa.component = spa.registerComponent = function(componentName, options) {
     options = options || {};
+
+    if (is(componentName, 'object')) {
+      options = _.merge({}, componentName);
+      componentName = options['name'] || options['componentName'] || (''+spa.now());
+    }
+
     options['componentName'] = componentName;
     if (!options.hasOwnProperty('renderCallback')) {
       options['renderCallback'] = 'app.'+componentName+'.renderCallback';
@@ -4334,6 +4415,9 @@ var isSpaHashRouteOn=false;
         spa.console.log('Failed to load required components.');
       });
     }
+
+    options = adjustComponentOptions(componentName, options);
+
     spa.components[componentName] = options;
     spa.extendComponent(componentName);
   };
@@ -4351,16 +4435,20 @@ var isSpaHashRouteOn=false;
     $.extend(window.app[componentName], options);
   };
 
+
   spa.renderComponent = function (componentName, options) {
+    if (is(componentName, 'object')) {
+      options = _.merge({}, componentName);
+      componentName = options['name'] || options['componentName'] || (''+spa.now());
+      options['componentName'] = componentName;
+    }
+
     spa.console.info('Called renderComponent: '+componentName+' with below options');
     spa.console.info(options);
 
     var tmplId = '_rtt_'+componentName, tmplBody = '';
-    if (options && _.isObject(options) && (options.hasOwnProperty('templateStr') || options.hasOwnProperty('templateString')) ) {
-      tmplBody = options['templateStr'] || options['templateString'] || '';
-      spa.updateTemplateScript(tmplId, tmplBody);
-      options['template'] = '#'+tmplId;
-    }
+
+    options = adjustComponentOptions(componentName, options);
 
     var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? componentName: '') +"/"+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
@@ -4374,6 +4462,8 @@ var isSpaHashRouteOn=false;
               tmplBody = spa.components[componentName]['templateStr'] || spa.components[componentName]['templateString'] || '';
               spa.updateTemplateScript(tmplId, tmplBody);
               spa.components[componentName]['template'] = '#'+tmplId;
+            } else  if (spa.hasPrimaryKeys(spa.components[componentName], 'templateUrl')) {
+              spa.components[componentName]['template'] = spa.components[componentName]['templateUrl'];
             } else {
               spa.components[componentName]['template'] = _cTmplFile;
             }
@@ -5225,7 +5315,7 @@ var isSpaHashRouteOn=false;
                   retValue['model'] = retValue['modelOriginal'];
                 }
               }
-              retValue['model']['_global'] = window || {};
+              retValue['model']['_global_'] = window || {};
               if (rCompName) {
                 retValue['model']['_this']  = spa.findSafe(window, 'app.'+rCompName, {});
                 retValue['model']['_this_'] = spa.components[rCompName] || {};
@@ -5251,10 +5341,10 @@ var isSpaHashRouteOn=false;
               doDeepRender = false;
               retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
-              //var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
-              //if (!spa.isBlank(spaRVOptions.dataRenderType)) {
-              //  targetRenderContainerType = spaRVOptions.dataRenderType;
-              //};
+              /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
+                if (!spa.isBlank(spaRVOptions.dataRenderType)) {
+                  targetRenderContainerType = spaRVOptions.dataRenderType;
+                };*/
               var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
 
               switch(targetRenderContainerType) {
@@ -5337,31 +5427,7 @@ var isSpaHashRouteOn=false;
                   spa.console.info("calling default callback: spa.routes._renderCallback");
                   spa.routes['_renderCallback'].call(undefined, retValue);
                 }
-
                 spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
-
-//                if (_fnCallbackAfterRender) {
-//                  var fnCallbackAfterRender = _fnCallbackAfterRender;
-//                  if (_.isString(fnCallbackAfterRender)) {
-//                    fnCallbackAfterRender = spa.findSafe(window, fnCallbackAfterRender);
-//                  }
-//                  if (fnCallbackAfterRender) {
-//                    if (_.isFunction(fnCallbackAfterRender)) {
-//                      spa.console.info("calling callback: " + _fnCallbackAfterRender);
-//                      fnCallbackAfterRender.call(undefined, retValue);
-//                      //eval("("+fnCallbackAfterRender+"(retValue))");
-//                    } else {
-//                      spa.console.error("CallbackFunction <" + _fnCallbackAfterRender + " = " + fnCallbackAfterRender + "> is NOT a valid FUNCTION.");
-//                    }
-//                  } else {
-//                    if (("" + _fnCallbackAfterRender).beginsWithStr("spa") && (("" + _fnCallbackAfterRender).endsWithStr("_renderCallback"))) {
-//                      spa.console.warn("Default Route renderCallback function <" + _fnCallbackAfterRender + "> is NOT defined.");
-//                    } else {
-//                      spa.console.error("CallbackFunction <" + _fnCallbackAfterRender + "> is NOT defined.");
-//                    }
-//                  }
-//                }
-
               }
 
               /*Deep/Child Render*/

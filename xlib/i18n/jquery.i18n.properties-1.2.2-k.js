@@ -1,3 +1,4 @@
+/** @license jquery-i18n-properties-custom | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /******************************************************************************
  * jquery.i18n.properties
  *

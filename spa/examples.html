@@ -1,6 +1,8 @@
 <div class="ui container">
   <div class="ui stackable two column grid">
-    <div class="column"><h1 class="ui header">Examples</h1></div>
+    <div class="column">
+      <h1 class="ui header">Examples</h1>
+    </div>
     <div class="column right aligned">
       <a href="spa/examples.zip" title="Download" download><i class="icon download"></i></a>
     </div>
@@ -12,7 +14,9 @@
   <!-- Example-Base -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Base</h2></div>
+      <div class="column">
+        <h2 class="ui header">Base</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/base.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
@@ -31,7 +35,6 @@
 
     <span class="hljs-comment">&lt;!-- jQuery, lodash and handlebars - necessary for SPA. (from CDN repository) --&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"//cdn.jsdelivr.net/jquery/2.2.3/jquery.min.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"//cdn.jsdelivr.net/lodash/4.12.0/lodash.min.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"//cdn.jsdelivr.net/handlebarsjs/4.0.5/handlebars.min.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
 
     <span class="hljs-comment">&lt;!-- Include SPA (from local repository) --&gt;</span>
@@ -40,25 +43,27 @@
 <span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span></code></pre>
 
   </section>
-  
+
   <!-- Example-1 -->
   <section class="example">
-    
+
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-1</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-1</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-1.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
-    
+
     <p>Local data with inline template</p>
-    
-    
+
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>Local Data</strong></p>
-      <pre><code class='js'><span class="hljs-keyword">var</span> <span class="hljs-string-blue">myPost</span> = {
+        <p><strong>Local Data</strong></p>
+        <pre><code class='js'><span class="hljs-keyword">var</span> <span class="hljs-string-blue">myPost</span> = {
   title: <span class="hljs-string">"My 1st Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">101</span>,
@@ -68,10 +73,10 @@
 };
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Inline Template</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string">"local:<span class="hljs-string-blue">myPost</span>"</span>
+        <p><strong>Inline Template</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string">"local:<span class="hljs-string-blue">myPost</span>"</span>
      <span class="hljs-attr-spa">data-render</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By <b>{</b><b>{</b>author.name<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
@@ -80,12 +85,12 @@
     <b>{</b><b>{</b>body<b>}</b><b>}</b>
   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
-</code></pre>  
+</code></pre>
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
      <span class="hljs-attr">data-render</span>&gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 1st Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By Jack O Neil<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
@@ -101,18 +106,20 @@
   <!-- Example-2 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-2</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-2</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-2.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>Local data with internal template (hidden within the page as template collection)</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>Local Data</strong></p>
-<pre><code class='js'><span class="hljs-keyword">var</span> myPost = {
+        <p><strong>Local Data</strong></p>
+        <pre><code class='js'><span class="hljs-keyword">var</span> myPost = {
   title: <span class="hljs-string">"My 2nd Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">102</span>,
@@ -122,10 +129,10 @@
 };
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Internal Template</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span> 
+        <p><strong>Internal Template</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
      <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string-blue">"#tmplPost"</span>
      <span class="hljs-attr">data-render</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
@@ -144,8 +151,8 @@
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
      <span class="hljs-attr">data-template</span>=<span class="hljs-string">"#tmplPost"</span>
      <span class="hljs-attr">data-render</span>&gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 2nd Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By Jack O Neil<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
@@ -158,22 +165,24 @@
 
     </div>
   </section>
-  
+
   <!-- Example-3 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-3</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-3</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-3.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>Local data with external template</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>Local Data</strong></p>
-<pre><code class='js'><span class="hljs-keyword">var</span> myPost = {
+        <p><strong>Local Data</strong></p>
+        <pre><code class='js'><span class="hljs-keyword">var</span> myPost = {
   title: <span class="hljs-string">"My 3rd Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">103</span>,
@@ -183,8 +192,8 @@
 };
 </code></pre>
 
-      <p><strong>External Template:</strong> <span class="hljs-string-blue">templates/tmplPost.html</span></p>
-<pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <p><strong>External Template:</strong> <span class="hljs-string-blue">templates/tmplPost.html</span></p>
+        <pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By <b>{</b><b>{</b>author.name<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
   <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
@@ -192,10 +201,10 @@
   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Base Page</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span> 
+        <p><strong>Base Page</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
   <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string-blue">"templates/tmplPost.html"</span>
   <span class="hljs-attr">data-render</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
@@ -203,8 +212,8 @@
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"local:myPost"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   <span class="hljs-attr">data-render</span>&gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 3rd Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By Jack O Neil<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
@@ -217,22 +226,24 @@
 
     </div>
   </section>
-  
+
   <!-- Example-4 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-4</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-4</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-4.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>External data with external template</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>External Data:</strong> <span class="hljs-string-blue">api/myPost.json</span></p>
-<pre><code class='js'>{
+        <p><strong>External Data:</strong> <span class="hljs-string-blue">api/myPost.json</span></p>
+        <pre><code class='js'>{
   title: <span class="hljs-string">"My 4th Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">104</span>,
@@ -241,9 +252,9 @@
   body: <span class="hljs-string">"My 4th post. Hurray!"</span>
 }
 </code></pre>
-      
-      <p><strong>External Template:</strong> templates/tmplPost.html</p>
-<pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+
+        <p><strong>External Template:</strong> templates/tmplPost.html</p>
+        <pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By <b>{</b><b>{</b>author.name<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
   <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
@@ -251,10 +262,10 @@
   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Base Page</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string-blue">"api/myPost.json"</span> 
+        <p><strong>Base Page</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string-blue">"api/myPost.json"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   <span class="hljs-attr">data-render</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
@@ -262,8 +273,8 @@
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/myPost.json"</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/myPost.json"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   <span class="hljs-attr">data-render</span>&gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 4th Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By Jack O Neil<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
@@ -280,18 +291,20 @@
   <!-- Example-5 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-5</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-5</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-5.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>External data "model" with external template</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>External Data:</strong> <span class="hljs-string-blue">api/getDetails.json</span></p>
-<pre><code class='js'>{
+        <p><strong>External Data:</strong> <span class="hljs-string-blue">api/getDetails.json</span></p>
+        <pre><code class='js'>{
 apicode: <span class="hljs-number">123456</span>,
 apimsg : <span class="hljs-string">"Get Post Details"</span>,
 
@@ -311,9 +324,9 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   }
 }
 </code></pre>
-      
-      <p><strong>External Template:</strong> templates/tmplPost.html</p>
-<pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+
+        <p><strong>External Template:</strong> templates/tmplPost.html</p>
+        <pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By <b>{</b><b>{</b>author.name<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
   <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
@@ -321,10 +334,10 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Base Page</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/getDetails.json"</span> 
+        <p><strong>Base Page</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/getDetails.json"</span>
   <span class="hljs-attr-spa">data-model</span>=<span class="hljs-string-blue">"blog.post"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   <span class="hljs-attr">data-render</span>&gt;</span>
@@ -333,8 +346,8 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/getDetails.json"</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/getDetails.json"</span>
   <span class="hljs-attr">data-model</span>=<span class="hljs-string">"blog.post"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   <span class="hljs-attr">data-render</span>&gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 5th Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
@@ -352,18 +365,20 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   <!-- Example-6 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-6</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-6</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-6.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>Render on click instead of on page load.</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>External Data:</strong> <span class="hljs-string">api/myPost.json</span></p>
-<pre><code class='js'>{
+        <p><strong>External Data:</strong> <span class="hljs-string">api/myPost.json</span></p>
+        <pre><code class='js'>{
   title: <span class="hljs-string">"My 4th Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">104</span>,
@@ -373,8 +388,8 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 }
 </code></pre>
 
-      <p><strong>External Template:</strong> templates/tmplPost.html</p>
-<pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <p><strong>External Template:</strong> templates/tmplPost.html</p>
+        <pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By <b>{</b><b>{</b>author.name<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
   <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
@@ -383,11 +398,11 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 </code></pre>
 
       </div>
-      
+
       <div class="column">
-      <p><strong>Base Page</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">id</span>=<span class="hljs-string-blue">"divViewPost"</span>
-  <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/myPost.json"</span> 
+        <p><strong>Base Page</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr-spa">id</span>=<span class="hljs-string-blue">"divViewPost"</span>
+  <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/myPost.json"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   &gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
@@ -396,14 +411,14 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   <span class="hljs-attr-spa">onclick</span>=<span class="hljs-string-blue">"spa.render('#divViewPost');"</span>
   &gt;</span>Load<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
 </code></pre>
-      
-      <p>Note: No "data-render" attribute in render container.</p>
+
+        <p>Note: No "data-render" attribute in render container.</p>
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"divViewPost"</span>
-  <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/myPost.json"</span> 
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"divViewPost"</span>
+  <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/myPost.json"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   &gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 4th Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By Jack O Neil<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
@@ -424,18 +439,20 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   <!-- Example-7 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-7</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-7</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-7.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>Dynamic Data-URL with params.</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>External Data:</strong> <span class="hljs-string">api/myPost.json</span></p>
-<pre><code class='js'>{
+        <p><strong>External Data:</strong> <span class="hljs-string">api/myPost.json</span></p>
+        <pre><code class='js'>{
   title: <span class="hljs-string">"My 4th Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">104</span>,
@@ -445,8 +462,8 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 }
 </code></pre>
 
-      <p><strong>External Template:</strong> templates/tmplPost.html</p>
-<pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <p><strong>External Template:</strong> templates/tmplPost.html</p>
+        <pre><code class='html'>  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span><b>{</b><b>{</b>title<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By <b>{</b><b>{</b>author.name<b>}</b><b>}</b><span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
   <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
@@ -454,9 +471,9 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 </code></pre>
 
-      <p><strong>function to render</strong></p>
-<pre><code class='js'><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-string-blue">loadMyPost</span>(<span class="hljs-params"></span>) </span>{
-  spa.render( { 
+        <p><strong>function to render</strong></p>
+        <pre><code class='js'><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-string-blue">loadMyPost</span>(<span class="hljs-params"></span>) </span>{
+  spa.render( {
     target : <span class="hljs-string">"#divViewPost"</span>,
     dataUrl: <span class="hljs-string">"api/myPost.json"</span>,
     dataParams: { pid: <span class="hljs-number">12345</span> }
@@ -464,10 +481,10 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 }
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Base Page</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"divViewPost"</span>
+        <p><strong>Base Page</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"divViewPost"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   &gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
@@ -479,8 +496,8 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"divViewPost"</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"divViewPost"</span>
   <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplPost.html"</span>
   &gt;</span><div class="result">  <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>My 4th Blog Post!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By Jack O Neil<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
@@ -497,22 +514,24 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 
     </div>
   </section>
-  
+
   <!-- Example-8 -->
   <section class="example">
     <div class="ui stackable two column grid">
-      <div class="column"><h2 class="ui header">Example-8</h2></div>
+      <div class="column">
+        <h2 class="ui header">Example-8</h2>
+      </div>
       <div class="column right aligned">
         <a href="spa/examples/example-8.html" title="View" target="_blank"><i class="icon unhide"></i></a>
       </div>
     </div>
     <p>Inner Templates.</p>
-    
+
     <div class="ui stackable three column grid">
-      
+
       <div class="column">
-      <p><strong>External Data:</strong> <span class="hljs-string">api/myPost.json</span></p>
-<pre><code class='js'>{
+        <p><strong>External Data:</strong> <span class="hljs-string">api/myPost.json</span></p>
+        <pre><code class='js'>{
   title: <span class="hljs-string">"My 4th Blog Post!"</span>,
   author: {
     id: <span class="hljs-number">104</span>,
@@ -522,25 +541,25 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 }
 </code></pre>
 
-      <p><strong>External Data:</strong> <span class="hljs-string-blue">api/relPost.json</span></p>
-<pre><code class='js'>{
+        <p><strong>External Data:</strong> <span class="hljs-string-blue">api/relPost.json</span></p>
+        <pre><code class='js'>{
   <span class="hljs-string">"pid"</span> : <span class="hljs-string">"12345"</span>,
-  <span class="hljs-string">"rposts"</span>: [ 
+  <span class="hljs-string">"rposts"</span>: [
       { <span class="hljs-string">"title"</span>: <span class="hljs-string">"Simplified Ajax"</span>,
         <span class="hljs-string">"date"</span>: <span class="hljs-string">"3 Nov 2003"</span>},
-      
+
       { <span class="hljs-string">"title"</span>: <span class="hljs-string">"JS Tool Box"</span>,
         <span class="hljs-string">"date"</span>: <span class="hljs-string">"3 May 2004"</span>},
-      
+
       { <span class="hljs-string">"title"</span>: <span class="hljs-string">"Web site vs app"</span>,
         <span class="hljs-string">"date"</span>: <span class="hljs-string">"6 Aug 2005"</span>}
     ]
 }
 </code></pre>
 
-      <p><strong>function to render</strong></p>
-<pre><code class='js'><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-string">loadMyPost</span>(<span class="hljs-params"></span>) </span>{
-  spa.render( { 
+        <p><strong>function to render</strong></p>
+        <pre><code class='js'><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-string">loadMyPost</span>(<span class="hljs-params"></span>) </span>{
+  spa.render( {
     target : <span class="hljs-string">"#divViewPost"</span>,
     dataUrl: <span class="hljs-string">"api/myPost.json"</span>,
     dataParams: { pid: <span class="hljs-number">12345</span> }
@@ -548,10 +567,10 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 }
 </code></pre>
       </div>
-      
+
       <div class="column">
-      <p><strong>Base Page</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">button</span>
+        <p><strong>Base Page</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">button</span>
   <span class="hljs-attr">onclick</span>=<span class="hljs-string">"loadMyPost();"</span>
   &gt;</span>Load<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
 
@@ -561,9 +580,9 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 
 </code></pre>
-      
-      <p><strong>External Template-1:</strong> templates/tmplPost+Rel.html</p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>{{title}}<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+
+        <p><strong>External Template-1:</strong> templates/tmplPost+Rel.html</p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>{{title}}<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
 <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>By {{author.name}}<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
 
 <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
@@ -572,22 +591,22 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
 
 <span class="hljs-tag">&lt;<span class="hljs-name">h3</span>&gt;</span>Other Posts:<span class="hljs-tag">&lt;/<span class="hljs-name">h3</span>&gt;</span>
 <span class="hljs-tag">&lt;<span class="hljs-name">ul</span>
-  <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string-blue">"templates/tmplRel.html"</span> 
-  <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string-blue">"api/relPost.json"</span> 
+  <span class="hljs-attr-spa">data-template</span>=<span class="hljs-string-blue">"templates/tmplRel.html"</span>
+  <span class="hljs-attr-spa">data-url</span>=<span class="hljs-string-blue">"api/relPost.json"</span>
   <span class="hljs-attr-spa">data-render</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
 </code></pre>
-      
-      <p><strong>External Template-2 (to use in 1):</strong> <span class="hljs-string-blue">templates/tmplRel.html</span></p>
-<pre><code class='html'>{{#each rposts}}
+
+        <p><strong>External Template-2 (to use in 1):</strong> <span class="hljs-string-blue">templates/tmplRel.html</span></p>
+        <pre><code class='html'>{{#each rposts}}
    <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span>{{title}} - {{date}}<span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
 {{/each}}
 </code></pre>
       </div>
 
       <div class="column">
-      <p><strong>Results in</strong></p>
-<pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">button</span>
+        <p><strong>Results in</strong></p>
+        <pre><code class='html'><span class="hljs-tag">&lt;<span class="hljs-name">button</span>
   <span class="hljs-attr">onclick</span>=<span class="hljs-string">"loadMyPost();"</span>
   &gt;</span>Load<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
 
@@ -600,7 +619,7 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
     My 4th post. Hurray!
   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></div>
   <span class="hljs-tag">&lt;<span class="hljs-name">h3</span>&gt;</span>Other Posts:<span class="hljs-tag">&lt;/<span class="hljs-name">h3</span>&gt;</span>
-  
+
   <span class="hljs-tag">&lt;<span class="hljs-name">ul</span>
     <span class="hljs-attr">data-template</span>=<span class="hljs-string">"templates/tmplRel.html"</span>
     <span class="hljs-attr">data-url</span>=<span class="hljs-string">"api/relPost.json"</span>
@@ -623,4 +642,5 @@ apimsg : <span class="hljs-string">"Get Post Details"</span>,
   </section>
 
 </div>
-<p>&nbsp;</p><p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
