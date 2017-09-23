@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.2.0';
+  spa.VERSION = '2.3.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -3323,15 +3323,19 @@ var isSpaHashRouteOn=false;
     return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
   }
 
-  spa.hasPrimaryKeys = function(obj, propNames){
+  spa.of = of;
+  spa.is = is;
+
+  function _isObjHasKeys(obj, propNames, deep){
 
     function checkForAll(obj, propNames){
-      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = true;
+      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = true, hasKey;
       for(var i=0;i<pKeys.length; i++) {
         pKey = pKeys[i].trim();
         if (pKey) {
           pKeysCount++;
-          retValue = retValue && (obj.hasOwnProperty(pKey));
+          hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)))? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
+          retValue = retValue && hasKey;
         }
       }
 
@@ -3339,12 +3343,13 @@ var isSpaHashRouteOn=false;
     }
 
     function checkForAny(obj, propNames){
-      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = false;
+      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = false, hasKey;
       for(var i=0;i<pKeys.length; i++) {
         pKey = pKeys[i].trim();
         if (pKey) {
           pKeysCount++;
-          retValue = retValue || (obj.hasOwnProperty(pKey));
+          hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)) )? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
+          retValue = retValue || hasKey;
         }
         if (retValue) break;
       }
@@ -3368,6 +3373,13 @@ var isSpaHashRouteOn=false;
     }
 
     return retValue;
+  };
+
+  spa.hasPrimaryKeys = function _spa_hasPrimaryKeys(obj, propNames){
+    return _isObjHasKeys(obj, propNames);
+  };
+  spa.hasKeys = function _spa_hasKeys(obj, propNames){
+    return _isObjHasKeys(obj, propNames, true);
   };
 
   spa.hasIgnoreCase = spa.hasKeyIgnoreCase = function (obj, pathStr) {
@@ -3446,6 +3458,74 @@ var isSpaHashRouteOn=false;
       return ((name).replace(/\./g, "_"));
     }));
   };
+
+  Object.defineProperties(Object.prototype, {
+    '__keys': {
+      value: function _obj_keys(deep){
+        return (deep)? spa.keysDotted(this) : Object.keys(this);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__keysAll': {
+      value: function _obj_keysAll(){
+        return spa.keysDotted(this);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__hasKey' : {
+      value: function _obj_hasKey(key) {
+        return spa.hasKey(this, key);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__hasKeys' : {
+      value: function _obj_hasKeys(keys) {
+        return _isObjHasKeys(this, keys, true);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__hasPrimaryKeys': {
+      value: function _obj_hasPrimaryKeys(keys){
+        return _isObjHasKeys(this, keys);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__valueOf' : {
+      value: function _obj_getValueOf(path, ifUndefined) {
+        return spa.findSafe(this, path, ifUndefined);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__clone': {
+      value: function _obj_clone(){
+        Array.prototype.unshift.call(arguments, {}, this);
+        return _.merge.apply(undefined, arguments);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__merge': {
+      value: function _obj_clone(){
+        Array.prototype.unshift.call(arguments, this);
+        return _.merge.apply(undefined, arguments);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__stringify': {
+      value: function(){
+        return JSON.stringify(this);
+      },
+      enumerable : false,
+      configurable: false
+    }
+  });
 
   $.cachedScript = function (url, options) {
     /* allow user to set any option except for dataType, cache, and url */
