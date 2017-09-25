@@ -3,21 +3,21 @@
   "description": "Single Page Application (SPA) Simplified Framework/Library",
   "main": "dist/spa-bundle.js",
 
-  "version": "2.3.0",
+  "version": "2.4.0",
   "license": "MIT",
   "homepage": "https://github.com/sucom/SPA.js",
-  
+
   "repository": {
     "type": "git",
     "url": "https://github.com/sucom/SPA.js.git"
   },
-  
+
   "private": false,
 
   "authors": [
     "Kumar"
   ],
-  
+
   "keywords": [
     "SPA",
     "Single",
@@ -27,7 +27,7 @@
     "Framework",
     "Library"
   ],
-  
+
   "ignore": [
     "**/.*",
     "node_modules",
@@ -35,7 +35,7 @@
     "test",
     "tests"
   ],
-  
+
   "dependencies": {
     "jquery": "^3.2.1",
     "handlebars": "^4.0.10"
