@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.3.0';
+  spa.VERSION = '2.4.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -5405,6 +5405,18 @@ var isSpaHashRouteOn=false;
               //spa.viewModels[retValue.id] = retValue.model;
 
               var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
+
+              /* {$}                  ==> app.thisComponentName.
+               * {$someComponentName} ==> app.someComponentName.
+               */
+              var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
+              if (componentRefs) {
+                _.forEach(componentRefs, function(cRef){
+                  templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                    cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                });
+              }
+
               compiledTemplate = templateContentToBindAndRender;
               spa.console.log("Template Source:", templateContentToBindAndRender);
               if (!spa.isBlank(spaViewModel)) {
