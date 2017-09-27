@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.4.0';
+  spa.VERSION = '2.5.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -4505,10 +4505,13 @@ var isSpaHashRouteOn=false;
   spa.extendComponent = spa.module = function(componentName, options) {
     window['app'] = window['app'] || {};
     window.app[componentName] = window.app[componentName] || {};
-    options = options || {};
+    if (options && _.isFunction(options)) {
+      options = options.call(spa.components[componentName] || {});
+    }
+    options = spa.is(options, 'object')? options : {};
     if (spa.components[componentName]) {
       if (options['__prop__']) {
-        $.extend(spa.components[componentName], options['__prop__']);
+        _.merge(spa.components[componentName], $.extend({},options['__prop__']));
       }
       options['__prop__'] = spa.components[componentName];
     }
@@ -5397,8 +5400,8 @@ var isSpaHashRouteOn=false;
               }
               retValue['model']['_global_'] = window || {};
               if (rCompName) {
-                retValue['model']['_this']  = spa.findSafe(window, 'app.'+rCompName, {});
-                retValue['model']['_this_'] = spa.components[rCompName] || {};
+                retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
+                retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
               };
 
               var spaViewModel = retValue.model, compiledTemplate;
