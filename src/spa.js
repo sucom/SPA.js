@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.5.0';
+  spa.VERSION = '2.6.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -4678,7 +4678,7 @@ var isSpaHashRouteOn=false;
       }
       return (_fn && _.isFunction(_fn))? _fn : _undefined;
     },
-    runCallbackFn: function (fn2Call, fnArg) {
+    runCallbackFn: function (fn2Call, fnArg, thisContext) {
       if (fn2Call) {
         var _fn2Call = fn2Call;
         if (_.isString(_fn2Call)) {
@@ -4687,7 +4687,7 @@ var isSpaHashRouteOn=false;
         if (_fn2Call) {
           if (_.isFunction(_fn2Call)) {
             spa.console.info("calling callback: " + fn2Call);
-            _fn2Call.call(undefined, fnArg);
+            _fn2Call.call(thisContext, fnArg);
           } else {
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
@@ -5393,7 +5393,7 @@ var isSpaHashRouteOn=false;
               retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
               retValue['model'] = spaTemplateModelData[viewDataModelName];
               if (fnDataProcess && _.isFunction(fnDataProcess)) {
-                retValue['model'] = fnDataProcess.call(undefined, spaTemplateModelData[viewDataModelName], spaRVOptions);
+                retValue['model'] = fnDataProcess.call($.extend({}, (app[rCompName] || {})), spaTemplateModelData[viewDataModelName], spaRVOptions);
                 if (!_.isObject(retValue['model'])) {
                   retValue['model'] = retValue['modelOriginal'];
                 }
@@ -5508,7 +5508,20 @@ var isSpaHashRouteOn=false;
               /*
                * Default component's callback
                */
-              spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue);
+
+              var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
+              if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
+                delete renderCallbackContext['__prop__']['data']['_global_'];
+                delete renderCallbackContext['__prop__']['data']['_this_'];
+                delete renderCallbackContext['__prop__']['data']['_this'];
+              }
+              if (retValue['model']) {
+                delete retValue['model']['_global_'];
+                delete retValue['model']['_this_'];
+                delete retValue['model']['_this'];
+              }
+
+              spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
 
               var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
               if (spaRVOptions.dataRenderCallback) {
@@ -5522,7 +5535,7 @@ var isSpaHashRouteOn=false;
                   spa.console.info("calling default callback: spa.routes._renderCallback");
                   spa.routes['_renderCallback'].call(undefined, retValue);
                 }
-                spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue, renderCallbackContext);
               }
 
               /*Deep/Child Render*/
