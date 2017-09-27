@@ -157,7 +157,10 @@
 
   function _hbjshelper_() {
     //exit if no arguments
-    if (arguments.length < 2) throw new Error('missing argument(s)');
+    if (arguments.length < 2) {
+      console.error('missing argument(s)');
+      throw new Error('missing argument(s)');
+    }
 
     var _Array_ = Array.prototype;
 
@@ -244,9 +247,9 @@
     }
 
     //:if must be  a block
-
-    if (isIfCall && !isConditionBlock) {
-      throw new Error(":if must be a block. use {{#:if ... 'CONDITION' ... }} ... {{else}} ... {{/:if}}");
+    if (isIfCall && !(isBlock && isConditionBlock)) {
+      console.error("[Template Syntax Error] :if must have 'CONDITION' and BLOCK. use {{#:if ... 'CONDITION' ... }} ... {{else}} ... {{/:if}}");
+      throw new Error("[Template Syntax Error] :if must have 'CONDITION' and BLOCK. use {{#:if ... 'CONDITION' ... }} ... {{else}} ... {{/:if}}");
     }
 
     if (isConditionBlock) {
