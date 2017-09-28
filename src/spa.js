@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.6.0';
+  spa.VERSION = '2.7.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -3458,6 +3458,23 @@ var isSpaHashRouteOn=false;
       return ((name).replace(/\./g, "_"));
     }));
   };
+
+  Object.defineProperties(Array.prototype, {
+    '__toObject': {
+      value : function(key){
+        var retObj = {}, itemKey;
+        this.forEach(function(item, index){
+          if (is(item, 'object')) {
+            itemKey = (key)? (is(item, 'object')? item[key] : index ) : index;
+            retObj[ itemKey ] = item;
+          }
+        });
+        return retObj;
+      },
+      enumerable : false,
+      configurable: false
+    }
+  });
 
   Object.defineProperties(Object.prototype, {
     '__keys': {
