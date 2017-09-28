@@ -128,7 +128,7 @@
           break;
           case (propNames.indexOf('|')>0) : retValue = checkForAny(obj, propNames.replace(/\|/g, ','));
           break;
-          default: retValue = checkForAll(obj, propNames)
+          default: retValue = checkForAll(obj, propNames);
           break;
         }
       }
@@ -339,9 +339,9 @@
                   appendToRetValue(fnResult);
                 } else {
                   if ( of (fnResult) === 'boolean') {
-                    appendToRetValue(fnResult ? options.fn(_thisData) : options.inverse(_thisData));
+                    appendToRetValue(fnResult ? options.fn(fnResult) : options.inverse(fnResult));
                   } else {
-                    appendToRetValue(options.fn(_thisData));
+                    appendToRetValue(options.fn(fnResult));
                   }
                 }
               } else {
@@ -621,11 +621,11 @@
       'ss'   : rightNow.getSeconds(),
 
       'ms'   : rightNow.getMilliseconds()
-    }
+    };
 
     Object.keys(pattern).forEach(function(key){
       retStr = retStr.replace(key, pattern[key]);
-    })
+    });
 
     return retStr;
   }
@@ -711,6 +711,49 @@
     return (!_isEmpty(inputVal))? ifNotEmpty : ((is(ifEmpty, 'object') && (ifEmpty['name'] == ':ifNotEmpty'))? inputVal : ifEmpty);
   }
 
+  function _getByIndexOrKey(arrOrObj, indexOrKey){
+    var lastParam = arguments[arguments.length-1];
+    var retValue = (_is(arrOrObj, 'array|object'))? arrOrObj[indexOrKey] : arrOrObj;
+    if (isBlockCall(lastParam)) {
+      return (typeof retValue != 'undefined')? lastParam.fn(retValue) : lastParam.inverse(retValue);
+    } else {
+      return retValue;
+    }
+  }
+
+  function _isBlank(arrOrObj){
+    return ((is(arrOrObj, 'object')? Object.keys(arrOrObj) : arrOrObj).length == 0);
+  }
+
+  function _each(arrOrObj, itemAs) {
+    var lastParam = arguments[arguments.length-1];
+    var retValue = '';
+    if (isBlockCall(lastParam)) {
+      switch (_of(arrOrObj)) {
+        case 'array':
+        case 'object':
+          if (_isBlank(arrOrObj)){
+            retValue += lastParam.inverse(arrOrObj);
+          } else {
+            var itemValueAs = (_is(itemAs, 'string'))? itemAs : 'item';
+            Object.keys(arrOrObj).forEach(function (item) {
+              var context = {key:item};
+              context[itemValueAs] = arrOrObj[item];
+              retValue += lastParam.fn(context);
+            });
+          }
+          break;
+        default:
+          retValue += lastParam.inverse(arrOrObj);
+          break;
+      }
+      return retValue;
+
+    } else {
+      return arrOrObj;
+    }
+  }
+
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
       ':'            : _hbjshelper_, //+Block
@@ -719,10 +762,13 @@
       ':is'          : _is,           //+Block
       ':isEmpty'     : _isEmpty,      //+Block
 
-      ':of'          : _of,
+      ':ofType'      : _of,
       ':?'           : _if,
       ':ifEmpty'     : _ifEmpty,
       ':ifNotEmpty'  : _ifNotEmpty,
+
+      ':of'          : _getByIndexOrKey,
+      ':each'        : _each,
 
       ':toLowerCase' : _toLowerCase,
       ':toUpperCase' : _toUpperCase,
