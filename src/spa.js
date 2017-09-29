@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.7.1';
+  spa.VERSION = '2.7.2';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)

@@ -712,8 +712,8 @@
   }
 
   function _getByIndexOrKey(arrOrObj, indexOrKey){
-    var lastParam = arguments[arguments.length-1];
-    var retValue = (_is(arrOrObj, 'array|object'))? arrOrObj[indexOrKey] : arrOrObj;
+    var lastParam = arguments[arguments.length-1],
+      retValue = (_is(arrOrObj, 'array|object'))? arrOrObj[indexOrKey] : arrOrObj;
     if (isBlockCall(lastParam)) {
       return (typeof retValue != 'undefined')? lastParam.fn(retValue) : lastParam.inverse(retValue);
     } else {
@@ -721,23 +721,46 @@
     }
   }
 
+  function _splitString(srcStr, splitBy){
+    var retArr = [];
+    if (!_isEmpty(srcStr)) {
+      if (splitBy) {
+       retArr = srcStr.split(splitBy);
+      } else {
+        if (srcStr.indexOf(',')>0) {
+          retArr = srcStr.split(',');
+        } else if (srcStr.indexOf('|')>0) {
+          retArr = srcStr.split('|');
+        } else if (srcStr.indexOf(' ')>0) {
+          retArr = srcStr.split(' ');
+        } else if (srcStr.indexOf('-')>0) {
+          retArr = srcStr.split('-');
+        } else {
+          retArr = [srcStr];
+        }
+      }
+    };
+    return retArr;
+  }
+
+  function _split(inStr, splitBy){
+    var lastParam = arguments[arguments.length-1],
+      splitByStr = (_is(splitBy, 'string'))? splitBy : undefined,
+      splitResult = _splitString(inStr, splitByStr);
+    if (isBlockCall(lastParam)) {
+      return _isEmpty(splitResult)? lastParam.inverse(inStr) : lastParam.fn(splitResult);
+    } else {
+      return splitResult;
+    }
+  }
+
   function _each(arrOrObj, itemAs) {
-    var lastParam = arguments[arguments.length-1];
-    var retValue = '';
+    var lastParam = arguments[arguments.length-1],
+      retValue = '';
     if (isBlockCall(lastParam)) {
       switch (_of(arrOrObj)) {
         case 'string':
-          if (arrOrObj.indexOf(',')>0) {
-            arrOrObj = arrOrObj.split(',');
-          } else if (arrOrObj.indexOf('|')>0) {
-            arrOrObj = arrOrObj.split('|');
-          } else if (arrOrObj.indexOf(' ')>0) {
-            arrOrObj = arrOrObj.split(' ');
-          } else if (arrOrObj.indexOf('-')>0) {
-            arrOrObj = arrOrObj.split('-');
-          } else {
-            arrOrObj = [arrOrObj];
-          }
+          arrOrObj = _splitString(arrOrObj);
         case 'array':
         case 'object':
           if (_isEmpty(arrOrObj)){
@@ -777,6 +800,7 @@
 
       ':of'          : _getByIndexOrKey,
       ':each'        : _each,
+      ':split'       : _split,
 
       ':toLowerCase' : _toLowerCase,
       ':toUpperCase' : _toUpperCase,
