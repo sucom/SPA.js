@@ -26,6 +26,6 @@ function initSPA() {
 
   // create sidebar and attach to menu in mobile view
   appUiHelper.sidebar.attach();
-  
+
   appUiHelper.setLang("en_US");
 }
