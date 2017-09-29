@@ -721,18 +721,26 @@
     }
   }
 
-  function _isBlank(arrOrObj){
-    return ((is(arrOrObj, 'object')? Object.keys(arrOrObj) : arrOrObj).length == 0);
-  }
-
   function _each(arrOrObj, itemAs) {
     var lastParam = arguments[arguments.length-1];
     var retValue = '';
     if (isBlockCall(lastParam)) {
       switch (_of(arrOrObj)) {
+        case 'string':
+          if (arrOrObj.indexOf(',')>0) {
+            arrOrObj = arrOrObj.split(',');
+          } else if (arrOrObj.indexOf('|')>0) {
+            arrOrObj = arrOrObj.split('|');
+          } else if (arrOrObj.indexOf(' ')>0) {
+            arrOrObj = arrOrObj.split(' ');
+          } else if (arrOrObj.indexOf('-')>0) {
+            arrOrObj = arrOrObj.split('-');
+          } else {
+            arrOrObj = [arrOrObj];
+          }
         case 'array':
         case 'object':
-          if (_isBlank(arrOrObj)){
+          if (_isEmpty(arrOrObj)){
             retValue += lastParam.inverse(arrOrObj);
           } else {
             var itemValueAs = (_is(itemAs, 'string'))? itemAs : 'item';
