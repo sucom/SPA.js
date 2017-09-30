@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.7.3';
+  spa.VERSION = '2.8.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -3467,6 +3467,8 @@ var isSpaHashRouteOn=false;
           if (is(item, 'object')) {
             itemKey = (key)? (is(item, 'object')? item[key] : index ) : index;
             retObj[ itemKey ] = item;
+          } else {
+            retObj[ index ] = item;
           }
         });
         return retObj;
