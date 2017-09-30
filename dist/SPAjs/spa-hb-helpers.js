@@ -165,8 +165,7 @@
     var _Array_ = Array.prototype;
 
     //extract injected handlebars options in param and process
-    var _thisData = this,
-      options   = _Array_.splice.call(arguments, arguments.length - 1, 1)[0],
+    var options = _Array_.splice.call(arguments, arguments.length - 1, 1)[0],
       _rootData = options['data']['root'] || {},
       isBlock   = (options.hasOwnProperty('fn') || options.hasOwnProperty('inverse')),
       isIfCall  = (options['name'] == ':if'),
@@ -785,51 +784,307 @@
     }
   }
 
+  function _selectOptions(arrOrObj, optStr){
+    var sOptions = ''
+    , oIndex = -1
+    , opt = {value:'',text:'',value_text:'',splitBy:',',vtSplit:'',selIndex:'',selValue:'',selText:''}
+    , selIdxLst=[], selValLst=[], selTxtLst=[]
+    , selByIdx, selByVal, selByTxt
+    , vKey='', tKey='', vtSplit='', useIndex4Val;
+
+    if (is(optStr, 'string')){
+      _splitString(optStr).forEach(function(optKeyVal){
+        var optKV = optKeyVal.split(':');
+        opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
+      });
+      selIdxLst = _splitString(opt['selIndex']);
+      selValLst = _splitString(opt['selValue']);
+      selTxtLst = _splitString(opt['selText']);
+
+      selByIdx = (selIdxLst.length);
+      selByVal = (selValLst.length);
+      selByTxt = (selTxtLst.length);
+
+      vKey = opt['value'] || opt['value_text'],
+      tKey = opt['text'] || opt['value_text'];
+      vtSplit = (opt['vtSplit']||'').replace(/colon/gi,':');
+      useIndex4Val = (vKey.toLowerCase()=='index');
+    }
+    //console.log(optStr, opt, selIdxLst, selValLst, selTxtLst);
+
+    function option(value, text){
+      oIndex++;
+      return '<option value="'+value+'" '+(isSelected(value, text)? 'selected' : '')+'>'+text+'</option>';
+    }
+
+    function isSelected(oValue, oText) {
+      return ( (selByIdx && selIdxLst.indexOf(''+oIndex)>=0)
+            || (selByVal && selValLst.indexOf(''+oValue)>=0)
+            || (selByTxt && selTxtLst.indexOf(''+oText)>=0) );
+    }
+
+    if (is(arrOrObj, 'string')) {
+      arrOrObj = _splitString(arrOrObj, opt['splitBy']);
+    };
+
+    switch (_of(arrOrObj)) {
+      case 'object':
+          //{'01': 'Jan', '02':'Feb', '03':'Mar'}
+          Object.keys(arrOrObj).forEach(function (key) {
+            sOptions += option(key, arrOrObj[key]);
+          });
+        break;
+      case 'array':
+        arrOrObj.forEach(function (oItem, idx) {
+          switch(of(oItem)) {
+            //[ {code:'01', name:'Jan'}, {code:'02', name:'Feb'}, {code:'03', name:'Mar'} ]
+            //[ {'01': 'Jan'}, {'02': 'Feb'}, {'03': 'Mar'} ]
+            case 'object':
+              var oItemKeys = Object.keys(oItem);
+              if (vKey && tKey) {
+                sOptions += option(oItem[vKey], oItem[tKey]);
+              } else if (oItemKeys.length==1) {
+                oItemKeys.forEach(function (key) {
+                  sOptions += option(key, oItem[key]);
+                });
+              }
+              break;
+
+            case 'string' :
+              if (useIndex4Val) {
+                  sOptions += option(idx, oItem);
+                break;
+              } else {
+                if (vtSplit) {
+                  oItem=oItem.split(vtSplit);
+                } else {
+                  oItem = [oItem];
+                }
+              }
+              //fall through 'array'
+
+            case 'array' :
+                if (vKey && tKey) {
+                  sOptions += option(oItem[vKey], oItem[tKey]);
+                } else {
+                  if (oItem.length == 1) {
+                    sOptions += option(oItem[0], oItem[0]);
+                  } else if (oItem.length > 1) {
+                    sOptions += option(oItem[0], oItem[1]);
+                  }
+                }
+              break;
+
+            default:
+              sOptions += option(useIndex4Val?idx : oItem, oItem);
+              break;
+          }
+
+        });
+        break;
+    }
+
+    return new Handlebars.SafeString(sOptions);
+  }
+
+  function _checkedIf(){
+    var chkResult = _hbjshelper_.apply(undefined, arguments);
+    return (chkResult? 'checked' : '');
+  }
+  function _checkedIfNot(){
+    var chkResult = _hbjshelper_.apply(undefined, arguments);
+    return (chkResult? '' : 'checked');
+  }
+
+  function _disabledIf(){
+    var chkResult = _hbjshelper_.apply(undefined, arguments);
+    return (chkResult? 'disabled' : '');
+  }
+  function _disabledIfNot(){
+    var chkResult = _hbjshelper_.apply(undefined, arguments);
+    return (chkResult? '' : 'disabled');
+  }
+
+  function _selectedIf(){
+    var chkResult = _hbjshelper_.apply(undefined, arguments);
+    return (chkResult? 'selected' : '');
+  }
+  function _selectedIfNot(){
+    var chkResult = _hbjshelper_.apply(undefined, arguments);
+    return (chkResult? '' : selected);
+  }
+
+  function _sort(arrList, optStr){
+    var lastParam = arguments[arguments.length-1],
+      sortedArrList = [],
+      opt = {sortOn:'',sortBy:'asc',splitBy:','},
+      asc = true,
+      sortOnKey = '';
+
+    function isNumeric(xStr) {
+      if (is(xStr, 'number')) {
+        return true;
+      } else if (is(xStr, 'string')) {
+        var nonNumericChars = xStr.replace(/[0-9]/g, '').trim();
+        return (xStr.length>0 && (nonNumericChars == '' || (xStr.length>1 && nonNumericChars == '.')));
+      } else {
+        return false;
+      }
+    }
+
+    function toDottedPath(srcStr){
+      return _trimStr((srcStr||"").replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.'), ("\\."));
+    }
+
+    function valueOfKeyPath(obj, pathStr, def) {
+      for (var i = 0, path = toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
+        if (!obj || typeof obj == "undefined") return def;
+        obj = obj[path[i]];
+      }
+      if (typeof obj == "undefined") return def;
+      return obj;
+    }
+
+    function strCompare(strA, strB){
+      return (strA < strB)? -1 : ( (strA > strB)? 1 : 0 );
+    }
+
+    if (is(optStr, 'string')) {
+      _splitString(optStr).forEach(function(optKeyVal){
+        var optKV = optKeyVal.split(':');
+        opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
+      });
+    }
+    asc = (opt['sortBy'].toLowerCase() == 'asc');
+    sortOnKey = (opt['sortOn'] || '');
+
+    if (is(arrList, 'string') && arrList.length>0) {
+      arrList = _splitString(arrList, opt['splitBy']);
+    };
+
+    if (is(arrList, 'array') && arrList.length>0) {
+
+      if (arrList.length==1) {
+        sortedArrList = arrList;
+      } else {
+        switch(of(arrList[0])){
+          case 'number':
+              sortedArrList = asc? arrList.sort(function(a,b){return a-b;}) : arrList.sort(function(a,b){return b-a;});
+            break;
+
+          case 'string':
+              if (isNumeric(arrList[0])) {
+                sortedArrList = asc? arrList.sort(function(a,b){return (a*1) - (b*1);}) : arrList.sort(function(a,b){return (b*1)-(a*1);});
+              } else {
+                sortedArrList = asc? arrList.sort() : arrList.reverse();
+              }
+            break;
+
+          case 'boolean':
+              sortedArrList = asc? arrList.sort(function(a,b){return strCompare(a,b);}) : arrList.sort(function(a,b){return strCompare(b,a);});
+            break;
+
+          case 'object':
+            if (sortOnKey) {
+              switch (of(valueOfKeyPath(arrList[0],sortOnKey))) {
+                case 'number':
+                    sortedArrList = asc? arrList.sort(function(a,b){return valueOfKeyPath(a,sortOnKey)-valueOfKeyPath(b,sortOnKey);})
+                                       : arrList.sort(function(a,b){return valueOfKeyPath(b,sortOnKey)-valueOfKeyPath(a,sortOnKey);});
+                  break;
+                case 'string':
+                    if (isNumeric(valueOfKeyPath(arrList[0],sortOnKey))) {
+                      sortedArrList = asc? arrList.sort(function(a,b){return (valueOfKeyPath(a,sortOnKey)*1)-(valueOfKeyPath(b,sortOnKey)*1);})
+                                         : arrList.sort(function(a,b){return (valueOfKeyPath(b,sortOnKey)*1)-(valueOfKeyPath(a,sortOnKey)*1);});
+                    } else {
+                      sortedArrList = asc? arrList.sort(function(a,b){return strCompare(valueOfKeyPath(a,sortOnKey),valueOfKeyPath(b,sortOnKey));})
+                                         : arrList.sort(function(a,b){return strCompare(valueOfKeyPath(b,sortOnKey),valueOfKeyPath(a,sortOnKey));});
+                    }
+                  break;
+                case 'boolean':
+                      sortedArrList = asc? arrList.sort(function(a,b){return strCompare(valueOfKeyPath(a,sortOnKey),valueOfKeyPath(b,sortOnKey));})
+                                         : arrList.sort(function(a,b){return strCompare(valueOfKeyPath(b,sortOnKey),valueOfKeyPath(a,sortOnKey));});
+                  break;
+                default:
+                    sortedArrList = arrList;
+                  break;
+              }
+            } else {
+              sortedArrList = arrList;
+            }
+            break;
+
+          default:
+              sortedArrList = arrList;
+            break;
+        }
+      }
+    }
+    if (isBlockCall(lastParam)) {
+      return (sortedArrList.length)? lastParam.fn(sortedArrList) : lastParam.inverse(arrList);
+    } else {
+      return sortedArrList;
+    }
+  }
+
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
-      ':'            : _hbjshelper_, //+Block
+      ':'              : _hbjshelper_, //+Block
 
-      ':if'          : _hbjshelper_,           //+Block
-      ':is'          : _is,           //+Block
-      ':isEmpty'     : _isEmpty,      //+Block
+      ':if'            : _hbjshelper_,           //+Block
+      ':is'            : _is,           //+Block
+      ':isEmpty'       : _isEmpty,      //+Block
 
-      ':ofType'      : _of,
-      ':?'           : _if,
-      ':ifEmpty'     : _ifEmpty,
-      ':ifNotEmpty'  : _ifNotEmpty,
+      ':ofType'        : _of,
+      ':?'             : _if,
+      ':ifEmpty'       : _ifEmpty,
+      ':ifNotEmpty'    : _ifNotEmpty,
 
-      ':of'          : _getByIndexOrKey,
-      ':each'        : _each,
-      ':split'       : _split,
+      ':of'            : _getByIndexOrKey,
+      ':each'          : _each,
+      ':split'         : _split,
+      ':sort'          : _sort,
 
-      ':toLowerCase' : _toLowerCase,
-      ':toUpperCase' : _toUpperCase,
-      ':capitalize'  : _capitalize,
-      ':unCapitalize': _unCapitalize,
-      ':normalizeStr': _normalizeStr,
+      ':options'       : _selectOptions,
+      ':checkedIf'     : _checkedIf,
+      ':checkedIfNot'  : _checkedIfNot,
+      ':enabledIf'     : _disabledIfNot,
+      ':enabledIfNot'  : _disabledIf,
+      ':disabledIf'    : _disabledIf,
+      ':disabledIfNot' : _disabledIfNot,
 
-      ':toInt'       : _toInt,
-      ':toFloat'     : _toFloat,
-      ':toStr'       : _toString,
-      ':toString'    : _toString,
-      ':toBool'      : _toBool,
-      ':toBoolean'   : _toBool,
+      ':selectedIf'    : _selectedIf,
+      ':selectedIfNot' : _selectedIfNot,
 
-      ':trim'        : _trimStr,
-      ':trimStr'     : _trimStr,
-      ':trimLeft'    : _trimLeftStr,
-      ':trimLeftStr' : _trimLeftStr,
-      ':trimRight'   : _trimRightStr,
-      ':trimRightStr': _trimRightStr,
+      ':toLowerCase'   : _toLowerCase,
+      ':toUpperCase'   : _toUpperCase,
+      ':capitalize'    : _capitalize,
+      ':unCapitalize'  : _unCapitalize,
+      ':normalizeStr'  : _normalizeStr,
 
-      ':getLeftStr'  : _getLeftStr,
-      ':getRightStr' : _getRightStr,
+      ':toInt'         : _toInt,
+      ':toFloat'       : _toFloat,
+      ':toStr'         : _toString,
+      ':toString'      : _toString,
+      ':toBool'        : _toBool,
+      ':toBoolean'     : _toBool,
 
-      ':dateNowMs'   : _nowMs,
-      ':dateNow'     : _now,
+      ':trim'          : _trimStr,
+      ':trimStr'       : _trimStr,
+      ':trimLeft'      : _trimLeftStr,
+      ':trimLeftStr'   : _trimLeftStr,
+      ':trimRight'     : _trimRightStr,
+      ':trimRightStr'  : _trimRightStr,
 
-      ':rand'        : _rand,
-      ':randPwd'     : _randPwd
+      ':getLeftStr'    : _getLeftStr,
+      ':getRightStr'   : _getRightStr,
+
+      ':dateNowMs'     : _nowMs,
+      ':dateNow'       : _now,
+
+      ':rand'          : _rand,
+      ':randPwd'       : _randPwd,
+      ':ifDefined'     : _isDefined,
+      ':ifUndefined'   : _isUndefined
 
     });
   };
