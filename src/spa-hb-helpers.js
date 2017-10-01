@@ -164,7 +164,7 @@
     var hashObj = (hasHash(obj)? obj['hash'] : {});
     if (toObj) {
       Object.keys(hashObj).forEach(function(hashKey){
-        toObj[hashKey] = hashObj[hashKey];
+        toObj[hashKey] = hashObj[hashKey].trim();
       });
       return toObj;
     } else {
@@ -768,29 +768,78 @@
     }
   }
 
+  /*
+   * filterFn: String functionName
+   * '@.fnName'          ==> invokes current component's fnName
+   * '@compName.fnName'  ==> invokes compName's fnName
+   * 'fnName'            ==> invokes fnName in window scope
+   */
   function _each(arrOrObj, itemAs) {
     var helperOptions = arguments[arguments.length-1],
-      retValue = '';
+      retValue = '',
+      opt = {sortOn:'',sortBy:'',splitBy:',',alias:'',filterFn:''},
+      inLoop=!1, loopCount=0,
+      filterFn;
+
+    if (hasHash(helperOptions)) {
+      opt = getHash(helperOptions, opt);
+      if (opt['filterFn']) {
+        var filterFnName = opt['filterFn'];
+        filterFnName = filterFnName
+                       .replace('@.', 'app.'+valueOfKeyPath(helperOptions,'data.root._this_.componentName')+'.')
+                       .replace('@', 'app.');
+        if (filterFnName) {
+          filterFn = valueOfKeyPath(window, filterFnName);
+          if (!is(filterFn, 'function')) filterFn = undefined;
+        }
+      };
+    }
+
     if (isBlockCall(helperOptions)) {
       switch (_of(arrOrObj)) {
         case 'string':
-          arrOrObj = _splitString(arrOrObj);
+          arrOrObj = _splitString(arrOrObj, opt['splitBy']);
         case 'array':
+          if (opt['sortOn'] || opt['sortBy']) {
+            var sortOptStr = 'sortOn:'+(opt['sortOn'].trim())+';sortBy:'+((opt['sortBy']||'asc').trim());
+            arrOrObj = _sort(arrOrObj, sortOptStr);
+          }
         case 'object':
           if (_isEmpty(arrOrObj)){
             retValue += helperOptions.inverse(arrOrObj);
           } else {
-            var itemValueAs = (_is(itemAs, 'string'))? itemAs : 'item';
+            var useAlias = (is(itemAs, 'string') && itemAs.trim()),
+                aliasNames = (useAlias)? _splitString(itemAs) : (opt['alias']? _splitString(opt['alias']) : ['', '']),
+                valAlias = (aliasNames[0]||'').trim(),
+                keyAlias = (aliasNames[1]||'').trim(),
+                context;
+            inLoop=!0;
             Object.keys(arrOrObj).forEach(function (item) {
-              var context = {key:item};
-              context[itemValueAs] = arrOrObj[item];
-              retValue += helperOptions.fn(context);
+              context = (valAlias)? {} : arrOrObj[item];
+              if (valAlias){
+                if (valAlias) context[valAlias] = arrOrObj[item];
+                if (keyAlias) context[keyAlias] = item;
+              }
+
+              if (filterFn) {
+                if (filterFn.call(undefined, context)) {
+                  loopCount++;
+                  retValue += helperOptions.fn(context);
+                }
+              } else {
+                loopCount++;
+                retValue += helperOptions.fn(context);
+              }
             });
+
           }
           break;
         default:
           retValue += helperOptions.inverse(arrOrObj);
           break;
+      }
+      if (inLoop && !loopCount) {
+        retValue += helperOptions.inverse(arrOrObj);
       }
       return retValue;
 
