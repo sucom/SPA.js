@@ -156,6 +156,22 @@
     return ((isHbOptions(obj)) && hasPrimaryKeys(obj, 'fn,inverse'));
   }
 
+  function hasHash(obj){
+    return ((isHbOptions(obj)) && Object.keys(obj['hash']).length );
+  }
+
+  function getHash(obj, toObj) {
+    var hashObj = (hasHash(obj)? obj['hash'] : {});
+    if (toObj) {
+      Object.keys(hashObj).forEach(function(hashKey){
+        toObj[hashKey] = hashObj[hashKey];
+      });
+      return toObj;
+    } else {
+      return hashObj;
+    }
+  }
+
   function _hbjshelper_() {
     //exit if no arguments
     if (arguments.length < 2) {
@@ -419,10 +435,10 @@
   }
 
   function _is(x, type) {
-    var lastParam = arguments[arguments.length-1],
+    var helperOptions = arguments[arguments.length-1],
       type2Check = (isHbOptions(type))? 'undefined' : type;
-    if (isBlockCall(lastParam)) {
-      return (is(x, type2Check))? lastParam.fn(x) : lastParam.inverse(x);
+    if (isBlockCall(helperOptions)) {
+      return (is(x, type2Check))? helperOptions.fn(x) : helperOptions.inverse(x);
     } else {
       return is(x, type2Check);
     }
@@ -653,18 +669,18 @@
   }
 
   function _isDefined(inputVal){
-    var lastParam = arguments[arguments.length-1];
-    if (isBlockCall(lastParam)) {
-      return (typeof inputVal != 'undefined')? lastParam.fn(inputVal) : lastParam.inverse(inputVal);
+    var helperOptions = arguments[arguments.length-1];
+    if (isBlockCall(helperOptions)) {
+      return (typeof inputVal != 'undefined')? helperOptions.fn(inputVal) : helperOptions.inverse(inputVal);
     } else {
       return (typeof inputVal != 'undefined');
     }
   }
 
   function _isUndefined(inputVal){
-    var lastParam = arguments[arguments.length-1];
-    if (isBlockCall(lastParam)) {
-      return (typeof inputVal == 'undefined')? lastParam.fn(inputVal) : lastParam.inverse(inputVal);
+    var helperOptions = arguments[arguments.length-1];
+    if (isBlockCall(helperOptions)) {
+      return (typeof inputVal == 'undefined')? helperOptions.fn(inputVal) : helperOptions.inverse(inputVal);
     } else {
       return (typeof inputVal == 'undefined');
     }
@@ -689,9 +705,9 @@
       }
     }
 
-    var lastParam = arguments[arguments.length-1];
-    if (isBlockCall(lastParam)) {
-      return (!!retValue)? lastParam.fn(inputVal) : lastParam.inverse(inputVal);
+    var helperOptions = arguments[arguments.length-1];
+    if (isBlockCall(helperOptions)) {
+      return (!!retValue)? helperOptions.fn(inputVal) : helperOptions.inverse(inputVal);
     } else {
       return (!!retValue);
     }
@@ -710,10 +726,10 @@
   }
 
   function _getByIndexOrKey(arrOrObj, indexOrKeyPath){
-    var lastParam = arguments[arguments.length-1],
+    var helperOptions = arguments[arguments.length-1],
       retValue = (_is(arrOrObj, 'array|object'))? valueOfKeyPath(arrOrObj, indexOrKeyPath) : arrOrObj;
-    if (isBlockCall(lastParam)) {
-      return (typeof retValue != 'undefined')? lastParam.fn(retValue) : lastParam.inverse(retValue);
+    if (isBlockCall(helperOptions)) {
+      return (typeof retValue != 'undefined')? helperOptions.fn(retValue) : helperOptions.inverse(retValue);
     } else {
       return retValue;
     }
@@ -742,38 +758,38 @@
   }
 
   function _split(inStr, splitBy){
-    var lastParam = arguments[arguments.length-1],
+    var helperOptions = arguments[arguments.length-1],
       splitByStr = (_is(splitBy, 'string'))? splitBy : undefined,
       splitResult = _splitString(inStr, splitByStr);
-    if (isBlockCall(lastParam)) {
-      return _isEmpty(splitResult)? lastParam.inverse(inStr) : lastParam.fn(splitResult);
+    if (isBlockCall(helperOptions)) {
+      return _isEmpty(splitResult)? helperOptions.inverse(inStr) : helperOptions.fn(splitResult);
     } else {
       return splitResult;
     }
   }
 
   function _each(arrOrObj, itemAs) {
-    var lastParam = arguments[arguments.length-1],
+    var helperOptions = arguments[arguments.length-1],
       retValue = '';
-    if (isBlockCall(lastParam)) {
+    if (isBlockCall(helperOptions)) {
       switch (_of(arrOrObj)) {
         case 'string':
           arrOrObj = _splitString(arrOrObj);
         case 'array':
         case 'object':
           if (_isEmpty(arrOrObj)){
-            retValue += lastParam.inverse(arrOrObj);
+            retValue += helperOptions.inverse(arrOrObj);
           } else {
             var itemValueAs = (_is(itemAs, 'string'))? itemAs : 'item';
             Object.keys(arrOrObj).forEach(function (item) {
               var context = {key:item};
               context[itemValueAs] = arrOrObj[item];
-              retValue += lastParam.fn(context);
+              retValue += helperOptions.fn(context);
             });
           }
           break;
         default:
-          retValue += lastParam.inverse(arrOrObj);
+          retValue += helperOptions.inverse(arrOrObj);
           break;
       }
       return retValue;
@@ -791,25 +807,27 @@
     , selByIdx, selByVal, selByTxt
     , vKey='', tKey='', vtSplit='', useIndex4Val;
 
-    if (is(optStr, 'string')){
+    if (hasHash(helperOptions)) {
+      opt = getHash(helperOptions, opt);
+    } else if (is(optStr, 'string')) {
       _splitString(optStr, ';').forEach(function(optKeyVal){
         var optKV = optKeyVal.split(':');
         opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
       });
-      selIdxLst = _splitString(opt['selIndex']);
-      selValLst = _splitString(opt['selValue']);
-      selTxtLst = _splitString(opt['selText']);
-
-      selByIdx = (selIdxLst.length);
-      selByVal = (selValLst.length);
-      selByTxt = (selTxtLst.length);
-
-      vKey = opt['value'] || opt['value_text'],
-      tKey = opt['text'] || opt['value_text'];
-      vtSplit = (opt['vtSplit']||'').replace(/colon/gi,':');
-      useIndex4Val = (vKey.toLowerCase()=='index');
     }
-    //console.log(optStr, opt, selIdxLst, selValLst, selTxtLst);
+
+    selIdxLst = _splitString(opt['selIndex']);
+    selValLst = _splitString(opt['selValue']);
+    selTxtLst = _splitString(opt['selText']);
+
+    selByIdx = (selIdxLst.length);
+    selByVal = (selValLst.length);
+    selByTxt = (selTxtLst.length);
+
+    vKey = opt['value'] || opt['value_text'],
+    tKey = opt['text'] || opt['value_text'];
+    vtSplit = (opt['vtSplit']||'').replace(/colon/gi,':');
+    useIndex4Val = (vKey.toLowerCase()=='index');
 
     function option(value, text){
       oIndex++;
@@ -938,7 +956,7 @@
   }
 
   function _sort(arrList, optStr){
-    var lastParam = arguments[arguments.length-1],
+    var helperOptions = arguments[arguments.length-1],
       sortedArrList = [],
       opt = {sortOn:'',sortBy:'asc',splitBy:','},
       asc = true,
@@ -948,12 +966,16 @@
       return (strA < strB)? -1 : ( (strA > strB)? 1 : 0 );
     }
 
-    if (is(optStr, 'string')) {
+    //Read Helper Options
+    if (hasHash(helperOptions)) {
+      opt = getHash(helperOptions, opt);
+    } else if (is(optStr, 'string')) {
       _splitString(optStr, ';').forEach(function(optKeyVal){
         var optKV = optKeyVal.split(':');
         opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
       });
     }
+
     asc = (opt['sortBy'].toLowerCase() == 'asc');
     sortOnKey = (opt['sortOn'] || '');
 
@@ -968,40 +990,36 @@
       } else {
         switch(of(arrList[0])){
           case 'number':
-              sortedArrList = asc? arrList.sort(function(a,b){return a-b;}) : arrList.sort(function(a,b){return b-a;});
+              sortedArrList = arrList.sort(function(a,b){return a-b;});
             break;
 
           case 'string':
               if (isNumeric(arrList[0])) {
-                sortedArrList = asc? arrList.sort(function(a,b){return (a*1) - (b*1);}) : arrList.sort(function(a,b){return (b*1)-(a*1);});
+                sortedArrList = arrList.sort(function(a,b){return (a*1) - (b*1);});
               } else {
-                sortedArrList = asc? arrList.sort() : arrList.reverse();
+                sortedArrList = arrList.sort();
               }
             break;
 
           case 'boolean':
-              sortedArrList = asc? arrList.sort(function(a,b){return strCompare(a,b);}) : arrList.sort(function(a,b){return strCompare(b,a);});
+              sortedArrList = arrList.sort(function(a,b){return strCompare(a,b);});
             break;
 
           case 'object':
             if (sortOnKey) {
               switch (of(valueOfKeyPath(arrList[0],sortOnKey))) {
                 case 'number':
-                    sortedArrList = asc? arrList.sort(function(a,b){return valueOfKeyPath(a,sortOnKey)-valueOfKeyPath(b,sortOnKey);})
-                                       : arrList.sort(function(a,b){return valueOfKeyPath(b,sortOnKey)-valueOfKeyPath(a,sortOnKey);});
+                    sortedArrList = arrList.sort(function(a,b){return valueOfKeyPath(a,sortOnKey)-valueOfKeyPath(b,sortOnKey);});
                   break;
                 case 'string':
                     if (isNumeric(valueOfKeyPath(arrList[0],sortOnKey))) {
-                      sortedArrList = asc? arrList.sort(function(a,b){return (valueOfKeyPath(a,sortOnKey)*1)-(valueOfKeyPath(b,sortOnKey)*1);})
-                                         : arrList.sort(function(a,b){return (valueOfKeyPath(b,sortOnKey)*1)-(valueOfKeyPath(a,sortOnKey)*1);});
+                      sortedArrList = arrList.sort(function(a,b){return (valueOfKeyPath(a,sortOnKey)*1)-(valueOfKeyPath(b,sortOnKey)*1);});
                     } else {
-                      sortedArrList = asc? arrList.sort(function(a,b){return strCompare(valueOfKeyPath(a,sortOnKey),valueOfKeyPath(b,sortOnKey));})
-                                         : arrList.sort(function(a,b){return strCompare(valueOfKeyPath(b,sortOnKey),valueOfKeyPath(a,sortOnKey));});
+                      sortedArrList = arrList.sort(function(a,b){return strCompare(valueOfKeyPath(a,sortOnKey),valueOfKeyPath(b,sortOnKey));});
                     }
                   break;
                 case 'boolean':
-                      sortedArrList = asc? arrList.sort(function(a,b){return strCompare(valueOfKeyPath(a,sortOnKey),valueOfKeyPath(b,sortOnKey));})
-                                         : arrList.sort(function(a,b){return strCompare(valueOfKeyPath(b,sortOnKey),valueOfKeyPath(a,sortOnKey));});
+                      sortedArrList = arrList.sort(function(a,b){return strCompare(valueOfKeyPath(a,sortOnKey),valueOfKeyPath(b,sortOnKey));});
                   break;
                 default:
                     sortedArrList = arrList;
@@ -1017,17 +1035,20 @@
             break;
         }
       }
+      if (!asc) {
+        sortedArrList = sortedArrList.reverse();
+      }
     }
-    if (isBlockCall(lastParam)) {
-      return (sortedArrList.length)? lastParam.fn(sortedArrList) : lastParam.inverse(arrList);
+
+    if (isBlockCall(helperOptions)) {
+      return (sortedArrList.length)? helperOptions.fn(sortedArrList) : helperOptions.inverse(arrList);
     } else {
       return sortedArrList;
     }
   }
 
-
   function _join(){
-    var lastParam  = _Array_.pop.call(arguments),
+    var helperOptions  = _Array_.pop.call(arguments),
         joinResult;
 
     function append(arg) {
@@ -1086,27 +1107,26 @@
     _Array_.forEach.call(arguments, function(arg){
       append(arg);
     });
-    if (isBlockCall(lastParam)) {
-      return lastParam.fn(joinResult);
+    if (isBlockCall(helperOptions)) {
+      return helperOptions.fn(joinResult);
     } else {
       return joinResult;
     }
   }
 
   function _joinWith(){
-    var lastParam   = _Array_.pop.call(arguments),
+    var helperOptions   = _Array_.pop.call(arguments),
         joinWithStr = _Array_.shift.call(arguments),
         joinResult  = _Array_.join.call(arguments, joinWithStr);
-    if (isBlockCall(lastParam)) {
-      return lastParam.fn(joinResult);
+    if (isBlockCall(helperOptions)) {
+      return helperOptions.fn(joinResult);
     } else {
       return joinResult;
     }
   }
 
-
   function _json(){
-    var lastParam = _Array_.pop.call(arguments),
+    var helperOptions = _Array_.pop.call(arguments),
         jsonStr   = _Array_.shift.call(arguments),
         jsonObj   = {},
         jsonArgs  = _Array_.splice.call(arguments,0);
@@ -1122,8 +1142,8 @@
       });
     }
 
-    if (isBlockCall(lastParam)) {
-      return lastParam.fn(jsonObj);
+    if (isBlockCall(helperOptions)) {
+      return helperOptions.fn(jsonObj);
     } else {
       return jsonObj;
     }
