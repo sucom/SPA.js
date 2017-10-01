@@ -31,6 +31,7 @@
  * ===========================================================================
  */
 ;(function(){
+    var _Array_ = Array.prototype;
 
   /**
    *
@@ -161,8 +162,6 @@
       console.error('missing argument(s)');
       throw new Error('missing argument(s)');
     }
-
-    var _Array_ = Array.prototype;
 
     //extract injected handlebars options in param and process
     var options = _Array_.splice.call(arguments, arguments.length - 1, 1)[0],
@@ -710,9 +709,9 @@
     return (!_isEmpty(inputVal))? ifNotEmpty : ((is(ifEmpty, 'object') && (ifEmpty['name'] == ':ifNotEmpty'))? inputVal : ifEmpty);
   }
 
-  function _getByIndexOrKey(arrOrObj, indexOrKey){
+  function _getByIndexOrKey(arrOrObj, indexOrKeyPath){
     var lastParam = arguments[arguments.length-1],
-      retValue = (_is(arrOrObj, 'array|object'))? arrOrObj[indexOrKey] : arrOrObj;
+      retValue = (_is(arrOrObj, 'array|object'))? valueOfKeyPath(arrOrObj, indexOrKeyPath) : arrOrObj;
     if (isBlockCall(lastParam)) {
       return (typeof retValue != 'undefined')? lastParam.fn(retValue) : lastParam.inverse(retValue);
     } else {
@@ -793,7 +792,7 @@
     , vKey='', tKey='', vtSplit='', useIndex4Val;
 
     if (is(optStr, 'string')){
-      _splitString(optStr).forEach(function(optKeyVal){
+      _splitString(optStr, ';').forEach(function(optKeyVal){
         var optKV = optKeyVal.split(':');
         opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
       });
@@ -914,6 +913,30 @@
     return (chkResult? '' : selected);
   }
 
+  function isNumeric(xStr) {
+    if (is(xStr, 'number')) {
+      return true;
+    } else if (is(xStr, 'string')) {
+      var nonNumericChars = xStr.replace(/[0-9]/g, '').trim();
+      return (xStr.length>0 && (nonNumericChars == '' || (xStr.length>1 && nonNumericChars == '.')));
+    } else {
+      return false;
+    }
+  }
+
+  function toDottedPath(srcStr){
+    return _trimStr((srcStr||"").replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.'), ("\\."));
+  }
+
+  function valueOfKeyPath(obj, pathStr, def) {
+    for (var i = 0, path = toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
+      if (!obj || typeof obj == "undefined") return def;
+      obj = obj[path[i]];
+    }
+    if (typeof obj == "undefined") return def;
+    return obj;
+  }
+
   function _sort(arrList, optStr){
     var lastParam = arguments[arguments.length-1],
       sortedArrList = [],
@@ -921,36 +944,12 @@
       asc = true,
       sortOnKey = '';
 
-    function isNumeric(xStr) {
-      if (is(xStr, 'number')) {
-        return true;
-      } else if (is(xStr, 'string')) {
-        var nonNumericChars = xStr.replace(/[0-9]/g, '').trim();
-        return (xStr.length>0 && (nonNumericChars == '' || (xStr.length>1 && nonNumericChars == '.')));
-      } else {
-        return false;
-      }
-    }
-
-    function toDottedPath(srcStr){
-      return _trimStr((srcStr||"").replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.'), ("\\."));
-    }
-
-    function valueOfKeyPath(obj, pathStr, def) {
-      for (var i = 0, path = toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
-        if (!obj || typeof obj == "undefined") return def;
-        obj = obj[path[i]];
-      }
-      if (typeof obj == "undefined") return def;
-      return obj;
-    }
-
     function strCompare(strA, strB){
       return (strA < strB)? -1 : ( (strA > strB)? 1 : 0 );
     }
 
     if (is(optStr, 'string')) {
-      _splitString(optStr).forEach(function(optKeyVal){
+      _splitString(optStr, ';').forEach(function(optKeyVal){
         var optKV = optKeyVal.split(':');
         opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
       });
@@ -1026,6 +1025,191 @@
     }
   }
 
+
+  function _join(){
+    var lastParam  = _Array_.pop.call(arguments),
+        joinResult;
+
+    function append(arg) {
+      if (!is(arg, 'undefined|null')) {
+        switch (of(joinResult)) {
+          case 'undefined':
+          case 'null':
+            joinResult = arg;
+            break;
+          case 'array': //concat or push
+            switch(of(arg)){
+              case 'array':
+                joinResult = joinResult.concat(arg);
+                break;
+              default:
+                joinResult.push(arg);
+                break;
+            }
+            break;
+          case 'object': //merge
+            switch(of(arg)){
+              case 'object':
+                Object.keys(arg).forEach(function(key){
+                  joinResult[key] = arg[key];
+                });
+                break;
+              default:
+                if (joinResult.hasOwnProperty('__joined__')) {
+                  joinResult['__joined__'].push(arg);
+                } else {
+                  joinResult['__joined__'] = [arg];
+                };
+                break;
+            }
+            break;
+          default:
+            //may be string, number, boolean
+            switch(of(arg)){
+              case 'array':
+                if (arg.length)
+                  joinResult += arg.join();
+                break;
+              case 'object':
+                if (Object.keys(arg).length)
+                  joinResult += JSON.stringify(arg);
+                break;
+              default:
+                joinResult += ''+arg;
+                break;
+            }
+            break;
+        }
+      }
+    }
+
+    _Array_.forEach.call(arguments, function(arg){
+      append(arg);
+    });
+    if (isBlockCall(lastParam)) {
+      return lastParam.fn(joinResult);
+    } else {
+      return joinResult;
+    }
+  }
+
+  function _joinWith(){
+    var lastParam   = _Array_.pop.call(arguments),
+        joinWithStr = _Array_.shift.call(arguments),
+        joinResult  = _Array_.join.call(arguments, joinWithStr);
+    if (isBlockCall(lastParam)) {
+      return lastParam.fn(joinResult);
+    } else {
+      return joinResult;
+    }
+  }
+
+
+  function _json(){
+    var lastParam = _Array_.pop.call(arguments),
+        jsonStr   = _Array_.shift.call(arguments),
+        jsonObj   = {},
+        jsonArgs  = _Array_.splice.call(arguments,0);
+
+    if (is(jsonStr, 'string')) {
+      _splitString(jsonStr, ';').forEach(function(optKeyVal){
+        var jsonKey = _getLeftStr(optKeyVal, ':').trim(),
+            jsonVal = _getRightStr(optKeyVal, ':').trim();
+        if (jsonKey) {
+          jsonVal = strToNative(jsonVal);
+          jsonObj[jsonKey] = jsonVal;
+        }
+      });
+    }
+
+    if (isBlockCall(lastParam)) {
+      return lastParam.fn(jsonObj);
+    } else {
+      return jsonObj;
+    }
+
+    function strToNative(strValue) {
+      strValue = strValue.trim();
+      if (!strValue.length) {
+        return strValue;
+      };
+
+      var strValType = strValue[0],
+          retValue = strValue;
+
+      switch (true) {
+        case (strValue == 'true'):
+            retValue = !0;
+          break;
+        case (strValue == 'false'):
+            retValue = !1;
+          break;
+        case (isNumeric(strValue)):
+            retValue = strValue*1;
+          break;
+        case (strValType == '['):
+            strValue = strValue.substring(1,strValue.lastIndexOf(']'))+',';
+        case ((strValue.indexOf(',')>0) && (strValue.indexOf('{')<0)): {
+            var vArray = [];
+            (strValue.split(',')).forEach(function(aItem){
+              aItem = aItem.trim();
+              if (aItem != '') {
+                vArray.push(strToNative(aItem));
+              }
+            });
+            retValue = vArray;
+          }
+          break;
+        case (strValType == '{'): {
+            strValue = strValue.substring(1,strValue.lastIndexOf('}'));
+            var vObj = {}, inObjKey, inObjVal;
+            (strValue.split(',')).forEach(function(aItem){
+              aItem = aItem.trim();
+              inObjKey = _getLeftStr(aItem, ':').trim(),
+              inObjVal = _getRightStr(aItem, ':').trim();
+              if (inObjKey) {
+                vObj[inObjKey] = strToNative(inObjVal);
+              }
+            });
+            retValue = vObj;
+          }
+          break;
+        case ((strValType == '@') && (strValue[1] != '[')): {
+            var argIndex = strValue.substring(1, strValue.indexOf('.'));
+            if (isNumeric(argIndex)) {
+              retValue = jsonArgs[argIndex];
+              var keyPath = (strValue.indexOf('.')>0)? strValue.substr(strValue.indexOf('.')+1) : '';
+              if (keyPath && is(retValue, 'array|object')) {
+                retValue = valueOfKeyPath(retValue, keyPath);
+              }
+            }
+          }
+          break;
+      }
+
+      if (is(retValue, 'string') && retValue.indexOf('@[')>=0) {
+        var vRefPatterns = retValue.match(/(@\[\s*(.*?)\s*])/g),
+            vRefPath,argIdx,repValue,kPath;
+        if (vRefPatterns) {
+          _.forEach(vRefPatterns, function(vRefPathPattern){
+            vRefPath = vRefPathPattern.replace(/@\[/,'').replace(/]/,'');
+            argIdx   = vRefPath.substring(0, vRefPath.indexOf('.'));
+            repValue = '';
+            if (isNumeric(argIdx)) {
+              repValue = jsonArgs[argIdx];
+              kPath  = (vRefPath.indexOf('.')>0)? vRefPath.substr(vRefPath.indexOf('.')+1) : '';
+              if (kPath && is(repValue, 'array|object')) {
+                repValue = valueOfKeyPath(repValue, kPath);
+              }
+            }
+            retValue = retValue.replace((new RegExp(vRefPathPattern.replace(/\[/, '\\['), 'g')), repValue);
+          });
+        }
+      }
+      return retValue;
+    }
+  }
+
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
       ':'              : _hbjshelper_, //+Block
@@ -1043,6 +1227,9 @@
       ':each'          : _each,
       ':split'         : _split,
       ':sort'          : _sort,
+      ':join'          : _join,
+      ':joinWith'      : _joinWith,
+      ':json'          : _json,
 
       ':options'       : _selectOptions,
       ':checkedIf'     : _checkedIf,

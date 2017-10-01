@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.8.0';
+  spa.VERSION = '2.9.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -5430,8 +5430,18 @@ var isSpaHashRouteOn=false;
 
               /* {$}                  ==> app.thisComponentName.
                * {$someComponentName} ==> app.someComponentName.
+               * {@}                  ==> app.thisComponentName.
+               * {@someComponentName} ==> app.someComponentName.
                */
-              var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
+              var componentRefs = templateContentToBindAndRender.match(/({\s*\@(.*?)\s*})/g);
+              if (componentRefs) {
+                _.forEach(componentRefs, function(cRef){
+                  templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef, 'g')),
+                    cRef.replace(/{\s*\@this|{\s*\@/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                });
+              }
+
+              componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
               if (componentRefs) {
                 _.forEach(componentRefs, function(cRef){
                   templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
