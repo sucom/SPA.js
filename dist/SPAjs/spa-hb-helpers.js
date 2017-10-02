@@ -768,8 +768,48 @@
     }
   }
 
+  function getFunction(fnName, helperOptions) {
+    var retFn;
+    if (is(fnName, 'string')) {
+      fnName = fnName.trim();
+      if (fnName) {
+              /* {$}                  ==> app.thisComponentName.
+               * {$someComponentName} ==> app.someComponentName.
+               */
+        var thisAppCompDot = 'app.'+valueOfKeyPath(helperOptions,'data.root._this_.componentName')+'.';
+        fnName = fnName
+                .replace('{$}', thisAppCompDot)
+                .replace('}', '')
+                .replace('{$', 'app.')
+                .replace(/\.\./g, '.');
+        if (fnName) {
+          retFn = valueOfKeyPath(window, fnName);
+          if (!is(retFn, 'function')) retFn = undefined;
+        }
+      }
+    }
+    return retFn;
+  }
+
+  function _fnCall() {
+    var helperOptions = _Array_.pop.call(arguments),
+        fnName  = _Array_.shift.call(arguments),
+        fn2call = getFunction(fnName, helperOptions),
+        fnCallResponse;
+    if (fn2call) fnCallResponse = fn2call.apply(undefined, arguments);
+    if (isBlockCall(helperOptions)) {
+      if (is(fnCallResponse, 'undefined')) {
+        return helperOptions.inverse(fnCallResponse);
+      } else {
+        return helperOptions.fn(fnCallResponse);
+      }
+    } else {
+      return fnCallResponse;
+    }
+  }
+
   /*
-   * filterFn: String functionName
+   * fnFilter: String functionName
    * '@.fnName'          ==> invokes current component's fnName
    * '@compName.fnName'  ==> invokes compName's fnName
    * 'fnName'            ==> invokes fnName in window scope
@@ -777,22 +817,16 @@
   function _each(arrOrObj, itemAs) {
     var helperOptions = arguments[arguments.length-1],
       retValue = '',
-      opt = {sortOn:'',sortBy:'',splitBy:',',alias:'',filterFn:''},
+      opt = {sortOn:'',sortBy:'',splitBy:',',alias:'',fnFilter:'',fnEmpty:'',fnEnd:'',fnError:''},
       inLoop=!1, loopCount=0,
-      filterFn;
+      fnFilter, fnEmpty, fnEnd, fnError;
 
     if (hasHash(helperOptions)) {
       opt = getHash(helperOptions, opt);
-      if (opt['filterFn']) {
-        var filterFnName = opt['filterFn'];
-        filterFnName = filterFnName
-                       .replace('@.', 'app.'+valueOfKeyPath(helperOptions,'data.root._this_.componentName')+'.')
-                       .replace('@', 'app.');
-        if (filterFnName) {
-          filterFn = valueOfKeyPath(window, filterFnName);
-          if (!is(filterFn, 'function')) filterFn = undefined;
-        }
-      };
+      fnFilter = getFunction(opt['fnFilter'], helperOptions);
+      fnEmpty  = getFunction(opt['fnEmpty'], helperOptions);
+      fnEnd    = getFunction(opt['fnEnd'], helperOptions);
+      fnError  = getFunction(opt['fnError'], helperOptions);
     }
 
     if (isBlockCall(helperOptions)) {
@@ -815,32 +849,41 @@
                 context;
             inLoop=!0;
             Object.keys(arrOrObj).forEach(function (item) {
+              opt['key'] = item;
               context = (valAlias)? {} : arrOrObj[item];
               if (valAlias){
                 if (valAlias) context[valAlias] = arrOrObj[item];
                 if (keyAlias) context[keyAlias] = item;
               }
 
-              if (filterFn) {
-                if (filterFn.call(undefined, context)) {
-                  loopCount++;
-                  retValue += helperOptions.fn(context);
+              if (fnFilter) {
+                if (fnFilter.call(undefined, context)) {
+                  opt['index'] = loopCount++;
+                  retValue += helperOptions.fn(context, {data: opt});
                 }
               } else {
-                loopCount++;
-                retValue += helperOptions.fn(context);
+                opt['index'] = loopCount++;
+                retValue += helperOptions.fn(context, {data: opt});
               }
             });
 
           }
           break;
         default:
+          if (fnError) fnError.call(undefined, arrOrObj);
           retValue += helperOptions.inverse(arrOrObj);
           break;
       }
-      if (inLoop && !loopCount) {
-        retValue += helperOptions.inverse(arrOrObj);
+
+      if (inLoop) {
+        if (loopCount) {
+          if (fnEnd) fnEnd.call(undefined, arrOrObj);
+        } else {
+          if (fnEmpty) fnEmpty.call(undefined, arrOrObj);
+          retValue += helperOptions.inverse(arrOrObj);
+        }
       }
+
       return retValue;
 
     } else {
@@ -849,12 +892,19 @@
   }
 
   function _selectOptions(arrOrObj, optStr){
-    var sOptions = ''
+    var helperOptions = arguments[arguments.length-1]
+    , sOptions = ''
     , oIndex = -1
-    , opt = {value:'',text:'',value_text:'',splitBy:',',vtSplit:'',selIndex:'',selValue:'',selText:''}
+    , opt = {value:'',text:'',value_text:'',splitBy:',',vtSplit:''
+            ,sortOn:'',sortBy:''
+            ,fnFilter:'',fnEmpty:'',fnEnd:''
+            ,selIndex:'',selValue:'',selText:''}
     , selIdxLst=[], selValLst=[], selTxtLst=[]
     , selByIdx, selByVal, selByTxt
-    , vKey='', tKey='', vtSplit='', useIndex4Val;
+    , sortOn, sortBy
+    , fnFilter, fnEmpty, fnEnd
+    , vKey='', tKey='', vtSplit='', useIndex4Val
+    , optionsArray = [];
 
     if (hasHash(helperOptions)) {
       opt = getHash(helperOptions, opt);
@@ -865,9 +915,9 @@
       });
     }
 
-    selIdxLst = _splitString(opt['selIndex']);
-    selValLst = _splitString(opt['selValue']);
-    selTxtLst = _splitString(opt['selText']);
+    selIdxLst = opt['selIndex']? _splitString(opt['selIndex']) : [];
+    selValLst = opt['selValue']? _splitString(opt['selValue']) : [];
+    selTxtLst = opt['selText']?  _splitString(opt['selText']) : [];
 
     selByIdx = (selIdxLst.length);
     selByVal = (selValLst.length);
@@ -878,15 +928,27 @@
     vtSplit = (opt['vtSplit']||'').replace(/colon/gi,':');
     useIndex4Val = (vKey.toLowerCase()=='index');
 
-    function option(value, text){
-      oIndex++;
-      return '<option value="'+value+'" '+(isSelected(value, text)? 'selected' : '')+'>'+text+'</option>';
+    sortOn   = opt['sortOn'].trim();
+    sortBy   = opt['sortBy'].trim();
+    if (sortBy && !sortOn) sortOn = 'text';
+    if (sortOn && !sortBy) opt['sortBy'] = 'asc';
+
+    fnFilter = getFunction(opt['fnFilter'], helperOptions);
+    fnEmpty  = getFunction(opt['fnEmpty'], helperOptions);
+    fnEnd    = getFunction(opt['fnEnd'], helperOptions);
+
+    function addToList(val, txt){
+      optionsArray.push({value:val, text:txt});
     }
 
     function isSelected(oValue, oText) {
       return ( (selByIdx && selIdxLst.indexOf(''+oIndex)>=0)
             || (selByVal && selValLst.indexOf(''+oValue)>=0)
             || (selByTxt && selTxtLst.indexOf(''+oText)>=0) );
+    }
+    function option(value, text){
+      oIndex++;
+      return '<option value="'+value+'" '+(isSelected(value, text)? 'selected' : '')+'>'+text+'</option>';
     }
 
     if (is(arrOrObj, 'string')) {
@@ -897,7 +959,8 @@
       case 'object':
           //{'01': 'Jan', '02':'Feb', '03':'Mar'}
           Object.keys(arrOrObj).forEach(function (key) {
-            sOptions += option(key, arrOrObj[key]);
+            //sOptions += option(key, arrOrObj[key]);
+            addToList(key, arrOrObj[key]);
           });
         break;
       case 'array':
@@ -905,52 +968,86 @@
           switch(of(oItem)) {
             //[ {code:'01', name:'Jan'}, {code:'02', name:'Feb'}, {code:'03', name:'Mar'} ]
             //[ {'01': 'Jan'}, {'02': 'Feb'}, {'03': 'Mar'} ]
-            case 'object':
-              var oItemKeys = Object.keys(oItem);
-              if (vKey && tKey) {
-                sOptions += option(oItem[vKey], oItem[tKey]);
-              } else if (oItemKeys.length==1) {
-                oItemKeys.forEach(function (key) {
-                  sOptions += option(key, oItem[key]);
-                });
+            case 'object': {
+                var oItemKeys = Object.keys(oItem);
+                if (vKey && tKey) {
+                  addToList(oItem[vKey], oItem[tKey]);
+                } else if (oItemKeys.length==1) {
+                  oItemKeys.forEach(function (key) {
+                    addToList(key, oItem[key]);
+                  });
+                }
               }
               break;
 
-            case 'string' :
-              if (useIndex4Val) {
-                  sOptions += option(idx, oItem);
-                break;
-              } else {
-                if (vtSplit) {
-                  oItem=oItem.split(vtSplit);
+            case 'string' : {
+                if (useIndex4Val) {
+                    addToList(idx, oItem);
+                  break;
                 } else {
-                  oItem = [oItem];
-                }
-              }
-              //fall through 'array'
-
-            case 'array' :
-                if (vKey && tKey) {
-                  sOptions += option(oItem[vKey], oItem[tKey]);
-                } else {
-                  if (oItem.length == 1) {
-                    sOptions += option(oItem[0], oItem[0]);
-                  } else if (oItem.length > 1) {
-                    sOptions += option(oItem[0], oItem[1]);
+                  if (vtSplit) {
+                    oItem=oItem.split(vtSplit);
+                  } else {
+                    oItem = [oItem];
                   }
                 }
+              }
+              //no break; fall through case 'array'
+            case 'array' : {
+                if (vKey && tKey) {
+                  addToList(oItem[vKey], oItem[tKey]);
+                } else {
+                  if (oItem.length == 1) {
+                    addToList(oItem[0], oItem[0]);
+                  } else if (oItem.length > 1) {
+                    addToList(oItem[0], oItem[1]);
+                  }
+                }
+              }
               break;
 
             default:
-              sOptions += option(useIndex4Val?idx : oItem, oItem);
+              addToList(useIndex4Val?idx : oItem, oItem);
               break;
           }
-
         });
         break;
     }
 
-    return new Handlebars.SafeString(sOptions);
+    if (fnFilter && optionsArray.length) {
+      var filteredOptArray = [];
+      optionsArray.forEach(function(optionObj, optIdx){
+        optionObj['index'] = optIdx;
+        var filterFnResponse = fnFilter.call(undefined, optionObj);
+        if (filterFnResponse) {
+          filteredOptArray.push( is(filterFnResponse, 'object')? filterFnResponse : optionObj );
+        }
+      });
+      optionsArray = filteredOptArray;
+    }
+
+    if (optionsArray.length) {
+      if (sortOn || sortBy) {
+          var sortOptStr = 'sortOn:'+sortOn+';sortBy:'+sortBy;
+          optionsArray = _sort(optionsArray, sortOptStr);
+      }
+      optionsArray.forEach(function(optionObj){
+        sOptions += option(optionObj.value, optionObj.text);
+      });
+      if (fnEnd) fnEnd.call(undefined, optionsArray, arrOrObj);
+    } else {
+      if (fnEmpty) fnEmpty.call(undefined, optionsArray, arrOrObj);
+    }
+
+    if (isBlockCall(helperOptions)) {
+      if (sOptions) {
+        return helperOptions.fn(new Handlebars.SafeString(sOptions));
+      } else {
+        return helperOptions.inverse(this);
+      }
+    } else {
+      return (new Handlebars.SafeString(sOptions));
+    }
   }
 
   function _checkedIf(){
@@ -1298,7 +1395,8 @@
       ':sort'          : _sort,
       ':join'          : _join,
       ':joinWith'      : _joinWith,
-      ':json'          : _json,
+      ':fn'            : _fnCall,
+      //':json'          : _json,
 
       ':options'       : _selectOptions,
       ':checkedIf'     : _checkedIf,

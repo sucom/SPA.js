@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.10.0';
+  spa.VERSION = '2.11.0';
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -91,7 +91,7 @@ var isSpaHashRouteOn=false;
   spa.noop = function(){};
 
   /* ***** lodash ***** */
-  spa['__'] = {
+  _LD_ = {
     MAX_INTEGER      : 1.7976931348623157e+308,
     MAX_SAFE_INTEGER : 9007199254740991,
     INFINITY         : 1/0,
@@ -231,7 +231,7 @@ var isSpaHashRouteOn=false;
     },
     getMapData : function _getMapData(map, key) {
       var data = map.__data__;
-      return spa.__.isKeyable(key)
+      return _LD_.isKeyable(key)
         ? data[typeof key == 'string' ? 'string' : 'hash']
         : data.map;
     },
@@ -239,43 +239,43 @@ var isSpaHashRouteOn=false;
     typedArrayTags : {}
   };
 
-  spa.__.typedArrayTags[spa.__.float32Tag]      = spa.__.typedArrayTags[spa.__.float64Tag] =
-  spa.__.typedArrayTags[spa.__.int8Tag]         = spa.__.typedArrayTags[spa.__.int16Tag]   =
-  spa.__.typedArrayTags[spa.__.int32Tag]        = spa.__.typedArrayTags[spa.__.uint8Tag]   =
-  spa.__.typedArrayTags[spa.__.uint8ClampedTag] = spa.__.typedArrayTags[spa.__.uint16Tag]  =
-  spa.__.typedArrayTags[spa.__.uint32Tag]       = true;
+  _LD_.typedArrayTags[_LD_.float32Tag]      = _LD_.typedArrayTags[_LD_.float64Tag] =
+  _LD_.typedArrayTags[_LD_.int8Tag]         = _LD_.typedArrayTags[_LD_.int16Tag]   =
+  _LD_.typedArrayTags[_LD_.int32Tag]        = _LD_.typedArrayTags[_LD_.uint8Tag]   =
+  _LD_.typedArrayTags[_LD_.uint8ClampedTag] = _LD_.typedArrayTags[_LD_.uint16Tag]  =
+  _LD_.typedArrayTags[_LD_.uint32Tag]       = true;
 
-  spa.__.typedArrayTags[spa.__.argsTag]         = spa.__.typedArrayTags[spa.__.arrayTag]  =
-  spa.__.typedArrayTags[spa.__.arrayBufferTag]  = spa.__.typedArrayTags[spa.__.boolTag]   =
-  spa.__.typedArrayTags[spa.__.dataViewTag]     = spa.__.typedArrayTags[spa.__.dateTag]   =
-  spa.__.typedArrayTags[spa.__.errorTag]        = spa.__.typedArrayTags[spa.__.funcTag]   =
-  spa.__.typedArrayTags[spa.__.mapTag]          = spa.__.typedArrayTags[spa.__.numberTag] =
-  spa.__.typedArrayTags[spa.__.objectTag]       = spa.__.typedArrayTags[spa.__.regexpTag] =
-  spa.__.typedArrayTags[spa.__.setTag]          = spa.__.typedArrayTags[spa.__.stringTag] =
-  spa.__.typedArrayTags[spa.__.weakMapTag]      = false;
+  _LD_.typedArrayTags[_LD_.argsTag]         = _LD_.typedArrayTags[_LD_.arrayTag]  =
+  _LD_.typedArrayTags[_LD_.arrayBufferTag]  = _LD_.typedArrayTags[_LD_.boolTag]   =
+  _LD_.typedArrayTags[_LD_.dataViewTag]     = _LD_.typedArrayTags[_LD_.dateTag]   =
+  _LD_.typedArrayTags[_LD_.errorTag]        = _LD_.typedArrayTags[_LD_.funcTag]   =
+  _LD_.typedArrayTags[_LD_.mapTag]          = _LD_.typedArrayTags[_LD_.numberTag] =
+  _LD_.typedArrayTags[_LD_.objectTag]       = _LD_.typedArrayTags[_LD_.regexpTag] =
+  _LD_.typedArrayTags[_LD_.setTag]          = _LD_.typedArrayTags[_LD_.stringTag] =
+  _LD_.typedArrayTags[_LD_.weakMapTag]      = false;
 
-  spa.__['baseSetToString'] = !spa.__.defineProperty
+  _LD_['baseSetToString'] = !_LD_.defineProperty
     ? function(value){return value;}
     : function(func, string) {
-        return spa.__.defineProperty(func, 'toString', {
+        return _LD_.defineProperty(func, 'toString', {
           'configurable': true,
           'enumerable': false,
-          'value': spa.__.constant(string),
+          'value': _LD_.constant(string),
           'writable': true
         });
       };
 
-  spa.__['shortOut'] = function _shortOut(func) {
+  _LD_['shortOut'] = function _shortOut(func) {
       var count = 0,
           lastCalled = 0;
 
       return function() {
         var stamp = Date.now(),
-            remaining = spa.__.HOT_SPAN - (stamp - lastCalled);
+            remaining = _LD_.HOT_SPAN - (stamp - lastCalled);
 
         lastCalled = stamp;
         if (remaining > 0) {
-          if (++count >= spa.__.HOT_COUNT) {
+          if (++count >= _LD_.HOT_COUNT) {
             return arguments[0];
           }
         } else {
@@ -285,7 +285,7 @@ var isSpaHashRouteOn=false;
       };
     };
 
-  spa.__['overRest'] = function _overRest(func, start, transform) {
+  _LD_['overRest'] = function _overRest(func, start, transform) {
       start = Math.max(start === undefined ? (func.length - 1) : start, 0);
       return function() {
         var args = arguments,
@@ -302,12 +302,12 @@ var isSpaHashRouteOn=false;
           otherArgs[index] = args[index];
         }
         otherArgs[start] = transform(array);
-        return spa.__.apply(func, this, otherArgs);
+        return _LD_.apply(func, this, otherArgs);
       };
     };
 
   //Hash
-  spa.__['Hash'] = function _Hash(entries) {
+  _LD_['Hash'] = function _Hash(entries) {
     var index = -1,
         length = entries == null ? 0 : entries.length;
     this.clear();
@@ -316,36 +316,36 @@ var isSpaHashRouteOn=false;
       this.set(entry[0], entry[1]);
     }
   };
-  spa.__['Hash'].prototype.clear = function hashClear() {
-    this.__data__ = spa.__.nativeCreate ? spa.__.nativeCreate(null) : {};
+  _LD_['Hash'].prototype.clear = function hashClear() {
+    this.__data__ = _LD_.nativeCreate ? _LD_.nativeCreate(null) : {};
     this.size = 0;
   };
-  spa.__['Hash'].prototype['delete'] = function hashDelete(key) {
+  _LD_['Hash'].prototype['delete'] = function hashDelete(key) {
     var result = this.has(key) && delete this.__data__[key];
     this.size -= result ? 1 : 0;
     return result;
   };
-  spa.__['Hash'].prototype.get = function hashGet(key) {
+  _LD_['Hash'].prototype.get = function hashGet(key) {
     var data = this.__data__;
-    if (spa.__.nativeCreate) {
+    if (_LD_.nativeCreate) {
       var result = data[key];
-      return result === spa.__.HASH_UNDEFINED ? undefined : result;
+      return result === _LD_.HASH_UNDEFINED ? undefined : result;
     }
     return spa._.hasOwnProperty.call(data, key) ? data[key] : undefined;
   };
-  spa.__['Hash'].prototype.has = function hashHas(key) {
+  _LD_['Hash'].prototype.has = function hashHas(key) {
     var data = this.__data__;
-    return spa.__.nativeCreate ? (data[key] !== undefined) : spa._.hasOwnProperty.call(data, key);
+    return _LD_.nativeCreate ? (data[key] !== undefined) : spa._.hasOwnProperty.call(data, key);
   };
-  spa.__['Hash'].prototype.set = function hashSet(key, value) {
+  _LD_['Hash'].prototype.set = function hashSet(key, value) {
     var data = this.__data__;
     this.size += this.has(key) ? 0 : 1;
-    data[key] = (spa.__.nativeCreate && value === undefined) ? spa.__.HASH_UNDEFINED : value;
+    data[key] = (_LD_.nativeCreate && value === undefined) ? _LD_.HASH_UNDEFINED : value;
     return this;
   };
 
   //ListCache
-  spa.__['ListCache'] = function _ListCache(entries) {
+  _LD_['ListCache'] = function _ListCache(entries) {
     var index = -1,
         length = entries == null ? 0 : entries.length;
 
@@ -355,11 +355,11 @@ var isSpaHashRouteOn=false;
       this.set(entry[0], entry[1]);
     }
   };
-  spa.__['ListCache'].prototype.clear     = function _listCacheClear() {
+  _LD_['ListCache'].prototype.clear     = function _listCacheClear() {
       this.__data__ = [];
       this.size = 0;
     };
-  spa.__['ListCache'].prototype['delete'] = function _listCacheDelete(key) {
+  _LD_['ListCache'].prototype['delete'] = function _listCacheDelete(key) {
       var data = this.__data__,
           index = spa._.assocIndexOf(data, key);
 
@@ -370,21 +370,21 @@ var isSpaHashRouteOn=false;
       if (index == lastIndex) {
         data.pop();
       } else {
-        spa.__.splice.call(data, index, 1);
+        _LD_.splice.call(data, index, 1);
       }
       --this.size;
       return true;
     };
-  spa.__['ListCache'].prototype.get       = function _listCacheGet(key) {
+  _LD_['ListCache'].prototype.get       = function _listCacheGet(key) {
       var data = this.__data__,
           index = spa._.assocIndexOf(data, key);
 
       return index < 0 ? undefined : data[index][1];
     };
-  spa.__['ListCache'].prototype.has       = function _listCacheHas(key) {
+  _LD_['ListCache'].prototype.has       = function _listCacheHas(key) {
       return spa._.assocIndexOf(this.__data__, key) > -1;
     };
-  spa.__['ListCache'].prototype.set       = function _listCacheSet(key, value) {
+  _LD_['ListCache'].prototype.set       = function _listCacheSet(key, value) {
       var data = this.__data__,
           index = spa._.assocIndexOf(data, key);
 
@@ -398,37 +398,37 @@ var isSpaHashRouteOn=false;
     };
 
   //Stack
-  spa.__['Stack'] = function _Stack(entries) {
-      var data = this.__data__ = new spa.__.ListCache(entries);
+  _LD_['Stack'] = function _Stack(entries) {
+      var data = this.__data__ = new _LD_.ListCache(entries);
       this.size = data.size;
     };
-  spa.__['Stack'].prototype.clear = function stackClear() {
-    this.__data__ = new spa.__.ListCache;
+  _LD_['Stack'].prototype.clear = function stackClear() {
+    this.__data__ = new _LD_.ListCache;
     this.size = 0;
   };
-  spa.__['Stack'].prototype['delete'] = function _stackDelete(key) {
+  _LD_['Stack'].prototype['delete'] = function _stackDelete(key) {
     var data = this.__data__,
         result = data['delete'](key);
 
     this.size = data.size;
     return result;
   };
-  spa.__['Stack'].prototype.get = function _stackGet(key) {
+  _LD_['Stack'].prototype.get = function _stackGet(key) {
     return this.__data__.get(key);
   };
-  spa.__['Stack'].prototype.has = function _stackHas(key) {
+  _LD_['Stack'].prototype.has = function _stackHas(key) {
     return this.__data__.has(key);
   };
-  spa.__['Stack'].prototype.set = function _stackSet(key, value) {
+  _LD_['Stack'].prototype.set = function _stackSet(key, value) {
     var data = this.__data__;
-    if (data instanceof spa.__.ListCache) {
+    if (data instanceof _LD_.ListCache) {
       var pairs = data.__data__;
-      if (!spa.__.Map || (pairs.length < spa.__.LARGE_ARRAY_SIZE - 1)) {
+      if (!_LD_.Map || (pairs.length < _LD_.LARGE_ARRAY_SIZE - 1)) {
         pairs.push([key, value]);
         this.size = ++data.size;
         return this;
       }
-      data = this.__data__ = new spa.__.MapCache(pairs);
+      data = this.__data__ = new _LD_.MapCache(pairs);
     }
     data.set(key, value);
     this.size = data.size;
@@ -436,7 +436,7 @@ var isSpaHashRouteOn=false;
   };
 
   //MapCache
-  spa.__['MapCache'] = function _MapCache(entries) {
+  _LD_['MapCache'] = function _MapCache(entries) {
     var index = -1,
         length = entries == null ? 0 : entries.length;
     this.clear();
@@ -445,27 +445,27 @@ var isSpaHashRouteOn=false;
       this.set(entry[0], entry[1]);
     }
   };
-  spa.__['MapCache'].prototype.clear = function _mapCacheClear() {
+  _LD_['MapCache'].prototype.clear = function _mapCacheClear() {
     this.size = 0;
     this.__data__ = {
-      'hash'  : new spa.__.Hash,
-      'map'   : new (spa.__.Map || spa.__.ListCache),
-      'string': new spa.__.Hash
+      'hash'  : new _LD_.Hash,
+      'map'   : new (_LD_.Map || _LD_.ListCache),
+      'string': new _LD_.Hash
     };
   };
-  spa.__['MapCache'].prototype['delete'] = function _mapCacheDelete(key) {
-    var result = spa.__.getMapData(this, key)['delete'](key);
+  _LD_['MapCache'].prototype['delete'] = function _mapCacheDelete(key) {
+    var result = _LD_.getMapData(this, key)['delete'](key);
     this.size -= result ? 1 : 0;
     return result;
   };
-  spa.__['MapCache'].prototype.get = function _mapCacheGet(key) {
-    return spa.__.getMapData(this, key).get(key);
+  _LD_['MapCache'].prototype.get = function _mapCacheGet(key) {
+    return _LD_.getMapData(this, key).get(key);
   };
-  spa.__['MapCache'].prototype.has = function _mapCacheHas(key) {
-    return spa.__.getMapData(this, key).has(key);
+  _LD_['MapCache'].prototype.has = function _mapCacheHas(key) {
+    return _LD_.getMapData(this, key).has(key);
   };
-  spa.__['MapCache'].prototype.set = function _mapCacheSet(key, value) {
-    var data = spa.__.getMapData(this, key),
+  _LD_['MapCache'].prototype.set = function _mapCacheSet(key, value) {
+    var data = _LD_.getMapData(this, key),
         size = data.size;
     data.set(key, value);
     this.size += data.size == size ? 0 : 1;
@@ -473,32 +473,32 @@ var isSpaHashRouteOn=false;
   };
 
   //SetCache
-  spa.__['SetCache'] = function _SetCache(values) {
+  _LD_['SetCache'] = function _SetCache(values) {
     var index = -1,
         length = values == null ? 0 : values.length;
-    this.__data__ = new spa.__.MapCache;
+    this.__data__ = new _LD_.MapCache;
     while (++index < length) {
       this.add(values[index]);
     }
   };
-  spa.__['SetCache'].prototype.add = spa.__['SetCache'].prototype.push = function _setCacheAdd(value) {
-    this.__data__.set(value, spa.__.HASH_UNDEFINED);
+  _LD_['SetCache'].prototype.add = _LD_['SetCache'].prototype.push = function _setCacheAdd(value) {
+    this.__data__.set(value, _LD_.HASH_UNDEFINED);
     return this;
   };
-  spa.__['SetCache'].prototype.has = function _setCacheHas(value) {
+  _LD_['SetCache'].prototype.has = function _setCacheHas(value) {
     return this.__data__.has(value);
   };
 
-  spa.__['createSet'] = !(spa.__.Set && (1 / spa.__.setToArray(new spa.__.Set([,-0]))[1]) == spa.__.INFINITY) ? function(){} : function(values) {
-      return new spa.__.Set(values);
+  _LD_['createSet'] = !(_LD_.Set && (1 / _LD_.setToArray(new _LD_.Set([,-0]))[1]) == _LD_.INFINITY) ? function(){} : function(values) {
+      return new _LD_.Set(values);
     };
 
-  spa.__['getSymbols'] = !spa.__.nativeGetSymbols ? spa.__.stubArray : function(object) {
+  _LD_['getSymbols'] = !_LD_.nativeGetSymbols ? _LD_.stubArray : function(object) {
       if (object == null) {
         return [];
       }
       object = Object(object);
-      return spa._.arrayFilter(spa.__.nativeGetSymbols(object), function(symbol) {
+      return spa._.arrayFilter(_LD_.nativeGetSymbols(object), function(symbol) {
         return spa._.propertyIsEnumerable.call(object, symbol);
       });
     };
@@ -506,7 +506,7 @@ var isSpaHashRouteOn=false;
   //--------------------------------------------------
   spa['_'] = {
       isString       : function _isString(value) {
-        return typeof value == 'string' || (!spa._.isArray(value) && spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.stringTag);
+        return typeof value == 'string' || (!spa._.isArray(value) && spa._.isObjectLike(value) && spa._.baseGetTag(value) == _LD_.stringTag);
       }
     , isObject       : function _isObject(value) {
         var type = typeof value;
@@ -522,24 +522,24 @@ var isSpaHashRouteOn=false;
         return (Object.prototype.toString.call(value) === '[object Array]');
       }
     , isBoolean      : function _isBoolean(value) {
-        return (value === true) || (value === false) || (spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.boolTag);
+        return (value === true) || (value === false) || (spa._.isObjectLike(value) && spa._.baseGetTag(value) == _LD_.boolTag);
       }
     , isNumber       : function _isNumber(value) {
-        return (typeof value == 'number') || (spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.numberTag);
+        return (typeof value == 'number') || (spa._.isObjectLike(value) && spa._.baseGetTag(value) == _LD_.numberTag);
       }
     , isLength       : function _isLength(value) {
       return typeof value == 'number' &&
-        value > -1 && value % 1 == 0 && value <= spa.__.MAX_SAFE_INTEGER;
+        value > -1 && value % 1 == 0 && value <= _LD_.MAX_SAFE_INTEGER;
     }
     , isIndex        : function _isIndex(value, length) {
-        length = length == null ? spa.__.MAX_SAFE_INTEGER : length;
+        length = length == null ? _LD_.MAX_SAFE_INTEGER : length;
         return !!length &&
-          (typeof value == 'number' || spa.__.reIsUint.test(value)) &&
+          (typeof value == 'number' || _LD_.reIsUint.test(value)) &&
           (value > -1 && value % 1 == 0 && value < length);
       }
 
     , isPlainObject     : function _isPlainObject(value) {
-        if (!spa._.isObjectLike(value) || spa._.baseGetTag(value) != spa.__.objectTag) {
+        if (!spa._.isObjectLike(value) || spa._.baseGetTag(value) != _LD_.objectTag) {
           return false;
         }
         var proto = spa._.getPrototype(value);
@@ -577,23 +577,23 @@ var isSpaHashRouteOn=false;
       if (type == 'number' || type == 'symbol' || type == 'boolean' || value == null ) {
         return true;
       }
-      return spa.__.reIsPlainProp.test(value) || !spa.__.reIsDeepProp.test(value) || (object != null && value in Object(object));
+      return _LD_.reIsPlainProp.test(value) || !_LD_.reIsDeepProp.test(value) || (object != null && value in Object(object));
     }
     , isPrototype       : function _isPrototype(value) {
         var Ctor = value && value.constructor,
-            proto = (typeof Ctor == 'function' && Ctor.prototype) || spa.__.objectProto;
+            proto = (typeof Ctor == 'function' && Ctor.prototype) || _LD_.objectProto;
         return value === proto;
       }
     , isSymbol          : function _isSymbol(value) {
         return typeof value == 'symbol' ||
-          (spa._.isObjectLike(value) && spa._.getTag(value) == spa.__.symbolTag);
+          (spa._.isObjectLike(value) && spa._.getTag(value) == _LD_.symbolTag);
       }
     , isTypedArray      : function _isTypedArray(value) {
         return spa._.isObjectLike(value) &&
-          spa._.isLength(value.length) && !!spa.__.typedArrayTags[spa._.getTag(value)];
+          spa._.isLength(value.length) && !!_LD_.typedArrayTags[spa._.getTag(value)];
       }
     , isFlattenable     : function _isFlattenable(value) {
-        return spa._.isArray(value) || !!(spa.__.spreadableSymbol && value && value[spa.__.spreadableSymbol]);
+        return spa._.isArray(value) || !!(_LD_.spreadableSymbol && value && value[_LD_.spreadableSymbol]);
       }
     , isIterateeCall    : function _isIterateeCall(value, index, object) {
         if (!spa._.isObject(object)) {
@@ -609,13 +609,13 @@ var isSpaHashRouteOn=false;
         return false;
       }
 
-    , isBuffer             : spa.__.nativeIsBuffer || spa.__.stubFalse
-    , nativeObjectToString : spa.__.objectProto.toString
-    , propertyIsEnumerable : spa.__.objectProto.propertyIsEnumerable
-    , hasOwnProperty       : spa.__.objectProto.hasOwnProperty
-    , allocUnsafe          : spa.__.nativeIsBuffer ? Buffer.allocUnsafe : undefined
-    , funcToString         : spa.__.funcProto.toString
-    , objectCtorString     : spa.__.funcProto.toString.call(Object)
+    , isBuffer             : _LD_.nativeIsBuffer || _LD_.stubFalse
+    , nativeObjectToString : _LD_.objectProto.toString
+    , propertyIsEnumerable : _LD_.objectProto.propertyIsEnumerable
+    , hasOwnProperty       : _LD_.objectProto.hasOwnProperty
+    , allocUnsafe          : _LD_.nativeIsBuffer ? Buffer.allocUnsafe : undefined
+    , funcToString         : _LD_.funcProto.toString
+    , objectCtorString     : _LD_.funcProto.toString.call(Object)
 
     , objectToString     : function _objectToString(value) {
         return spa._.nativeObjectToString.call(value);
@@ -645,7 +645,7 @@ var isSpaHashRouteOn=false;
         return value !== value;
       }
     , toFinite           : function _toFinite(value) {
-        var INFINITY = spa.__.INFINITY, MAX_INTEGER = spa.__.MAX_INTEGER;
+        var INFINITY = _LD_.INFINITY, MAX_INTEGER = _LD_.MAX_INTEGER;
         if (!value) {
           return value === 0 ? value : 0;
         }
@@ -661,7 +661,7 @@ var isSpaHashRouteOn=false;
         return value;
       }
       var result = (value + '');
-      return (result == '0' && (1 / value) == -(spa.__.INFINITY)) ? '-0' : result;
+      return (result == '0' && (1 / value) == -(_LD_.INFINITY)) ? '-0' : result;
     }
     , baseToString       : function _baseToString(value) {
         // Exit early for strings to avoid a performance hit in some environments.
@@ -673,7 +673,7 @@ var isSpaHashRouteOn=false;
           return spa._.arrayMap(value, spa._.baseToString) + '';
         }
         var result = (value + '');
-        return (result == '0' && (1 / value) == -spa.__.INFINITY) ? '-0' : result;
+        return (result == '0' && (1 / value) == -_LD_.INFINITY) ? '-0' : result;
       }
     , toString           : function _toString(value) {
       return value == null ? '' : spa._.baseToString(value);
@@ -724,11 +724,11 @@ var isSpaHashRouteOn=false;
       }
     , strToPath          : function _strToPath(string) {
         var result = [];
-        if (spa.__.reLeadingDot.test(string)) {
+        if (_LD_.reLeadingDot.test(string)) {
           result.push('');
         }
-        string.replace(spa.__.rePropName, function(match, number, quote, string) {
-          result.push(quote ? string.replace(spa.__.reEscapeChar, '$1') : (number || match));
+        string.replace(_LD_.rePropName, function(match, number, quote, string) {
+          result.push(quote ? string.replace(_LD_.reEscapeChar, '$1') : (number || match));
         });
         return result;
       }
@@ -771,8 +771,8 @@ var isSpaHashRouteOn=false;
     , hasIn              : function _hasIn(object, path) {
         return object != null && spa._.hasPath(object, path, spa._.baseHasIn);
       }
-    , nativeKeys         : spa.__.overArg(Object.keys, Object)
-    , getPrototype       : spa.__.overArg(Object.getPrototypeOf, Object)
+    , nativeKeys         : _LD_.overArg(Object.keys, Object)
+    , getPrototype       : _LD_.overArg(Object.getPrototypeOf, Object)
 
     , baseTimes          : function _baseTimes(n, iteratee) {
         var index = -1,
@@ -890,42 +890,42 @@ var isSpaHashRouteOn=false;
       }
     , baseGetTag         : function _baseGetTag(value) {
         if (value == null) {
-          return value === undefined ? spa.__.undefinedTag : spa.__.nullTag;
+          return value === undefined ? _LD_.undefinedTag : _LD_.nullTag;
         }
-        return (spa.__.symToStringTag && spa.__.symToStringTag in Object(value))
+        return (_LD_.symToStringTag && _LD_.symToStringTag in Object(value))
           ? spa._.getRawTag(value)
           : spa._.objectToString(value);
       }
     , getRawTag          : function _getRawTag(value) {
-        var isOwn = spa._.hasOwnProperty.call(value, spa.__.symToStringTag),
-            tag = value[spa.__.symToStringTag];
+        var isOwn = spa._.hasOwnProperty.call(value, _LD_.symToStringTag),
+            tag = value[_LD_.symToStringTag];
 
         try {
-          value[spa.__.symToStringTag] = undefined;
+          value[_LD_.symToStringTag] = undefined;
           var unmasked = true;
         } catch (e) {}
 
         var result = spa._.nativeObjectToString.call(value);
         if (unmasked) {
           if (isOwn) {
-            value[spa.__.symToStringTag] = tag;
+            value[_LD_.symToStringTag] = tag;
           } else {
-            delete value[spa.__.symToStringTag];
+            delete value[_LD_.symToStringTag];
           }
         }
         return result;
       }
     , getTag             : function _getTag(value) {
         if (value == null) {
-          return value === undefined ? spa.__.undefinedTag : spa.__.nullTag;
+          return value === undefined ? _LD_.undefinedTag : _LD_.nullTag;
         }
-        return (spa.__.symToStringTag && spa.__.symToStringTag in Object(value))
+        return (_LD_.symToStringTag && _LD_.symToStringTag in Object(value))
           ? spa._.getRawTag(value)
           : spa._.objectToString(value);
       }
     , baseAssignValue    : function _baseAssignValue(object, key, value) {
-        if (key == '__proto__' && spa.__.defineProperty) {
-          spa.__.defineProperty(object, key, {
+        if (key == '__proto__' && _LD_.defineProperty) {
+          _LD_.defineProperty(object, key, {
             'configurable': true,
             'enumerable': true,
             'value': value,
@@ -1105,12 +1105,12 @@ var isSpaHashRouteOn=false;
         var length = array == null ? 0 : array.length;
         return length ? spa._.baseFlatten(array, 1) : [];
       }
-    , setToString        : spa.__.shortOut(spa.__.baseSetToString)
+    , setToString        : _LD_.shortOut(_LD_.baseSetToString)
     , baseRest           : function _baseRest(func, start) {
-        return spa._.setToString(spa.__.overRest(func, start, spa._.identity), func + '');
+        return spa._.setToString(_LD_.overRest(func, start, spa._.identity), func + '');
       }
     , flatRest           : function _flatRest(func) {
-        return spa._.setToString(spa.__.overRest(func, undefined, spa._.flatten), func + '');
+        return spa._.setToString(_LD_.overRest(func, undefined, spa._.flatten), func + '');
       }
 
     , baseGetAllKeys     : function _baseGetAllKeys(object, keysFunc, symbolsFunc) {
@@ -1118,10 +1118,10 @@ var isSpaHashRouteOn=false;
         return spa._.isArray(object) ? result : spa._.arrayPush(result, symbolsFunc(object));
       }
     , getAllKeys         : function _getAllKeys(object) {
-        return baseGetAllKeys(object, keys, spa.__.getSymbols);
+        return baseGetAllKeys(object, keys, _LD_.getSymbols);
       }
     , equalArrays        : function _equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
-        var isPartial = bitmask & spa.__.COMPARE_PARTIAL_FLAG,
+        var isPartial = bitmask & _LD_.COMPARE_PARTIAL_FLAG,
             arrLength = array.length,
             othLength = other.length;
 
@@ -1135,7 +1135,7 @@ var isSpaHashRouteOn=false;
         }
         var index = -1,
             result = true,
-            seen = (bitmask & spa.__.COMPARE_UNORDERED_FLAG) ? new spa.__.SetCache : undefined;
+            seen = (bitmask & _LD_.COMPARE_UNORDERED_FLAG) ? new _LD_.SetCache : undefined;
 
         stack.set(array, other);
         stack.set(other, array);
@@ -1182,7 +1182,7 @@ var isSpaHashRouteOn=false;
       }
     , equalByTag         : function _equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
         switch (tag) {
-          case spa.__.dataViewTag:
+          case _LD_.dataViewTag:
             if ((object.byteLength != other.byteLength) ||
                 (object.byteOffset != other.byteOffset)) {
               return false;
@@ -1190,36 +1190,36 @@ var isSpaHashRouteOn=false;
             object = object.buffer;
             other = other.buffer;
 
-          case spa.__.arrayBufferTag:
+          case _LD_.arrayBufferTag:
             if ((object.byteLength != other.byteLength) ||
-                !equalFunc(new spa.__.Uint8Array(object), new spa.__.Uint8Array(other))) {
+                !equalFunc(new _LD_.Uint8Array(object), new _LD_.Uint8Array(other))) {
               return false;
             }
             return true;
 
-          case spa.__.boolTag:
-          case spa.__.dateTag:
-          case spa.__.numberTag:
+          case _LD_.boolTag:
+          case _LD_.dateTag:
+          case _LD_.numberTag:
             // Coerce booleans to `1` or `0` and dates to milliseconds.
             // Invalid dates are coerced to `NaN`.
             return spa._.eq(+object, +other);
 
-          case spa.__.errorTag:
+          case _LD_.errorTag:
             return object.name == other.name && object.message == other.message;
 
-          case spa.__.regexpTag:
-          case spa.__.stringTag:
+          case _LD_.regexpTag:
+          case _LD_.stringTag:
             // Coerce regexes to strings and treat strings, primitives and objects,
             // as equal. See http://www.ecma-international.org/ecma-262/7.0/#sec-regexp.prototype.tostring
             // for more details.
             return object == (other + '');
 
-          case spa.__.mapTag:
+          case _LD_.mapTag:
             var convert = spa._.mapToArray;
 
-          case spa.__.setTag:
-            var isPartial = bitmask & spa.__.COMPARE_PARTIAL_FLAG;
-            convert || (convert = spa.__.setToArray);
+          case _LD_.setTag:
+            var isPartial = bitmask & _LD_.COMPARE_PARTIAL_FLAG;
+            convert || (convert = _LD_.setToArray);
 
             if (object.size != other.size && !isPartial) {
               return false;
@@ -1229,7 +1229,7 @@ var isSpaHashRouteOn=false;
             if (stacked) {
               return stacked == other;
             }
-            bitmask |= spa.__.COMPARE_UNORDERED_FLAG;
+            bitmask |= _LD_.COMPARE_UNORDERED_FLAG;
 
             // Recursively compare objects (susceptible to call stack limits).
             stack.set(object, other);
@@ -1237,15 +1237,15 @@ var isSpaHashRouteOn=false;
             stack['delete'](object);
             return result;
 
-          case spa.__.symbolTag:
-            if (spa.__.symbolValueOf) {
-              return spa.__.symbolValueOf.call(object) == spa.__.symbolValueOf.call(other);
+          case _LD_.symbolTag:
+            if (_LD_.symbolValueOf) {
+              return _LD_.symbolValueOf.call(object) == _LD_.symbolValueOf.call(other);
             }
         }
         return false;
       }
     , equalObjects       : function _equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
-        var isPartial = bitmask & spa.__.COMPARE_PARTIAL_FLAG,
+        var isPartial = bitmask & _LD_.COMPARE_PARTIAL_FLAG,
             objProps  = spa._.getAllKeys(object),
             objLength = objProps.length,
             othProps  = spa._.getAllKeys(other),
@@ -1414,20 +1414,20 @@ var isSpaHashRouteOn=false;
           var objValue = spa._.get(object, path);
           return (objValue === undefined && objValue === srcValue)
             ? spa._.hasIn(object, path)
-            : spa._.baseIsEqual(srcValue, objValue, spa.__.COMPARE_PARTIAL_FLAG | spa.__.COMPARE_UNORDERED_FLAG);
+            : spa._.baseIsEqual(srcValue, objValue, _LD_.COMPARE_PARTIAL_FLAG | _LD_.COMPARE_UNORDERED_FLAG);
         };
       }
     , baseIsEqualDeep     : function _baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
         var objIsArr = spa._.isArray(object),
             othIsArr = spa._.isArray(other),
-            objTag = objIsArr ? spa.__.arrayTag : spa._.getTag(object),
-            othTag = othIsArr ? spa.__.arrayTag : spa._.getTag(other);
+            objTag = objIsArr ? _LD_.arrayTag : spa._.getTag(object),
+            othTag = othIsArr ? _LD_.arrayTag : spa._.getTag(other);
 
-        objTag = objTag == spa.__.argsTag ? spa.__.objectTag : objTag;
-        othTag = othTag == spa.__.argsTag ? spa.__.objectTag : othTag;
+        objTag = objTag == _LD_.argsTag ? _LD_.objectTag : objTag;
+        othTag = othTag == _LD_.argsTag ? _LD_.objectTag : othTag;
 
-        var objIsObj = objTag == spa.__.objectTag,
-            othIsObj = othTag == spa.__.objectTag,
+        var objIsObj = objTag == _LD_.objectTag,
+            othIsObj = othTag == _LD_.objectTag,
             isSameTag = objTag == othTag;
 
         if (isSameTag && spa._.isBuffer(object)) {
@@ -1438,12 +1438,12 @@ var isSpaHashRouteOn=false;
           objIsObj = false;
         }
         if (isSameTag && !objIsObj) {
-          stack || (stack = new spa.__.Stack);
+          stack || (stack = new _LD_.Stack);
           return (objIsArr || spa._.isTypedArray(object))
             ? spa._.equalArrays(object, other, bitmask, customizer, equalFunc, stack)
             : spa._.equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
         }
-        if (!(bitmask & spa.__.COMPARE_PARTIAL_FLAG)) {
+        if (!(bitmask & _LD_.COMPARE_PARTIAL_FLAG)) {
           var objIsWrapped = objIsObj && spa._.hasOwnProperty.call(object, '__wrapped__'),
               othIsWrapped = othIsObj && spa._.hasOwnProperty.call(other, '__wrapped__');
 
@@ -1451,14 +1451,14 @@ var isSpaHashRouteOn=false;
             var objUnwrapped = objIsWrapped ? object.value() : object,
                 othUnwrapped = othIsWrapped ? other.value() : other;
 
-            stack || (stack = new spa.__.Stack);
+            stack || (stack = new _LD_.Stack);
             return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer, stack); //equalFunc: is local param
           }
         }
         if (!isSameTag) {
           return false;
         }
-        stack || (stack = new spa.__.Stack);
+        stack || (stack = new _LD_.Stack);
         return spa._.equalObjects(object, other, bitmask, customizer, equalFunc, stack);
       }
     , baseIsEqual         : function _baseIsEqual(value, other, bitmask, customizer, stack) {
@@ -1499,12 +1499,12 @@ var isSpaHashRouteOn=false;
               return false;
             }
           } else {
-            var stack = new spa.__.Stack;
+            var stack = new _LD_.Stack;
             if (customizer) {
               var result = customizer(objValue, srcValue, key, object, source, stack);
             }
             if (!(result === undefined
-                  ? spa._.baseIsEqual(srcValue, objValue, spa.__.COMPARE_PARTIAL_FLAG | spa.__.COMPARE_UNORDERED_FLAG, customizer, stack)
+                  ? spa._.baseIsEqual(srcValue, objValue, _LD_.COMPARE_PARTIAL_FLAG | _LD_.COMPARE_UNORDERED_FLAG, customizer, stack)
                   : result
                 )) {
               return false;
@@ -1517,7 +1517,7 @@ var isSpaHashRouteOn=false;
         return value !== value;
       }
     , baseIsArguments     : function _baseIsArguments(value) {
-        return spa._.isObjectLike(value) && spa._.baseGetTag(value) == spa.__.argsTag;
+        return spa._.isObjectLike(value) && spa._.baseGetTag(value) == _LD_.argsTag;
       }
     , getMatchData        : function _getMatchData(object) {
         var result = spa._.keys(object),
@@ -1625,7 +1625,7 @@ var isSpaHashRouteOn=false;
           if (length == lastIndex || index !== previous) {
             var previous = index;
             if (spa._.isIndex(index)) {
-              spa.__.splice.call(array, index, 1);
+              _LD_.splice.call(array, index, 1);
             } else {
               spa._.baseUnset(array, index);
             }
@@ -1714,9 +1714,9 @@ var isSpaHashRouteOn=false;
 
           while ((fromIndex = indexOf(seen, computed, fromIndex, comparator)) > -1) {
             if (seen !== array) {
-              spa.__.splice.call(seen, fromIndex, 1);
+              _LD_.splice.call(seen, fromIndex, 1);
             }
-            spa.__.splice.call(array, fromIndex, 1);
+            _LD_.splice.call(array, fromIndex, 1);
           }
         }
         return array;
@@ -1788,14 +1788,14 @@ var isSpaHashRouteOn=false;
           isCommon = false;
           includes = spa._.arrayIncludesWith;
         }
-        else if (length >= spa.__.LARGE_ARRAY_SIZE) {
-          var set = iteratee ? null : spa.__.createSet(array);
+        else if (length >= _LD_.LARGE_ARRAY_SIZE) {
+          var set = iteratee ? null : _LD_.createSet(array);
           if (set) {
-            return spa.__.setToArray(set);
+            return _LD_.setToArray(set);
           }
           isCommon = false;
           includes = spa._.cacheHas;
-          seen = new spa.__.SetCache;
+          seen = new _LD_.SetCache;
         }
         else {
           seen = iteratee ? [] : result;
@@ -1879,7 +1879,7 @@ var isSpaHashRouteOn=false;
 
     , initCloneObject     : function _initCloneObject(object) {
         return (typeof object.constructor == 'function' && !spa._.isPrototype(object))
-          ? spa.__.baseCreate(spa._.getPrototype(object))
+          ? _LD_.baseCreate(spa._.getPrototype(object))
           : {};
       }
     , copyObject          : function _copyObject(source, props, object, customizer) {
@@ -1919,7 +1919,7 @@ var isSpaHashRouteOn=false;
       }
     , cloneArrayBuffer    : function _cloneArrayBuffer(arrayBuffer) {
         var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-        new spa.__.Uint8Array(result).set(new spa.__.Uint8Array(arrayBuffer));
+        new _LD_.Uint8Array(result).set(new _LD_.Uint8Array(arrayBuffer));
         return result;
       }
     , cloneTypedArray     : function _cloneTypedArray(typedArray, isDeep) {
@@ -1993,7 +1993,7 @@ var isSpaHashRouteOn=false;
         }
         spa._.baseFor(source, function(srcValue, key) {
           if (spa._.isObject(srcValue)) {
-            stack || (stack = new spa.__.Stack);
+            stack || (stack = new _LD_.Stack);
             spa._.baseMergeDeep(object, source, key, srcIndex, spa._.baseMerge, customizer, stack);
           }
           else {
@@ -3297,7 +3297,7 @@ var isSpaHashRouteOn=false;
     return retValue;
   };
 
-  spa.findSafe = spa.locateSafe = spa.valueOfKeyPath = function (obj, pathStr, def) {
+  spa.findSafe = spa.locateSafe = spa.valueOfPath = function (obj, pathStr, def) {
     for (var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
       if (!obj || typeof obj == "undefined") return def;
       obj = obj[path[i]];
@@ -3465,10 +3465,8 @@ var isSpaHashRouteOn=false;
         var retObj = {}, itemKey;
         this.forEach(function(item, index){
           if (is(item, 'object')) {
-            itemKey = (key)? (is(item, 'object')? item[key] : index ) : index;
+            itemKey = (key)? (is(item, 'object')? spa.findSafe(item, key) : index ) : index;
             retObj[ itemKey ] = item;
-          } else {
-            retObj[ index ] = item;
           }
         });
         return retObj;
@@ -4495,7 +4493,7 @@ var isSpaHashRouteOn=false;
     return options;
   }
 
-  spa.component = spa.registerComponent = function(componentName, options) {
+  spa.component = spa.$ = spa.registerComponent = function(componentName, options) {
     options = options || {};
 
     if (is(componentName, 'object')) {
@@ -4521,7 +4519,7 @@ var isSpaHashRouteOn=false;
     spa.extendComponent(componentName);
   };
 
-  spa.extendComponent = spa.module = function(componentName, options) {
+  spa.extendComponent = spa.$extend = spa.module = function(componentName, options) {
     window['app'] = window['app'] || {};
     window.app[componentName] = window.app[componentName] || {};
     if (options && _.isFunction(options)) {
@@ -4538,7 +4536,7 @@ var isSpaHashRouteOn=false;
   };
 
 
-  spa.renderComponent = function (componentName, options) {
+  spa.renderComponent = spa.$render = function (componentName, options) {
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
       componentName = options['name'] || options['componentName'] || (''+spa.now());
@@ -4620,7 +4618,7 @@ var isSpaHashRouteOn=false;
     }
   };
 
-  spa.renderComponents = function () {
+  spa.renderComponents = spa.$$render = function () {
     if (arguments.length){
       var compList = arguments; //spa.renderComponents('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
@@ -5430,18 +5428,8 @@ var isSpaHashRouteOn=false;
 
               /* {$}                  ==> app.thisComponentName.
                * {$someComponentName} ==> app.someComponentName.
-               * {@}                  ==> app.thisComponentName.
-               * {@someComponentName} ==> app.someComponentName.
                */
-              var componentRefs = templateContentToBindAndRender.match(/({\s*\@(.*?)\s*})/g);
-              if (componentRefs) {
-                _.forEach(componentRefs, function(cRef){
-                  templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef, 'g')),
-                    cRef.replace(/{\s*\@this|{\s*\@/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
-                });
-              }
-
-              componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
+              var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
               if (componentRefs) {
                 _.forEach(componentRefs, function(cRef){
                   templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
