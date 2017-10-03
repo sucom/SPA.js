@@ -846,9 +846,10 @@
                 aliasNames = (useAlias)? _splitString(itemAs) : (opt['alias']? _splitString(opt['alias']) : ['', '']),
                 valAlias = (aliasNames[0]||'').trim(),
                 keyAlias = (aliasNames[1]||'').trim(),
+                desKeyName = keyAlias || 'index',
                 context;
             inLoop=!0;
-            Object.keys(arrOrObj).forEach(function (item) {
+            Object.keys(arrOrObj).forEach(function (item, aIdx) {
               opt['key'] = item;
               context = (valAlias)? {} : arrOrObj[item];
               if (valAlias){
@@ -857,12 +858,13 @@
               }
 
               if (fnFilter) {
+                opt[desKeyName+'Src'] = aIdx;
                 if (fnFilter.call(undefined, context)) {
-                  opt['index'] = loopCount++;
+                  opt[desKeyName] = loopCount++;
                   retValue += helperOptions.fn(context, {data: opt});
                 }
               } else {
-                opt['index'] = loopCount++;
+                opt[desKeyName] = loopCount++;
                 retValue += helperOptions.fn(context, {data: opt});
               }
             });
@@ -1193,6 +1195,30 @@
     }
   }
 
+  function merge() {
+    var resultObj={}, i=0, length=arguments.length;
+
+    // Merge the object into the resultObj object
+    function _merge(obj) {
+      for (var prop in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+          if (Object.prototype.toString.call(obj[prop]) === '[object Object]') {
+            resultObj[prop] = merge(resultObj[prop], obj[prop]);
+          } else {
+            resultObj[prop] = obj[prop];
+          }
+        }
+      }
+    }
+
+    // Loop through each object and conduct a merge
+    for (;i < length; i++) {
+      _merge(arguments[i]);
+    }
+
+    return resultObj;
+  };
+
   function _join(){
     var helperOptions  = _Array_.pop.call(arguments),
         joinResult;
@@ -1217,9 +1243,10 @@
           case 'object': //merge
             switch(of(arg)){
               case 'object':
-                Object.keys(arg).forEach(function(key){
-                  joinResult[key] = arg[key];
-                });
+                joinResult = merge(joinResult, arg);
+//                Object.keys(arg).forEach(function(key){
+//                  joinResult[key] = arg[key];
+//                });
                 break;
               default:
                 if (joinResult.hasOwnProperty('__joined__')) {
@@ -1271,7 +1298,7 @@
     }
   }
 
-  function _json(){
+  function _jsonify(){
     var helperOptions = _Array_.pop.call(arguments),
         jsonStr   = _Array_.shift.call(arguments),
         jsonObj   = {},
@@ -1376,6 +1403,41 @@
     }
   }
 
+  function _jsonParse() {
+    var helperOptions  = _Array_.pop.call(arguments),
+        jsonStr = Array_.shift.call(arguments),
+        jsonObj = {};
+
+    if (is(jsonStr, 'string')) {
+      try {
+        jsonObj = JSON.parse(jsonStr);
+      }catch(e){
+        if (isBlockCall(helperOptions))
+          return helperOptions.inverse(e);
+      }
+    }
+
+    if (isBlockCall(helperOptions)) {
+      return helperOptions.fn(jsonObj);
+    } else {
+      return jsonObj;
+    }
+  }
+
+
+  function _console() {
+    var helperOptions = _Array_.pop.call(arguments),
+        cType = _unCapitalize(helperOptions.name.replace(/:console/g, ''));
+    if ((cType == 'time') && arguments.length) {
+      console.log.apply(undefined, arguments);
+    };
+    if (cType.indexOf('mem')==0) {
+      console.log(console.memory);
+    } else {
+      console[cType].apply(undefined, arguments);
+    }
+  };
+
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
       ':'              : _hbjshelper_, //+Block
@@ -1391,12 +1453,31 @@
 
       ':of'            : _getByIndexOrKey,
       ':each'          : _each,
+      ':forEach'       : _each,
       ':split'         : _split,
       ':sort'          : _sort,
       ':join'          : _join,
-      ':joinWith'      : _joinWith,
+      ':merge'         : _join,
+      ':joinWithStr'   : _joinWith,
       ':fn'            : _fnCall,
-      //':json'          : _json,
+      ':jsonify'       : _jsonify,
+      ':jsonParse'     : _jsonParse,
+
+      ':consoleClear'          : _console,
+      ':consoleLog'            : _console,
+      ':consoleWarn'           : _console,
+      ':consoleInfo'           : _console,
+      ':consoleError'          : _console,
+      ':consoleGroup'          : _console,
+      ':consoleGroupEnd'       : _console,
+      ':consoleGroupCollapsed' : _console,
+      ':consoleMem'            : _console,
+      ':consoleMemory'         : _console,
+      ':consoleProfile'        : _console,
+      ':consoleProfileEnd'     : _console,
+      ':consoleTable'          : _console,
+      ':consoleTime'           : _console,
+      ':consoleTimeEnd'        : _console,
 
       ':options'       : _selectOptions,
       ':checkedIf'     : _checkedIf,
@@ -1405,18 +1486,31 @@
       ':enabledIfNot'  : _disabledIf,
       ':disabledIf'    : _disabledIf,
       ':disabledIfNot' : _disabledIfNot,
-
       ':selectedIf'    : _selectedIf,
       ':selectedIfNot' : _selectedIfNot,
 
+      ':lower'         : _toLowerCase,
+      ':lowerCase'     : _toLowerCase,
       ':toLowerCase'   : _toLowerCase,
+      ':lowerCaseOf'   : _toLowerCase,
+
+      ':upper'         : _toUpperCase,
+      ':upperCase'     : _toUpperCase,
       ':toUpperCase'   : _toUpperCase,
+      ':upperCaseOf'   : _toUpperCase,
+
       ':capitalize'    : _capitalize,
       ':unCapitalize'  : _unCapitalize,
       ':normalizeStr'  : _normalizeStr,
 
+      ':int'           : _toInt,
       ':toInt'         : _toInt,
+      ':intOf'         : _toInt,
+
+      ':float'         : _toFloat,
       ':toFloat'       : _toFloat,
+      ':floatOf'       : _toFloat,
+
       ':toStr'         : _toString,
       ':toString'      : _toString,
       ':toBool'        : _toBool,
