@@ -88,7 +88,8 @@
    * hasPrimaryKeys(obj, 'release')       --> false
    * hasPrimaryKeys(obj, 'name')          --> true
    * hasPrimaryKeys(obj, 'name, version') --> true
-   * hasPrimaryKeys(obj, 'release|name') --> true
+   * hasPrimaryKeys(obj, 'release|name')  --> true
+   * hasPrimaryKeys(obj, 'name&author')   --> false
    *
    */
   function hasPrimaryKeys(obj, propNames){
@@ -768,24 +769,13 @@
     }
   }
 
-  function getFunction(fnName, helperOptions) {
+  function getFunction(fnName) {
     var retFn;
     if (is(fnName, 'string')) {
       fnName = fnName.trim();
       if (fnName) {
-              /* {$}                  ==> app.thisComponentName.
-               * {$someComponentName} ==> app.someComponentName.
-               */
-        var thisAppCompDot = 'app.'+valueOfKeyPath(helperOptions,'data.root._this_.componentName')+'.';
-        fnName = fnName
-                .replace('{$}', thisAppCompDot)
-                .replace('}', '')
-                .replace('{$', 'app.')
-                .replace(/\.\./g, '.');
-        if (fnName) {
-          retFn = valueOfKeyPath(window, fnName);
-          if (!is(retFn, 'function')) retFn = undefined;
-        }
+        retFn = valueOfKeyPath(window, fnName);
+        if (!is(retFn, 'function')) retFn = undefined;
       }
     }
     return retFn;
@@ -794,7 +784,7 @@
   function _fnCall() {
     var helperOptions = _Array_.pop.call(arguments),
         fnName  = _Array_.shift.call(arguments),
-        fn2call = getFunction(fnName, helperOptions),
+        fn2call = getFunction(fnName),
         fnCallResponse;
     if (fn2call) fnCallResponse = fn2call.apply(undefined, arguments);
     if (isBlockCall(helperOptions)) {
@@ -823,10 +813,10 @@
 
     if (hasHash(helperOptions)) {
       opt = getHash(helperOptions, opt);
-      fnFilter = getFunction(opt['fnFilter'], helperOptions);
-      fnEmpty  = getFunction(opt['fnEmpty'], helperOptions);
-      fnEnd    = getFunction(opt['fnEnd'], helperOptions);
-      fnError  = getFunction(opt['fnError'], helperOptions);
+      fnFilter = getFunction(opt['fnFilter']);
+      fnEmpty  = getFunction(opt['fnEmpty']);
+      fnEnd    = getFunction(opt['fnEnd']);
+      fnError  = getFunction(opt['fnError']);
     }
 
     if (isBlockCall(helperOptions)) {
@@ -935,9 +925,9 @@
     if (sortBy && !sortOn) sortOn = 'text';
     if (sortOn && !sortBy) opt['sortBy'] = 'asc';
 
-    fnFilter = getFunction(opt['fnFilter'], helperOptions);
-    fnEmpty  = getFunction(opt['fnEmpty'], helperOptions);
-    fnEnd    = getFunction(opt['fnEnd'], helperOptions);
+    fnFilter = getFunction(opt['fnFilter']);
+    fnEmpty  = getFunction(opt['fnEmpty']);
+    fnEnd    = getFunction(opt['fnEnd']);
 
     function addToList(val, txt){
       optionsArray.push({value:val, text:txt});
@@ -1423,7 +1413,6 @@
       return jsonObj;
     }
   }
-
 
   function _console() {
     var helperOptions = _Array_.pop.call(arguments),
