@@ -79,7 +79,12 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.12.1';
+  spa.VERSION = '2.12.2';
+
+  var _$  = document.querySelector.bind(document),
+      _$$ = document.querySelectorAll.bind(document);
+  if (!win['_$'])  win['_$']  = _$;
+  if (!win['_$$']) win['_$$'] = _$$;
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -4552,8 +4557,8 @@ var isSpaHashRouteOn=false;
 
     var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? componentName: '') +"/"+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
-      , _cScriptExt  = (options && _.isObject(options) && options.hasOwnProperty('scriptExt'))? options['scriptExt'] : spa.defaults.components.scriptExt
-      , _cScriptFile = (_cScriptExt)? (_cFilesPath+_cScriptExt) : ''
+      , _cScriptExt  = spa.defaults.components.scriptExt
+      , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
       , _renderComp  = function(){
           spa.console.info('_renderComp > '+componentName+' with below options');
           spa.console.info(options);
@@ -4646,16 +4651,15 @@ var isSpaHashRouteOn=false;
       , renderList = {}, deferRender = !noDefer;
     if ($spaCompList.length){
       $spaCompList.each(function( index, el ) {
-        var $el = $(el), spaCompName, spaCompOptions, newElId;
-
-        spaCompName = $el.data('spaComponent');
+        var $el = $(el), spaCompName, spaCompOptions, newElId, $elData = $el.data();
+        spaCompName = $elData['spaComponent'];
         if (!el.id) {
           newElId = 'spaCompContainer_'+spaCompName+'_'
                       + ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
           el.id = newElId;
           el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
         }
-        spaCompOptions = _.merge( {target: "#"+el.id }, spa.toJSON($el.data('spaComponentOptions') || '{}'));
+        spaCompOptions = _.merge( {target: "#"+el.id }, $elData, spa.toJSON($elData['spaComponentOptions'] || '{}'));
 
         if (deferRender) {
           if (!renderList.hasOwnProperty(spaCompName)) {
