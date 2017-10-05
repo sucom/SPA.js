@@ -785,8 +785,17 @@
     var helperOptions = _Array_.pop.call(arguments),
         fnName  = _Array_.shift.call(arguments),
         fn2call = getFunction(fnName),
-        fnCallResponse;
-    if (fn2call) fnCallResponse = fn2call.apply(undefined, arguments);
+        fnContextName, fnContext, fnCallResponse;
+
+    if (fn2call) {
+      if (fnName.match(']$')) {
+        fnContextName = fnName.substring(0, fnName.lastIndexOf('['));
+      } else if (fnName.indexOf('.')>0) {
+        fnContextName = fnName.substring(0, fnName.lastIndexOf('.'));
+      }
+      fnContext = (fnContextName)? valueOfKeyPath(window, fnContextName) : window;
+      fnCallResponse = fn2call.apply(fnContext, arguments);
+    }
     if (isBlockCall(helperOptions)) {
       if (is(fnCallResponse, 'undefined')) {
         return helperOptions.inverse(fnCallResponse);

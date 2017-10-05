@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.12.2';
+  spa.VERSION = '2.12.3';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -4701,14 +4701,23 @@ var isSpaHashRouteOn=false;
     },
     runCallbackFn: function (fn2Call, fnArg, thisContext) {
       if (fn2Call) {
-        var _fn2Call = fn2Call;
+        var _fn2Call = fn2Call, fnContextName, fnContext=thisContext;
+
         if (_.isString(_fn2Call)) {
+          if (!fnContext) {
+            if (fn2Call.match(']$')) {
+              fnContextName = fn2Call.substring(0, fn2Call.lastIndexOf('['));
+            } else if (fn2Call.indexOf('.')>0) {
+              fnContextName = fn2Call.substring(0, fn2Call.lastIndexOf('.'));
+            }
+            fnContext = (fnContextName)? spa.findSafe(window, fnContextName) : window;
+          }
           _fn2Call = spa.findSafe(window, _fn2Call);
         }
         if (_fn2Call) {
           if (_.isFunction(_fn2Call)) {
             spa.console.info("calling callback: " + fn2Call);
-            _fn2Call.call(thisContext, fnArg);
+            _fn2Call.call(fnContext, fnArg);
           } else {
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
@@ -5554,9 +5563,9 @@ var isSpaHashRouteOn=false;
               if (!isCallbackDisabled) {
                 if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
                   spa.console.info("calling default callback: spa.routes._renderCallback");
-                  spa.routes['_renderCallback'].call(undefined, retValue);
+                  spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
                 }
-                spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue, renderCallbackContext);
+                spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
               }
 
               /*Deep/Child Render*/
