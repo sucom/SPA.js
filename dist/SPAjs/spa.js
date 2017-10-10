@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.12.3';
+  spa.VERSION = '2.13.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -106,6 +106,7 @@ var isSpaHashRouteOn=false;
     rePropName       : /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g,
     reEscapeChar     : /\\(\\)?/g,
     reIsUint         : /^(?:0|[1-9]\d*)$/,
+    reFlags          : /\w*$/,
 
     spreadableSymbol : window['Symbol'] ? Symbol.isConcatSpreadable : undefined,
     symToStringTag   : window['Symbol'] ? Symbol.toStringTag : undefined,
@@ -133,6 +134,10 @@ var isSpaHashRouteOn=false;
     LARGE_ARRAY_SIZE : 200,
     HOT_COUNT        : 800,
     HOT_SPAN         : 16,
+
+    CLONE_DEEP_FLAG    : 1,
+    CLONE_FLAT_FLAG    : 2,
+    CLONE_SYMBOLS_FLAG : 4,
 
     argsTag          : '[object Arguments]',
     arrayTag         : '[object Array]',
@@ -241,7 +246,9 @@ var isSpaHashRouteOn=false;
         : data.map;
     },
 
-    typedArrayTags : {}
+    typedArrayTags : {},
+
+    cloneableTags : {}
   };
 
   _LD_.typedArrayTags[_LD_.float32Tag]      = _LD_.typedArrayTags[_LD_.float64Tag] =
@@ -258,6 +265,20 @@ var isSpaHashRouteOn=false;
   _LD_.typedArrayTags[_LD_.objectTag]       = _LD_.typedArrayTags[_LD_.regexpTag] =
   _LD_.typedArrayTags[_LD_.setTag]          = _LD_.typedArrayTags[_LD_.stringTag] =
   _LD_.typedArrayTags[_LD_.weakMapTag]      = false;
+
+  _LD_.cloneableTags[_LD_.argsTag]          = _LD_.cloneableTags[_LD_.arrayTag] =
+  _LD_.cloneableTags[_LD_.arrayBufferTag]   = _LD_.cloneableTags[_LD_.dataViewTag] =
+  _LD_.cloneableTags[_LD_.boolTag]          = _LD_.cloneableTags[_LD_.dateTag] =
+  _LD_.cloneableTags[_LD_.float32Tag]       = _LD_.cloneableTags[_LD_.float64Tag] =
+  _LD_.cloneableTags[_LD_.int8Tag]          = _LD_.cloneableTags[_LD_.int16Tag] =
+  _LD_.cloneableTags[_LD_.int32Tag]         = _LD_.cloneableTags[_LD_.mapTag] =
+  _LD_.cloneableTags[_LD_.numberTag]        = _LD_.cloneableTags[_LD_.objectTag] =
+  _LD_.cloneableTags[_LD_.regexpTag]        = _LD_.cloneableTags[_LD_.setTag] =
+  _LD_.cloneableTags[_LD_.stringTag]        = _LD_.cloneableTags[_LD_.symbolTag] =
+  _LD_.cloneableTags[_LD_.uint8Tag]         = _LD_.cloneableTags[_LD_.uint8ClampedTag] =
+  _LD_.cloneableTags[_LD_.uint16Tag]        = _LD_.cloneableTags[_LD_.uint32Tag] = true;
+  _LD_.cloneableTags[_LD_.errorTag]         = _LD_.cloneableTags[_LD_.funcTag] =
+  _LD_.cloneableTags[_LD_.weakMapTag]       = false;
 
   _LD_['baseSetToString'] = !_LD_.defineProperty
     ? function(value){return value;}
@@ -508,6 +529,500 @@ var isSpaHashRouteOn=false;
       });
     };
 
+  _LD_['setToString'] = _LD_.shortOut(_LD_.baseSetToString);
+
+
+  //for _.max
+  function baseGt(value, other) {
+    return value > other;
+  }
+  function identity(value) {
+    return value;
+  }
+  function baseExtremum(array, iteratee, comparator) {
+    var index = -1,
+        length = array.length;
+    while (++index < length) {
+      var value = array[index],
+          current = iteratee(value);
+      if (current != null && (computed === undefined
+            ? (current === current && !spa._.isSymbol(current))
+            : comparator(current, computed)
+          )) {
+        var computed = current,
+            result = value;
+      }
+    }
+    return result;
+  }
+  function _max(array) {
+    return (array && array.length)
+      ? baseExtremum(array, identity, baseGt)
+      : undefined;
+  }
+
+  //for _.extend
+  function _identity(value) {
+    return value;
+  }
+  function isIterateeCall(value, index, object) {
+    if (!spa._.isObject(object)) {
+      return false;
+    }
+    var type = typeof index;
+    if (type == 'number'
+          ? (spa._.isArrayLike(object) && spa._.isIndex(index, object.length))
+          : (type == 'string' && index in object)
+        ) {
+      return spa._.eq(object[index], value);
+    }
+    return false;
+  }
+  function baseRest(func, start) {
+    return _LD_.setToString(_LD_.overRest(func, start, _identity), func + '');
+  }
+  function createAssigner(assigner) {
+    return baseRest(function(object, sources) {
+      var index = -1,
+          length = sources.length,
+          customizer = length > 1 ? sources[length - 1] : undefined,
+          guard = length > 2 ? sources[2] : undefined;
+
+      customizer = (assigner.length > 3 && typeof customizer == 'function')
+        ? (length--, customizer)
+        : undefined;
+
+      if (guard && isIterateeCall(sources[0], sources[1], guard)) {
+        customizer = length < 3 ? undefined : customizer;
+        length = 1;
+      }
+      object = Object(object);
+      while (++index < length) {
+        var source = sources[index];
+        if (source) {
+          assigner(object, source, index, customizer);
+        }
+      }
+      return object;
+    });
+  }
+  var _assignIn = createAssigner(function(object, source) {
+    spa._.copyObject(source, spa._.keysIn(source), object);
+  });
+
+  //for _.union
+  function _baseUniq(array, iteratee, comparator) {
+    var index = -1,
+        includes = spa._.arrayIncludes,
+        length = array.length,
+        isCommon = true,
+        result = [],
+        seen = result;
+
+    if (comparator) {
+      isCommon = false;
+      includes = spa._.arrayIncludesWith;
+    }
+    else if (length >= _LD_.LARGE_ARRAY_SIZE) {
+      var set = iteratee ? null : _LD_.createSet(array);
+      if (set) {
+        return _LD_.setToArray(set);
+      }
+      isCommon = false;
+      includes = spa._.cacheHas;
+      seen = new _LD_.SetCache;
+    }
+    else {
+      seen = iteratee ? [] : result;
+    }
+    outer:
+    while (++index < length) {
+      var value = array[index],
+          computed = iteratee ? iteratee(value) : value;
+
+      value = (comparator || value !== 0) ? value : 0;
+      if (isCommon && computed === computed) {
+        var seenIndex = seen.length;
+        while (seenIndex--) {
+          if (seen[seenIndex] === computed) {
+            continue outer;
+          }
+        }
+        if (iteratee) {
+          seen.push(computed);
+        }
+        result.push(value);
+      }
+      else if (!includes(seen, computed, comparator)) {
+        if (seen !== result) {
+          seen.push(computed);
+        }
+        result.push(value);
+      }
+    }
+    return result;
+  }
+  function _isArrayLikeObject(value) {
+    return spa._.isObjectLike(value) && spa._.isArrayLike(value);
+  }
+  function _baseFlatten(array, depth, predicate, isStrict, result) {
+    var index = -1,
+        length = array.length;
+
+    predicate || (predicate = spa._.isFlattenable);
+    result || (result = []);
+
+    while (++index < length) {
+      var value = array[index];
+      if (depth > 0 && predicate(value)) {
+        if (depth > 1) {
+          // Recursively flatten arrays (susceptible to call stack limits).
+          spa._.baseFlatten(value, depth - 1, predicate, isStrict, result);
+        } else {
+          spa._.arrayPush(result, value);
+        }
+      } else if (!isStrict) {
+        result[result.length] = value;
+      }
+    }
+    return result;
+  }
+  var _union = baseRest(function(arrays) {
+    return _baseUniq(_baseFlatten(arrays, 1, _isArrayLikeObject, true));
+  });
+
+  // for _.omit
+  var _getSymbolsIn = !_LD_.nativeGetSymbols ? _LD_.stubArray : function(object) {
+    var result = [];
+    while (object) {
+      spa._.arrayPush(result, _LD_.getSymbols(object));
+      object = spa._.getPrototype(object);
+    }
+    return result;
+  };
+
+  function _flatten(array) {
+    var length = array == null ? 0 : array.length;
+    return length ? spa._.baseFlatten(array, 1) : [];
+  }
+  function _initCloneArray(array) {
+    var length = array.length,
+        result = array.constructor(length);
+
+    // Add properties assigned by `RegExp#exec`.
+    if (length && typeof array[0] == 'string' && spa._.hasOwnProperty.call(array, 'index')) {
+      result.index = array.index;
+      result.input = array.input;
+    }
+    return result;
+  }
+  function _baseGetAllKeys(object, keysFunc, symbolsFunc) {
+    var result = keysFunc(object);
+    return spa._.isArray(object) ? result : spa._.arrayPush(result, symbolsFunc(object));
+  }
+  function _getAllKeysIn(object) {
+    return _baseGetAllKeys(object, spa._.keysIn, _getSymbolsIn);
+  }
+  function _baseUnset(object, path) {
+    path = spa._.castPath(path, object);
+    object = spa._.parent(object, path);
+    return object == null || delete object[spa._.toKey(spa._.last(path))];
+  }
+  function _castPath(value, object) {
+    if (spa._.isArray(value)) {
+      return value;
+    }
+    return spa._.isKey(value, object) ? [value] : spa._.strToPath(spa._.toString(value));
+  }
+  function _flatRest(func) {
+    return _LD_.setToString(_LD_.overRest(func, undefined, _flatten), func + '');
+  }
+  function _isPlainObject(value) {
+    if (!spa._.isObjectLike(value) || spa._.baseGetTag(value) != _LD_.objectTag) {
+      return false;
+    }
+    var proto = spa._.getPrototype(value);
+    if (proto === null) {
+      return true;
+    }
+    var Ctor = spa._.hasOwnProperty.call(proto, 'constructor') && proto.constructor;
+    return typeof Ctor == 'function' && Ctor instanceof Ctor &&
+      spa._.funcToString.call(Ctor) == spa._.objectCtorString;
+  }
+  function _customOmitClone(value) {
+    return _isPlainObject(value) ? undefined : value;
+  }
+  function _copyArray(source, array) {
+    var index = -1,
+        length = source.length;
+
+    array || (array = Array(length));
+    while (++index < length) {
+      array[index] = source[index];
+    }
+    return array;
+  }
+  function _copyObject(source, props, object, customizer) {
+    var isNew = !object;
+    object || (object = {});
+
+    var index = -1,
+        length = props.length;
+
+    while (++index < length) {
+      var key = props[index];
+
+      var newValue = customizer
+        ? customizer(object[key], source[key], key, object, source)
+        : undefined;
+
+      if (newValue === undefined) {
+        newValue = source[key];
+      }
+      if (isNew) {
+        spa._.baseAssignValue(object, key, newValue);
+      } else {
+        spa._.assignValue(object, key, newValue);
+      }
+    }
+    return object;
+  }
+  function _cloneBuffer(buffer, isDeep) {
+    if (isDeep) {
+      return buffer.slice();
+    }
+    var length = buffer.length,
+        result = spa._.allocUnsafe ? spa._.allocUnsafe(length) : new buffer.constructor(length);
+
+    buffer.copy(result);
+    return result;
+  }
+  function _initCloneObject(object) {
+    return (typeof object.constructor == 'function' && !spa._.isPrototype(object))
+      ? _LD_.baseCreate(spa._.getPrototype(object))
+      : {};
+  }
+  function _cloneArrayBuffer(arrayBuffer) {
+    var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
+    new _LD_.Uint8Array(result).set(new _LD_.Uint8Array(arrayBuffer));
+    return result;
+  }
+  function _cloneTypedArray(typedArray, isDeep) {
+    var buffer = isDeep ? spa._.cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
+    return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
+  }
+  function _mapToArray(map) {
+    var index = -1,
+        result = Array(map.size);
+
+    map.forEach(function(value, key) {
+      result[++index] = [key, value];
+    });
+    return result;
+  }
+  function _arrayReduce(array, iteratee, accumulator, initAccum) {
+    var index = -1,
+        length = array == null ? 0 : array.length;
+
+    if (initAccum && length) {
+      accumulator = array[++index];
+    }
+    while (++index < length) {
+      accumulator = iteratee(accumulator, array[index], index, array);
+    }
+    return accumulator;
+  }
+  function _cloneDataView(dataView, isDeep) {
+    var buffer = isDeep ? _cloneArrayBuffer(dataView.buffer) : dataView.buffer;
+    return new dataView.constructor(buffer, dataView.byteOffset, dataView.byteLength);
+  }
+  function _cloneRegExp(regexp) {
+    var result = new regexp.constructor(regexp.source, _LD_.reFlags.exec(regexp));
+    result.lastIndex = regexp.lastIndex;
+    return result;
+  }
+  function _addMapEntry(map, pair) {
+    // Don't return `map.set` because it's not chainable in IE 11.
+    map.set(pair[0], pair[1]);
+    return map;
+  }
+  function _addSetEntry(set, value) {
+    // Don't return `set.add` because it's not chainable in IE 11.
+    set.add(value);
+    return set;
+  }
+  function _cloneMap(map, isDeep, cloneFunc) {
+    var array = isDeep ? cloneFunc(_mapToArray(map), _LD_.CLONE_DEEP_FLAG) : _mapToArray(map);
+    return _arrayReduce(array, _addMapEntry, new map.constructor);
+  }
+  function _cloneSet(set, isDeep, cloneFunc) {
+    var array = isDeep ? cloneFunc(_LD_.setToArray(set), _LD_.CLONE_DEEP_FLAG) : _LD_.setToArray(set);
+    return _arrayReduce(array, _addSetEntry, new set.constructor);
+  }
+  function _cloneSymbol(symbol) {
+    return _LD_.symbolValueOf ? Object(_LD_.symbolValueOf.call(symbol)) : {};
+  }
+  function _initCloneByTag(object, tag, cloneFunc, isDeep) {
+    var Ctor = object.constructor;
+    switch (tag) {
+      case _LD_.numberTag:
+      case _LD_.stringTag:
+        return new Ctor(object);
+
+      case _LD_.boolTag:
+      case _LD_.dateTag:
+        return new Ctor(+object);
+
+      case _LD_.arrayBufferTag:
+        return _cloneArrayBuffer(object);
+
+      case _LD_.float32Tag: case _LD_.float64Tag:
+      case _LD_.int8Tag: case _LD_.int16Tag: case _LD_.int32Tag:
+      case _LD_.uint8Tag: case _LD_.uint8ClampedTag: case _LD_.uint16Tag: case _LD_.uint32Tag:
+        return _cloneTypedArray(object, isDeep);
+
+      case _LD_.mapTag:
+        return _cloneMap(object, isDeep, cloneFunc);
+
+      case _LD_.dataViewTag:
+        return _cloneDataView(object, isDeep);
+
+      case _LD_.regexpTag:
+        return _cloneRegExp(object);
+
+      case _LD_.setTag:
+        return _cloneSet(object, isDeep, cloneFunc);
+
+      case _LD_.symbolTag:
+        return _cloneSymbol(object);
+    }
+  }
+  function _assignValue(object, key, value) {
+    var objValue = object[key];
+    if (!(spa._.hasOwnProperty.call(object, key) && spa._.eq(objValue, value)) ||
+        (value === undefined && !(key in object))) {
+      spa._.baseAssignValue(object, key, value);
+    }
+  }
+  function _keys(object) {
+    return spa._.isObject(object) ? spa._.baseKeys(object) : (spa._.isString(object)? spa._.baseKeys(object.split('')) : []);
+  }
+  function _keysIn(object) {
+    return spa._.isArrayLike(object) ? spa._.arrayLikeKeys(object, true) : spa._.baseKeysIn(object);
+  }
+  function _getAllKeys(object) {
+    return _baseGetAllKeys(object, keys, _LD_.getSymbols);
+  }
+  function _copySymbols(source, object) {
+    return _copyObject(source, _LD_.getSymbols(source), object);
+  }
+  function _copySymbolsIn(source, object) {
+    return _copyObject(source, _getSymbolsIn(source), object);
+  }
+  function _baseAssign(object, source) {
+    return object && _copyObject(source, _keys(source), object);
+  }
+  function _baseAssignIn(object, source) {
+    return object && _copyObject(source, _keysIn(source), object);
+  }
+  function _arrayEach(array, iteratee) {
+    var index = -1,
+        length = array == null ? 0 : array.length;
+
+    while (++index < length) {
+      if (iteratee(array[index], index, array) === false) {
+        break;
+      }
+    }
+    return array;
+  }
+  function _baseClone(value, bitmask, customizer, key, object, stack) {
+    var result,
+        isDeep = bitmask & CLONE_DEEP_FLAG,
+        isFlat = bitmask & CLONE_FLAT_FLAG,
+        isFull = bitmask & CLONE_SYMBOLS_FLAG;
+
+    if (customizer) {
+      result = object ? customizer(value, key, object, stack) : customizer(value);
+    }
+    if (result !== undefined) {
+      return result;
+    }
+    if (!spa._.isObject(value)) {
+      return value;
+    }
+    var isArr = spa._.isArray(value);
+    if (isArr) {
+      result = _initCloneArray(value);
+      if (!isDeep) {
+        return _copyArray(value, result);
+      }
+    } else {
+      var tag = spa._.getTag(value),
+          isFunc = tag == _LD_.funcTag || tag == _LD_.genTag;
+
+      if (spa._.isBuffer(value)) {
+        return _cloneBuffer(value, isDeep);
+      }
+      if (tag == _LD_.objectTag || tag == _LD_.argsTag || (isFunc && !object)) {
+        result = (isFlat || isFunc) ? {} : _initCloneObject(value);
+        if (!isDeep) {
+          return isFlat
+            ? _copySymbolsIn(value, _baseAssignIn(result, value))
+            : _copySymbols(value, _baseAssign(result, value));
+        }
+      } else {
+        if (!_LD_.cloneableTags[tag]) {
+          return object ? value : {};
+        }
+        result = _initCloneByTag(value, tag, _baseClone, isDeep);
+      }
+    }
+    // Check for circular references and return its corresponding clone.
+    stack || (stack = new spa.__.Stack);
+    var stacked = stack.get(value);
+    if (stacked) {
+      return stacked;
+    }
+    stack.set(value, result);
+
+    var keysFunc = isFull
+      ? (isFlat ? _getAllKeysIn : _getAllKeys)
+      : (isFlat ? _keysIn : _keys);
+
+    var props = isArr ? undefined : keysFunc(value);
+    _arrayEach(props || value, function(subValue, key) {
+      if (props) {
+        key = subValue;
+        subValue = value[key];
+      }
+      // Recursively populate clone (susceptible to call stack limits).
+      _assignValue(result, key, _baseClone(subValue, bitmask, customizer, key, value, stack));
+    });
+    return result;
+  }
+  var _omit = _flatRest(function(object, paths) {
+    var result = {};
+    if (object == null) {
+      return result;
+    }
+    var isDeep = false;
+    paths = spa._.arrayMap(paths, function(path) {
+      path = _castPath(path, object);
+      isDeep || (isDeep = path.length > 1);
+      return path;
+    });
+    spa._.copyObject(object, _getAllKeysIn(object), result);
+    if (isDeep) {
+      result = _baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG, _customOmitClone);
+    }
+    var length = paths.length;
+    while (length--) {
+      _baseUnset(result, paths[length]);
+    }
+    return result;
+  });
+
   //--------------------------------------------------
   spa['_'] = {
       isString       : function _isString(value) {
@@ -543,24 +1058,11 @@ var isSpaHashRouteOn=false;
           (value > -1 && value % 1 == 0 && value < length);
       }
 
-    , isPlainObject     : function _isPlainObject(value) {
-        if (!spa._.isObjectLike(value) || spa._.baseGetTag(value) != _LD_.objectTag) {
-          return false;
-        }
-        var proto = spa._.getPrototype(value);
-        if (proto === null) {
-          return true;
-        }
-        var Ctor = spa._.hasOwnProperty.call(proto, 'constructor') && proto.constructor;
-        return typeof Ctor == 'function' && Ctor instanceof Ctor &&
-          spa._.funcToString.call(Ctor) == spa._.objectCtorString;
-      }
+    , isPlainObject     : _isPlainObject
     , isArrayLike       : function _isArrayLike(value) {
         return value != null && spa._.isLength(value.length) && !spa._.isFunction(value);
       }
-    , isArrayLikeObject : function _isArrayLikeObject(value) {
-        return spa._.isObjectLike(value) && spa._.isArrayLike(value);
-      }
+    , isArrayLikeObject : _isArrayLikeObject
     , isEmpty           : function _isEmpty(value) {
         var vType = typeof value;
         if ((vType == "undefined") || (value == null)) {
@@ -600,19 +1102,7 @@ var isSpaHashRouteOn=false;
     , isFlattenable     : function _isFlattenable(value) {
         return spa._.isArray(value) || !!(_LD_.spreadableSymbol && value && value[_LD_.spreadableSymbol]);
       }
-    , isIterateeCall    : function _isIterateeCall(value, index, object) {
-        if (!spa._.isObject(object)) {
-          return false;
-        }
-        var type = typeof index;
-        if (type == 'number'
-              ? (spa._.isArrayLike(object) && spa._.isIndex(index, object.length))
-              : (type == 'string' && index in object)
-            ) {
-          return spa._.eq(object[index], value);
-        }
-        return false;
-      }
+    , isIterateeCall    : isIterateeCall
 
     , isBuffer             : _LD_.nativeIsBuffer || _LD_.stubFalse
     , nativeObjectToString : _LD_.objectProto.toString
@@ -631,9 +1121,7 @@ var isSpaHashRouteOn=false;
     , toPlainObject      : function _toPlainObject(value) {
         return spa._.copyObject(value, spa._.keysIn(value));
       }
-    , identity           : function _identity(value) {
-        return value;
-      }
+    , identity           : _identity
     , eq                 : function _eq(value, other) {
       return value === other || (value !== value && other !== other);
     }
@@ -737,12 +1225,7 @@ var isSpaHashRouteOn=false;
         });
         return result;
       }
-    , castPath           : function _castPath(value, object) {
-        if (spa._.isArray(value)) {
-          return value;
-        }
-        return spa._.isKey(value, object) ? [value] : spa._.strToPath(spa._.toString(value));
-      }
+    , castPath           : _castPath
     , hasPath            : function _hasPath(object, path, hasFunc) {
         path = spa._.castPath(path, object);
 
@@ -800,9 +1283,7 @@ var isSpaHashRouteOn=false;
         }
         return result;
       }
-    , keys               : function _keys(object) {
-        return spa._.isObject(object) ? spa._.baseKeys(object) : (spa._.isString(object)? spa._.baseKeys(object.split('')) : []);
-      }
+    , keys               : _keys
     , nativeKeysIn       : function _nativeKeysIn(object) {
         var result = [];
         if (object != null) {
@@ -852,9 +1333,7 @@ var isSpaHashRouteOn=false;
         }
         return result;
       }
-    , keysIn             : function _keysIn(object) {
-        return spa._.isArrayLike(object) ? spa._.arrayLikeKeys(object, true) : spa._.baseKeysIn(object);
-      }
+    , keysIn             : _keysIn
     , baseSlice          : function _baseSlice(array, start, end) {
         var index = -1,
             length = array.length;
@@ -940,13 +1419,7 @@ var isSpaHashRouteOn=false;
           object[key] = value;
         }
       }
-    , assignValue        : function _assignValue(object, key, value) {
-        var objValue = object[key];
-        if (!(spa._.hasOwnProperty.call(object, key) && spa._.eq(objValue, value)) ||
-            (value === undefined && !(key in object))) {
-          spa._.baseAssignValue(object, key, value);
-        }
-      }
+    , assignValue        : _assignValue
     , baseZipObject      : function _baseZipObject(props, values, assignFunc) {
         var index = -1,
             length = props.length,
@@ -984,27 +1457,8 @@ var isSpaHashRouteOn=false;
         }
         return array;
       }
-    , copyArray          : function _copyArray(source, array) {
-        var index = -1,
-            length = source.length;
-
-        array || (array = Array(length));
-        while (++index < length) {
-          array[index] = source[index];
-        }
-        return array;
-      }
-    , arrayEach          : function _arrayEach(array, iteratee) {
-        var index = -1,
-            length = array == null ? 0 : array.length;
-
-        while (++index < length) {
-          if (iteratee(array[index], index, array) === false) {
-            break;
-          }
-        }
-        return array;
-      }
+    , copyArray          : _copyArray
+    , arrayEach          : _arrayEach
     , arrayEvery         : function _arrayEvery(array, predicate) {
         var index = -1,
             length = array == null ? 0 : array.length;
@@ -1075,56 +1529,15 @@ var isSpaHashRouteOn=false;
         }
         return result;
       }
-    , mapToArray         : function _mapToArray(map) {
-        var index = -1,
-            result = Array(map.size);
-
-        map.forEach(function(value, key) {
-          result[++index] = [key, value];
-        });
-        return result;
-      }
-    , baseFlatten        : function _baseFlatten(array, depth, predicate, isStrict, result) {
-        var index = -1,
-            length = array.length;
-
-        predicate || (predicate = spa._.isFlattenable);
-        result || (result = []);
-
-        while (++index < length) {
-          var value = array[index];
-          if (depth > 0 && predicate(value)) {
-            if (depth > 1) {
-              // Recursively flatten arrays (susceptible to call stack limits).
-              spa._.baseFlatten(value, depth - 1, predicate, isStrict, result);
-            } else {
-              spa._.arrayPush(result, value);
-            }
-          } else if (!isStrict) {
-            result[result.length] = value;
-          }
-        }
-        return result;
-      }
-    , flatten            : function _flatten(array) {
-        var length = array == null ? 0 : array.length;
-        return length ? spa._.baseFlatten(array, 1) : [];
-      }
+    , mapToArray         : _mapToArray
+    , baseFlatten        : _baseFlatten
+    , flatten            : _flatten
     , setToString        : _LD_.shortOut(_LD_.baseSetToString)
-    , baseRest           : function _baseRest(func, start) {
-        return spa._.setToString(_LD_.overRest(func, start, spa._.identity), func + '');
-      }
-    , flatRest           : function _flatRest(func) {
-        return spa._.setToString(_LD_.overRest(func, undefined, spa._.flatten), func + '');
-      }
+    , baseRest           : baseRest
+    , flatRest           : _flatRest
 
-    , baseGetAllKeys     : function _baseGetAllKeys(object, keysFunc, symbolsFunc) {
-        var result = keysFunc(object);
-        return spa._.isArray(object) ? result : spa._.arrayPush(result, symbolsFunc(object));
-      }
-    , getAllKeys         : function _getAllKeys(object) {
-        return baseGetAllKeys(object, keys, _LD_.getSymbols);
-      }
+    , baseGetAllKeys     : _baseGetAllKeys
+    , getAllKeys         : _getAllKeys
     , equalArrays        : function _equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
         var isPartial = bitmask & _LD_.COMPARE_PARTIAL_FLAG,
             arrLength = array.length,
@@ -1616,11 +2029,7 @@ var isSpaHashRouteOn=false;
         }
         return -1;
       }
-    , baseUnset           : function _baseUnset(object, path) {
-        path = spa._.castPath(path, object);
-        object = spa._.parent(object, path);
-        return object == null || delete object[spa._.toKey(spa._.last(path))];
-      }
+    , baseUnset           : _baseUnset
     , basePullAt          : function _basePullAt(array, indexes) {
         var length = array ? indexes.length : 0,
             lastIndex = length - 1;
@@ -1781,57 +2190,7 @@ var isSpaHashRouteOn=false;
         }
         return func(collection, spa._.getIteratee(predicate, 3));
       }
-    , baseUniq            : function _baseUniq(array, iteratee, comparator) {
-        var index = -1,
-            includes = spa._.arrayIncludes,
-            length = array.length,
-            isCommon = true,
-            result = [],
-            seen = result;
-
-        if (comparator) {
-          isCommon = false;
-          includes = spa._.arrayIncludesWith;
-        }
-        else if (length >= _LD_.LARGE_ARRAY_SIZE) {
-          var set = iteratee ? null : _LD_.createSet(array);
-          if (set) {
-            return _LD_.setToArray(set);
-          }
-          isCommon = false;
-          includes = spa._.cacheHas;
-          seen = new _LD_.SetCache;
-        }
-        else {
-          seen = iteratee ? [] : result;
-        }
-        outer:
-        while (++index < length) {
-          var value = array[index],
-              computed = iteratee ? iteratee(value) : value;
-
-          value = (comparator || value !== 0) ? value : 0;
-          if (isCommon && computed === computed) {
-            var seenIndex = seen.length;
-            while (seenIndex--) {
-              if (seen[seenIndex] === computed) {
-                continue outer;
-              }
-            }
-            if (iteratee) {
-              seen.push(computed);
-            }
-            result.push(value);
-          }
-          else if (!includes(seen, computed, comparator)) {
-            if (seen !== result) {
-              seen.push(computed);
-            }
-            result.push(value);
-          }
-        }
-        return result;
-      }
+    , baseUniq            : _baseUniq
     , uniq                : function _uniq(array) {
         return (array && array.length) ? spa._.baseUniq(array) : [];
       }
@@ -1882,55 +2241,11 @@ var isSpaHashRouteOn=false;
         }
       }
 
-    , initCloneObject     : function _initCloneObject(object) {
-        return (typeof object.constructor == 'function' && !spa._.isPrototype(object))
-          ? _LD_.baseCreate(spa._.getPrototype(object))
-          : {};
-      }
-    , copyObject          : function _copyObject(source, props, object, customizer) {
-        var isNew = !object;
-        object || (object = {});
-
-        var index = -1,
-            length = props.length;
-
-        while (++index < length) {
-          var key = props[index];
-
-          var newValue = customizer
-            ? customizer(object[key], source[key], key, object, source)
-            : undefined;
-
-          if (newValue === undefined) {
-            newValue = source[key];
-          }
-          if (isNew) {
-            spa._.baseAssignValue(object, key, newValue);
-          } else {
-            spa._.assignValue(object, key, newValue);
-          }
-        }
-        return object;
-      }
-    , cloneBuffer         : function _cloneBuffer(buffer, isDeep) {
-        if (isDeep) {
-          return buffer.slice();
-        }
-        var length = buffer.length,
-            result = spa._.allocUnsafe ? spa._.allocUnsafe(length) : new buffer.constructor(length);
-
-        buffer.copy(result);
-        return result;
-      }
-    , cloneArrayBuffer    : function _cloneArrayBuffer(arrayBuffer) {
-        var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-        new _LD_.Uint8Array(result).set(new _LD_.Uint8Array(arrayBuffer));
-        return result;
-      }
-    , cloneTypedArray     : function _cloneTypedArray(typedArray, isDeep) {
-        var buffer = isDeep ? spa._.cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
-        return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
-      }
+    , initCloneObject     : _initCloneObject
+    , copyObject          : _copyObject
+    , cloneBuffer         : _cloneBuffer
+    , cloneArrayBuffer    : _cloneArrayBuffer
+    , cloneTypedArray     : _cloneTypedArray
     , baseMergeDeep       : function _baseMergeDeep(object, source, key, srcIndex, mergeFunc, customizer, stack) {
         var objValue = object[key],
             srcValue = source[key],
@@ -2088,6 +2403,11 @@ var isSpaHashRouteOn=false;
           return spa._.hasIn(object, path);
         });
       }
+
+    , max    : _max
+    , extend : _assignIn
+    , omit   : _omit
+    , union  : _union
 
     , pullAt              : undefined
     , pull                : undefined
@@ -4191,6 +4511,7 @@ var isSpaHashRouteOn=false;
 
     var fillOptions = {
       dataParams: {},
+      method:'GET',
       async:true,
       dataCache: false,
       keyFormat: "aBc",
@@ -4208,6 +4529,7 @@ var isSpaHashRouteOn=false;
       /*wait till this data loads*/
       $.ajax({
         url: data,
+        method: (''+(fillOptions.method || 'GET')).toUpperCase(),
         data: fillOptions.dataParams,
         cache: fillOptions.dataCache,
         async: fillOptions.async,
@@ -4500,46 +4822,58 @@ var isSpaHashRouteOn=false;
 
   spa.component = spa.$ = spa.registerComponent = function(componentName, options) {
     options = options || {};
-
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
       componentName = options['name'] || options['componentName'] || (''+spa.now());
     }
+    if (is(componentName, 'string') && componentName) {
+      componentName = componentName.trim();
+      if (componentName) {
+        options['componentName'] = componentName;
+        if (!options.hasOwnProperty('renderCallback')) {
+          options['renderCallback'] = 'app.'+componentName+'.renderCallback';
+        }
+        if (options.hasOwnProperty('require')) {
+          spa.loadComponents(options['require'], function(){
+            spa.console.log('Required components successfully loaded.');
+          }, function(){
+            spa.console.log('Failed to load required components.');
+          });
+        }
 
-    options['componentName'] = componentName;
-    if (!options.hasOwnProperty('renderCallback')) {
-      options['renderCallback'] = 'app.'+componentName+'.renderCallback';
+        options = adjustComponentOptions(componentName, options);
+
+        spa.components[componentName] = options;
+        spa.extendComponent(componentName);
+      }
     }
-    if (options.hasOwnProperty('require')) {
-      spa.loadComponents(options['require'], function(){
-        spa.console.log('Required components successfully loaded.');
-      }, function(){
-        spa.console.log('Failed to load required components.');
-      });
-    }
-
-    options = adjustComponentOptions(componentName, options);
-
-    spa.components[componentName] = options;
-    spa.extendComponent(componentName);
   };
 
   spa.extendComponent = spa.$extend = spa.module = function(componentName, options) {
-    window['app'] = window['app'] || {};
-    window.app[componentName] = window.app[componentName] || {};
-    if (options && _.isFunction(options)) {
-      options = options.call(spa.components[componentName] || {});
+    if (is(componentName, 'object')) {
+      options = _.merge({}, componentName);
+      componentName = options['name'] || options['componentName'] || (''+spa.now());
     }
-    options = spa.is(options, 'object')? options : {};
-    if (spa.components[componentName]) {
-      if (options['__prop__']) {
-        _.merge(spa.components[componentName], $.extend({},options['__prop__']));
+    if (is(componentName, 'string') && componentName) {
+      componentName = componentName.trim();
+      if (componentName) {
+        window['app'] = window['app'] || {};
+        window.app[componentName] = window.app[componentName] || {};
+        if (options && _.isFunction(options)) {
+          options = options.call(spa.components[componentName] || {});
+        }
+        options = spa.is(options, 'object')? options : {};
+        if (spa.components[componentName]) {
+          if (options['__prop__']) {
+            _.merge(spa.components[componentName], $.extend({},options['__prop__']));
+          }
+          options['__prop__'] = spa.components[componentName];
+        }
+        $.extend(window.app[componentName], options);
+        window['$$'+componentName] = window.app[componentName];
       }
-      options['__prop__'] = spa.components[componentName];
     }
-    $.extend(window.app[componentName], options);
   };
-
 
   spa.renderComponent = spa.$render = function (componentName, options) {
     if (is(componentName, 'object')) {
@@ -4623,6 +4957,16 @@ var isSpaHashRouteOn=false;
     }
   };
 
+/*
+ * TODO:
+ * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
+ * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
+ * ( ['compName1', 'compName2', 'compName3'], ... ) //as Single Array without options
+ *
+ * ( { compName1: {overrideOptions} }, { compName2: {overrideOptions} }, ... ) //as arguments with options
+ * ( [ { compName1: {overrideOptions} }, { compName2: {overrideOptions} }, ... ] ) //as Single Array with options
+ *
+ */
   spa.renderComponents = spa.$$render = function () {
     if (arguments.length){
       var compList = arguments; //spa.renderComponents('compName1', 'compName2', 'compName3');
@@ -4663,7 +5007,7 @@ var isSpaHashRouteOn=false;
 
         if (deferRender) {
           if (!renderList.hasOwnProperty(spaCompName)) {
-            $sameCompRenderList = $(scope).find('[data-spa-component='+spaCompName+']');
+            var $sameCompRenderList = $(scope).find('[data-spa-component='+spaCompName+']');
             spa.console.log("component: "+spaCompName+" to render : "+$sameCompRenderList.length);
             if ($sameCompRenderList.length>1) {
               spaCompOptions['mountComponent'] = {scope: scope, name: spaCompName};
@@ -4740,6 +5084,7 @@ var isSpaHashRouteOn=false;
    data                      : {}    // Data(JSON Object) to be used in templates; for html data-attribute see dataUrl
 
    ,dataUrl                   : ""    // External Data(JSON) URL | local:dataModelVariableName
+   ,dataUrlMethod             : ""    // GET | POST; default:GET
    ,dataUrlErrorHandle        : ""    // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
    ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
    ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
@@ -4749,6 +5094,7 @@ var isSpaHashRouteOn=false;
    ,dataCollection            : {}    // { urls: [ {
    //              name   : 'string:dataApi'; if no (name or target) auto-keys: data0..dataN
    //            , url    : 'string:path-to-data-api'
+   //            , method : 'string:GET | POST'; default:GET
    //            , params : object:pay-load
    //            , cache  : boolean:true|false; default:false
    //            , target : 'string:data-key-in-api-result-json'
@@ -4854,6 +5200,7 @@ var isSpaHashRouteOn=false;
     var spaRVOptions = {
       data: {}
       , dataUrl: ""
+      , dataUrlMethod: "GET"
       , dataUrlErrorHandle: ""
       , dataParams: {}
       , dataExtra:{}
@@ -5078,6 +5425,7 @@ var isSpaHashRouteOn=false;
                 spaAjaxRequestsQue.push(
                   $.ajax({
                     url: apiDataUrl,
+                    method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
                     data: _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {}),
                     cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
                     dataType: "text",
@@ -5176,6 +5524,7 @@ var isSpaHashRouteOn=false;
           spaAjaxRequestsQue.push(
             $.ajax({
               url: dataModelUrl,
+              method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
               data: spaRVOptions.dataParams,
               cache: spaRVOptions.dataCache,
               dataType: "text",
@@ -5523,8 +5872,14 @@ var isSpaHashRouteOn=false;
 
                 /*apply data-validation*/
                 if (spa.hasOwnProperty('initDataValidation')) {
-                  $(viewContainerId).find('[data-validate-scope]').each(function (i, el){
-                    spa.initDataValidation('#'+ ($(el).data('validateScope').replace(/#/g,'') || el.id));
+                  var $el, $elData;
+                  $(viewContainerId).find('[data-validate-form],[data-validate-scope]').each(function (i, el){
+                    $el = $(el); $elData = $el.data();
+                    //Disable form submit;
+                    if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
+                    //clear validate msg on focus
+                    if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
+                    spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
                   });
                 }
 

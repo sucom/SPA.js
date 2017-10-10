@@ -287,10 +287,12 @@ spa['_validate'] = {
                       if ((arguments.length>2) && _.isBoolean(isValid) && (isValid)) { msg = ""; }
                       errMsgTemplate = errMsgTemplate || spa['_validate']._validateAlertTemplate;
 
+                      var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<'));
+
                       forObj = $($(forObj).data("validateMsgEl")||forObj).get(0);
-                      var alertObj = $(forObj).next();
+                      var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
                       var i18nSpec = "";
-                      if (($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class")))
+                      if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
                       { if (msg.beginsWithStrIgnoreCase("i18n:"))
                         { var i18nKey = msg.replace(/i18n:/gi,"");
                           i18nSpec = "{html:'"+i18nKey+"'}";
@@ -327,6 +329,8 @@ var _check = spa['_validate'].expose();
 
 spa['initValidation'] = spa['initDataValidation'] = function(context){
   /* apply same rules if mult-events specified with underscore eg: onFocus_onBlur_onKeyup */
+  spa.console.log('>>>>> initDataValidation request for context:'+context);
+
   var splitValidateEvents = function(eObj) {
     eObj = eObj || {};
     _.each(_.keys(eObj), function(eNames){
@@ -353,10 +357,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var $context = $(context);
   var elSelector = $context.data("validateElFilter") || "";
   var commonValidateRules = splitValidateEvents(spa.toJSON($context.data("validateCommon")||"{}"));
+  spa.console.log('keys Of commonValidateRules');
   spa.console.log(_.keys(commonValidateRules));
 
   var addRule2El, addRule2ElDir, overrideOfflineRule2El, elOfflineRule, commonRule2El;
-  var offlineValidationKey = ($context.data("validateScope")||"").replace(/[^a-zA-Z0-9]/g,'');
+  var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/[^a-zA-Z0-9]/g,'');
   if (spa.isBlank(offlineValidationKey)) {
     var contextName = context.replace(/[^a-zA-Z0-9]/g,'');
     if (!spa['_validate']._offlineValidationRules.hasOwnProperty(contextName)) {
@@ -437,19 +442,23 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
         });
       }
 
-      $(el).on(jqEventName, function(){
-        var el = this;
-        _.every(elValidateRules[validateOnEvent], function(validateRule){
-          if (_.isArray(validateRule))
-          { return _.every(validateRule, function(validateRuleInArray){
-              return (validateRuleInArray.fn(el, (validateRuleInArray.msg || $(el).data("validateMsg") || "")));
-            });
-          }
-          else
-          { return (validateRule.fn(el, (validateRule.msg || $(el).data("validateMsg") || "")));
-          }
+      spa.console.log('registering an event: '+validateOnEvent);
+      if (validateOnEvent.beginsWithStrIgnoreCase('on')) {
+        $(el).on(jqEventName, function(){
+          var el = this;
+          _.every(elValidateRules[validateOnEvent], function(validateRule){
+            if (_.isArray(validateRule))
+            { return _.every(validateRule, function(validateRuleInArray){
+                return (validateRuleInArray.fn(el, (validateRuleInArray.msg || $(el).data("validateMsg") || "")));
+              });
+            }
+            else
+            { return (validateRule.fn(el, (validateRule.msg || $(el).data("validateMsg") || "")));
+            }
+          });
         });
-      });
+      }
+
     });
   });
 };
