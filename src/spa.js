@@ -6710,9 +6710,9 @@ var isSpaHashRouteOn=false;
 
   function init_i18n_Lang() {
     function setLang(uLang) {
-      spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {})));
+      if (uLang) spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {})));
     }
-    setLang($('html').attr('lang')||'en_US');
+    setLang($('body').attr('i18n-lang'));
     $(document).on("click", "[data-i18n-lang]", function () {
       setLang($(this).data('i18nLang'));
     });
@@ -6754,7 +6754,7 @@ var isSpaHashRouteOn=false;
     }
 
     //Common Request Error Handling if not defined
-    if (!options.hasOwnProperty('error')) {
+    if ((options['dataType'] != 'script') && (!options.hasOwnProperty('error'))) {
       options['error'] = spa.api.onReqError;
     }
 
