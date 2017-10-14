@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.13.1';
+  spa.VERSION = '2.14.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -2694,6 +2694,41 @@ var isSpaHashRouteOn=false;
     });
   };
 
+  spa.strToNative = function(srcStr){
+    var tStr = srcStr.trim();
+    function isNumeric(){
+      var nonNumericChars = tStr.replace(/[0-9]/g, '');
+      if (tStr.length) {
+        if (nonNumericChars.length) {
+          return ((nonNumericChars == '-') || (nonNumericChars == '+') || (nonNumericChars == '.'));
+        } else {
+          return true;
+        }
+      } else {
+        return false;
+      }
+    }
+    function isBoolean(){
+      return (tStr=='true' || tStr=='false');
+    }
+    function isArray(){
+      return (tStr[0]=='[' && tStr[tStr.length-1]==']');
+    }
+    function isObject(){
+      return (tStr[0]=='{' && tStr[tStr.length-1]=='}');
+    }
+    switch (true) {
+      case isNumeric() : return tStr*1;
+      case isBoolean() : return (tStr == 'true');
+      case isObject()  : return tStr.toJSON();
+      case isArray()   : return ('{xArr:'+tStr+'}').toJSON().xArr;
+      default: return srcStr;
+    }
+  };
+  String.prototype.toNative = function(){
+    return spa.strToNative(''+this);
+  };
+
   //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
   //bS: '{'
   //eS: '}'
@@ -3335,7 +3370,7 @@ var isSpaHashRouteOn=false;
   };
 
   spa.parseKeyStr = function (keyName, changeToLowerCase) {
-    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\[\]\?]/g, ""));
+    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\[\]\?\*]/g, ""));
   };
 
   var arrayIndexPointsToMap = {};
@@ -3345,7 +3380,7 @@ var isSpaHashRouteOn=false;
     var xObj = obj, oKey;
     var oKeys = keyNameStr.split(/(?=[A-Z])/), arrNameIndx, arrName, arrIdx;
     /*Default: camelCase | TitleCase*/
-    var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?]/g, ""));
+    var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?\*\_]/g, ""));
     if (keyIdentifier && (keyIdentifier != "")) {
       oKeys = keyNameStr.split(keyIdentifier[0]);
     }
@@ -3353,7 +3388,7 @@ var isSpaHashRouteOn=false;
     while (oKeys.length > 1) {
       oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
       if ($.trim(oKey) != "") {
-        keyFullPath += oKey.replace(/[\?\[\]]/g,'');
+        keyFullPath += oKey.replace(/[\?\[\]\*\_]/g,'');
         if ((oKey.indexOf('[')>0) && (oKey.indexOf(']') == oKey.length-1)) {//isArray
           arrNameIndx = oKey.substring(0,oKey.length-1).replace(/\[/g, '.').split('.');
           arrName = arrNameIndx[0];
@@ -3568,15 +3603,17 @@ var isSpaHashRouteOn=false;
    * */
   $.fn.serializeFormToJSON = $.fn.serializeFormToObject = function (obj, keyNameToLowerCase, strPrefixToIgnore) {
     var a = this.serializeArray()
+      , $fmData = $(this).data()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : (keyNameToLowerCase || false)
-      , kParse = $(this).data("serializeIgnorePrefix")
+      , kParse   = $fmData["serializeIgnorePrefix"]
+      , toNative = $fmData.hasOwnProperty('typeNative')
       , oKeyName, oKeyValue;
     arrayIndexPointsToMap = {};
     if (strPrefixToIgnore) kParse = strPrefixToIgnore;
     $.each(a, function () {
       oKeyName = (kParse) ? (this.name).replace(kParse, "") : this.name;
-      o = spa.setObjProperty(o, oKeyName, this.value, c);
+      o = spa.setObjProperty(o, oKeyName,  (toNative? ((this.value).toNative()) : this.value), c);
     });
 
     //include unchecked checkboxes
@@ -3590,11 +3627,14 @@ var isSpaHashRouteOn=false;
         }
         oKeyValue = '' + ((typeof oKeyValue == 'undefined') ? '' : oKeyValue);
 
-        o = spa.setObjProperty(o, oKeyName, oKeyValue, c);
+        o = spa.setObjProperty(o, oKeyName, (toNative? (oKeyValue.toNative()) : oKeyValue), c);
       }
     });
 
     return o;
+  };
+  spa.serializeFormToJSON = spa.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
+    return $(formSelector).serializeFormToJSON(obj, keyNameToLowerCase, strPrefixToIgnore);
   };
 
   $.fn.serializeFormToSimpleJSON = $.fn.serializeFormToSimpleObject = function (obj, includeDisabledElements) {
@@ -3632,10 +3672,6 @@ var isSpaHashRouteOn=false;
   };
   spa.serializeFormToSimpleJSON = spa.serializeFormToSimpleObject = function (formSelector, obj, includeDisabledElements) {
     return $(formSelector).serializeFormToSimpleJSON(obj, includeDisabledElements);
-  };
-
-  spa.serializeFormToJSON = spa.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
-    return $(formSelector).serializeFormToJSON(obj, keyNameToLowerCase, strPrefixToIgnore);
   };
 
   /* find(jsonObject, 'key1.key2.key3[0].key4'); */
@@ -5227,6 +5263,7 @@ var isSpaHashRouteOn=false;
       , dataUrlErrorHandle: ""
       , dataParams: {}
       , dataExtra:{}
+      , data_    :{}
       , dataDefaults:{}
       , dataModel: ""
       , dataProcess: ''
@@ -5828,7 +5865,7 @@ var isSpaHashRouteOn=false;
                 if ((typeof Handlebars != "undefined") && Handlebars) {
                   var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
                   if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                  compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
+                  compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
                 } else {
                   spa.console.error("handlebars.js is not loaded.");
                 }
@@ -6671,9 +6708,84 @@ var isSpaHashRouteOn=false;
   };//End of spa.api{}
   //API Section Ends
 
+  function init_i18n_Lang() {
+    function setLang(uLang) {
+      spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {})));
+    }
+    setLang($('html').attr('lang')||'en_US');
+    $(document).on("click", "[data-i18n-lang]", function () {
+      setLang($(this).data('i18nLang'));
+    });
+  }
+
+  spa.ajaxPreProcess;
+  spa.onReady;
+
+  function _ajaxSetReqHeaders(req, options){
+    var reqHeadersToSend = spa.findSafe(window, 'app.api.reqHeaders');
+    if (is(reqHeadersToSend, 'function')) reqHeadersToSend = reqHeadersToSend(req, options);
+    if (is(reqHeadersToSend, 'object')) {
+      _.forEach(Object.keys(reqHeadersToSend), function(reqHeadKey){
+        req.setRequestHeader(reqHeadKey, reqHeadersToSend[reqHeadKey]);
+      });
+    } else if (is(reqHeadersToSend, 'string')) {
+      if ((options.url).beginsWithStr(app.api.liveApiPrefix)) {
+        options['data'] = options['data'] || '';
+        options['data'] += (spa.isBlank(options['data'])? '':'&') + reqHeadersToSend;
+      } else {
+        req.setRequestHeader('reqHeadersInLiveUrl', reqHeadersToSend);
+      }
+    }
+  }
+
+  function _ajaxPrefilter(options, orgOptions, jqXHR){
+
+    if ((options.url).beginsWithStr(spa.api.urlKeyIndicator)) {
+      options.url = spa.api.url((options.url).trimLeftStr(spa.api.urlKeyIndicator), options.data);
+    };
+    var actualUrl = options.url;
+
+    //any request Header to send?
+    var reqHeaders = spa.findSafe(window, 'app.api.reqHeaders');
+    if (reqHeaders) {
+      options['beforeSend'] = function(req) {
+        _ajaxSetReqHeaders(req, options);
+      };
+    }
+
+    //Common Request Error Handling if not defined
+    if (!options.hasOwnProperty('error')) {
+      options['error'] = spa.api.onReqError;
+    }
+
+    if (spa.api.mock || actualUrl.beginsWithStr('!')) {
+      if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
+        options.url = actualUrl.trimLeftStr('~');
+      } else {
+        var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
+        options['type'] = 'GET'; //force GET for mock URLs
+        actualUrl = actualUrl.trimLeftStr('!');
+        if (actualUrl.beginsWithStr(app.api.liveApiPrefix)) {
+          if (!actualUrl.containsStr('\\?')) {
+            actualUrl = actualUrl.trimRightStr('/') + '?';
+          }
+          options.url = (actualUrl).replace(RegExp(app.api.liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
+          if (app.debug) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
+        }
+      }
+    }
+
+    if (spa.ajaxPreProcess) {
+      spa.ajaxPreProcess(options, orgOptions, jqXHR);
+    }
+  }
+
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
+
+    /* ajaxPrefilter */
+    $.ajaxPrefilter(_ajaxPrefilter);
 
     /*Reflow Foundation*/
     spa.reflowFoundation();
@@ -6689,6 +6801,9 @@ var isSpaHashRouteOn=false;
     /*Key Tracking*/
     spa.initKeyTracking();
 
+    /*init i18nLang*/
+    init_i18n_Lang();
+
     /*Auto Render*/
     var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
     var autoRenderCount = $autoRenderElList.length;
@@ -6697,10 +6812,16 @@ var isSpaHashRouteOn=false;
       $autoRenderElList.spaRender();
     } else {
       spa.console.info("Init SPA Render.");
-      $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off'></div>");
+      $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off' style='display:none'>&nbsp;</div>");
       $("#initSpaRender0").spaRender();
     }
     spa.renderComponentsInHtml();
+
+    /*APP Init*/
+
+    if (spa.onReady) {
+      spa.onReady();
+    }
   });
 
 })(this);
