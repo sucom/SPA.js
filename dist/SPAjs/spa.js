@@ -79,7 +79,7 @@ var isSpaHashRouteOn=false;
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.13.0';
+  spa.VERSION = '2.13.1';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -3335,23 +3335,45 @@ var isSpaHashRouteOn=false;
   };
 
   spa.parseKeyStr = function (keyName, changeToLowerCase) {
-    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z]/g, ""));
+    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\[\]\?]/g, ""));
   };
+
+  var arrayIndexPointsToMap = {};
   spa.setObjProperty = function (obj, keyNameStr, propValue, keyToLowerCase) {
     keyNameStr = ('' + keyNameStr);
     keyToLowerCase = keyToLowerCase || false;
     var xObj = obj, oKey;
-    var oKeys = keyNameStr.split(/(?=[A-Z])/);
+    var oKeys = keyNameStr.split(/(?=[A-Z])/), arrNameIndx, arrName, arrIdx;
     /*Default: camelCase | TitleCase*/
-    var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z]/g, ""));
+    var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?]/g, ""));
     if (keyIdentifier && (keyIdentifier != "")) {
       oKeys = keyNameStr.split(keyIdentifier[0]);
     }
+    var keyFullPath='';
     while (oKeys.length > 1) {
       oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
       if ($.trim(oKey) != "") {
-        if (typeof xObj[oKey] == "undefined") xObj[oKey] = {};
-        xObj = xObj[oKey];
+        keyFullPath += oKey.replace(/[\?\[\]]/g,'');
+        if ((oKey.indexOf('[')>0) && (oKey.indexOf(']') == oKey.length-1)) {//isArray
+          arrNameIndx = oKey.substring(0,oKey.length-1).replace(/\[/g, '.').split('.');
+          arrName = arrNameIndx[0];
+          arrIdx = arrNameIndx[1];
+          if (typeof xObj[arrName] == "undefined") xObj[arrName] = [];
+          if (!!arrIdx.replace(/[0-9]/g, '')) {
+            arrIdx = arrIdx.replace(/[^0-9]/g, '');
+            if (arrayIndexPointsToMap.hasOwnProperty(keyFullPath)) {
+              arrIdx = arrayIndexPointsToMap[keyFullPath];
+            } else if (typeof xObj[arrName][arrIdx] == "undefined") {
+              arrayIndexPointsToMap[keyFullPath] = xObj[arrName].length;
+              arrIdx = xObj[arrName].length;
+            }
+          }
+          if (typeof xObj[arrName][arrIdx] == "undefined") xObj[arrName][arrIdx] = {};
+          xObj = xObj[arrName][arrIdx];
+        } else {
+          if (typeof xObj[oKey] == "undefined") xObj[oKey] = {};
+          xObj = xObj[oKey];
+        }
       }
     }
     oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
@@ -3550,6 +3572,7 @@ var isSpaHashRouteOn=false;
       , c = (typeof obj === "boolean") ? obj : (keyNameToLowerCase || false)
       , kParse = $(this).data("serializeIgnorePrefix")
       , oKeyName, oKeyValue;
+    arrayIndexPointsToMap = {};
     if (strPrefixToIgnore) kParse = strPrefixToIgnore;
     $.each(a, function () {
       oKeyName = (kParse) ? (this.name).replace(kParse, "") : this.name;
