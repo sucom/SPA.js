@@ -5846,11 +5846,13 @@
 
               compiledTemplate = templateContentToBindAndRender;
               spa.console.log("Template Source:", templateContentToBindAndRender);
+              spa.console.log("DATA for Template:", spaViewModel);
               if (!spa.isBlank(spaViewModel)) {
                 if ((typeof Handlebars != "undefined") && Handlebars) {
                   var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
+                  var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                   if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                  compiledTemplate = preCompiledTemplate(_.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel));
+                  compiledTemplate = preCompiledTemplate(data4Template);
                 } else {
                   spa.console.error("handlebars.js is not loaded.");
                 }
