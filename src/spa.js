@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.15.1';
+  spa.VERSION = '2.16.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -2730,13 +2730,19 @@
     return srcStr;
   };
 
-  spa.toJSON = function (str) {
+  spa.toJSON = function (str, key4PrimaryDataTypes) {
     var thisStr;
     if (_.isString(str)) {
       thisStr = str.trimStr();
 
       if (!(thisStr.containsStr("{") || thisStr.containsStr(":") || thisStr.containsStr("\\[") || thisStr.containsStr("'") || thisStr.containsStr('\"') ))
-      { return (thisStr.containsStr(",") || thisStr.containsStr(";"))? thisStr.replace(/ /g,'').replace(/;/g, ',').split(',') : thisStr;
+      { if (thisStr.containsStr(",") || thisStr.containsStr(";")) {
+          return thisStr.replace(/ /g,'').replace(/;/g, ',').split(',');
+        } else if (key4PrimaryDataTypes) {
+          thisStr = '{'+key4PrimaryDataTypes+':'+thisStr+'}';
+        } else {
+          return thisStr;
+        }
       }
 
       if (thisStr.containsStr(":") && !thisStr.containsStr(",") && thisStr.containsStr(";")) {
@@ -2752,6 +2758,10 @@
         }
       } else if (thisStr.beginsWithStr("{") && !thisStr.containsStr(":") && thisStr.containsStr("=")) {
         thisStr = ""+thisStr.replace(/=/g,':')+"";
+      }
+
+      if (!thisStr.beginsWithStr("{") && key4PrimaryDataTypes) {
+        thisStr = '{'+key4PrimaryDataTypes+':'+thisStr+'}';
       }
     }
     return (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
@@ -4570,7 +4580,7 @@
         async: fillOptions.async,
         dataType: "text",
         success: function (result) {
-          data = spa.toJSON(result);
+          data = spa.toJSON(''+result);
           ready2Fill = ((typeof data) == "object");
           _fillData();
         },
@@ -5468,7 +5478,7 @@
                     success: function (result) {
                       var targetApiData
                         , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
-                        , oResult = spa.toJSON("" + result);
+                        , oResult = spa.toJSON(''+result, 'data');
 
                       if (targetDataModelName.indexOf(".") > 0) {
                         targetApiData = spa.hasKey(oResult, targetDataModelName) ? spa.find(oResult, targetDataModelName) : oResult;
@@ -5565,11 +5575,10 @@
               cache: spaRVOptions.dataCache,
               dataType: "text",
               success: function (result) {
-                var oResult = spa.toJSON(""+result);
+                var oResult = spa.toJSON(''+result, 'data');
                 if (dataModelName.indexOf(".") > 0) {
                   spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? spa.find(oResult, dataModelName) : oResult;
-                }
-                else {
+                } else {
                   try{
                     if ((dataModelName == 'data') && !oResult.hasOwnProperty(dataModelName)) {
                       dataModelName = 'Data';
