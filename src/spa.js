@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.16.0';
+  spa.VERSION = '2.16.1';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -3364,8 +3364,8 @@
     keyNameStr = ('' + keyNameStr);
     keyToLowerCase = keyToLowerCase || false;
     var xObj = obj, oKey;
-    var oKeys = keyNameStr.split(/(?=[A-Z])/), arrNameIndx, arrName, arrIdx;
-    /*Default: camelCase | TitleCase*/
+    var oKeys = ((keyNameStr == keyNameStr.toUpperCase())? keyNameStr.split('.') : keyNameStr.split(/(?=[A-Z])/)), arrNameIndx, arrName, arrIdx;
+    /*Default: camelCase | TitleCase if ALL UPPERCASE split by . */
     var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?\*\_]/g, ""));
     if (keyIdentifier && (keyIdentifier != "")) {
       oKeys = keyNameStr.split(keyIdentifier[0]);
