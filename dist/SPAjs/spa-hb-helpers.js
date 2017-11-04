@@ -173,6 +173,18 @@
     }
   }
 
+  function getHashRaw(obj, toObj) {
+    var hashObj = (hasHash(obj)? obj['hash'] : {});
+    if (toObj) {
+      Object.keys(hashObj).forEach(function(hashKey){
+        toObj[hashKey] = hashObj[hashKey];
+      });
+      return toObj;
+    } else {
+      return hashObj;
+    }
+  }
+
   function _hbjshelper_() {
     //exit if no arguments
     if (arguments.length < 2) {
@@ -1436,6 +1448,23 @@
     }
   };
 
+  function _replaceStr (srcStr){
+    var helperOptions = arguments[arguments.length-1],
+      retValue = '',
+      opt = {searchStr:'', replaceStr:'', rxPattern:'', rxOption:''};
+
+    if (hasHash(helperOptions)) {
+      opt = getHashRaw(helperOptions, opt);
+    }
+
+    if (opt.rxPattern) {
+      retValue = (''+srcStr).replace(new RegExp(opt.rxPattern, opt.rxOption), opt.replaceStr);
+    } else {
+      retValue = (''+srcStr).replace(opt.searchStr, opt.replaceStr);
+    }
+    return retValue;
+  }
+
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
       ':'              : _hbjshelper_, //+Block
@@ -1520,6 +1549,7 @@
       ':trimLeftStr'   : _trimLeftStr,
       ':trimRight'     : _trimRightStr,
       ':trimRightStr'  : _trimRightStr,
+      ':replace'       : _replaceStr,
 
       ':getLeftStr'    : _getLeftStr,
       ':getRightStr'   : _getRightStr,

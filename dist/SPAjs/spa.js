@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.16.1';
+  spa.VERSION = '2.16.2';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -6699,10 +6699,17 @@
     function setLang(uLang) {
       if (uLang) spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {})));
     }
-    setLang($('body').attr('i18n-lang'));
-    $(document).on("click", "[data-i18n-lang]", function () {
-      setLang($(this).data('i18nLang'));
+    $(document).on("click", "[data-i18n-lang]", function() {
+      var elData = $(this).data();
+      setLang(elData['i18nLang']);
+      $('.lang-text').html(elData['langDisplay']);
+      $('.lang-icon').removeClass(Array.prototype.join.call($('[data-lang-display]').map(function(i, el){ return $(el).data('langDisplay'); }), ' ')).addClass(elData['langDisplay']);
     });
+    var defaultLang = $('body').attr('i18n-lang');
+    if (defaultLang) {
+      setLang(defaultLang);
+      $('[data-i18n-lang="'+defaultLang+'"]').trigger('click');
+    }
   }
 
   spa.ajaxPreProcess;
