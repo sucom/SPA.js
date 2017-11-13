@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.16.2';
+  spa.VERSION = '2.17.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -4862,6 +4862,11 @@
         options['template'] = options['templateUrl'];
       }
     }
+
+    if (options && _.isObject(options) && !spa.hasPrimaryKeys(options, 'data|dataUrl') && spa.hasPrimaryKeys(spa.api.urls, '$'+componentName)){
+      options['dataUrl'] = '@$'+componentName;
+    }
+
     return options;
   }
 
@@ -5137,14 +5142,15 @@
    ,dataProcess               : function or Function name in String
 
    ,dataCollection            : {}    // { urls: [ {
-   //              name   : 'string:dataApi'; if no (name or target) auto-keys: data0..dataN
-   //            , url    : 'string:path-to-data-api'
-   //            , method : 'string:GET | POST'; default:GET
-   //            , params : object:pay-load
-   //            , cache  : boolean:true|false; default:false
-   //            , target : 'string:data-key-in-api-result-json'
-   //            , success: 'string:functionName'
-   //            , error  : 'string:functionName' } ... ]
+   //              name     : 'string:dataApi'; if no (name or target) auto-keys: data0..dataN
+   //            , url      : 'string:path-to-data-api'
+   //            , urlParams: object: {paramKey1: paramValue1, paramKey2: paramValue2} ==> will replace in url: path-to-api/{paramKey1}/{paramKey2}
+   //            , method   : 'string:GET | POST'; default:GET
+   //            , params   : object:ajax-pay-load
+   //            , cache    : boolean:true|false; default:false
+   //            , target   : 'string:data-key-in-api-result-json'
+   //            , success  : 'string:functionName'
+   //            , error    : 'string:functionName' } ... ]
    //
    //    , nameprefix: 'string: default:data' for xyz0, xyz1, xyz2
    //    , success:fn
@@ -5245,6 +5251,7 @@
     var spaRVOptions = {
       data: {}
       , dataUrl: ""
+      , dataUrlParams: {}
       , dataUrlMethod: "GET"
       , dataUrlErrorHandle: ""
       , dataParams: {}
@@ -5468,6 +5475,9 @@
               spa.console.log(dataApi);
 
               if (apiDataUrl) {
+                if (_.has(dataApi, 'urlParams')) {
+                  apiDataUrl = spa.api.url(apiDataUrl, dataApi['urlParams']);
+                };
                 spaAjaxRequestsQue.push(
                   $.ajax({
                     url: apiDataUrl,
@@ -5566,6 +5576,9 @@
 
         }
         else { /*External Data Source*/
+          if (!spa.isBlank(spaRVOptions.dataUrlParams)){
+            dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
+          }
           spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
           spaAjaxRequestsQue.push(
             $.ajax({
@@ -6603,6 +6616,7 @@
 
   //API Section begins
   spa.api = {
+    baseUrl:'',
     urls:{},
     mock:false,
     forceParamValuesInMockUrls:false,
@@ -6754,7 +6768,7 @@
 
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
-        options.url = actualUrl.trimLeftStr('~');
+        options.url = (spa.api.baseUrl || '')+actualUrl.trimLeftStr('~');
       } else {
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
@@ -6767,7 +6781,9 @@
           if (app.debug) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
-    }
+    } else {
+      options.url = (spa.api.baseUrl || '')+actualUrl;
+    };
 
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
