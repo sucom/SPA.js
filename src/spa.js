@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.18.0';
+  spa.VERSION = '2.18.1';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -4870,7 +4870,13 @@
     return options;
   }
 
+  var reservedCompNames = 'api,debug,lang';
   spa.component = spa.$ = spa.registerComponent = function(componentName, options) {
+    if (reservedCompNames.indexOf(componentName)>=0) {
+      console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
+      return;
+    };
+
     options = options || {};
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
@@ -4907,6 +4913,11 @@
     if (is(componentName, 'string') && componentName) {
       componentName = componentName.trim();
       if (componentName) {
+        if (reservedCompNames.indexOf(componentName)>=0) {
+          console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
+          return;
+        };
+
         window['app'] = window['app'] || {};
         window.app[componentName] = window.app[componentName] || {};
         if (options && _.isFunction(options)) {
