@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.17.0';
+  spa.VERSION = '2.18.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -4913,6 +4913,7 @@
           options = options.call(spa.components[componentName] || {});
         }
         options = spa.is(options, 'object')? options : {};
+        if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, renderCallback: 'app.'+componentName+'.renderCallback'};
         if (spa.components[componentName]) {
           if (options['__prop__']) {
             _.merge(spa.components[componentName], $.extend({},options['__prop__']));
@@ -5009,12 +5010,11 @@
 
 /*
  * TODO:
- * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
  * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
- * ( ['compName1', 'compName2', 'compName3'], ... ) //as Single Array without options
  *
- * ( { compName1: {overrideOptions} }, { compName2: {overrideOptions} }, ... ) //as arguments with options
- * ( [ { compName1: {overrideOptions} }, { compName2: {overrideOptions} }, ... ] ) //as Single Array with options
+ * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
+ * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array without options
+ * ( { compName1: {overrideOptions}, compName2: {overrideOptions}, ... } ) //as argument as Object
  *
  */
   spa.renderComponents = spa.$$render = function () {
@@ -5023,15 +5023,22 @@
       if (arguments.length == 1) {
         if (_.isArray(arguments[0])) { //spa.renderComponents(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else { //spa.renderComponents('compName3');
-          compList = [arguments[0]];
-        };
+        } else if (_.isString(arguments[0])) { //spa.renderComponents('compName1') | spa.renderComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        } else {
+          compList = arguments[0]; // spa.renderComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+        }
       }
 
-      if (compList && compList.length) {
+      if (spa.is(compList, 'object')) {
+        _.each(Object.keys(compList), function(compName){
+          spa.console.info('Rendering spa-component:['+compName+']');
+          spa.renderComponent(compName, compList[compName]);
+        });
+      } else if (compList && compList.length) {
         _.each(compList, function(compName){
           spa.console.info('Rendering spa-component:['+compName+']');
-          spa.renderComponent(compName);
+          spa.renderComponent(compName.trim());
         });
       }
     }
@@ -6711,7 +6718,7 @@
 
   function init_i18n_Lang() {
     function setLang(uLang) {
-      if (uLang) spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {})));
+      if (uLang) spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}) ));
     }
     $(document).on("click", "[data-i18n-lang]", function() {
       var elData = $(this).data();
@@ -6737,7 +6744,8 @@
         req.setRequestHeader(reqHeadKey, reqHeadersToSend[reqHeadKey]);
       });
     } else if (is(reqHeadersToSend, 'string')) {
-      if ((options.url).beginsWithStr(app.api.liveApiPrefix)) {
+      var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
+      if (liveApiPrefix && (options.url).beginsWithStr(liveApiPrefix)) {
         options['data'] = options['data'] || '';
         options['data'] += (spa.isBlank(options['data'])? '':'&') + reqHeadersToSend;
       } else {
@@ -6770,15 +6778,16 @@
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
         options.url = (spa.api.baseUrl || '')+actualUrl.trimLeftStr('~');
       } else {
-        var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
+        var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', ''),
+            reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
         actualUrl = actualUrl.trimLeftStr('!');
-        if (actualUrl.beginsWithStr(app.api.liveApiPrefix)) {
+        if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
-          options.url = (actualUrl).replace(RegExp(app.api.liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
-          if (app.debug) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
+          options.url = (actualUrl).replace(RegExp(liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
+          if (app['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
     } else {
@@ -6793,6 +6802,8 @@
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
+
+    window['app'] = window['app'] || {};
 
     /* ajaxPrefilter */
     $.ajaxPrefilter(_ajaxPrefilter);
