@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.18.1';
+  spa.VERSION = '2.18.2';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -6645,7 +6645,7 @@
 
       var apiUrl = (spa.api.urls[apiKey] || apiKey)
         , isStaticUrl = apiUrl.beginsWithStr('!') || spa.api.mock
-        , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || spa.api.forceParamValuesInMockUrls
+        , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || spa.api.forceParamValuesInMockUrls
         , paramsInUrl = _.uniq(apiUrl.extractStrBetweenIn('{', '}'))
         , pKey, pValue;
 
@@ -6727,9 +6727,23 @@
   };//End of spa.api{}
   //API Section Ends
 
+  spa.i18n.displayLang = function(){
+    var selectedLang = $('html').attr('lang');
+    if (selectedLang){
+      var $el = $('[data-i18n-lang="'+(selectedLang.replace('-', '_') )+'"]');
+      if ($el.length) {
+        var elData = $el.data();
+        $('.lang-text').html(elData['langDisplay']);
+        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-lang-display]').map(function(i, el){ return $(el).data('langDisplay'); }), ' ')).addClass(elData['langDisplay']);
+      }
+    }
+  };
   function init_i18n_Lang() {
     function setLang(uLang) {
-      if (uLang) spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}) ));
+      if (uLang) {
+        $('html').attr('lang', uLang.replace('_', '-'));
+        spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}) ));
+      }
     }
     $(document).on("click", "[data-i18n-lang]", function() {
       var elData = $(this).data();
@@ -6737,10 +6751,13 @@
       $('.lang-text').html(elData['langDisplay']);
       $('.lang-icon').removeClass(Array.prototype.join.call($('[data-lang-display]').map(function(i, el){ return $(el).data('langDisplay'); }), ' ')).addClass(elData['langDisplay']);
     });
+
     var defaultLang = $('body').attr('i18n-lang');
     if (defaultLang) {
       setLang(defaultLang);
-      $('[data-i18n-lang="'+defaultLang+'"]').trigger('click');
+      setTimeout(function(){
+        spa.i18n.displayLang();
+      }, 500);
     }
   }
 
