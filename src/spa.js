@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.18.2';
+  spa.VERSION = '2.18.3';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -6802,12 +6802,12 @@
       options['error'] = spa.api.onReqError;
     }
 
+    var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
         options.url = (spa.api.baseUrl || '')+actualUrl.trimLeftStr('~');
       } else {
-        var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', ''),
-            reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
+        var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
         actualUrl = actualUrl.trimLeftStr('!');
         if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
@@ -6819,7 +6819,9 @@
         }
       }
     } else {
-      options.url = (spa.api.baseUrl || '')+actualUrl;
+      if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
+        options.url = (spa.api.baseUrl || '')+actualUrl;
+      }
     };
 
     if (spa.ajaxPreProcess) {
