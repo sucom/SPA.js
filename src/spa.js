@@ -2422,7 +2422,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.18.3';
+  spa.VERSION = '2.19.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -5020,7 +5020,6 @@
   };
 
 /*
- * TODO:
  * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
  *
  * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
@@ -5140,6 +5139,26 @@
             spa.console.error("CallbackFunction <" + fn2Call + "> is NOT defined.");
           }
         }
+      }
+    },
+    registerComponentEvents: function (compName) {
+      if (compName && app[compName].hasOwnProperty('events')) {
+        _.each(Object.keys(app[compName].events), function(eventId){
+          if (app[compName].events[eventId].hasOwnProperty('target') && (!spa.isBlank(app[compName].events[eventId].target))) {
+            $('body').find(app[compName].events[eventId].target).filter(':not([spa-events-'+eventId+'="'+compName+'"])')
+            .attr('spa-events-'+eventId, compName)
+            .each(function(index, el){
+              _.each(Object.keys(app[compName].events[eventId]), function(eventNames){
+                if (eventNames.indexOf('on')==0) {
+                  _.each(eventNames.split('_'), function(eventName){
+                    spa.console.log('registering component ['+compName+'] event: '+eventId+'-'+eventName);
+                    $(el).on(eventName.trimLeftStr('on').toLowerCase(), app[compName].events[eventId][eventNames]);
+                  });
+                }
+              });
+            });
+          }
+        });
       }
     }
   };
@@ -5967,11 +5986,13 @@
 
               spa.console.log(retValue);
 
+              /*Register Events in Components*/
+              spa.renderUtils.registerComponentEvents(rCompName);
+
               /*run callback if any*/
               /*
                * Default component's callback
                */
-
               var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
               if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
                 delete renderCallbackContext['__prop__']['data']['_global_'];
@@ -6815,10 +6836,11 @@
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
           options.url = (actualUrl).replace(RegExp(liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
-          if (app['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
+          if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
     } else {
+      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefix);
       if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
         options.url = (spa.api.baseUrl || '')+actualUrl;
       }
@@ -6827,6 +6849,8 @@
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
     }
+
+    if (app['debug'] || spa['debug']) console.log('ajax Options', options);
   }
 
   $(document).ready(function(){
