@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.20.0';
+  spa.VERSION = '2.20.1';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -5144,7 +5144,7 @@ window['app'] = window['app'] || {};
       }
     },
     registerComponentEvents: function (compName) {
-      if (compName && app[compName].hasOwnProperty('events')) {
+      if (compName && app[compName] && app[compName].hasOwnProperty('events')) {
         _.each(Object.keys(app[compName].events), function(eventId){
           if (app[compName].events[eventId].hasOwnProperty('target') && (!spa.isBlank(app[compName].events[eventId].target))) {
             $('body').find(app[compName].events[eventId].target).filter(':not([spa-events-'+eventId+'="'+compName+'"])')
@@ -5876,9 +5876,11 @@ window['app'] = window['app'] || {};
               }
 
               if (rCompName) {
-                var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
-                app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
-                app[rCompName]['__global__']= window || {};
+                if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
+                  var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
+                  app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
+                  app[rCompName]['__global__']= window || {};
+                }
 
                 retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
                 retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
