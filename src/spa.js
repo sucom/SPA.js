@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.20.1';
+  spa.VERSION = '2.21.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -5878,7 +5878,11 @@ window['app'] = window['app'] || {};
               if (rCompName) {
                 if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
                   var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
-                  app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
+                  if (compLocOrApiData.hasOwnProperty('spaComponent')) {
+                    app[rCompName]['$data'] = {};
+                  } else {
+                    app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
+                  }
                   app[rCompName]['__global__']= window || {};
                 }
 
