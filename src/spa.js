@@ -36,6 +36,8 @@
  * ===========================================================================
  */
 
+window['app'] = window['app'] || {};
+
 /* Avoid 'console' errors in browsers that lack a console*/
 (function() {
   var method;
@@ -2422,7 +2424,7 @@
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.19.0';
+  spa.VERSION = '2.20.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -5872,11 +5874,16 @@
                   retValue['model'] = retValue['modelOriginal'];
                 }
               }
-              retValue['model']['_global_'] = window || {};
+
               if (rCompName) {
+                var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
+                app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
+                app[rCompName]['__global__']= window || {};
+
                 retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
                 retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
               };
+              retValue['model']['_global_'] = window || {};
 
               var spaViewModel = retValue.model, compiledTemplate;
               //spa.viewModels[retValue.id] = retValue.model;
@@ -6856,8 +6863,6 @@
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
-
-    window['app'] = window['app'] || {};
 
     /* ajaxPrefilter */
     $.ajaxPrefilter(_ajaxPrefilter);
