@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.21.0';
+  spa.VERSION = '2.22.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -5298,6 +5298,7 @@ window['app'] = window['app'] || {};
       , data_    :{}
       , dataDefaults:{}
       , dataModel: ""
+      , dataValidate: false
       , dataProcess: ''
       , dataCache: false
 
@@ -5627,7 +5628,9 @@ window['app'] = window['app'] || {};
               cache: spaRVOptions.dataCache,
               dataType: "text",
               success: function (result) {
-                var oResult = spa.toJSON(''+result, 'data');
+                var oResult = spa.toJSON(''+result, 'data'),
+                    validateData = _renderOption('dataValidate', 'validate');
+
                 if (dataModelName.indexOf(".") > 0) {
                   spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? spa.find(oResult, dataModelName) : oResult;
                 } else {
@@ -5636,7 +5639,7 @@ window['app'] = window['app'] || {};
                       dataModelName = 'Data';
                       viewDataModelName = 'Data';
                     };
-                    spaTemplateModelData[viewDataModelName] = oResult.hasOwnProperty(dataModelName) ? oResult[dataModelName] : oResult;
+                    spaTemplateModelData[viewDataModelName] = (!validateData && oResult.hasOwnProperty(dataModelName)) ? oResult[dataModelName] : oResult;
                   } catch(e) {
                     spa.console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
                   }
@@ -5860,194 +5863,207 @@ window['app'] = window['app'] || {};
             }
 
             try {
-
-              //dataProcess
-              var fnDataProcess = _renderOption('dataProcess', 'process');
-              if (fnDataProcess && (_.isString(fnDataProcess))) {
-                fnDataProcess = spa.findSafe(window, fnDataProcess);
+              var isValidData = !_renderOption('dataValidate', 'validate');
+              if (!isValidData) {
+                //Get Validated using SPA.API
+                spa.console.info('Validating Data');
+                isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
               }
-              retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
-              retValue['model'] = spaTemplateModelData[viewDataModelName];
-              if (fnDataProcess && _.isFunction(fnDataProcess)) {
-                retValue['model'] = fnDataProcess.call($.extend({}, (app[rCompName] || {})), spaTemplateModelData[viewDataModelName], spaRVOptions);
-                if (!_.isObject(retValue['model'])) {
-                  retValue['model'] = retValue['modelOriginal'];
+
+              if (isValidData) {
+
+                //dataProcess
+                var fnDataProcess = _renderOption('dataProcess', 'process');
+                if (fnDataProcess && (_.isString(fnDataProcess))) {
+                  fnDataProcess = spa.findSafe(window, fnDataProcess);
                 }
-              }
-
-              if (rCompName) {
-                if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
-                  var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
-                  if (compLocOrApiData.hasOwnProperty('spaComponent')) {
-                    app[rCompName]['$data'] = {};
-                  } else {
-                    app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
+                retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
+                retValue['model'] = spaTemplateModelData[viewDataModelName];
+                if (fnDataProcess && _.isFunction(fnDataProcess)) {
+                  retValue['model'] = fnDataProcess.call($.extend({}, (app[rCompName] || {})), spaTemplateModelData[viewDataModelName], spaRVOptions);
+                  if (!_.isObject(retValue['model'])) {
+                    retValue['model'] = retValue['modelOriginal'];
                   }
-                  app[rCompName]['__global__']= window || {};
                 }
 
-                retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
-                retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
-              };
-              retValue['model']['_global_'] = window || {};
-
-              var spaViewModel = retValue.model, compiledTemplate;
-              //spa.viewModels[retValue.id] = retValue.model;
-
-              var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
-
-              /* {$}                  ==> app.thisComponentName.
-               * {$someComponentName} ==> app.someComponentName.
-               */
-              var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
-              if (componentRefs) {
-                _.forEach(componentRefs, function(cRef){
-                  templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
-                    cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
-                });
-              }
-
-              compiledTemplate = templateContentToBindAndRender;
-              spa.console.log("Template Source:", templateContentToBindAndRender);
-              spa.console.log("DATA for Template:", spaViewModel);
-              if (!spa.isBlank(spaViewModel)) {
-                if ((typeof Handlebars != "undefined") && Handlebars) {
-                  var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
-                  var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                  if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                  compiledTemplate = preCompiledTemplate(data4Template);
-                } else {
-                  spa.console.error("handlebars.js is not loaded.");
-                }
-              }
-              spa.console.log("Template Compiled:", compiledTemplate);
-
-              doDeepRender = false;
-              retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
-
-              /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
-                if (!spa.isBlank(spaRVOptions.dataRenderType)) {
-                  targetRenderContainerType = spaRVOptions.dataRenderType;
-                };*/
-              var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
-
-              switch(targetRenderContainerType) {
-                case "value" :
-                  $(viewContainerId).val(retValue.view);
-                  break;
-                case "text" :
-                  $(viewContainerId).text(retValue.view);
-                  break;
-
-                default:
-                  doDeepRender = true;
-                  if (spa.isBlank(targetRenderMode)) {
-                    $(viewContainerId).html(retValue.view);
-                  } else {
-                    switch (true) {
-                      case (targetRenderMode.equalsIgnoreCase("append")):
-                        $(viewContainerId).append(retValue.view);
-                        break;
-                      case (targetRenderMode.equalsIgnoreCase("prepend")):
-                        $(viewContainerId).prepend(retValue.view);
-                        break;
-                      default: $(viewContainerId).html(retValue.view); break;
+                if (rCompName) {
+                  if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
+                    var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
+                    if (compLocOrApiData.hasOwnProperty('spaComponent')) {
+                      app[rCompName]['$data'] = {};
+                    } else {
+                      app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
                     }
+                    app[rCompName]['__global__']= window || {};
                   }
-                  break;
-              };
 
-              spa.console.info("Render: SUCCESS");
-              var rhKeys = _.keys(spa.renderHistory);
-              var rhLen = rhKeys.length;
-              if (rhLen > spa.renderHistoryMax) {
-                $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
-                  delete spa.renderHistory[key];
-                });
-              }
-              retValue.cron = "" + spa.now();
-              if (spa.renderHistoryMax>0) {
-                spa.renderHistory[retValue.id] = retValue;
-              };
+                  retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
+                  retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
+                };
+                retValue['model']['_global_'] = window || {};
 
-              if (doDeepRender) {
-                /*Reflow Foundation*/
-                spa.reflowFoundation(viewContainerId);
+                var spaViewModel = retValue.model, compiledTemplate;
+                //spa.viewModels[retValue.id] = retValue.model;
 
-                /*init KeyTracking*/
-                spa.initKeyTracking();
+                var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
 
-                /*apply i18n*/
-                spa.i18n.apply(viewContainerId);
-
-                /*apply data-validation*/
-                if (spa.hasOwnProperty('initDataValidation')) {
-                  var $el, $elData;
-                  $(viewContainerId).find('[data-validate-form],[data-validate-scope]').each(function (i, el){
-                    $el = $(el); $elData = $el.data();
-                    //Disable form submit;
-                    if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
-                    //clear validate msg on focus
-                    if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
-                    spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
+                /* {$}                  ==> app.thisComponentName.
+                 * {$someComponentName} ==> app.someComponentName.
+                 */
+                var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
+                if (componentRefs) {
+                  _.forEach(componentRefs, function(cRef){
+                    templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                      cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
                   });
                 }
 
-                /*init spaRoute*/
-                spa.initRoutes(viewContainerId);
-              };
-
-              spa.console.log(retValue);
-
-              /*Register Events in Components*/
-              spa.renderUtils.registerComponentEvents(rCompName);
-
-              /*run callback if any*/
-              /*
-               * Default component's callback
-               */
-              var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
-              if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
-                delete renderCallbackContext['__prop__']['data']['_global_'];
-                delete renderCallbackContext['__prop__']['data']['_this_'];
-                delete renderCallbackContext['__prop__']['data']['_this'];
-              }
-              if (retValue['model']) {
-                delete retValue['model']['_global_'];
-                delete retValue['model']['_this_'];
-                delete retValue['model']['_this'];
-              }
-
-              spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
-
-              var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
-              if (spaRVOptions.dataRenderCallback) {
-                _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
-              }
-              var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
-              spa.console.info("Processing callback: " + _fnCallbackAfterRender);
-
-              if (!isCallbackDisabled) {
-                if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
-                  spa.console.info("calling default callback: spa.routes._renderCallback");
-                  spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
+                compiledTemplate = templateContentToBindAndRender;
+                spa.console.log("Template Source:", templateContentToBindAndRender);
+                spa.console.log("DATA for Template:", spaViewModel);
+                if (!spa.isBlank(spaViewModel)) {
+                  if ((typeof Handlebars != "undefined") && Handlebars) {
+                    var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
+                    var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                    if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
+                    compiledTemplate = preCompiledTemplate(data4Template);
+                  } else {
+                    spa.console.error("handlebars.js is not loaded.");
+                  }
                 }
-                spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
-              }
+                spa.console.log("Template Compiled:", compiledTemplate);
 
-              /*Deep/Child Render*/
-              if (doDeepRender) {
-                //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
-                $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+                doDeepRender = false;
+                retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
-                if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                  spa.console.info('mounting defered component', spaRVOptions.mountComponent);
-                  $(viewContainerId).removeAttr('data-spa-component');
-                  spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
+                  if (!spa.isBlank(spaRVOptions.dataRenderType)) {
+                    targetRenderContainerType = spaRVOptions.dataRenderType;
+                  };*/
+                var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
+
+                switch(targetRenderContainerType) {
+                  case "value" :
+                    $(viewContainerId).val(retValue.view);
+                    break;
+                  case "text" :
+                    $(viewContainerId).text(retValue.view);
+                    break;
+
+                  default:
+                    doDeepRender = true;
+                    if (spa.isBlank(targetRenderMode)) {
+                      $(viewContainerId).html(retValue.view);
+                    } else {
+                      switch (true) {
+                        case (targetRenderMode.equalsIgnoreCase("append")):
+                          $(viewContainerId).append(retValue.view);
+                          break;
+                        case (targetRenderMode.equalsIgnoreCase("prepend")):
+                          $(viewContainerId).prepend(retValue.view);
+                          break;
+                        default: $(viewContainerId).html(retValue.view); break;
+                      }
+                    }
+                    break;
                 };
 
-                spa.renderComponentsInHtml(viewContainerId);
-              };
+                spa.console.info("Render: SUCCESS");
+                var rhKeys = _.keys(spa.renderHistory);
+                var rhLen = rhKeys.length;
+                if (rhLen > spa.renderHistoryMax) {
+                  $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
+                    delete spa.renderHistory[key];
+                  });
+                }
+                retValue.cron = "" + spa.now();
+                if (spa.renderHistoryMax>0) {
+                  spa.renderHistory[retValue.id] = retValue;
+                };
+
+                if (doDeepRender) {
+                  /*Reflow Foundation*/
+                  spa.reflowFoundation(viewContainerId);
+
+                  /*init KeyTracking*/
+                  spa.initKeyTracking();
+
+                  /*apply i18n*/
+                  spa.i18n.apply(viewContainerId);
+
+                  /*apply data-validation*/
+                  if (spa.hasOwnProperty('initDataValidation')) {
+                    var $el, $elData;
+                    $(viewContainerId).find('[data-validate-form],[data-validate-scope]').each(function (i, el){
+                      $el = $(el); $elData = $el.data();
+                      //Disable form submit;
+                      if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
+                      //clear validate msg on focus
+                      if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
+                      spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
+                    });
+                  }
+
+                  /*init spaRoute*/
+                  spa.initRoutes(viewContainerId);
+                };
+
+                spa.console.log(retValue);
+
+                /*Register Events in Components*/
+                spa.renderUtils.registerComponentEvents(rCompName);
+
+                /*run callback if any*/
+                /*
+                 * Default component's callback
+                 */
+                var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
+                if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
+                  delete renderCallbackContext['__prop__']['data']['_global_'];
+                  delete renderCallbackContext['__prop__']['data']['_this_'];
+                  delete renderCallbackContext['__prop__']['data']['_this'];
+                }
+                if (retValue['model']) {
+                  delete retValue['model']['_global_'];
+                  delete retValue['model']['_this_'];
+                  delete retValue['model']['_this'];
+                }
+
+                spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+
+                var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
+                if (spaRVOptions.dataRenderCallback) {
+                  _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
+                }
+                var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
+                spa.console.info("Processing callback: " + _fnCallbackAfterRender);
+
+                if (!isCallbackDisabled) {
+                  if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
+                    spa.console.info("calling default callback: spa.routes._renderCallback");
+                    spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
+                  }
+                  spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                }
+
+                /*Deep/Child Render*/
+                if (doDeepRender) {
+                  //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
+                  $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+
+                  if (spaRVOptions.hasOwnProperty('mountComponent')) {
+                    spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                    $(viewContainerId).removeAttr('data-spa-component');
+                    spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                  };
+
+                  spa.renderComponentsInHtml(viewContainerId);
+                };
+
+                //End of Valid Data
+              } else { //NOT a valid Data
+                spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
+              }
             }
             catch(e) {
               spa.console.error("Error Rendering.\n" + e.stack);
