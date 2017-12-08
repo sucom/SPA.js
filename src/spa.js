@@ -5178,6 +5178,7 @@ window['app'] = window['app'] || {};
    ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
    ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
    ,dataCache                 : false // External Data(JSON) Cache
+   ,dataValidate              : false // Validate Data before Rendering; boolean or function
    ,dataProcess               : function or Function name in String
 
    ,dataCollection            : {}    // { urls: [ {
@@ -5867,7 +5868,15 @@ window['app'] = window['app'] || {};
               if (!isValidData) {
                 //Get Validated using SPA.API
                 spa.console.info('Validating Data');
-                isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
+                var fnDataValidate = _renderOption('dataValidate', 'validate');
+                if (fnDataValidate && (_.isString(fnDataValidate))) {
+                  fnDataValidate = spa.findSafe(window, fnDataValidate);
+                }
+                if (fnDataValidate && _.isFunction(fnDataValidate)) {
+                  isValidData = fnDataProcess.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
+                } else {
+                  isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
+                }
               }
 
               if (isValidData) {
