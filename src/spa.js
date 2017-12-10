@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.23.0';
+  spa.VERSION = '2.23.1';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -3366,7 +3366,7 @@ window['app'] = window['app'] || {};
     keyNameStr = ('' + keyNameStr);
     keyToLowerCase = keyToLowerCase || false;
     var xObj = obj, oKey;
-    var oKeys = ((keyNameStr == keyNameStr.toUpperCase())? keyNameStr.split('.') : keyNameStr.split(/(?=[A-Z])/)), arrNameIndx, arrName, arrIdx;
+    var oKeys = (( (keyNameStr.indexOf('.')>0) || (keyNameStr == keyNameStr.toUpperCase()) )? keyNameStr.split('.') :  keyNameStr.split(/(?=[A-Z])/)), arrNameIndx, arrName, arrIdx;
     /*Default: camelCase | TitleCase if ALL UPPERCASE split by . */
     var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?\*\_]/g, ""));
     if (keyIdentifier && (keyIdentifier != "")) {
