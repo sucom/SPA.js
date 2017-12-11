@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.23.1';
+  spa.VERSION = '2.23.2';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -5873,7 +5873,7 @@ window['app'] = window['app'] || {};
                   fnDataValidate = spa.findSafe(window, fnDataValidate);
                 }
                 if (fnDataValidate && _.isFunction(fnDataValidate)) {
-                  isValidData = fnDataProcess.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
+                  isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
                 } else {
                   isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
                 }
