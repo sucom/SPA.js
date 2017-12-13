@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.23.2';
+  spa.VERSION = '2.23.3';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -4246,7 +4246,7 @@ window['app'] = window['app'] || {};
     if (returnOf) {
       hashDelimiter = hashDelimiter || "/";
       retValue = retValue.beginsWithStr(hashDelimiter) ? retValue.substring(retValue.indexOf(hashDelimiter) + (hashDelimiter.length)) : retValue;
-      var hashArray = retValue.split(hashDelimiter);
+      var hashArray = (retValue.length)? retValue.split(hashDelimiter) : [];
       if (_.isNumber(returnOf)) {
         retValue = (hashArray && hashArray.length > returnOf) ? hashArray[returnOf] : "";
       }
