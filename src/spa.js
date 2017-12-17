@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.23.3';
+  spa.VERSION = '2.24.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -4907,6 +4907,38 @@ window['app'] = window['app'] || {};
     }
   };
 
+  /* spa.registerComponents( 'compName1' );
+   * spa.registerComponents( 'compName1,compName2' );
+   * spa.registerComponents( 'compName1', 'compName2', 'compName3' );
+   * spa.registerComponents( ['compName1', 'compName2', 'compName3'] );
+   * spa.registerComponents( { compName1: {baseProps}, compName2: {baseProps} } );
+   */
+  spa.$$ = spa.registerComponents = function() {
+    if (arguments.length){
+      var compList = arguments;                //spa.registerComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) {         //spa.registerComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //spa.registerComponents('compName1') | spa.registerComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        } else {
+          compList = arguments[0];             // spa.registerComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+        }
+      }
+      if (spa.is(compList, 'object')) {
+        _.each(Object.keys(compList), function(compName){
+          spa.console.info('Registering spa-component:['+compName+']');
+          spa.registerComponent(compName, compList[compName]);
+        });
+      } else if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Registering spa-component:['+compName+']');
+          spa.registerComponent(compName.trim());
+        });
+      }
+    }
+  };
+
   spa.extendComponent = spa.$extend = spa.module = function(componentName, options) {
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
@@ -4935,6 +4967,38 @@ window['app'] = window['app'] || {};
         }
         $.extend(window.app[componentName], options);
         window['$$'+componentName] = window.app[componentName];
+      }
+    }
+  };
+
+  /* spa.extendComponents( 'compName1' );
+   * spa.extendComponents( 'compName1,compName2' );
+   * spa.extendComponents( 'compName1', 'compName2', 'compName3' );
+   * spa.extendComponents( ['compName1', 'compName2', 'compName3'] );
+   * spa.extendComponents( { compName1: {baseProps}, compName2: {baseProps} } );
+   */
+  spa.extendComponents = spa.$$extend = function() {
+    if (arguments.length){
+      var compList = arguments;                //spa.extendComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) {         //spa.extendComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //spa.extendComponents('compName1') | spa.registerComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        } else {
+          compList = arguments[0];             //spa.extendComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+        }
+      }
+      if (spa.is(compList, 'object')) {
+        _.each(Object.keys(compList), function(compName){
+          spa.console.info('Extend spa-component:['+compName+']');
+          spa.extendComponent(compName, compList[compName]);
+        });
+      } else if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Extend spa-component:['+compName+']');
+          spa.extendComponent(compName.trim());
+        });
       }
     }
   };
