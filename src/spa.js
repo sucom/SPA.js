@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.24.0';
+  spa.VERSION = '2.25.0';
 
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
@@ -2477,6 +2477,8 @@ window['app'] = window['app'] || {};
     , 'trace'         : function(){ spa.cOut('trace',          arguments); }
     , 'warn'          : function(){ spa.cOut('warn',           arguments); }
   };
+
+  spa.onUrlHashChange;
 
   spa._initWindowOnHashChange = function(){
     if ('onhashchange' in window) {
@@ -4948,7 +4950,7 @@ window['app'] = window['app'] || {};
       componentName = componentName.trim();
       if (componentName) {
         if (reservedCompNames.indexOf(componentName)>=0) {
-          console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
+          console.error('Invalid component name '+componentName+'. Reserved component names: '+(reservedCompNames.join()));
           return;
         };
 
@@ -5004,6 +5006,8 @@ window['app'] = window['app'] || {};
   };
 
   spa.renderComponent = spa.$render = function (componentName, options) {
+    if (!componentName) return;
+
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
       componentName = options['name'] || options['componentName'] || (''+spa.now());
@@ -6972,6 +6976,17 @@ window['app'] = window['app'] || {};
 
     /*Init spaRoutes*/
     spa.initRoutes("body");
+
+    if ('onhashchange' in window) {
+      if (spa.isBlank(sparouteInitOptions)) {
+        spa.console.info("Registering HashRouting Listener");
+        window.addEventListener("hashchange", function(){
+          if (spa.onUrlHashChange) {
+            spa.onUrlHashChange(spa.urlHash([]));
+          }
+        });
+      }
+    }
 
     /*Key Tracking*/
     spa.initKeyTracking();
