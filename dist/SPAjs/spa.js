@@ -2424,8 +2424,9 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.25.0';
+  spa.VERSION = '2.26.0';
 
+  /* native document selector */
   var _$  = document.querySelector.bind(document),
       _$$ = document.querySelectorAll.bind(document);
   if (!win['_$'])  win['_$']  = _$;
@@ -2478,9 +2479,11 @@ window['app'] = window['app'] || {};
     , 'warn'          : function(){ spa.cOut('warn',           arguments); }
   };
 
+  /* event handler for window.onhashchange */
   spa.onUrlHashChange;
 
-  spa._initWindowOnHashChange = function(){
+  /* spa rounte management internal functions */
+  function _initWindowOnHashChange(){
     if ('onhashchange' in window) {
       isSpaHashRouteOn = true;
       spa.console.info("Registering HashRouting Listener");
@@ -2501,10 +2504,17 @@ window['app'] = window['app'] || {};
       };
     }
   };
-  spa._stopWindowOnHashChange = function(){
+  function _stopWindowOnHashChange(){
     window.onhashchange = undefined;
   };
 
+  /* **********************Date prototypes*********************** */
+  /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
+   *
+   * now.yymmdd()    => '20100301'
+   * now.yymmdd('/') => '2010/03/01'
+   * now.yymmdd('-') => '2010-03-01'
+   */
   Date.prototype.yyyymmdd = function(sep) {
     var mm = this.getMonth() + 1, dd = this.getDate();
     return ([this.getFullYear(),
@@ -2512,6 +2522,12 @@ window['app'] = window['app'] || {};
             (dd>9 ? '' : '0') + dd
            ].join(sep||''));
   };
+  /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
+   *
+   * now.hhmmss()    => '102030'
+   * now.hhmmss(':') => '10:20:30'
+   * now.hhmmss('-') => '10-20-30'
+   */
   Date.prototype.hhmmss = function(sep) {
     var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
     return ([(hh>9 ? '' : '0') + hh,
@@ -2520,33 +2536,24 @@ window['app'] = window['app'] || {};
            ].join(sep||''));
   };
 
-  /* ********************************************************* */
-  /*NEW String Methods trim, normalize, beginsWith, endsWith
-   var str                    = " I am a      string ";
-
-   str.trimStr()                        = "I am a      string";
-   str.isBlankStr()                     = false;
-   str.isNumberStr()                    = false;
-   str.normalizeStr()                   = "I am a string";
-   str.beginsWithStr("I am")            = "true";
-   str.beginsWithStr("i am")            = "false";
-   str.beginsWithStrIgnoreCase("i am")  = "true"; // case insensitive
-   str.endsWithStr("ing")               = "true";
-   str.endsWithStr("iNg")               = "false";
-   str.endsWithStrIgnoreCase("InG")     = "true"; // case insensitive
-   ("     ").ifBlankStr(str)            = " I am a      string ";
-   ("     ").ifBlankStr()               = "";
-   (str).ifBlankStr()                   = "I am a      string";
+  /* **********************String prototypes*********************** */
+  /* "   some string   ".trimLeftStr()    ==> "some string   "
+   * "+++some string+++".trimLeftStr('+') ==> "some string+++"
    */
-
   String.prototype.trimLeftStr = function (tStr) {
     return ((''+this).replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
   };
 
+  /* "   some string   ".trimRightStr()    ==> "   some string"
+   * "+++some string+++".trimRightStr('+') ==> "+++some string"
+   */
   String.prototype.trimRightStr = function (tStr) {
     return ((''+this).replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
   };
 
+  /* "   some string   ".trimStr()    ==> "some string"
+   * "+++some string+++".trimStr('+') ==> "some string"
+   */
   String.prototype.trimStr = function (tStr) {
     return (''+this).trimLeftStr(tStr).trimRightStr(tStr);
   };
@@ -5385,6 +5392,7 @@ window['app'] = window['app'] || {};
 
       , dataRenderCallback: ""
       , dataRenderMode: ""
+      , skipDataBind:false
 
       , dataRenderId: ""
     };
@@ -5999,7 +6007,7 @@ window['app'] = window['app'] || {};
                 spa.console.log("Template Source:", templateContentToBindAndRender);
                 spa.console.log("DATA for Template:", spaViewModel);
                 if (!spa.isBlank(spaViewModel)) {
-                  if ((typeof Handlebars != "undefined") && Handlebars) {
+                  if ((typeof Handlebars != "undefined") && Handlebars && !spaRVOptions.skipDataBind) {
                     var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
                     var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                     if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
@@ -6726,8 +6734,8 @@ window['app'] = window['app'] || {};
       spa.console.info("Init routesOptions");
       _.merge(spa.routesOptions, routeInitOptions);
 
-      if (!isSpaHashRouteOn && spa.routesOptions.useHashRoute) spa._initWindowOnHashChange();
-      if (isSpaHashRouteOn && !spa.routesOptions.useHashRoute) spa._stopWindowOnHashChange();
+      if (!isSpaHashRouteOn && spa.routesOptions.useHashRoute) _initWindowOnHashChange();
+      if (isSpaHashRouteOn && !spa.routesOptions.useHashRoute) _stopWindowOnHashChange();
 
       //options without (context or scope)
       if (!(routeInitOptions.hasOwnProperty('context') || routeInitOptions.hasOwnProperty('scope'))) {
