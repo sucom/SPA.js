@@ -5996,7 +5996,7 @@ window['app'] = window['app'] || {};
                  * {$someComponentName} ==> app.someComponentName.
                  */
                 var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
-                if (componentRefs) {
+                if (!spaRVOptions.skipDataBind && componentRefs) {
                   _.forEach(componentRefs, function(cRef){
                     templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
                       cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
