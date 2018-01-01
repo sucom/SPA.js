@@ -5028,7 +5028,7 @@ window['app'] = window['app'] || {};
 
     options = adjustComponentOptions(componentName, options);
 
-    var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? componentName: '') +"/"+componentName
+    var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (componentName+"/"): '') +componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
       , _cScriptExt  = spa.defaults.components.scriptExt
       , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
@@ -5057,6 +5057,15 @@ window['app'] = window['app'] || {};
             spa.console.info('Extended> render-options: spa.components['+componentName+']');
             spa.console.info(renderOptions);
           }
+
+          if (renderOptions.hasOwnProperty('style') && spa.is(renderOptions.style, 'string')) {
+            renderOptions['dataStyles'] = {};
+            renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : renderOptions.style;
+            delete renderOptions['style'];
+            spa.console.info('Using component style for ['+componentName+']');
+            spa.console.info(renderOptions);
+          }
+
           spa.render(renderOptions);
         }
       , _parseComp = function(){
