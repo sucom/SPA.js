@@ -1,0 +1,29 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataUrlParams</mark></h3>
+
+  <p>Passing Parameters to API URL</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataUrl: 'api/path/to/data/{uid}',
+      dataUrlParams: { uid: '12345' }
+
+    });
+  </script>
+  <p>The SPA will attempt to fetch the data from //host/api/path/to/data/12345</p>
+
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      dataUrlParams: { uid: '987654' }
+
+    });
+  </script>
+
+</div>

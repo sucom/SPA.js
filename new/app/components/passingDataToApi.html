@@ -1,0 +1,29 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataParams</mark></h3>
+
+  <p>Passing data (pay load) to API</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataUrl: 'api/path/to/data',
+      dataParams: { uname: 'XYZ', uemail: 'xyz@abc.com' }
+
+    });
+  </script>
+  <p>The SPA will attempt to fetch the data from //host/api/path/to/data?uname=XYZ&amp;uemail=xyz@abc.com</p>
+
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      dataParams: { uname: 'ABC', uemail: 'abc@xyz.com' }
+
+    });
+  </script>
+
+</div>

@@ -1,0 +1,44 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Extended Properties</h2>
+  <h3><mark>events</mark></h3>
+
+  <p>Event-binding to component elements.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$extend('componentX', {
+
+      events: [
+        { target: '#btnSubmit',
+          onClick: function(){
+            //doSomething onClick of elment #btnSubmit
+          }
+        },
+
+        { target: '#btnCancel',
+          onClick: function(){
+            //doSomething onClick of elment #btnCancel
+          }
+        },
+
+        { target: '#userName',
+          onFocus: function(){
+          //doSomething onFocus of elment #userName
+          },
+          onKeyUp_KeyDown: function(){
+          //doSomething onKeyUp and KeyDown of elment #userName
+          },
+          onBlur: function(){
+          //doSomething onBlur of elment #userName
+          }
+        }
+      ]
+
+    });
+
+  </script>
+
+  <blockquote>
+      events is an optional extended property.
+  </blockquote>
+
+</div>

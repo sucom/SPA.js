@@ -1,0 +1,105 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Form Serialization for SPA REST API calls</h2>
+  <p>For REST API calls, sometimes it's required to serialize the HTML form data
+    to send along with the request.</p>
+
+  <section>
+    <h3>To Simple Object ( <mark>spa.serializeFormToSimpleObject</mark> )</h3>
+    <p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <form id="FormX" onsubmit="return false;">
+
+        <input type="text" name="fname"   value="First Name">
+        <input type="text" name="lname"   value="Last Name">
+        <input type="text" name="age"     value="30">
+
+        <input type="text" name="address" value="1 Street">
+        <input type="text" name="city"    value="NewYork">
+        <input type="text" name="state"   value="NY">
+        <input type="text" name="country" value="US">
+        <input type="text" name="zip"     value="12345">
+
+        <button id="btnSerialize">Serialize</button>
+
+      </form>
+    </script>
+    </p>
+
+    <p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+spa.$extend('componentX', {
+
+  events: [{
+    target: '#btnSerialize',
+    onClick: function(){
+      var formData = spa.serializeFormToSimpleObject( '#FormX' );
+
+      console.log( formData );
+    }
+  }]
+});
+
+/* formData => { "fname":"First Name", "lname":"Last Name",
+                 "age":"30", "address":"1 Street", "city":"NewYork",
+                 "state":"NY", "country": "US", "zip": "12345" }
+*/
+    </script>
+    </p>
+  </section>
+
+  <br/>
+
+  <section>
+      <h3>To Structured Object ( <mark>spa.serializeFormToObject</mark> )</h3>
+      <p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <form id="FormX" onsubmit="return false;">
+
+          <input type="text" name="user.fname"   value="First Name">
+          <input type="text" name="user.lname"   value="Last Name">
+          <input type="text" name="user.age"     value="30">
+
+          <input type="text" name="ship.address" value="1 Street">
+          <input type="text" name="ship.city"    value="NewYork">
+          <input type="text" name="ship.state"   value="NY">
+          <input type="text" name="ship.country" value="US">
+          <input type="text" name="ship.zip"     value="12345">
+
+          <button id="btnSerialize">Serialize</button>
+
+        </form>
+      </script>
+      </p>
+
+      <p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+spa.$extend('componentX', {
+
+  events: [{
+    target: '#btnSerialize',
+    onClick: function(){
+      var formData = spa.serializeFormToObject( '#FormX' );
+
+      console.log( formData );
+    }
+  }]
+});
+
+/* formData => { "user": { "fname": "First Name",
+                           "lname": "Last Name",
+                           "age": "30"},
+                 "ship": { "address": "1 Street",
+                           "city": "NewYork",
+                           "state": "NY",
+                           "country": "US",
+                           "zip":"12345"}
+                }
+*/
+      </script>
+      </p>
+    </section>
+
+
+
+
+</div>

@@ -1,0 +1,51 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA i18n</h1>
+
+  <section>
+    <p>sample Language_en_US.txt:
+    <script type="text/code" class="code trim no-num-tool" data-lang="Diff" data-title="sample Language_en_US.txt">
+      app.name = myApp in English
+
+      title.section.profile.view = View PROFILE
+      title.section.profile.edit = Edit PROFILE
+
+      btn.save.text    = SAVE
+      btn.save.tooltip = Click to save
+
+    </script></p>
+
+    <h3>In HTML Template</h3>
+    <p>To render the currently loaded languge text in HTML, add HTML tag attribute "data-i18n".
+      By default the value of the key will be applied to innerHTML of the element.</p>
+    <script type="text/code" class="code no-num-tool" data-lang="html" data-title="componentX.html">
+
+<h1 data-i18n="app.name"></h1>
+
+<!-- will result in <h1>myApp in English</h1> -->
+
+
+    </script>
+
+    <p>The lang-text can be applied to any valid html attribute as shown below.
+    <script type="text/code" class="code no-num-tool" data-lang="html" data-title="componentX.html">
+
+<button data-i18n="html:'btn.save.text', title:'btn.save.tooltip'"></button>
+
+<!--  will result in <button title="Click to save">SAVE</button>  -->
+
+
+    </script></p>
+
+    <p>To apply same lang-text to multiple attributes, use underscore ( <mark>_</mark> ) as shown below.
+    <script type="text/code" class="code no-num-tool" data-lang="html" data-title="componentX.html">
+
+<button data-i18n="html_title:'btn.save.text'"></button>
+
+<!--  will result in <button title="SAVE">SAVE</button>  -->
+
+    </script></p>
+
+  </section>
+
+
+</div>

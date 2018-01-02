@@ -1,0 +1,277 @@
+<nav id="sidebar-nav" class="bd-links">
+  <ul>
+    <li class="d-md-none d-lg-none d-xl-none main-nav">
+      <a href="#home">Home</a>
+    </li>
+    <li class="d-md-none d-lg-none d-xl-none main-nav">
+      <a href="#blog">Blog</a>
+    </li>
+
+    <li>
+      <a href="#getStarted/folderStructure">Get Started</a>
+    </li>
+    <li>
+      <a href="#getStarted/downloadSpa">Downloading SPA JS</a>
+    </li>
+    <li>
+      <a href="#getStarted/applicationStartingPage">Application Starting Page</a>
+    </li>
+
+    <!-- SPA Component -->
+    <li data-toggle="nav-dropdown-in">
+      <a data-target="#item1" data-toggle="collapse" aria-expanded="true">
+        <span class="drop-text">SPA Component
+          <span class="sidebar_arrow"></span>
+        </span>
+      </a>
+
+      <!-- SPA Component sub menu -->
+      <ul class="nav-stacked collapse left-submenu show" id="item1">
+        <li>
+          <a href="#getStarted/componentStructure">Component Structure</a>
+        </li>
+        <!-- Component’s UI -->
+        <li data-toggle="nav-multi-one-dropdown-in">
+          <a data-target="#item2" data-toggle="collapse" aria-expanded="true">
+            <span class="drop-text">Component’s UI
+              <span class="sidebar_arrow"></span>
+            </span>
+          </a>
+          <!-- Component’s UI sub menu -->
+          <ul class="nav-stacked collapse left-submenu show" id="item2">
+            <li>
+              <a href="#getStarted/simpleUi">Simple UI</a>
+            </li>
+            <li>
+              <a href="#getStarted/dataBinding">Data Binding</a>
+            </li>
+            <li>
+              <a href="#getStarted/htmlEscaping">HTML Escaping</a>
+            </li>
+            <li>
+              <a href="#getStarted/nestedPaths">Nested Paths</a>
+            </li>
+            <li>
+              <a href="#getStarted/builtInHelperIf">Built-in Helper - #if</a>
+            </li>
+            <li>
+              <a href="#getStarted/builtInHelperUnless">Built-in Helper - #unless</a>
+            </li>
+            <li>
+              <a href="#getStarted/builtInHelperEach">Built-in Helper - #each</a>
+            </li>
+            <li>
+              <a href="#getStarted/builtInHelperWith">Built-in Helper - #with</a>
+            </li>
+
+            <li>
+              <a href="#getStarted/formattingHelpers">Formatting Helpers</a>
+            </li>
+            <li>
+              <a href="#getStarted/debuggingWithinTemplate">Debugging Within Template</a>
+            </li>
+            <li>
+              <a href="#getStarted/eventBindingInTemplate">Event Binding in Template</a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Component’s Script -->
+        <li data-toggle="nav-multi-two-dropdown-in">
+          <a data-target="#item3" data-toggle="collapse" aria-expanded="true">
+            <span class="drop-text">Component’s Script
+              <span class="sidebar_arrow"></span>
+            </span>
+          </a>
+
+          <!-- Component’s Script sub menu -->
+          <ul class="nav-stacked collapse left-submenu show" id="item3">
+            <li>
+              <a href="#getStarted/componentScript">The Basics</a>
+            </li>
+
+            <!-- Component Base Properties -->
+            <li data-toggle="nav-multi-three-dropdown-in">
+              <a data-target="#item4" data-toggle="collapse" aria-expanded="true">
+                <span class="drop-text">Component Base Properties - <strong>spa.$</strong>
+                  <span class="sidebar_arrow"></span>
+                </span>
+              </a>
+              <!-- Component Base Properties sub menu -->
+              <ul class="nav-stacked collapse left-submenu show" id="item4">
+                <li>
+                  <a href="#getStarted/target">target</a>
+                </li>
+                <li>
+                  <a href="#getStarted/template">template</a>
+                </li>
+                <li>
+                  <a href="#getStarted/style">style</a>
+                </li>
+                <li>
+                  <a href="#getStarted/localData">data</a>
+                </li>
+                <li>
+                  <a href="#getStarted/externalApiData">dataUrl: External Api Data</a>
+                </li>
+                <li>
+                  <a href="#getStarted/passingParamerterToApiUrl">Paramerters to dataUrl</a>
+                </li>
+                <li>
+                  <a href="#getStarted/passingDataToApi">Data to API (Pay Load)</a>
+                </li>
+                <li>
+                  <a href="#getStarted/passingAdditionalDataToTemplate">Additional data to template</a>
+                </li>
+                <li>
+                  <a href="#getStarted/preprocessingExternalApiDataBeforeRender">Preprocessing external (API) data before render</a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- Component Extended Properties -->
+            <li data-toggle="nav-multi-three-dropdown-in">
+              <a data-target="#item5" data-toggle="collapse" aria-expanded="true">
+                <span class="drop-text">Component Extended Properties - <strong>spa.$extend</strong>
+                  <span class="sidebar_arrow"></span>
+                </span>
+              </a>
+              <!-- Component Extended Properties sub menu -->
+              <ul class="nav-stacked collapse left-submenu show" id="item5">
+                <li>
+                  <a href="#getStarted/renderCallback">renderCallback</a>
+                </li>
+                <li>
+                  <a href="#getStarted/events">events</a>
+                </li>
+                <li>
+                  <a href="#getStarted/customPropsMethods">Custom Properties/Methods</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Component Render -->
+        <li data-toggle="nav-multi-three-dropdown-in">
+          <a data-target="#item6" data-toggle="collapse" aria-expanded="true">
+            <span class="drop-text">Component Render - <strong>spa.$render</strong>
+              <span class="sidebar_arrow"></span>
+            </span>
+          </a>
+          <!-- Component Render sub menu -->
+          <ul class="nav-stacked collapse left-submenu show" id="item6">
+            <li>
+              <a href="#getStarted/renderScript">Render using Script</a>
+            </li>
+            <li>
+              <a href="#getStarted/renderAttribute">Render using HTML attribute</a>
+            </li>
+          </ul>
+        </li>
+
+
+      </ul>
+    </li>
+
+    <!-- SPA API -->
+    <li data-toggle="nav-dropdown-in">
+      <a data-target="#item7" data-toggle="collapse" aria-expanded="true">
+        <span class="drop-text">SPA API
+          <span class="sidebar_arrow"></span>
+        </span>
+      </a>
+      <!-- SPA API sub menu -->
+      <ul class="nav-stacked collapse left-submenu show" id="item7">
+        <li>
+          <a href="#getStarted/spaApi">The Basics / Configuration</a>
+        </li>
+        <li>
+          <a href="#getStarted/apiMock">Mock APIs</a>
+        </li>
+        <li>
+          <a href="#getStarted/restApi">REST APIs</a>
+        </li>
+        <li>
+          <a href="#getStarted/formSerialize">Form Serialization</a>
+        </li>
+        <li>
+          <a href="#getStarted/apiRequestHeaders">Request Headers</a>
+        </li>
+        <li>
+          <a href="#getStarted/apiErrorHandling">Error Handling</a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- SPA i18n -->
+    <li data-toggle="nav-dropdown-in">
+      <a data-target="#item8" data-toggle="collapse" aria-expanded="true">
+        <span class="drop-text">SPA i18n
+          <span class="sidebar_arrow"></span>
+        </span>
+      </a>
+      <!-- SPA i18n sub menu -->
+      <ul class="nav-stacked collapse left-submenu show" id="item8">
+        <li>
+          <a href="#getStarted/i18n">The Basics / Configuration</a>
+        </li>
+        <li>
+          <a href="#getStarted/i18nInHtml">i18n in HTML Template</a>
+        </li>
+        <li>
+          <a href="#getStarted/i18nFunctions">i18n functions</a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- SPA Defaults -->
+    <li data-toggle="nav-dropdown-in">
+      <a data-target="#item9" data-toggle="collapse" aria-expanded="true">
+        <span class="drop-text">SPA Defaults
+          <span class="sidebar_arrow"></span>
+        </span>
+      </a>
+      <!-- SPA Defaults sub menu -->
+      <ul class="nav-stacked collapse left-submenu show" id="item9">
+        <li>
+          <a href="#getStarted/componentsDefaults">Components Defaults</a>
+        </li>
+        <li>
+          <a href="#getStarted/SPAonReady">SPA onReady</a>
+        </li>
+        <li>
+          <a href="#getStarted/SPAonUrlHashChange">SPA onUrlHashChange</a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- SPA Utils -->
+    <li data-toggle="nav-dropdown-in">
+      <a data-target="#item10" data-toggle="collapse" aria-expanded="true">
+        <span class="drop-text">SPA Utils
+          <span class="sidebar_arrow"></span>
+        </span>
+      </a>
+      <!-- SPA Utils sub menu -->
+      <ul class="nav-stacked collapse left-submenu show" id="item10">
+        <li>
+          <a href="#getStarted/bindData">spa.bindData</a>
+        </li>
+        <li>
+          <a href="#getStarted/isBlank">spa.isBlank</a>
+        </li>
+        <li>
+          <a href="#getStarted/stringFunctions">String Functions</a>
+        </li>
+        <li>
+          <a href="#getStarted/objectFunctions">Object Functions</a>
+        </li>
+        <li>
+          <a href="#getStarted/typeCheck">Type Check</a>
+        </li>
+      </ul>
+    </li>
+
+  </ul>
+</nav>

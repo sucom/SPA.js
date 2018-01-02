@@ -1,0 +1,57 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>template</mark></h3>
+
+  <p>Specify the template string (html tags). Use Handlebars syntax for data-binding.
+    Refer Component's UI section for more details.</p>
+
+  <blockquote>
+    SPA JS highly recommends to keep HTML in <mark>.html</mark> file and Javascript in <mark>.js</mark> file.
+    Use this 'template' property for a few lines template only. For the larger template use <mark>componentX.html</mark>
+  </blockquote>
+
+  <strong>Single line template:</strong>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      template: '<h1>User Profile</h1>'
+
+    });
+  </script>
+
+  <strong>Multi-line template:</strong> use back-tick <mark>`</mark> not single-quote!
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      template: `<h1>My Post</h1>
+        <div class="entry">
+          <h2>{{title}}</h2>
+          <div class="body">
+            {{body}}
+          </div>
+        </div>`
+    });
+  </script>
+
+  <blockquote>
+      template is an optional property. If not specified, SPA JS will load the corresponding template
+      from <mark>componentX.html</mark> file, when the component is rendered using <mark>$.render</mark> method
+      or <mark>data-spa-component</mark> attribute.
+  </blockquote>
+  <script type="text/code" class="code trim no-num-tool">
+    <div data-spa-component="componentX"></div>
+  </script>
+
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      template: 'This is my new Post.'
+
+    });
+  </script>
+
+  </div>

@@ -1,0 +1,34 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>target</mark></h3>
+
+  <p>Specify the target element-id where the component to be rendered.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      target: '#targetContainer'
+
+    });
+  </script>
+
+  <blockquote>
+      Target is an optional property. This can be overridden using <mark>spa.$render</mark> method in Javascript or <mark>data-spa-component</mark> attribute in HTML template.
+  </blockquote>
+  <script type="text/code" class="code trim no-num-tool">
+    <div data-spa-component="componentX"></div>
+  </script>
+
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      target: '#someTargetId'
+
+    });
+  </script>
+
+</div>

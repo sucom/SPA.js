@@ -1,0 +1,146 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>SPA API Mock</h2>
+  <p>SPA JS comes with built-in mocking system for faster development.</p>
+
+  <section>
+  <h3>Enable API Mocking</h3>
+  <p>To enable mock for all the API URLs defined in spa.api.urls,
+    set <mark>spa.api.mock</mark> to true (by default mock system is disabled).</p>
+
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = true;
+  </script>
+  </section>
+
+  <section>
+  <h3>API Root Context (for mock data)</h3>
+  <p>If you require SPA’s mocking (static) data for the API URLs,
+    It’s highly recommended to have the single API root context and
+    the same to be specified in <mark>app.api.liveApiPrefix</mark></p>
+
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+/* live-api url prefix to identify Live-Api calls in API URLs */
+app['api'] = { liveApiPrefix: 'api/' };
+  </script>
+
+  <blockquote>
+    This Live API Root context is must for SPA Mock Sytem to be enabled.
+  </blockquote>
+  </section>
+
+  <br/>
+  <section>
+  <h3>API Mock URLs</h3>
+
+  <h4>Making specific API URL to MOCK when <mark>spa.api.mock=false</mark></h4>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = false; //default false
+
+    app['api'] = { liveApiPrefix: 'api/' };
+
+
+    /* ! in url => force to mock location ignoring spa.api.mock setting */
+
+    $.extend(spa.api.urls, {
+
+        $componentA: 'api/path/to/componentA-data', //goes LIVE
+        $componentB: '!api/path/to/componentB-data' //goes MOCK
+
+    });
+  </script>
+
+  <h4>Making specific API URL to LIVE when <mark>spa.api.mock = true</mark></h4>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = true; //for development (without LIVE APIs)
+
+    app['api'] = { liveApiPrefix: 'api/' };
+
+
+    /* ~ in url => force to live location ignoring spa.api.mock setting */
+
+    $.extend(spa.api.urls, {
+
+        $componentA: 'api/path/to/componentA-data',  //goes MOCK
+        $componentB: '!api/path/to/componentB-data'  //goes MOCK
+        $componentC: '~api/path/to/componentC-data', //goes LIVE
+
+    });
+  </script>
+
+  <h4>urlParams for LIVE URLs</h4>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = true; //for development (without LIVE APIs)
+    app['api'] = { liveApiPrefix: 'api/' };
+
+    /* ~ in url => force to live location ignoring spa.api.mock setting */
+
+    $.extend(spa.api.urls, {
+
+        $componentA: 'api/path/to/componentA-data',  //goes MOCK
+        $componentB: '!api/path/to/componentB-data'  //goes MOCK
+        $componentC: '~api/path/to/componentC-data', //goes LIVE
+
+    });
+  </script>
+
+  <h4>urlParams for MOCK URLs</h4>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = true; //for development (without LIVE APIs)
+    app['api'] = { liveApiPrefix: 'api/' };
+
+    /* {urlParamName}  => if mock, replaced with string '_urlParamName' */
+
+    // if urlParams ==> { urlParam1: '12345', urlParam2: 'ABCD' };
+
+    $.extend(spa.api.urls, {
+
+      $componentA: 'api/path/to/componentA-data/{urlParam1}/{urlParam2}'
+             // ==> api_/path/to/componentA-data/_urlParam1/_urlParam2
+
+    });
+  </script>
+
+  <h4>Force urlParams value in MOCK URLs</h4>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = true; //for development (without LIVE APIs)
+    app['api'] = { liveApiPrefix: 'api/' };
+
+    /* {<urlParamName>} => replaced with actual urlParamValue */
+
+    // if urlParams ==> { urlParam1: '12345', urlParam2: 'ABCD' };
+    $.extend(spa.api.urls, {
+
+      $componentA: 'api/path/to/componentA-data/{<urlParam1>}/{urlParam2}'
+             // ==> api_/path/to/componentA-data/12345/_urlParam2
+
+    });
+  </script>
+
+  <h4>Mock Data (static) Structure</h4>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    spa.api.mock = true; //for development (without LIVE APIs)
+    app['api'] = { liveApiPrefix: 'api/' };
+
+    /* {<urlParamName>} => replaced with actual urlParamValue */
+
+    // if urlParams ==> { urlParam1: '12345', urlParam2: 'ABCD' };
+
+    $.extend(spa.api.urls, {
+
+      $componentA: 'api/path/to/componentA-data/{<urlParam1>}/{urlParam2}'
+             // ==> api_/path/to/componentA-data/12345/_urlParam2
+
+    });
+  </script>
+
+  <p>Create <mark>data.json</mark> file in MOCK API URL <mark>folder structure</mark> with mock response data.
+    <img src="app/images/mock_folder_structure.png" alt="Mock Folder Structure">
+  </p>
+
+  <blockquote>
+    If you are not getting the mock data, watch browser's developer tool and check for 404 error to find the actual path for mock data.
+  </blockquote>
+
+  </section>
+
+</div>

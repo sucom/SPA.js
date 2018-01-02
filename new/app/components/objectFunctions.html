@@ -1,0 +1,31 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Utils</h1>
+
+  <section>
+    <h3>Object Functions</h3>
+    <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="Object Utility Functions">
+
+  var myObject = {
+    name   : 'King',
+    age    : 99,
+    contact: {
+      phone: '1234567890',
+      email: 'king@jungle.com'
+      }
+  };
+
+  myObject.__keys();
+  myObject.__keysAll();
+  myObject.__hasKey( 'contact.phone' );
+  myObject.__hasKeys();
+  myObject.__hasPrimaryKeys('name&alias');
+  myObject.__hasPrimaryKeys('name|alias');
+  myObject.__valueOf( 'contact.email', 'valueForUndefined' );
+  myObject.__clone();
+  myObject.__merge( {alias:'Raja', age:100} );
+  myObject.__stringify();
+
+    </script>
+  </section>
+
+</div>

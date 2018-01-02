@@ -1,0 +1,34 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Extended Properties</h2>
+  <h3><mark>renderCallback</mark></h3>
+
+  <p>A function to be executed immediately after component's render.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$extend('componentX', {
+
+        renderCallback: function () {
+          console.log( this.$data );
+          console.log( this );
+          //do Component-UI Initialization if any, like dropdown / accordion
+
+          //doSomething
+        }
+    });
+  </script>
+
+  <blockquote>
+      renderCallback is an optional extended property. This can be overridden using <mark>spa.$render</mark> method.
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      renderCallback: function() {
+        //doSomething immediately after this component render.
+      }
+
+    });
+  </script>
+
+</div>

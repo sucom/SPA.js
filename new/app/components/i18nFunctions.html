@@ -1,0 +1,38 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA i18n</h1>
+
+  <section>
+    <p>sample Language_en_US.txt:
+    <script type="text/code" class="code no-num-tool" data-lang="Diff" data-title="sample Language_en_US.txt">
+
+warning.select.none = Select {itemName} from the {listName}.
+confirm.action      = Are you sure to {action}.
+
+
+    </script></p>
+
+    <h3>Passing Params to Language Text</h3>
+    <p>The i18n text can have varibles to display values in run-time using single curly braces <mark>{ variableName }</mark></p>
+
+    <p>Use <mark>data-i18n-data</mark> attribute in Component template to pass the values to the variables.</p>
+
+    <p>Use <mark>spa.i18n.text</mark> function to pass the values to the variables.</p>
+
+  </section>
+
+  <section>
+    <h3>i18n Functions</h3>
+    <p><mark>spa.i18n.text(</mark> <strong>i18nKey</strong> <mark>)</mark> ==&gt; returns the text for the <strong>i18nKey</strong> from the active language file.</p>
+
+    <p><mark>spa.i18n.text(</mark> <strong>i18nKey</strong>, <strong>paramsValue</strong> <mark>)</mark> ==&gt; returns the text for the <strong>i18nKey</strong> (replaced variables with <stron>paramsValues</stron>) from the active language file.</p>
+
+    <p><mark>spa.i18n.apply()</mark> ==&gt; applies active language's i18n text for the entire body elements.</p>
+
+    <p><mark>spa.i18n.apply(</mark> <strong>context</strong> <mark>)</mark> ==&gt; applies active language's i18n text for the <strong>context</strong>'s elements.</p>
+
+    <p><mark>spa.i18n.apply(</mark> <strong>context</strong>, <strong>elSelector</strong> <mark>)</mark> ==&gt; applies active language's i18n text for the filtered elements (<strong>elSelector</strong>) in <strong>context</strong>.</p>
+
+  </section>
+
+
+</div>

@@ -1,0 +1,34 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>HTML escaping</h2>
+  <p>Be default Handlebars HTML-escapes values returned by a
+    <mark>{{</mark> expression
+    <mark>}}</mark>. To avoid HTML-escapes, use the "triple-stash",
+    <mark>{{{</mark> expression
+    <mark>}}}</mark>
+  </p>
+  <script type="text/code" class="code trim no-num-tool" data-lines="2,4">
+  <div class="entry">
+    <h1>{{title}}</h1>
+    <div class="post">
+      {{{body}}}
+    </div>
+  </div>
+  </script>
+
+  <h3>With Data</h3>
+  <p>Refer
+    <a href="#getStarted/localData">Component Base Properties</a> of Component's Script to send data to it's template.</p>
+  <script type="text/code" class="code trim no-num-tool" data-lang="json">
+  { title: "All about <p> Tags", body: "<p>This is my first post!</p>" }
+  </script>
+
+  <h3>Results in</h3>
+  <script type="text/code" class="code trim no-toolbar" data-lines="2,4">
+  <div class="entry">
+    <h1>All about &lt;p&gt; Tags</h1>
+    <div class="post">
+      <p>This is my first post!</p>
+    </div>
+  </div>
+  </script>
+</div>

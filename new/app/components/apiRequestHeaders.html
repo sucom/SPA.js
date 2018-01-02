@@ -1,0 +1,24 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>API Request Headers</h2>
+  <p>You can send additional Request Headers to the API calls using <mark>app.api.reqHeader</mark></p>
+
+  <section>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+//sending Static Header Values
+
+app.api.reqHeaders = { TOKEN: '12345-XY-568F-X584KFI-',
+                       RH:'SOME-VALUE-TO-SEND-THROUGH-HEADER' };
+
+//OR
+
+//Sending Dynamic Header Values
+app.api.reqHeaders = function(req, options) {
+  var reqHeader = {};
+
+  //build reqHeader Object...
+
+  return reqHeader;
+};
+  </script>
+  </section>
+</div>
