@@ -1,0 +1,38 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Utils</h1>
+
+  <section>
+    <h3>Type Check Functions</h3>
+    <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="Type Check Utility Functions">
+
+    spa.of( 12345 );        // "number"
+    spa.of( '' );           // "string"
+    spa.of( true );         // "boolean"
+    spa.of( false );        // "boolean"
+    spa.of( [] );           // "array"
+    spa.of( {} );           // "object"
+    spa.of( function(){} ); // "function"
+    spa.of( null );         // "null"
+    spa.of( undefined );    // "undefined"
+
+    spa.is(variableX, 'object');       //returns Boolean
+    spa.is(variableX, 'object|array'); //returns Boolean
+
+    function doSomething( variableX ) {
+
+      if ( spa.is(variableX, 'object') ) {
+        //doSomething if it's object
+      }
+
+      //OR
+
+      if ( spa.is(variableX, 'object|array') ) {
+        //doSomething if it's object or array
+      }
+    }
+
+
+    </script>
+  </section>
+
+</div>

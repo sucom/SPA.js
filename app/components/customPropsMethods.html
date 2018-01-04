@@ -1,0 +1,39 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Extended Properties</h2>
+  <h3><mark>Custom Properties/Methods</mark></h3>
+
+  <p>A component can have it's custom properties and methods</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$extend('componentX', {
+
+      isActive : false,
+      greetings: 'Welcome ',
+
+      doSomething: function() {
+        console.log( this.isActive );
+        console.log( this.greetings );
+
+        this.doSomethingElse();
+      },
+
+      doSomethingElse: function() {
+        app.componentY.doSomething( this.$data );
+
+        //doing something else...
+      }
+
+    });
+  </script>
+
+  <blockquote>
+    <strong>Accessing Component’s Extended Properties and Methods</strong>
+    <p>The component’s extended properties and methods can be accessed using app.componentX.<mark>PropertyOrMethodName</mark> or app.componentX[ <mark>'PropertyOrMethodName'</mark> ]</p>
+
+    <p>Within extended methods, the properties or methods can be accessed using <mark>this.</mark> keyword.</p>
+
+    <p>Note: <mark>this.$data</mark> refers to the Component’s Final Data (base property) i.e. The final data which goes to the template. (Refer above example)</p>
+
+  </blockquote>
+
+</div>

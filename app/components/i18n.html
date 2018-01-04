@@ -1,0 +1,82 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA i18n</h1>
+  <p>SPA JS has built-in support for internationalization ( <mark>i18n</mark> ). The i18n labels can be used/managed in template as well as
+    in script of any component within SPA JS.</p>
+
+  <section>
+    <h3>Language Code</h3>
+    <p>In SPA JS, it’s recommended to use the ISO Language Code along with the ISO Country Code
+      separated by underscore ( <mark>_</mark> )</p>
+
+    <p>Example: <mark>en_US</mark>, <mark>ja_JP</mark>, <mark>es_ES</mark></p>
+
+    <p>For List of ISO language code refer: <a href="https://www.w3schools.com/tags/ref_language_codes.asp" target="_blank">https://www.w3schools.com/tags/ref_language_codes.asp</a></p>
+    <p>For List of ISO Country code refer: <a href="https://www.w3schools.com/tags/ref_country_codes.asp" target="_blank">https://www.w3schools.com/tags/ref_country_codes.asp</a></p>
+  </section>
+
+  <section>
+    <h3>Language Files and Folder</h3>
+    <p>Create a folder "language" in app folder to store the language files.
+      The language file name must follow the naming convention as <mark>Language_lc_CC.txt</mark> where
+      <mark>lc</mark> is ISO Language code in lowercase and <mark>CC</mark> is ISO Country code in Uppercase.
+    </p>
+    <p>
+      <img src="app/images/lang_folder_structure.png" alt="Lang Folder Structure">
+      <blockquote>
+        NOTE: The Folder Name and File Names are case-sensitive.
+      </blockquote>
+    </p>
+  </section>
+
+  <section>
+    <h3>i18n Language File Content</h3>
+    <p>The i18n Language file contains a key value pair. These keys will be referred in
+      the Component's template or script.</p>
+
+    <script type="text/code" class="code trim no-num-tool" data-lang="Diff" data-title="sample Language_en_US.txt">
+      app.name = myApp in English
+
+      title.section.profile.view = View PROFILE
+      title.section.profile.edit = Edit PROFILE
+
+      btn.save.text    = SAVE
+      btn.save.tooltip = Click to save
+
+    </script>
+  </section>
+
+  <section>
+    <h3>Enable i18n</h3>
+    <p>To enable i18n feature, in the HTML body tag add attribute <mark>i18n-lang</mark> with value of default i18n Language Code ( <mark>lc_CC</mark> )</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html">
+      <_body i18n-lang="en_US">
+    </script>
+  </section>
+
+  <section>
+    <h3>Change Language</h3>
+    <p>The default i18n language can be changed using HTML elements (on click) or JavaScript.</p>
+
+    <h4>Using UI element</h4>
+    <p>Add attribute data-i18n-lang with the i18n Language code. This will register onClick
+      events for those elements to trigger Languge Change. </p>
+    <script type="text/code" class="code no-num-tool" data-lang="html" data-title="header.html">
+
+<a href="javascript:;" data-i18n-lang="en_US">EN</a> |
+<a href="javascript:;" data-i18n-lang="ja_JP">JP</a>
+
+
+    </script>
+
+    <h4>Using Script</h4>
+    <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+
+  //on Click event of Language selection element
+  spa.i18n.setLanguage('ja_JP');
+
+
+    </script>
+
+  </section>
+
+</div>

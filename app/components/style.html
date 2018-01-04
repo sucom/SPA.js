@@ -1,0 +1,31 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>style</mark></h3>
+
+  <p>Specify the css file's relative path (to index.html). Use <mark>'.'</mark> to load current component's css file.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      style: '.'
+
+    });
+  </script>
+  <p>This loads componentX.css on render call.</p>
+
+  <blockquote>
+      style is an optional property. Used if the component has its own style specifications.
+  </blockquote>
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      style: '.'
+
+    });
+  </script>
+
+  </div>

@@ -1,0 +1,49 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Utils</h1>
+
+  <section>
+    <h3>spa.bindData()</h3>
+
+    <p>You can apply data on a rendered component using data-bind attribute. This will avoid re-rendering of the whole component.
+      <script type="text/code" class="code no-num-tool" data-lang="html" data-title="componentX.html">
+
+<div class="container_componentX">
+
+  <div data-bind="name"></div>
+  <div data-bind="age"></div>
+  <div data-bind="email"></div>
+
+  <div>Address</div>
+  <div data-bind="address.street"></div>
+  <div data-bind="address.city"></div>
+  <div data-bind="address.state"></div>
+  <div data-bind="address.zip"></div>
+
+</div>
+      </script>
+
+      <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+    //... ... ...
+
+    //on some event
+
+    spa.bindData( '.container_componentX',
+
+                  { name: 'Smith J',
+                    age:20,
+                    address: {
+                      street: '1 Town Road',
+                      city: 'New York',
+                      state: 'NY',
+                      zip: '12345'
+                    }
+                  }
+                );
+    //... ... ...
+
+      </script>
+
+    </p>
+  </section>
+
+</div>

@@ -1,0 +1,733 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+<h2>Components UI</h2>
+<p>The component UI file in SPA is a handlebars template content with additional custom helpers. For detailed template documentation
+	refer: http://handlebarsjs.com/</p>
+<!-- Simple UI -->
+<h3>Simple UI</h3>
+<p>The HTML file contains plain HTML Tags in Header.html</p>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">h1</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="blue-txt">Welcome to SPA </span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/h1</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<p class="Notes">NOTE: Refer to Component Script file ( componentX.js ) for Single Line Template Specification to avoid a separate HTML file.</p>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"ui inverted vertical footer segment fixed-bottom"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space2">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"ui container"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space2">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"ui fixed-bottom-right"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">code licensed under</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space2">&lt;</span>
+						<span class="tag-txt">a</span>
+						<span class="green-txt">target=</span>
+						<span class="blue-txt">"_blank"</span>
+						<span class="green-txt">href=</span>
+						<span class="blue-txt">"https://github.com/sucom/SPA.js/blob/master/LICENSE"</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="cont-txt">MIT</span>
+						<span class="mediumblue"> &lt;</span>
+						<span class="tag-txt">/a</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">| Hosted @ </span>
+					</li>
+					<li>
+						<span class="mediumblue code-space2">&lt;</span>
+						<span class="tag-txt">a</span>
+						<span class="green-txt"></span>
+						<span class="green-txt">target=</span>
+						<span class="blue-txt">"_blank"</span>
+						<span class="green-txt">href=</span>
+						<span class="blue-txt">"https://github.com/sucom/SPA.js"</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">i</span>
+						<span class="green-txt">class=</span>
+						<span class="blue-txt">"ui github icon"</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/i</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="mediumblue">&nbsp;&nbsp; &lt;</span>
+						<span class="tag-txt">/a</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt  code-space2">routed via</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space2">&lt;</span>
+						<span class="tag-txt">a</span>
+						<span class="green-txt"></span>
+						<span class="green-txt">target=</span>
+						<span class="blue-txt">"_blank"</span>
+						<span class="green-txt">title=</span>
+						<span class="blue-txt">"JS.ORG"</span>
+						<span class="green-txt">href=</span>
+						<span class="blue-txt">"https://js.org/"</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">img</span>
+						<span class="green-txt"></span>
+						<span class="green-txt">alt=</span>
+						<span class="blue-txt">"JS.ORG Logo"</span>
+						<span class="green-txt">src=</span>
+						<span class="blue-txt">"https://logo.js.org/bright_tiny.png"</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/a</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<!-- Data Binding -->
+<h3>Data Binding</h3>
+<p>We can bind data using double curly braces {{ expression }} (double-stash)</p>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"entry"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">h1</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="cont-txt">{</span>
+						<span class="cont-txt">{title}</span>
+						<span class="cont-txt">}</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/h1</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"body"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">{</span>
+						<span class="cont-txt">{body}</span>
+						<span class="cont-txt">}</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<h4>With Data</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="green-txt"> { title:</span>
+						<span class="blue-txt"> "My New Post", </span>
+						<span class="green-txt"> body:</span>
+						<span class="blue-txt"> "This is my first post!" </span>
+						<span class="green-txt">}</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<h4>Results in</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"entry"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space1">My New Post</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"body"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">This is my first post!</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<!-- HTML escaping -->
+<h3>HTML escaping</h3>
+<p>Be default Handlebars HTML-escapes values returned by a {{ expression }}. To avoid HTML-escapes, use the “triple-stash’,
+	<span>{</span>
+	<span>{</span>
+	<span>{</span>
+	<span>}</span>
+	<span>}</span>
+	<span>}</span>
+</p>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"entry"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">h1</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="cont-txt">{</span>
+						<span class="cont-txt">{title}</span>
+						<span class="cont-txt">}</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/h1</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"body"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">{</span>
+						<span class="cont-txt">{</span>
+						<span class="cont-txt">{body}</span>
+						<span class="cont-txt">}</span>
+						<span class="cont-txt">}</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<h4>With Data</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="green-txt"> { </span>
+					</li>
+					<li>
+						<span class="green-txt code-space1">title:</span>
+						<span class="blue-txt"> "All about
+							<span class="mediumblue">&lt;</span>p
+							<span class="mediumblue">&gt;</span> Tags",
+						</span>
+					</li>
+					<li>
+						<span class="green-txt code-space1">body:</span>
+						<span class="blue-txt"> "
+							<span class="mediumblue">&lt;</span>p
+							<span class="mediumblue">&gt;</span> This is a post about &lt;p&gt; tags
+							<span class="mediumblue">&lt;</span>/p
+							<span class="mediumblue">&gt;</span>"
+						</span>
+					</li>
+					<li>
+						<span class="green-txt">}</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<h4>Results in</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"entry"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space1">All about &lt;p&gt; Tags</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"body"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">This is poat about tags </span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<!-- Nested Paths -->
+<h3>Nested Paths</h3>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"entry"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">h1</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="cont-txt">{</span>
+						<span class="cont-txt">{title}</span>
+						<span class="cont-txt">}</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/h1</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">h2</span>
+						<span class="mediumblue">&gt;</span>
+						<span class="cont-txt">By {</span>
+						<span class="cont-txt">{author.name}</span>
+						<span class="cont-txt">}</span>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/h2</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">div</span>
+						<span class="green-txt"> class=</span>
+						<span class="blue-txt">"body"</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="cont-txt code-space2">{</span>
+						<span class="cont-txt">{</span>
+						<span class="cont-txt">{body}</span>
+						<span class="cont-txt">}</span>
+						<span class="cont-txt">}</span>
+					</li>
+					<li>
+						<span class="mediumblue code-space1">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+					<li>
+						<span class="mediumblue">&lt;</span>
+						<span class="tag-txt">/div</span>
+						<span class="mediumblue">&gt;</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+<!-- Formatting Helpers -->
+<h3>Formatting Helpers</h3>
+
+<h4>For Data</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="green-txt"> { street:</span>
+						<span class="blue-txt"> "Main street", </span>
+						<span class="green-txt"> city:</span>
+						<span class="blue-txt"> "new york" </span>
+						<span class="green-txt">}</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+
+
+<h4>The String Formatting Helpers are</h4>
+
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+				<code>
+					<ol>
+						<li>
+								<p class="comment-line"><span><</span>!-- results in: main street --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:lower street </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+						<li>&nbsp;</li>
+						<li>
+								<p class="comment-line"><span><</span>!-- results in: MAIN STREET --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:upper street </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+
+						<li>&nbsp;</li>
+						<li>
+								<p class="comment-line"><span><</span>!-- results in: New york --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:capitalize city </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+
+						<li>&nbsp;</li>
+						<li>
+								<p class="comment-line"><span><</span>!-- results in: main Street --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:uncapitalize city </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+					</ol>
+				</code>
+			</pre>
+	</div>
+</div>
+
+
+<h4>For Data</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+			<code>
+				<ol>
+					<li>
+						<span class="green-txt"> { data:</span>
+						<span class="blue-txt"> " &nbsp; ++ &nbsp; some text &nbsp; ++ &nbsp; ", </span>
+						<span class="green-txt">}</span>
+					</li>
+				</ol>
+			</code>
+		</pre>
+	</div>
+</div>
+
+
+<h4>The String Trim Helpers are</h4>
+
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+				<code>
+					<ol>
+						<li>
+								<p class="comment-line"><span><</span>!-- "++some text++" --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:trim data </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+						<li>&nbsp;</li>
+						<li>
+								<p class="comment-line"><span><</span>!-- "++some text++ &nbsp;&nbsp;" --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:trimLeft data </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+
+						<li>&nbsp;</li>
+						<li>
+								<p class="comment-line"><span><</span>!-- "&nbsp;&nbsp; ++some text++" --<span>></span></p>
+						</li>
+						<li>
+							<span class="green-txt"> {<span>{</span></span>
+							<span class="blue-txt">:trimRight data </span>
+							<span class="green-txt">}<span>}</span></span>
+						</li>
+					</ol>
+				</code>
+			</pre>
+	</div>
+</div>
+
+
+<h4>For Data</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+				<code>
+					<ol>
+						<li>
+							<span class="green-txt"> { data:</span>
+							<span class="blue-txt"> "++some text++", </span>
+							<span class="green-txt">}</span>
+						</li>
+					</ol>
+				</code>
+			</pre>
+	</div>
+</div>
+
+
+<h4>The String Trim Helpers are</h4>
+
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+					<code>
+						<ol>
+							<li>
+									<p class="comment-line"><span><</span>!-- "some text" --<span>></span></p>
+							</li>
+							<li>
+								<span class="green-txt"> {<span>{</span></span>
+								<span class="blue-txt">:trim data &nbsp;"+"&nbsp; </span>
+								<span class="green-txt">}<span>}</span></span>
+							</li>
+							<li>&nbsp;</li>
+							<li>
+									<p class="comment-line"><span><</span>!-- "some text++" --<span>></span></p>
+							</li>
+							<li>
+								<span class="green-txt"> {<span>{</span></span>
+								<span class="blue-txt">:trimLeft data &nbsp;"+"&nbsp; </span>
+								<span class="green-txt">}<span>}</span></span>
+							</li>
+
+							<li>&nbsp;</li>
+							<li>
+									<p class="comment-line"><span><</span>!-- "++some text" --<span>></span></p>
+							</li>
+							<li>
+								<span class="green-txt"> {<span>{</span></span>
+								<span class="blue-txt">:trimRight data &nbsp;"+"&nbsp; </span>
+								<span class="green-txt">}<span>}</span></span>
+							</li>
+						</ol>
+					</code>
+				</pre>
+	</div>
+</div>
+
+
+<h4>&nbsp;</h4>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+						<code>
+							<ol>
+								<li>
+										<p class="comment-line"><span><</span>!-- "/+some text++" --<span>></span></p>
+								</li>
+								<li>
+									<span class="green-txt"> {<span>{</span></span>
+									<span class="blue-txt">:replace data searchStr="+" &nbsp; replaceStr="/" </span>
+									<span class="green-txt">}<span>}</span></span>
+								</li>
+								<li>&nbsp;</li>
+								<li>
+										<p class="comment-line"><span><</span>!-- "++ &nbsp; ____ ____ &nbsp; ++" --<span>></span></p>
+								</li>
+								<li>
+									<span class="green-txt"> {<span>{</span></span>
+									<span class="blue-txt">:replace data replaceStr="_" &nbsp; rxPattern="[a-z]" &nbsp; rxOption="gi"</span>
+									<span class="green-txt">}<span>}</span></span>
+								</li>
+							</ol>
+						</code>
+					</pre>
+	</div>
+</div>
+
+<h4>Debugging within Template</h4>
+<p>To print the template context data in browser console use
+	<span> {
+		<span>{</span>
+	</span>:consoleLog expression
+	<span>}
+		<span>}</span>
+	</span>
+</p>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+							<code>
+								<ol>
+									<li>
+										<span class="green-txt"> {<span>{</span></span>
+										<span class="blue-txt">:consoleLog  &nbsp; shippingAddress </span>
+										<span class="green-txt">}<span>}</span></span>
+									</li>
+								</ol>
+							</code>
+						</pre>
+	</div>
+</div>
+
+
+<h4>Event Binding in Template</h4>
+<p>Using HTML native event attributes, we can bind a function defined in component’s script ( componentX.js ) file to any HTML
+	element in the template.</span>
+	</span>
+</p>
+<div class="structure-code codes">
+	<div class="htmlcolor">
+		<pre>
+							<code>
+								<ol>
+									<li>
+										<span class="mediumblue">&lt;</span>
+										<span class="tag-txt">button</span>
+										<span class="green-txt"> onclick=</span>
+										<span class="blue-txt">"<span>{</span>$<span>}</span>submitForm();"</span>
+										<span class="mediumblue">&gt;</span><span class="cont-txt">Submit</span><span class="mediumblue">&lt;</span><span class="tag-txt">/button</span><span class="mediumblue">&gt;</span>
+									</li>
+
+								</ol>
+							</code>
+						</pre>
+	</div>
+</div>
+</div>

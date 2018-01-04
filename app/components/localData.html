@@ -1,0 +1,34 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>data</mark></h3>
+
+  <p>Specify the context (data) JSON to the template.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      data: { title: "My New Post",
+              body: "This is my first post!"
+            }
+
+    });
+  </script>
+
+  <blockquote>
+      data is an optional property. If no data-binding in template, ignore this property.
+  </blockquote>
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      data: { title: "My New Post",
+              body: "<p>This is my first post!</p>"
+            }
+
+    });
+  </script>
+
+</div>

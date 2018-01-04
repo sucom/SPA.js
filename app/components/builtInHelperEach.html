@@ -1,0 +1,81 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Using Built-in Helpers</h2>
+  <p>For detailed Built-in Helpers refer:
+    <a href="http://handlebarsjs.com/builtin_helpers.html" target="_blank">http://handlebarsjs.com/builtin_helpers.html</a>
+  </p>
+
+  <h3>The <mark>each</mark> block helper</h3>
+  <p>To iterate over a list, use the built-in <mark>each</mark> helper. Inside the block, use <mark>this</mark> to reference the element
+    being iterated over
+  </p>
+  <script type="text/code" class="code trim no-num-tool">
+    <ul class="people_list">
+      {{#each people}}
+        <li>{{this}}</li>
+      {{/each}}
+    </ul>
+  </script>
+
+  <p>when used with this context</p>
+  <script type="text/code" class="code trim no-num-tool" data-lang="json">
+    {
+      people: [
+        "Yehuda Katz",
+        "Alan Johnson",
+        "Charles Jolley"
+      ]
+    }
+  </script>
+
+  <p>will result in:</p>
+  <script type="text/code" class="code trim no-toolbar">
+    <ul class="people_list">
+      <li>Yehuda Katz</li>
+      <li>Alan Johnson</li>
+      <li>Charles Jolley</li>
+    </ul>
+  </script>
+
+  <p>Use the <mark>this</mark> expression in any context to reference the <mark>current</mark> context.</p>
+  <p>The optional <mark>{{else}}</mark> section will display only when the list is empty.</p>
+  <script type="text/code" class="code trim no-num-tool">
+    {{#each paragraphs}}
+      <p>{{this}}</p>
+    {{else}}
+      <p class="empty">No content</p>
+    {{/each}}
+  </script>
+
+  <p>When looping through items in <mark>each</mark>, you can optionally reference the current loop index via <mark>{{@index}}</mark></p>
+  <script type="text/code" class="code trim no-num-tool">
+    {{#each array}}
+      {{@index}}: {{this}}
+    {{/each}}
+  </script>
+
+  <p>Additionally for object iteration, <mark>{{@key}}</mark> references the current key name:</p>
+  <script type="text/code" class="code trim no-num-tool">
+    {{#each object}}
+      {{@key}}: {{this}}
+    {{/each}}
+  </script>
+
+  <p>The first and last steps of iteration are noted via the <mark>@first</mark> and <mark>@last</mark> variables when iterating over an array.
+    When iterating over an object only the <mark>@first</mark> is available.</p>
+
+  <p>Nested each blocks may access the iteration variables via depth based paths. To access the parent index,
+    for example, <mark>{{@../index}}</mark> can be used.</p>
+
+  <p>The each helper also supports <mark>block parameters</mark>, allowing for named references anywhere in the block.</p>
+  <script type="text/code" class="code trim no-num-tool">
+    {{#each array as |value key|}}
+      {{#each child as |childValue childKey|}}
+        {{key}} - {{childKey}}. {{childValue}}
+      {{/each}}
+    {{/each}}
+  </script>
+
+  <p>The above code will create a <mark>key</mark> and <mark>value</mark> variable that children may access without the need for depthed variable references.
+    In the example above, <mark>{{key}}</mark> is identical to <mark>{{@../key}}</mark> but in many cases is more readable.</p>
+
+</div>

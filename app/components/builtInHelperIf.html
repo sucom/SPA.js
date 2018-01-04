@@ -1,0 +1,37 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Using Built-in Helpers</h2>
+  <p>For detailed Built-in Helpers refer:
+    <a href="http://handlebarsjs.com/builtin_helpers.html" target="_blank">http://handlebarsjs.com/builtin_helpers.html</a>
+  </p>
+
+  <h3>The <mark>if</mark> block helper</h3>
+  <p>Use the <mark>if</mark> helper to conditionally render a block.
+    If its argument returns <mark>false</mark>, <mark>undefined</mark>, <mark>null</mark>,
+    <mark>""</mark>, <mark>0</mark> or <mark>[ ]</mark>, Handlebars will not render the block</p>
+  <script type="text/code" class="code trim no-num-tool">
+  <div class="entry">
+    {{#if author}}
+      <h1>{{firstName}} {{lastName}}</h1>
+    {{/if}}
+  </div>
+  </script>
+
+  <p>When used with an empty ( <mark>{ }</mark> ) context, <mark>author</mark> will be <mark>undefined</mark>, resulting in:</p>
+  <script type="text/code" class="code trim no-toolbar">
+  <div class="entry">
+  </div>
+  </script>
+
+  <p>When using a block expression, (optional) specify a template section
+    to run if the expression returns a falsy value. The section, marked by <mark>{{else}}</mark> is called an "else section".
+  </p>
+  <script type="text/code" class="code trim no-num-tool">
+    <div class="entry">
+      {{#if author}}
+        <h1>{{firstName}} {{lastName}}</h1>
+      {{else}}
+        <h1>Unknown Author</h1>
+      {{/if}}
+    </div>
+  </script>
+</div>

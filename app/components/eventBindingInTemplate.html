@@ -1,0 +1,13 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+	<h2>Event Binding in Template</h2>
+	<p>Using HTML native event attributes, we can bind a function defined in component's script ( <strong>componentX.js</strong> )
+		 file to any HTML element in the template. Refer to Component's Events Binding in <a >ComponentX.js</a></p>
+
+  <script type="text/code" class="code trim no-num-tool">
+    <button onclick="app.componentX.submitForm();">Submit</button>
+	</script>
+	<p>To refer to the current component's method use shortcut <mark>{$}</mark> instead of <mark>app.componentX.</mark></p>
+	<script type="text/code" class="code trim no-num-tool">
+<button onclick="{$}submitForm();">Submit</button>
+	</script>
+</div>

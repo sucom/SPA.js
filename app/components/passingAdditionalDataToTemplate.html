@@ -1,0 +1,37 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataDefaults</mark></h3>
+
+  <p>Passing additional data to template.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataDefaults: {
+        prefLang : 'en-US',
+        profilePic: 'asset/images/profile-default.png'
+      }
+
+    });
+  </script>
+
+  <blockquote>
+    { dataToTemplate } = merge ( { dataDefaults } &lt;== { apiResponse } )
+  </blockquote>
+
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      dataDefaults: {
+        prefLang : 'en-UK'
+      }
+
+
+    });
+  </script>
+
+</div>

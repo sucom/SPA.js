@@ -1,0 +1,41 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataUrl</mark></h3>
+
+  <p>Specify actual API path with reference to the <mark>index.html</mark></p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataUrl: 'api/path/to/data'
+
+    });
+  </script>
+  <p>The SPA will attempt to fetch the data from //host/api/path/to/data</p>
+
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataUrl: '@apiUrlKey'
+
+    });
+  </script>
+  <p>All API URLs can be stored in <mark>spa.api.urls</mark> and refer the key in dataUrl. For more details refer SPA API section.</p>
+
+  <blockquote>
+      dataUrl is an optional property. If no data-binding in template, ignore this property.
+  </blockquote>
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      dataUrl: 'api/path/to/dataX'
+
+    });
+  </script>
+
+</div>

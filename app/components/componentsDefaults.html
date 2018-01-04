@@ -1,0 +1,39 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Defaults</h1>
+
+  <section>
+    <h3>Components Defaults</h3>
+
+    <p>
+      SPA comes with default settings for it's components and the same can be changed using <mark>spa.defaults.set()</mark> function.
+      <script type="text/code" class="code no-toolbar" data-lang="JavaScript">
+components: {
+    rootPath    : 'app/components/'
+  , inFolder    : true
+  , templateExt : '.html'
+  , scriptExt   : '.js'
+  , callback    : ''
+}
+      </script>
+
+      <script type="text/code" class="code no-num-tool" data-lang="JavaScript">
+
+//to change single default property
+spa.defaults.set( 'components.templateExt', '.jsp' );
+
+//to change multiple default properties
+spa.defaults.set( { components: {
+                      templateExt:'.jsp',
+                      rootPath:'Components/',
+                      inFolder:false}
+                  } );
+
+
+      </script>
+
+    </p>
+
+
+  </section>
+
+</div>

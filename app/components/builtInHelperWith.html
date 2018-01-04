@@ -1,0 +1,77 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Using Built-in Helpers</h2>
+  <p>For detailed Built-in Helpers refer:
+    <a href="http://handlebarsjs.com/builtin_helpers.html" target="_blank">http://handlebarsjs.com/builtin_helpers.html</a>
+  </p>
+
+  <h3>The <mark>with</mark> block helper</h3>
+
+  <p>Normally, Handlebars templates are evaluated against the context passed into the template.</p>
+  <script type="text/code" class="code trim no-num-tool">
+    <p>{{lastName}}, {{firstName}}</p>
+  </script>
+
+  with data:
+  <script type="text/code" class="code trim no-num-tool" data-lang="json">
+    {firstName: "Alan", lastName: "Johnson"}
+  </script>
+
+  will result in
+  <script type="text/code" class="code trim no-toolbar">
+    <p>Johnson, Alan</p>
+  </script>
+
+  <p>You can shift the context for a section of a template by using the built-in <mark>with</mark> block helper.</p>
+  <script type="text/code" class="code trim no-num-tool">
+    <div class="entry">
+      <h1>{{title}}</h1>
+
+      {{#with author}}
+      <h2>By {{firstName}} {{lastName}}</h2>
+      {{/with}}
+    </div>
+  </script>
+
+  with data:
+  <script type="text/code" class="code trim no-num-tool" data-lang="json">
+    {
+      title: "My first post!",
+      author: {
+        firstName: "Charles",
+        lastName: "Jolley"
+      }
+    }
+  </script>
+
+  will result in
+  <script type="text/code" class="code trim no-toolbar">
+    <div class="entry">
+      <h1>My first post!</h1>
+
+      <h2>By Charles Jolley</h2>
+    </div>
+  </script>
+
+  <p><mark>with</mark> can also be used with <mark>block parameters</mark> to define known references in the current block.
+    The example above can be converted to
+  </p>
+
+  <script type="text/code" class="code trim no-num-tool">
+    <div class="entry">
+      <h1>{{title}}</h1>
+
+      {{#with author as |myAuthor|}}
+      <h2>By {{myAuthor.firstName}} {{myAuthor.lastName}}</h2>
+      {{/with}}
+    </div>
+  </script>
+  <p>Which allows for complex templates to potentially provide clearer code than <mark>../</mark> depthed references allow for.</p>
+
+  <p>Also, you can optionally provide an <mark>{{else}}</mark> section which will display only when the passed value is empty.</p>
+  <script type="text/code" class="code trim no-num-tool">
+    {{#each bar}}
+      {{lookup ../foo @index}}
+    {{/each}}
+  </script>
+
+</div>

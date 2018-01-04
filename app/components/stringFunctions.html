@@ -1,0 +1,44 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Utils</h1>
+
+  <section>
+    <h3>String Functions</h3>
+    <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="String Utility Functions">
+
+    (" Some string content... ").trimStr();
+    (" Some string content... ").trimLeftStr();
+    (" Some string content... ").trimRightStr();
+
+    ("+++Some string content+++").trimStr('+');
+    ("+++Some string content+++").trimLeftStr('+');
+    ("+++Some string content+++").trimRightStr('+');
+
+    ("someString~Value").getLeftStr('~');
+    ("someString~Value").getRightStr('~');
+
+    (" ").isBlankStr();
+    ("").isBlankStr();
+    ("Some String").isBlankStr();
+
+    ("").ifBlankStr(valueForBlank);
+    (" ").ifBlankStr(valueForBlank);
+    ("Some String").ifBlankStr(valueForBlank);
+    ("Some String").ifBlankStr(valueForBlank, valueForNotBlank);
+
+    ("12345").isNumberStr();
+    ("-12345").isNumberStr();
+    ("12345ABC").isNumberStr();
+
+    (" some    string   value").normalizeStr();
+
+    ("#SomeString").beginsWithStr('#');
+    ("SOME-String").beginsWithStrIgnoreCase('some');
+
+    ("SomeString,").endsWithStr(',');
+    ("execution SUCCESS").endsWithStrIgnoreCase('success');
+
+
+    </script>
+  </section>
+
+</div>

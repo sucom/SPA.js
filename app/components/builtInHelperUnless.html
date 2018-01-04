@@ -1,0 +1,20 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Using Built-in Helpers</h2>
+  <p>For detailed Built-in Helpers refer:
+    <a href="http://handlebarsjs.com/builtin_helpers.html" target="_blank">http://handlebarsjs.com/builtin_helpers.html</a>
+  </p>
+
+  <h3>The <mark>unless</mark> block helper</h3>
+  <p>Use the <mark>unless</mark> helper as the inverse of the <mark>if</mark> helper. Its block will be rendered if the
+    expression returns a falsy value</p>
+  <script type="text/code" class="code trim no-num-tool">
+  <div class="entry">
+    {{#unless license}}
+    <h3 class="warning">WARNING: This entry does not have a license!</h3>
+    {{/unless}}
+  </div>
+  </script>
+  <p>If looking up <strong>license</strong> under the current context returns a falsy value,
+    Handlebars will render the warning text block. Otherwise, it will render nothing!
+  </p>
+</div>

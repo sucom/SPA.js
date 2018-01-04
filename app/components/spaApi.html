@@ -1,0 +1,169 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA API</h1>
+  <p>SPA JS has functions to handle API calls in easiest way.</p>
+
+  <section>
+  <p>SPA JS highly recommends to organize all the API URLs in a single location (file) for easy maintainability and scalability.</p>
+
+  <p>Create <mark>apiConf.js</mark> in app/js folder and refer to this script file in <mark>index.html</mark> as below</p>
+  <script type="text/code" class="code trim line-numbers" data-lang="html" data-title="index.html" data-lines="19">
+    <!DOCTYPE html>
+    <html>
+    <_head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <title>myApp</title>
+
+      <link rel="stylesheet" href="app/css/style.css">
+    </_head>
+    <_body>
+
+      <div data-spa-component="main"></div>
+
+      <_script src="xlib/jquery/jquery.min.js"></_script>
+      <_script src="xlib/handlebars/handlebars.min.js"></_script>
+      <_script src="xlib/spa/spa-bundle.min.js"></_script>
+
+      <_script src="app/js/apiConf.js"></_script>
+
+    </_body>
+    </html>
+  </script>
+  </section>
+
+  <br/>
+
+  <section>
+    <p><mark>apiConf.js</mark> contains all API related configuration.</p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="apiConf.js">
+
+/* To mock live api urls with local static data; default false */
+//spa.api.mock = true;
+
+/* If live-api-server is not same as front-end-ui server; */
+//spa.api.baseUrl = 'https://live-api-server-address:port/';
+
+/* live-api url prefix to identify Live-Api calls */
+app['api'] = { liveApiPrefix: 'api/' };
+
+/* All API Urls */
+/* $ prefix in Key refers to dataUrl for the component */
+
+/* ! in url => force to mock location */
+/* ~ in url => force to live location */
+/* {urlParamName}  => if live, replaced with actual urlParamValue
+                    => if mock, replaced with string '_urlParamName'
+  {<urlParamName>} => replaced with actual urlParamValue
+*/
+$.extend(spa.api.urls, {
+
+  //Component Data APIs (Default GET)
+  $componentA: 'api/path/to/componentA-data',
+  $componentB: '!api/path/to/componentB-data/{urlParam1}/{<urlParam2>}',
+  $componentC: '~api/path/to/componentC-data/{urlParamX}/{<urlParamY>}',
+
+  //Action based REST APIs (GET/POST/PUT/DELETE)
+  readFormA: '!api/path/to/read/data',
+  saveFormA: '~api/path/to/save/data'
+
+});
+    </script>
+  </section>
+
+  <section>
+    <h3>spa.api.mock</h3>
+    <p>By default all API calls are routed to live server. Using <mark>!</mark> and <mark>~</mark> symbol
+      at the beginning of the URL, the call can be directed to mock directory or live server respectively.</p>
+
+    <p>If you want to direct all API URLs specified in <mark>spa.api.urls</mark> beginning with
+      <mark>app.api.liveApiPrefix</mark> to mock directory, set <mark>spa.api.mock</mark> to true.</p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="apiConf.js">
+      spa.api.mock = true;
+    </script>
+  </section>
+
+  <section>
+    <h3>spa.api.baseUrl</h3>
+    <p>In general the Front-End (html, css, js, images, etc.) and APIs are served from the same server.
+      However, in the event where the API’s are served from different server, use <mark>spa.api.baseUrl</mark> to
+      define the root path of the API Service End-Point.</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+
+spa.api.baseUrl = 'https://your-live-api-server-address:port/';
+
+    </script>
+  </section>
+
+  <section>
+    <h3>app.api.liveApiPrefix</h3>
+    <p>If you want to use SPA JS's mock feature, specify the live url prefix in <mark>app.api.liveApiPrefix</mark></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+
+app['api'] = { liveApiPrefix: 'api/' };
+
+    </script>
+  </section>
+
+  <section>
+    <h3>spa.api.urls</h3>
+    <p>Define all API URLs in <mark>apiConf.js</mark> by extending <mark>spa.api.urls</mark> as shown below.</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+
+$.extend(spa.api.urls, {
+
+  //Component dataUrl APIs (Default GET)
+  $componentA: 'api/path/to/componentA-data',
+  $componentB: 'api/path/to/componentB-data/{urlParam1}/{urlParam2}',
+  $componentC: 'api/path/to/componentC-data/{urlParamX}/{urlParamY}',
+
+  //Action based REST API URLs (GET/POST/PUT/DELETE)
+  readFormA: 'api/path/to/read/data',
+  saveFormA: 'api/path/to/save/data'
+
+});
+    </script>
+
+    <blockquote>
+        <p>Prefix key with <mark>$</mark> if the API URL is used for a component ( <mark>$componentName</mark> ),
+           to avoid <mark>dataUrl</mark> base property in <mark>componentX.js</mark></p>
+        <br>
+        <p>Use curly braces <mark>{  }</mark> in URL for dynamic data injection before the actual API call.
+          Values for these params can be passed through component's base property <mark>dataUrlParams</mark></p>
+    </blockquote>
+  </section>
+
+  <section>
+    <h3>Component's <mark>dataUrl</mark> in <mark>spa.api.urls</mark></h3>
+    <p>If you specify <mark>@</mark> in URL key, the respective component base property dataUrl need not be specified in component specification.</p>
+
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+
+$.extend(spa.api.urls, {
+
+  $componentA: 'api/path/to/componentA-data',
+  someApiUrl : 'api/path/to/componentX-data'
+
+});
+    </script>
+
+    <p>Ignore dataUrl property in componentA.js</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentA.js">
+
+spa.$('componentA', {
+  //dataUrl: '@$componentA' //optional - no need to define this line
+});
+    </script>
+
+    <p>Specify dataUrl property in componentX.js</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+
+spa.$('componentX', {
+  dataUrl: '@someApiUrl' //need to specify dataUrl including @
+});
+
+    </script>
+
+  </section>
+
+</div>

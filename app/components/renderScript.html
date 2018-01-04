@@ -1,0 +1,40 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component Render</h2>
+  <h3>Using Script <mark>spa.$render</mark> | <mark>spa.$$render</mark></h3>
+
+  <p>Render Single Component with default base properties.</p>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX');
+  </script>
+
+  <br/>
+  <p>Render Single Component with new base properties.</p>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      target: '#someTargetContainer',
+
+      dataDefaults: {
+        prefLang : 'en-US'
+      }
+
+    });
+  </script>
+
+  <br/>
+  <p>Render Multiple Components using <mark>spa.$$render</mark></p>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    //as Arguments - to render with component's default properties
+    spa.$$render( 'componentX', 'componentY', 'componentZ' );
+
+    //as String - to render with component's default properties
+    spa.$$render( 'componentX, componentY, componentZ' );
+
+    //as Array - to render with component's default properties
+    spa.$$render( ['componentX', 'componentY', 'componentZ'] );
+
+    //as Object - to render to override component's base properties
+    spa.$$render( { componentX: { options }, componentY: { options } } );
+    </script>
+
+</div>

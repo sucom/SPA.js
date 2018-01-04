@@ -1,0 +1,36 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Data Binding</h2>
+  <p>Bind data using double curly braces <mark>{{</mark> expression <mark>}}</mark> (<strong>double-stash</strong>)</p>
+  <script type="text/code" class="code trim no-num-tool" data-lang="html" data-lines="2,4">
+  <div class="entry">
+    <h1>{{title}}</h1>
+    <div class="post">
+      {{body}}
+    </div>
+  </div>
+  </script>
+
+  <h3>With Data</h3>
+  <p>Refer <a href="#getStarted/localData">Component Base Properties</a> of Component's Script to send data to it's template.</p>
+  <script type="text/code" class="code trim no-num-tool" data-lang="json">
+  { title: "My New Post", body: "This is my first post!" }
+  </script>
+
+  <h3>Results in</h3>
+  <script type="text/code" class="code trim no-toolbar" data-lang="html" data-lines="2,4">
+  <div class="entry">
+    <h1>My New Post</h1>
+    <div class="post">
+      This is my first post!
+    </div>
+  </div>
+  </script>
+
+  <blockquote>
+    <p>Now, jump to Component's Base Properties section to learn to send data
+      to bind with template and come back to learn more advanced topics in Component's UI.</p>
+
+    <p>Before proceed further with template topics, it's highly recommended to learn to render a component.</p>
+  </blockquote>
+
+</div>

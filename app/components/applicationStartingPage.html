@@ -1,0 +1,77 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>App's Starting Page (The Single Page)</h1>
+  <h3>At the beginning</h3>
+  <p>The minimum content of the single page <mark>index.html</mark> is
+  <script type="text/code" class="code trim line-numbers" data-lang="html" data-title="index.html" data-lines="9,11-13">
+  <!DOCTYPE html>
+  <html>
+    <_head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>MyApp</title>
+    </_head>
+    <_body>
+
+    <div data-spa-component="main"></div>
+
+    <_script src="xlib/jquery/jquery.min.js"        ></_script>
+    <_script src="xlib/handlebars/handlebars.min.js"></_script>
+    <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
+    </_body>
+  </html>
+  </script>
+  </p>
+
+  <h3>During Development</h3>
+  <p>A fully developed application start page may contains links to
+    Style Sheet ( <strong>.css</strong> ) and Javascript ( <strong>.js</strong> ) files similar to
+  <script type="text/code" class="code trim line-numbers" data-lang="html" data-title="index.html" data-lines="7,17-18">
+  <!DOCTYPE html>
+  <html>
+    <_head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>MyApp</title>
+
+      <link rel="stylesheet" href="app/css/style.css" />
+    </_head>
+    <_body>
+
+    <div data-spa-component="main"></div>
+
+    <_script src="xlib/jquery/jquery.min.js"        ></_script>
+    <_script src="xlib/handlebars/handlebars.min.js"></_script>
+    <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
+
+    <_script src="app/js/appConf.js"></_script>
+    <_script src="app/js/apiConf.js"></_script>
+    </_body>
+  </html>
+  </script>
+  </p>
+
+  <h3>The Final (Production)</h3>
+  <p>Using Gulp or Grunt or WebPack the style sheets and javascripts
+    can be minified and bundled in respective files. Those
+    minified files can be referred in the production <mark>index.html</mark>
+
+  <script type="text/code" class="code trim line-numbers" data-lang="html"  data-title="index.html" data-lines="7-8,14-15">
+  <!DOCTYPE html>
+  <html>
+    <_head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>MyApp</title>
+
+      <link rel="stylesheet" href="xlib/bundle.min.css"   />
+      <link rel="stylesheet" href="app/css/style.min.css" />
+    </_head>
+    <_body>
+
+    <div data-spa-component="main"></div>
+
+    <_script src="xlib/bundle.min.js"></_script>
+    <_script src="app/js/app.min.js" ></_script>
+    </_body>
+  </html>
+  </script>
+  </p>
+
+</div>

@@ -1,0 +1,47 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+	<h2>Formatting Helpers</h2>
+	<p>The custom formatting helpers can be used to format the expression within the template.</p>
+
+	<h3>String: <mark>case</mark> helpers</h3>
+	for data:
+	<script type="text/code" class="code trim no-num-tool" data-lang="json">
+    { street: "Main Street", city: "new York" }
+	</script>
+	<mark>case</mark> helpers in template:
+  <script type="text/code" class="code trim no-num-tool">
+{{:lower street }}          <!-- results in: "main street" -->
+{{:upper street }}          <!-- results in: "MAIN STREET" -->
+{{:capitalize city }}       <!-- results in: "New York"    -->
+{{:unCapitalize street }}   <!-- results in: "main Street" -->
+	</script>
+
+	<h3>String: <mark>trim</mark> helpers</h3>
+	for data:
+	<script type="text/code" class="code trim no-num-tool" data-lang="json">
+    { data: "  ++some text++  " }
+	</script>
+	<mark>trim</mark> helpers in template:
+	<script type="text/code" class="code trim no-num-tool">
+{{:trim data }}          <!-- results in: "++some text++"   -->
+{{:trimLeft data }}      <!-- results in: "++some text++  " -->
+{{:trimRight data }}     <!-- results in: "  ++some text++" -->
+  </script>
+
+	for data:
+	<script type="text/code" class="code trim no-num-tool" data-lang="json">
+    { data: "++some text++" }
+	</script>
+	<mark>trim</mark> helpers in template:
+	<script type="text/code" class="code trim no-num-tool">
+{{:trim data '+' }}          <!-- results in: "some text"   -->
+{{:trimLeft data '+' }}      <!-- results in: "some text++" -->
+{{:trimRight data '+' }}     <!-- results in: "++some text" -->
+	</script>
+
+	String replace using <mark>RegEx</mark> in template:
+	<script type="text/code" class="code trim no-num-tool">
+{{:replace data searchStr='+' replaceStr='/' }}                   <!-- results in: "/+some text++" -->
+{{:replace data replaceStr='_' rxPattern='[a-z]' rxOption='gi' }} <!-- results in: "++____ ____++" -->
+	</script>
+
+</div>

@@ -1,0 +1,73 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+<h1>Downloading SPA JS</h1>
+<div>
+  <h2>Using Bower</h2>
+  <div>
+    <p>If “bower” is installed, use “bower” CLI to download SPA JS along with its dependencies.</p>
+
+    <script type="text/code" class="code w300 trim line-numbers no-num-tool" data-lang="bash" data-line-start=">">
+      bower install spa.js
+    </script>
+  </div>
+
+  <p>Results in</p>
+  <div class="structure-folder">
+    <pre>
+      <div>
+        <span><span class="arr-down"></span><img src="app/images/folder.png">bower_components</span>
+        <span class="padding-ten"><span class="arr-left"></span><img src="app/images/folder.png">Jquery</span>
+        <span class="padding-ten"><span class="arr-left"></span><img src="app/images/folder.png">Handlebars</span>
+        <span class="padding-ten"><span class="arr-left"></span><img src="app/images/folder.png">spa</span>
+      </div>
+    </pre>
+  </div>
+</div>
+
+<div>
+  <h2>Direct Download</h2>
+  <p>Since SPA JS is built on jQuery and Handlebars libraries, download the dependency libraries from the respective sites.</p>
+  <p>For jQuery <a href="//cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js" target="_blank" download="">Download Latest</a> or visit
+    <a href="http://jquery.com/download/">http://jquery.com/download/</a>
+  </p>
+  <p>For Handlebars <a href="//cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.min.js" target="_blank" download="">Download Latest</a> or visit
+    <a href="http://handlebarsjs.com/installation.html">http://handlebarsjs.com/installation.html</a>
+  </p>
+  <p>For SPA JS <a href="//cdn.jsdelivr.net/gh/sucom/SPA.js/dist/spa-bundle.min.js" target="_blank" download="">Download Latest</a> or visit
+    <a href="https://spa.js.org">https://spa.js.org</a> or
+    <a href="http://spajs.org">http://spajs.org</a>
+  </p>
+  <div class="structure-folder">
+    <pre>
+      <div>
+        <span><span class="arr-down"></span><img src="app/images/folder.png">Xlib</span>
+        <span class="padding-ten"><span class="arr-down"></span><img src="app/images/folder.png">Jquery</span>
+        <span class="padding-thirty"><img src="app/images/js.png">jquery.min.js</span>
+        <span class="padding-ten"><span class="arr-down"></span><img src="app/images/folder.png">Handlebars</span>
+        <span class="padding-thirty"><img src="app/images/js.png">handlebars.min.js</span>
+        <span class="padding-ten"><span class="arr-down"></span><img src="app/images/folder.png">spa</span>
+        <span class="padding-thirty"><img src="app/images/js.png">spa-bundle.min.js</span>
+      </div>
+    </pre>
+  </div>
+</div>
+
+<div>
+  <h2>Using CDN</h2>
+  <div>
+    <p>If the application is hosted on the server, which has internet connection, then it’s recommeded to use CDN</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html">
+      <_script src="//cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"          ></_script>
+      <_script src="//cdn.jsdelivr.net/npm/handlebars/dist/handlebars.min.js"  ></_script>
+      <_script src="//cdn.jsdelivr.net/gh/sucom/SPA.js/dist/spa-bundle.min.js" ></_script>
+    </script>
+  </div>
+</div>
+
+<hr/>
+<blockquote class="blockquote">
+  <p>
+    In addition to dependent libraries, any 3rd party libraries like Bootstrap, Foundation, Semantic UI, Moments, DataTables,
+    etc. can be dowloaded and included in the project using bower or npm or yarn or direct download.
+  </p>
+</blockquote>
+</div>

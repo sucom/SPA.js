@@ -1,0 +1,82 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>REST API</h2>
+  <p>SPA JS comes with built-in methods for REST API calls (GET, POST, PUT and DELETE) for faster development.</p>
+
+  <section>
+  <h3>Signatures</h3>
+  <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="REST API Signatures">
+
+spa.api.get(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+
+spa.api.post(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+
+spa.api.put(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+
+spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+  </script>
+  </section>
+
+  <section>
+  <h3>apiUrl:String (mandate)</h3>
+
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+    $.extend(spa.api.urls, {
+
+      readFormA: 'api/path/to/read/data',
+      saveFormA: 'api/path/to/save/data/{id}'
+
+    });
+  </script>
+
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: apiUrl">
+    apiUrl = 'api/path/to/read/data';
+
+    //OR
+
+    apiUrl = '@readFormA';
+
+    //OR
+
+    apiUrl = spa.api.url( '@saveFormA', {id: '12345'} )
+  </script>
+
+  <h3>data:Object (optional)</h3>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: data">
+    data = { }; //optional
+  </script>
+
+  <h3>onSuccessFn:Function (optional)</h3>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: onSuccessFn">
+    onSuccessFn = function(apiResponse) {
+      //doSomething
+    };
+  </script>
+
+  <h3>wait:Boolean (optional)</h3>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: wait">
+    wait = false; //async: true; default
+    //OR
+    wait = true;  //async: false
+  </script>
+
+  </section>
+
+  <section>
+    <h2>Passing parameters ( <mark>urlParams</mark> ) to REST API URLs</h2>
+
+    <p>Use <mark>spa.api.url</mark> method to re-construct API URL with urlParams.</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiConf.js">
+      $.extend(spa.api.urls, {
+
+        readFormA: 'api/path/to/read/data',
+        saveFormA: 'api/path/to/save/data/{id}'
+
+      });
+    </script>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiUrl with dynamic params">
+
+var apiUrl = spa.api.url( '@saveFormA', {id: '12345'} )
+    </script>
+
+  </section>
+</div>
