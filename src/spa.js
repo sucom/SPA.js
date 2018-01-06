@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.26.0';
+  spa.VERSION = '2.27.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4495,6 +4495,154 @@ window['app'] = window['app'] || {};
     });
   };
 
+  spa.togglePassword = function(elPwd){
+    if (!$(elPwd).next('.icon.eye').length){
+      var $eyeEl = $('<i class="icon eye"></i>');
+      $eyeEl.on('click', function(){
+        var $eyeIcon = $(this),
+            $pwdEl   = $eyeIcon.prev('.toggle-password'),
+            newState = ($pwdEl.attr('type') == 'text')? 'password' : 'text';
+        $pwdEl.attr('type', newState).toggleClass('text');
+      });
+      $($eyeEl).insertAfter(elPwd);
+    }
+  };
+
+  spa.initTogglePassword = function(scope){
+    $(scope||'body').find('.toggle-password').each(function(idx, elPwd) {
+      spa.console.info('Initializing toggle password', elPwd);
+      spa.togglePassword(elPwd);
+    });
+  };
+
+  spa.isElValueChanged = function(elSelector){
+    var isChanged, $el = $(elSelector), el;
+
+    if ($el.length) {
+      el = $el[0];
+      if ('checkbox' == el.type) {
+        isChanged = (el.checked != el.defaultChecked);
+      } else if ('radio' == el.type) {
+        $(el).closest('form').find(':radio[name="'+el.name+'"]').each(function(idx, rEl){
+          if (rEl.checked == rEl.defaultChecked) $(rEl).removeClass('changed');
+          isChanged = isChanged || (rEl.checked != rEl.defaultChecked);
+        });
+      } else if ('INPUT,TEXTAREA'.indexOf(el.tagName) >= 0) {
+        isChanged = (el.value != el.defaultValue);
+        triggerFormChange = (e['type'] != 'change');
+      } else if ('SELECT' == el.tagName) {
+        var def=0, oIndex, oLength, opt;
+        for (oIndex=0, oLength=el.options.length; oIndex < oLength; oIndex++) {
+          opt = el.options[oIndex];
+          isChanged = isChanged || (opt.selected != opt.defaultSelected);
+          if (opt.defaultSelected) def = oIndex;
+        }
+        if (isChanged && !el.multiple) isChanged = (def != el.selectedIndex);
+      }
+    }
+
+    return isChanged;
+  };
+  spa.resetElDefaultValue = function(elSelector){
+    var $el = $(elSelector), el;
+    if ($el.length) {
+      el = $el[0];
+      if ('~checkbox,radio'.indexOf(el.type)>0) {
+        el.defaultChecked = el.checked;
+      } else if ('~INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
+        el.defaultValue = el.value;
+      } else if ('SELECT' == el.tagName) {
+        var oIndex, oLength, opt;
+        for (oIndex=0, oLength=el.options.length; oIndex < oLength; oIndex++) {
+          opt = el.options[oIndex];
+          opt.defaultSelected = opt.selected;
+        }
+      }
+    }
+  };
+
+  spa.trackFormElChange = function _trackFormElChange(elSelector, scope){
+    var $elementsToTrack = $(scope||'body').find(elSelector);
+
+    $elementsToTrack.each(function(idx, el){
+      if ('FORM' == el.tagName) {
+        spa.trackFormElChange(($(el).find('.track-change').length? '.track-change':'input,textarea,select'), el);
+      } else {
+        elTrackChange(el);
+      }
+    });
+
+    function updateTrackForm($elForm){
+      var changedElcount = $elForm.find('.tracking-change.changed').length;
+      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
+             .find('.ctrl-on-change')
+             .prop('disabled',!changedElcount)
+             .addClass(changedElcount?'':'disabled')
+             .removeClass(changedElcount?'disabled':'');
+    }
+
+    function eTrackChange(e){
+      if ((e['type'] == 'change') || (e['key'] && (e.key.length == 1 || '~BackspaceDelete'.indexOf(e.key)>0))) {
+        var isChanged = false, $thisForm = $(this).closest('form'), prvChgCount = $thisForm.find('.tracking-change.changed').length, newChgCount, triggerFormChange;
+        if ('checkbox' == this.type) {
+          isChanged = (this.checked != this.defaultChecked);
+        } else if ('radio' == this.type) {
+          $thisForm.find(':radio[name="'+this.name+'"]').each(function(idx, rEl){
+            if (rEl.checked == rEl.defaultChecked) $(rEl).removeClass('changed');
+            isChanged = isChanged || (rEl.checked != rEl.defaultChecked);
+          });
+        } else if ('INPUT,TEXTAREA'.indexOf(this.tagName) >= 0) {
+          isChanged = (this.value != this.defaultValue);
+          triggerFormChange = (e['type'] != 'change');
+        } else if ('SELECT' == this.tagName) {
+          var def=0, oIndex, oLength, opt;
+          for (oIndex=0, oLength=this.options.length; oIndex < oLength; oIndex++) {
+            opt = this.options[oIndex];
+            isChanged = isChanged || (opt.selected != opt.defaultSelected);
+            if (opt.defaultSelected) def = oIndex;
+          }
+          if (isChanged && !this.multiple) isChanged = (def != this.selectedIndex);
+        }
+        $(this)[isChanged? 'addClass' : 'removeClass']('changed');
+        updateTrackForm($thisForm);
+        if (prvChgCount!=newChgCount && triggerFormChange) $thisForm.trigger('change');
+      }
+    }
+
+    function elTrackChange(el){
+      var trackEvents = 'change', $el = $(el);
+      if ('~checkbox,radio'.indexOf(el.type)>0) {
+        el.defaultChecked = el.checked;
+      } else if ('~INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
+        el.defaultValue = el.value;
+        trackEvents = 'keyup change';
+      } else if ('SELECT' == el.tagName) {
+        var oIndex, oLength, opt;
+        for (oIndex=0, oLength=el.options.length; oIndex < oLength; oIndex++) {
+          opt = el.options[oIndex];
+          opt.defaultSelected = opt.selected;
+        }
+      } else {
+        return false;
+      }
+
+      $el.removeClass('track-change changed');
+      updateTrackForm($el.closest('form'));
+
+      if (el.className.indexOf('tracking-change') < 0) {
+        $el.addClass('tracking-change').on(trackEvents, eTrackChange);
+      }
+      return true;
+    };
+  };
+
+  spa.initTrackFormElChanges = function(scope){
+    $(scope||'body').find('form.track-changes').each(function(idx, formEl){
+      spa.console.info('Initializing Form Elements Track: Form ['+ (formEl['id'] || formEl['name']) +']');
+      spa.trackFormElChange(formEl);
+    });
+  };
+
   spa.getModifiedElement = function (elSelector) {
     var modified, modifiedEl=undefined;
     var $elements = $(elSelector || "form:not([data-ignore-change]) :input:not(:disabled,:button,[data-ignore-change])");
@@ -6103,6 +6251,13 @@ window['app'] = window['app'] || {};
                 };
 
                 spa.console.log(retValue);
+
+                /*
+                 * Init togglePassword (eye icon)
+                 * Init Track Form Element's changes
+                 */
+                spa.initTogglePassword(viewContainerId);
+                spa.initTrackFormElChanges(viewContainerId);
 
                 /*Register Events in Components*/
                 spa.renderUtils.registerComponentEvents(rCompName);
