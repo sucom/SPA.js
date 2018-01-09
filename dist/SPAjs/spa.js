@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.27.0';
+  spa.VERSION = '2.27.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4502,7 +4502,7 @@ window['app'] = window['app'] || {};
         var $eyeIcon = $(this),
             $pwdEl   = $eyeIcon.prev('.toggle-password'),
             newState = ($pwdEl.attr('type') == 'text')? 'password' : 'text';
-        $pwdEl.attr('type', newState).toggleClass('text');
+        $pwdEl.attr('type', newState).toggleClass('text').focus();
       });
       $($eyeEl).insertAfter(elPwd);
     }
