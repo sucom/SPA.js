@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.28.0';
+  spa.VERSION = '2.28.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7123,7 +7123,7 @@ window['app'] = window['app'] || {};
         options.url = (spa.api.baseUrl || '')+actualUrl;
       }
     };
-    options.url = (options.url).replace(/{(\w)+}/g,'').replace(/\/\//g,'/'); //remove any optional url-params {xyz}
+    options.url = (options.url).replace(/{([^}])*}/g,'').replace(/\/\//g,'/'); //remove any optional url-params {xyz}
 
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
