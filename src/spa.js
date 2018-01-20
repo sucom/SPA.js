@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.27.1';
+  spa.VERSION = '2.28.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3333,10 +3333,10 @@ window['app'] = window['app'] || {};
   };
 
   /* randomPassword: Random Password for requested length */
-  spa.randomPassword = function (passLen) {
-    var chars = "9a8b77C8D9E8F7G6H5I4J3c6d5e4f32L3M4N5P6Qg2h3i4j5kV6W5X4Y3Z26m7n8p9q8r7s6t5u4v3w2x3y4z5A6BK7R8S9T8U7";
+  spa.randomPassword = function (passLen, passStr) {
+    var chars = passStr || "9a8b77C8D9E8dkfhseidF7G6H5QJ3c6d5e4f32L3M4N5P6Qg2h3i4j5kV6W5X4Y3Z26m7n8p9q8r7s6t5u4v3w2x3y4z5A6BK7R8S9T8U7";
     var pass = "";
-    for (var x = 0; x < passLen; x++) {
+    for (var x = 0; x < (passLen || 8); x++) {
       var i = Math.floor(Math.random() * (chars).length);
       pass += chars.charAt(i);
     }
@@ -7113,7 +7113,7 @@ window['app'] = window['app'] || {};
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
-          options.url = (actualUrl).replace(RegExp(liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
+          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp(liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
@@ -7123,6 +7123,7 @@ window['app'] = window['app'] || {};
         options.url = (spa.api.baseUrl || '')+actualUrl;
       }
     };
+    options.url = (options.url).replace(/{(\w)+}/g,'').replace(/\/\//g,'/'); //remove any optional url-params {xyz}
 
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
