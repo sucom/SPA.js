@@ -14,9 +14,9 @@
   <script src="//cdn.jsdelivr.net/gh/sucom/SPA.js@latest/dist/spa-bundle.min.js" ></script>
 
   <script>
-    spa.onReady(function(){
+    spa.onReady = function(){
       spa.$render('home', {target: '#containerHome'});
-    });
+    };
   </script>
 
   </body>
