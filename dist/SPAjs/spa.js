@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.28.1';
+  spa.VERSION = '2.29.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7029,26 +7029,33 @@ window['app'] = window['app'] || {};
   spa.i18n.displayLang = function(){
     var selectedLang = $('html').attr('lang');
     if (selectedLang){
-      var $el = $('[data-i18n-lang="'+(selectedLang.replace('-', '_') )+'"]');
+      var selLangCode = selectedLang.replace('-', '_'),
+          $el = $('[data-i18n-lang="'+(selLangCode)+'"]'),
+          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode;
+      $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
       if ($el.length) {
-        var elData = $el.data();
-        $('.lang-text').html(elData['langDisplay']);
-        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-lang-display]').map(function(i, el){ return $(el).data('langDisplay'); }), ' ')).addClass(elData['langDisplay']);
+        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' '));
       }
+      $('.lang-icon').addClass(selLangCode);
+      spa.i18n.apply('.lang-text');
     }
   };
   function init_i18n_Lang() {
-    function setLang(uLang) {
+    function setLang(uLang, options) {
       if (uLang) {
         $('html').attr('lang', uLang.replace('_', '-'));
-        spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}) ));
+        spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
       }
     }
     $(document).on("click", "[data-i18n-lang]", function() {
-      var elData = $(this).data();
-      setLang(elData['i18nLang']);
-      $('.lang-text').html(elData['langDisplay']);
-      $('.lang-icon').removeClass(Array.prototype.join.call($('[data-lang-display]').map(function(i, el){ return $(el).data('langDisplay'); }), ' ')).addClass(elData['langDisplay']);
+      var elData = $(this).data(),
+          selLangCode = (elData['i18nLang']||'').replace('-', '_'),
+          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode;
+      setLang(selLangCode, { callback: function(){
+        $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
+        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass(selLangCode);
+        spa.i18n.apply('.lang-text');
+      }});
     });
 
     var defaultLang = $('body').attr('i18n-lang');
