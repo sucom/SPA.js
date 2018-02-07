@@ -13,6 +13,9 @@ body {
   border-bottom: #0056b3 dotted 1px;
 }
 
+.pd-0{padding:0px;}
+.hide{display: none;}
+
 ul,
 li {
   margin: 0;
@@ -38,6 +41,12 @@ button:focus {
   width: 100px;
 }
 
+.navbar{height:40px;}
+
+.navbar-brand {
+   width:180px; height:33px; background:url(../images/spa-site-logo.png) no-repeat left center; text-align: right; padding: 0; margin: -2px 0 -2px 0;
+ }
+
 .home-header h1 {
   font-size: 32px;
   color: #ffffff;
@@ -59,6 +68,10 @@ button:focus {
   position: relative;
 }
 
+.version{
+  background: #3f7fc9; margin: 0 auto; color:#fff; padding:3px 15px; border-radius:2px; display: inline-block; margin-top:15px;
+}
+
 .gradient-banner {
   background: rgba(13, 72, 161, 1);
   background: -moz-linear-gradient(top, rgba(13, 72, 161, 1) 0%, rgba(66, 165, 245, 1) 100%);
@@ -77,7 +90,7 @@ button:focus {
 .home-banner {
   z-index: 1;
   position: relative;
-  padding: 75px 0;
+  padding: 60px 0;
 }
 
 .gradient {
@@ -214,7 +227,7 @@ button:focus {
 
 .home #mainContainer {
   overflow-y: auto;
-  height: calc(100vh - 91px);
+  height: calc(100% - 78px);
 }
 
 footer p {
@@ -255,7 +268,7 @@ footer p {
   width: 240px;
   padding: 0px;
   background-color: #f7f7f7;
-  height: calc(100vh - 90px);
+  height: calc(100vh - 78px);
 }
 
 .container_getStarted {
@@ -279,7 +292,7 @@ footer p {
 
 .docContainer {
   padding: 5px 20px;
-  height: calc(100vh - 90px);
+  height: calc(100vh - 78px);
   overflow-y: auto;
 }
 
@@ -679,7 +692,7 @@ footer {
 
 @media(min-width:769px) {
   nav.navbar.navbar-expand-md {
-    padding: 10px 15px 5px 15px;
+    padding: 5px 15px 5px 15px;
   }
   .navbar-expand-md .navbar-nav li {
     padding: 0 0 3px 0;
@@ -689,7 +702,7 @@ footer {
     background: url('../images/menu_brd.png') center bottom no-repeat;
   }
   #mainContainer {
-    height: calc(100vh - 92px);
+    height: calc(100% - 78px);
   }
   div.sidebar {
     width: 320px;
@@ -697,6 +710,8 @@ footer {
   div.docContainer {
     margin-left: 320px;
   }
+
+  #spaCompContainer_main_1, .container_main{height: 100%}
 }
 
 @media(max-width:767px) {
@@ -766,18 +781,22 @@ footer {
     cursor: pointer;
   }
   .navbar-brand {
-    width: 100%;
-    text-align: center;
-  }
+    margin-left: 55px;
+   }
   .container_blog {
     height: calc(100vh - 91px);
   }
+  .container-footer .footer-menu{margin-left:-10px; margin-right: -10px;}
 }
 
 @media (min-width: 768px) and (max-width: 992px) {
   .home_grid_container h1 {
     font-size: 20px;
   }
+}
+
+@media(min-width:360px) {
+ .m-hide{display: none;}
 }
 
 
