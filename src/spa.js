@@ -2424,7 +2424,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.29.0';
+  spa.VERSION = '2.30.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3367,7 +3367,7 @@ window['app'] = window['app'] || {};
   };
 
   spa.parseKeyStr = function (keyName, changeToLowerCase) {
-    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\[\]\?\*]/g, ""));
+    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\[\]\?\*-]/g, ""));
   };
 
   var arrayIndexPointsToMap = {};
@@ -3375,7 +3375,7 @@ window['app'] = window['app'] || {};
     keyNameStr = ('' + keyNameStr);
     keyToLowerCase = keyToLowerCase || false;
     var xObj = obj, oKey;
-    var oKeys = (( (keyNameStr.indexOf('.')>0) || (keyNameStr == keyNameStr.toUpperCase()) )? keyNameStr.split('.') :  keyNameStr.split(/(?=[A-Z])/)), arrNameIndx, arrName, arrIdx;
+    var oKeys = (( (keyNameStr.indexOf('.')>=0) || (keyNameStr == keyNameStr.toUpperCase()) )? keyNameStr.split('.') :  keyNameStr.split(/(?=[A-Z])/)), arrNameIndx, arrName, arrIdx;
     /*Default: camelCase | TitleCase if ALL UPPERCASE split by . */
     var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?\*\_]/g, ""));
     if (keyIdentifier && (keyIdentifier != "")) {
@@ -3559,7 +3559,7 @@ window['app'] = window['app'] || {};
     return retValue;
   };
 
-  spa.toQueryString = spa.ObjectToQueryString = spa.JsonToQueryString = function (obj) {
+  spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = function (obj) {
     return _.isObject(obj)? (Object.keys(obj).reduce(function (str, key, i) {
       var delimiter, val;
       delimiter = (i === 0) ? '' : '&';
@@ -3678,7 +3678,7 @@ window['app'] = window['app'] || {};
     return retValue;
   };
 
-  spa.findSafe = spa.locateSafe = spa.valueOfPath = function (obj, pathStr, def) {
+  spa.findSafe = spa.findInObj = spa.findInObject = spa.locateSafe = spa.valueOfPath = function (obj, pathStr, def) {
     for (var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
       if (!obj || typeof obj == "undefined") return def;
       obj = obj[path[i]];
@@ -3919,6 +3919,13 @@ window['app'] = window['app'] || {};
     '__stringify': {
       value: function(){
         return JSON.stringify(this);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__toQueryString': {
+      value: function(){
+        return spa.toQueryString(this);
       },
       enumerable : false,
       configurable: false
