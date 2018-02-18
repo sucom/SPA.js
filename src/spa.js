@@ -63,6 +63,7 @@ window['app'] = window['app'] || {};
 }());
 
 /* ***** lodash begins ***** */
+/* ***** https://github.com/lodash/lodash/blob/master/LICENSE ***** */
 (function(){
   if (window['_']) return;
 
@@ -2424,7 +2425,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.30.0';
+  spa.VERSION = '2.31.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3909,7 +3910,7 @@ window['app'] = window['app'] || {};
       configurable: false
     },
     '__merge': {
-      value: function _obj_clone(){
+      value: function _obj_merge(){
         Array.prototype.unshift.call(arguments, this);
         return _.merge.apply(undefined, arguments);
       },
