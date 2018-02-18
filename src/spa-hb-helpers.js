@@ -261,7 +261,6 @@
 
       mainArgs = _Array_.slice.call(arguments);
 
-
     //isConditionBlock
     for (var i = 0; i < mainArgs.length; i++) {
       if ( of (mainArgs[i]) === 'string') {
@@ -465,6 +464,12 @@
     return (''+(inputVal || '')).toUpperCase();
   }
 
+  function _toTitleCase(inputVal) {
+    return (''+(inputVal || '')).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
+      return $1.toUpperCase();
+    });
+  }
+
   function _capitalize(inputVal) {
     return (''+inputVal).charAt(0).toUpperCase() + (''+inputVal).slice(1);
   }
@@ -566,6 +571,31 @@
     fromIndex = _toInt(fromIndex);
     return (fromIndex<0)? '' : inputVal.substr(fromIndex+sLen);
   };
+
+  /**
+   * DateTime Format using moment.js
+   *
+   * @param {string} inputVal
+   * @param {string} srcFormat
+   * @param {string} targetFormat
+   * @returns {string}
+   */
+  function _moment(inputVal, srcFormat, targetFormat) {
+    if (typeof moment === "undefined") {
+      console.warn('Missing moment.js');
+      return inputVal;
+    } else {
+      if (is(targetFormat, 'string')) {
+        return moment(inputVal, srcFormat).format(targetFormat);
+      } else if (isHbOptions(targetFormat)) {
+        return moment(inputVal).format(srcFormat);
+      } else if (isHbOptions(srcFormat)) {
+        return moment().format(inputVal);
+      } else if (isHbOptions(inputVal)) {
+        return moment();
+      }
+    }
+  }
 
   /**
    *
@@ -1526,8 +1556,14 @@
       ':toUpperCase'   : _toUpperCase,
       ':upperCaseOf'   : _toUpperCase,
 
+      ':title'        : _toTitleCase,
+      ':titleCase'    : _toTitleCase,
+      ':toTitleCase'  : _toTitleCase,
+      ':titleCaseOf'  : _toTitleCase,
+
       ':capitalize'    : _capitalize,
       ':unCapitalize'  : _unCapitalize,
+      ':normalize'     : _normalizeStr,
       ':normalizeStr'  : _normalizeStr,
 
       ':int'           : _toInt,
@@ -1556,6 +1592,7 @@
 
       ':dateNowMs'     : _nowMs,
       ':dateNow'       : _now,
+      ':moment'        : _moment,
 
       ':rand'          : _rand,
       ':randPwd'       : _randPwd,
