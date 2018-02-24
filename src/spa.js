@@ -2425,7 +2425,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.31.0';
+  spa.VERSION = '2.32.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6160,6 +6160,16 @@ window['app'] = window['app'] || {};
                 /* {$}                  ==> app.thisComponentName.
                  * {$someComponentName} ==> app.someComponentName.
                  */
+                //for values
+                var componentRefsV = templateContentToBindAndRender.match(/({{([^\{])*{\s*\$(.*?)\s*}\s*\})/g);
+                if (!spaRVOptions.skipDataBind && componentRefsV) {
+                  _.forEach(componentRefsV, function(cRef){
+                    templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                      cRef.replace(/{\s*\$this|{\s*\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                  });
+                  templateContentToBindAndRender = templateContentToBindAndRender.replace(/_global_\.app\./g, ' _global_.app.');
+                }
+                //for reference
                 var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
                 if (!spaRVOptions.skipDataBind && componentRefs) {
                   _.forEach(componentRefs, function(cRef){
@@ -6942,6 +6952,7 @@ window['app'] = window['app'] || {};
   //API Section begins
   spa.api = {
     baseUrl:'',
+    liveUrlSuffix:'',
     urls:{},
     mock:false,
     forceParamValuesInMockUrls:false,
@@ -7119,7 +7130,8 @@ window['app'] = window['app'] || {};
     var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
-        options.url = (spa.api.baseUrl || '')+actualUrl.trimLeftStr('~');
+        options.url = (spa.api.baseUrl || '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
+        if (spa.api.baseUrl) options['crossDomain'] = true;
       } else {
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
@@ -7135,7 +7147,8 @@ window['app'] = window['app'] || {};
     } else {
       if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefix);
       if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
-        options.url = (spa.api.baseUrl || '')+actualUrl;
+        options.url = (spa.api.baseUrl || '') + actualUrl + (spa.api.liveUrlSuffix||'');
+        if (spa.api.baseUrl) options['crossDomain'] = true;
       }
     };
     options.url = (options.url).replace(/{([^}])*}/g,'').replace(/\/\//g,'/'); //remove any optional url-params {xyz}
