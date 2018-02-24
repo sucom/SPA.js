@@ -2425,7 +2425,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.32.0';
+  spa.VERSION = '2.33.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4148,7 +4148,10 @@ window['app'] = window['app'] || {};
     spa.console.group("spaTemplateAjaxQue");
     if (!spa.isElementExist("#"+tmplId)) {
       spa.console.info("Template[" + tmplId + "] of [" + templateType + "] NOT found. Source [" + tmplPath + "]");
-      if ((tmplPath.equalsIgnoreCase("inline") || tmplPath.beginsWithStr("#"))) { /* load from viewTargetContainer or local container ID given in tmplPath */
+      if (tmplPath && tmplPath == "undefined") {
+        spa.addTemplateScript(tmplId, '', templateType);
+        spa.console.info("Loaded Empty Template[" + tmplId + "] of [" + templateType + "]");
+      } else if ((tmplPath.equalsIgnoreCase("inline") || tmplPath.beginsWithStr("#"))) { /* load from viewTargetContainer or local container ID given in tmplPath */
         var localTemplateSrcContainerId = tmplPath.equalsIgnoreCase("inline")? viewContainerId : tmplPath;
         var $localTemplateSrcContainer = $(localTemplateSrcContainerId);
         var inlineTemplateHTML = $localTemplateSrcContainer.html();
@@ -5579,6 +5582,9 @@ window['app'] = window['app'] || {};
       }
     }
 
+    spa.console.log('spa.render with options:');
+    spa.console.log(spaRVOptions);
+
     var $viewContainerId = $(viewContainerId);
     var _renderOptionInAttr = function(dataAttrKey) {
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
@@ -6985,7 +6991,7 @@ window['app'] = window['app'] || {};
     onReqError : function (jqXHR, textStatus, errorThrown) {
       //This function is to handles if Ajax request itself failed due to network error / server error
       //like 404 / 500 / timeout etc.
-      spa.console.error([textStatus, errorThrown]);
+      spa.console.error([jqXHR, textStatus, errorThrown]);
       spa.console.error($(jqXHR.responseText).text());
     },
     onResError : function () {
