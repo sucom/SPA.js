@@ -1,4 +1,4 @@
-/** @license SPA.js | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js v2.33.1 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -2425,7 +2425,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.33.0';
+  spa.VERSION = '2.33.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6165,16 +6165,19 @@ window['app'] = window['app'] || {};
 
                 /* {$}                  ==> app.thisComponentName.
                  * {$someComponentName} ==> app.someComponentName.
+                 *
+                 * {@$}                  ==> _global_.app.thisComponentName.
+                 * {@$someComponentName} ==> _global_.app.someComponentName.
                  */
                 //for values
-                var componentRefsV = templateContentToBindAndRender.match(/({{([^\{])*{\s*\$(.*?)\s*}\s*\})/g);
+                var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
                 if (!spaRVOptions.skipDataBind && componentRefsV) {
                   _.forEach(componentRefsV, function(cRef){
                     templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
-                      cRef.replace(/{\s*\$this|{\s*\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                      cRef.replace(/{\s*\$this|{\s*\@\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
                   });
-                  templateContentToBindAndRender = templateContentToBindAndRender.replace(/_global_\.app\./g, ' _global_.app.');
                 }
+
                 //for reference
                 var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
                 if (!spaRVOptions.skipDataBind && componentRefs) {
