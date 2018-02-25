@@ -851,9 +851,9 @@
 
   /*
    * fnFilter: String functionName
-   * '@.fnName'          ==> invokes current component's fnName
-   * '@compName.fnName'  ==> invokes compName's fnName
-   * 'fnName'            ==> invokes fnName in window scope
+   * '{$}fnName'          ==> invokes current component's fnName
+   * '{$compName}fnName'  ==> invokes compName's fnName
+   * 'fnName'             ==> invokes fnName in window scope
    */
   function _each(arrOrObj, itemAs) {
     var helperOptions = arguments[arguments.length-1],
