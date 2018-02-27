@@ -1,4 +1,4 @@
-/** @license SPA.js v2.33.1 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js v2.34.0 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -2425,7 +2425,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.33.1';
+  spa.VERSION = '2.34.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2487,7 +2487,7 @@ window['app'] = window['app'] || {};
   function _initWindowOnHashChange(){
     if ('onhashchange' in window) {
       isSpaHashRouteOn = true;
-      //spa.console.info("Registering HashRouting Listener");
+     //spa.console..info("Registering HashRouting Listener");
       window.onhashchange = function () {
         /* ocEvent
          .oldURL : "http://dev.semantic-test.com/ui/home.html#user/changePassword"
@@ -2496,7 +2496,7 @@ window['app'] = window['app'] || {};
          .type:"hashchange"
          */
         var cHash = window.location.hash;
-        //spa.console.info("onHashChange: "+cHash);
+       //spa.console..info("onHashChange: "+cHash);
         if (cHash) {
           spa.route(cHash);
         } else if (spa.routesOptions.defaultPageRoute) {
@@ -2893,7 +2893,7 @@ window['app'] = window['app'] || {};
 
   /*Tobe Removed: replaced with toStr*/
   spa.toString = function (obj) {
-    //spa.console.warn("spa.toString is deprecated. use spa.toStr instead.");
+   //spa.console..warn("spa.toString is deprecated. use spa.toStr instead.");
     var retValue = "" + obj;
     if (_.isObject(obj)) {
       retValue = JSON.stringify(obj);
@@ -2971,7 +2971,7 @@ window['app'] = window['app'] || {};
       , retValue = (( ((disableKeys.padStr(',')).indexOf(keyCode.padStr(',')) >= 0) && (withShiftKey ? ((e.shiftKey) ? true : false) : ((!e.shiftKey)? true : false))));
     if (retValue) {
       e.preventDefault();
-      //spa.console.info("Key [" + keyCode + (withShiftKey ? "+Shift" : "") + "] has been disabled in this element.");
+     //spa.console..info("Key [" + keyCode + (withShiftKey ? "+Shift" : "") + "] has been disabled in this element.");
     }
     return retValue;
   };
@@ -2995,11 +2995,11 @@ window['app'] = window['app'] || {};
 
   spa.initKeyTracking = function () {
     var elementsToTrackKeys = (arguments.length) ? arguments[0] : "[data-disable-keys],[data-focus-next],[data-focus-back]";
-    //spa.console.info("Finding Key-Tracking for element(s): " + elementsToTrackKeys);
+   //spa.console..info("Finding Key-Tracking for element(s): " + elementsToTrackKeys);
     $(elementsToTrackKeys).each(function (index, element) {
       $(element).keydown(spa._trackAndControlKey);
-      //spa.console.info("SPA is tracking keys on element:");
-      //spa.console.info(element);
+     //spa.console..info("SPA is tracking keys on element:");
+     //spa.console..info(element);
     });
   };
 
@@ -3693,7 +3693,7 @@ window['app'] = window['app'] || {};
     try {
       retValue = (typeof eval("tObj." + path) != "undefined");
     } catch(e) {
-      //spa.console.error("Key["+path+"] error in object.\n" + e.stack);
+     //spa.console..error("Key["+path+"] error in object.\n" + e.stack);
     };
     return retValue;
   };
@@ -3768,7 +3768,7 @@ window['app'] = window['app'] || {};
     var retValue = "", tObj = obj || {}, lookupPath = ""+spa.toDottedPath((pathStr));
     var objKeys = spa.keysDottedAll(tObj); //get AllKeys with dotted notation
     if (objKeys && !_.isEmpty(objKeys)) {
-      //spa.console.debug(objKeys);
+     //spa.console..debug(objKeys);
       _.some(objKeys, function(oKey){
         var isMatch = oKey.equalsIgnoreCase(lookupPath);
         if (!isMatch) {
@@ -3940,7 +3940,7 @@ window['app'] = window['app'] || {};
       cache: true,
       url: url
     });
-    //spa.console.info("$.cachedScript('" + url + "')");
+   //spa.console..info("$.cachedScript('" + url + "')");
     /* Use $.ajax() since it is more flexible than $.getScript
      * Return the jqXHR object so we can chain callbacks
      */
@@ -3957,7 +3957,7 @@ window['app'] = window['app'] || {};
         $("head").append("<style id='" + (styleId) + "' type='text/css'>" + cssStyles + "<\/style>");
       }
     });
-    //spa.console.info("$.cachedScript('" + url + "')");
+   //spa.console..info("$.cachedScript('" + url + "')");
     /* Use $.ajax() since it is more flexible than $.getScript
      * Return the jqXHR object so we can chain callbacks
      */
@@ -3967,38 +3967,38 @@ window['app'] = window['app'] || {};
   /* Add Script Tag */
   spa.addScriptTag = function (scriptId, scriptSrc) {
     scriptId = scriptId.replace(/#/, "");
-    //spa.console.group("spaAddScriptTag");
+   //spa.console..group("spaAddScriptTag");
     if (!spa.isElementExist("#spaScriptsCotainer")) {
-      //spa.console.info("#spaScriptsCotainer NOT Found! Creating one...");
+     //spa.console..info("#spaScriptsCotainer NOT Found! Creating one...");
       $('body').append("<div id='spaScriptsCotainer' style='display:none' rel='Dynamic Scripts Container'></div>");
     }
     if (spa.isElementExist("#" + scriptId)) {
-      //spa.console.info("script [" + scriptId + "] already found in local.");
+     //spa.console..info("script [" + scriptId + "] already found in local.");
     }
     else {
-      //spa.console.info("script [" + scriptId + "] NOT found. Added script tag with src [" + scriptSrc + "]");
+     //spa.console..info("script [" + scriptId + "] NOT found. Added script tag with src [" + scriptSrc + "]");
       var scriptSrcAttr = (scriptSrc)? "src='" + scriptSrc + "'" : "";
       $("#spaScriptsCotainer").append("<script id='" + (scriptId) + "' type='text/javascript' "+scriptSrcAttr+"><\/script>");
     }
-    //spa.console.groupEnd("spaAddScriptTag");
+   //spa.console..groupEnd("spaAddScriptTag");
   };
 
   /* Add Style Tag */
   spa.addStyle = function (styleId, styleSrc) {
     styleId = styleId.replace(/#/, "");
-    //spa.console.group("spaAddStyle");
+   //spa.console..group("spaAddStyle");
     if (!spa.isElementExist("#spaStylesCotainer")) {
-      //spa.console.info("#spaStylesCotainer NOT Found! Creating one...");
+     //spa.console..info("#spaStylesCotainer NOT Found! Creating one...");
       $('body').append("<div id='spaStylesCotainer' style='display:none' rel='Dynamic Styles Container'></div>");
     }
     if (spa.isElementExist("#" + styleId)) {
-      //spa.console.info("style [" + styleId + "] already found in local.");
+     //spa.console..info("style [" + styleId + "] already found in local.");
     }
     else {
-      //spa.console.info("style [" + styleId + "] NOT found. Added link tag with href [" + styleSrc + "]");
+     //spa.console..info("style [" + styleId + "] NOT found. Added link tag with href [" + styleSrc + "]");
       $("#spaStylesCotainer").append("<link id='" + (styleId) + "' rel='stylesheet' type='text/css' href='" + styleSrc + "'\/>");
     }
-    //spa.console.groupEnd("spaAddStyle");
+   //spa.console..groupEnd("spaAddStyle");
   };
 
   /* Loading script */
@@ -4006,9 +4006,9 @@ window['app'] = window['app'] || {};
     scriptId = scriptId.replace(/#/, "");
     useScriptTag = useScriptTag || false;
     tAjaxRequests = tAjaxRequests || [];
-    //spa.console.group("spaScriptsLoad");
+   //spa.console..group("spaScriptsLoad");
     if (spa.isBlank(scriptPath)) {
-      //spa.console.error("script path [" + scriptPath + "] for [" + scriptId + "] NOT defined.");
+     //spa.console..error("script path [" + scriptPath + "] for [" + scriptId + "] NOT defined.");
     }
     else {
       if (useScriptTag) {
@@ -4017,12 +4017,12 @@ window['app'] = window['app'] || {};
       else { /* load script script-URL */
         tAjaxRequests.push(
           $.cachedScript(scriptPath).done(function (script, textStatus) {
-            //spa.console.info("Loaded script [" + scriptId + "] from [" + scriptPath + "]. STATUS: " + textStatus);
+           //spa.console..info("Loaded script [" + scriptId + "] from [" + scriptPath + "]. STATUS: " + textStatus);
           })
         );
       }
     }
-    //spa.console.groupEnd("spaScriptsLoad");
+   //spa.console..groupEnd("spaScriptsLoad");
     return (tAjaxRequests);
   };
 
@@ -4052,9 +4052,9 @@ window['app'] = window['app'] || {};
       _.each(scriptsLst, function(scriptPath) {
         ajaxQ.push(
           $.cachedScript(scriptPath).done(function (script, textStatus) {
-            //spa.console.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
+           //spa.console..info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
           }).fail(function(){
-            //spa.console.info("Failed Loading script from [" + scriptPath + "].");
+           //spa.console..info("Failed Loading script from [" + scriptPath + "].");
           })
         );
       });
@@ -4082,10 +4082,10 @@ window['app'] = window['app'] || {};
     } else {
       var scriptPath = scriptsLst.shift();
       $.cachedScript(scriptPath).done(function (script, textStatus) {
-            //spa.console.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
+           //spa.console..info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
             spa.loadScriptsSync(scriptsLst, onDone);
           }).fail(function(){
-            //spa.console.info("Failed Loading script from [" + scriptPath + "].");
+           //spa.console..info("Failed Loading script from [" + scriptPath + "].");
             spa.renderUtils.runCallbackFn(onFail);
           });
     }
@@ -4096,9 +4096,9 @@ window['app'] = window['app'] || {};
     styleId = styleId.replace(/#/, "");
     useStyleTag = useStyleTag || false;
     tAjaxRequests = tAjaxRequests || [];
-    //spa.console.group("spaStylesLoad");
+   //spa.console..group("spaStylesLoad");
     if (spa.isBlank(stylePath)) {
-      //spa.console.error("style path [" + stylePath + "] for [" + styleId + "] NOT defined.");
+     //spa.console..error("style path [" + stylePath + "] for [" + styleId + "] NOT defined.");
     }
     else {
       if (useStyleTag) {
@@ -4107,12 +4107,12 @@ window['app'] = window['app'] || {};
       else { /* load style style-URL */
         tAjaxRequests.push(
           $.cachedStyle(styleId, stylePath).done(function (style, textStatus) {
-            //spa.console.info("Loaded style [" + styleId + "] from [" + stylePath + "]. STATUS: " + textStatus);
+           //spa.console..info("Loaded style [" + styleId + "] from [" + stylePath + "]. STATUS: " + textStatus);
           })
         );
       }
     }
-    //spa.console.groupEnd("spaStylesLoad");
+   //spa.console..groupEnd("spaStylesLoad");
     return (tAjaxRequests);
   };
 
@@ -4121,10 +4121,10 @@ window['app'] = window['app'] || {};
     tmplId = tmplId.replace(/#/, "");
     tmplType = tmplType  || 'x-template';
     if (!spa.isElementExist("#spaViewTemplateCotainer")) {
-      //spa.console.info("#spaViewTemplateCotainer NOT Found! Creating one...");
+     //spa.console..info("#spaViewTemplateCotainer NOT Found! Creating one...");
       $('body').append("<div id='spaViewTemplateCotainer' style='display:none' rel='Template Container'></div>");
     }
-    //spa.console.info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
+   //spa.console..info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
     tmplBody = tmplBody.replace(/<( )*script/gi,'<_SCRIPTTAGINTEMPLATE_').replace(/<( )*(\/)( )*script/gi,'</_SCRIPTTAGINTEMPLATE_')
             .replace(/<( )*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<( )*(\/)( )*link/gi,'</_LINKTAGINTEMPLATE_');
     $("#spaViewTemplateCotainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
@@ -4145,18 +4145,18 @@ window['app'] = window['app'] || {};
     templateType = templateType || "x-template";
     viewContainerId = viewContainerId || "#DummyInlineTemplateContainer";
     tAjaxRequests = tAjaxRequests || [];
-    //spa.console.group("spaTemplateAjaxQue");
+   //spa.console..group("spaTemplateAjaxQue");
     if (!spa.isElementExist("#"+tmplId)) {
-      //spa.console.info("Template[" + tmplId + "] of [" + templateType + "] NOT found. Source [" + tmplPath + "]");
+     //spa.console..info("Template[" + tmplId + "] of [" + templateType + "] NOT found. Source [" + tmplPath + "]");
       if (tmplPath && tmplPath == "undefined") {
         spa.addTemplateScript(tmplId, '', templateType);
-        //spa.console.info("Loaded Empty Template[" + tmplId + "] of [" + templateType + "]");
+       //spa.console..info("Loaded Empty Template[" + tmplId + "] of [" + templateType + "]");
       } else if ((tmplPath.equalsIgnoreCase("inline") || tmplPath.beginsWithStr("#"))) { /* load from viewTargetContainer or local container ID given in tmplPath */
         var localTemplateSrcContainerId = tmplPath.equalsIgnoreCase("inline")? viewContainerId : tmplPath;
         var $localTemplateSrcContainer = $(localTemplateSrcContainerId);
         var inlineTemplateHTML = $localTemplateSrcContainer.html();
         if (spa.isBlank(inlineTemplateHTML)) {
-          //spa.console.error("Template[" + tmplId + "] of [" + templateType + "] NOT defined inline in ["+localTemplateSrcContainerId+"].");
+         //spa.console..error("Template[" + tmplId + "] of [" + templateType + "] NOT defined inline in ["+localTemplateSrcContainerId+"].");
         }
         else {
           spa.addTemplateScript(tmplId, inlineTemplateHTML, templateType);
@@ -4164,55 +4164,55 @@ window['app'] = window['app'] || {};
         }
       }
       else if (tmplPath.equalsIgnoreCase("none")) {
-        //spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] defined as NONE. Ignoring template.");
+       //spa.console..warn("Template[" + tmplId + "] of [" + templateType + "] defined as NONE. Ignoring template.");
       }
       else if (!tmplPath.equalsIgnoreCase("script")) { /* load from templdate-URL */
         var axTemplateRequest;
         if (tmplReload) {
-          //spa.console.warn(">>>>>>>>>> Making New Template Request");
+         //spa.console..warn(">>>>>>>>>> Making New Template Request");
           axTemplateRequest = $.ajax({
             url: tmplPath,
             cache: false,
             dataType: "html",
             success: function (template) {
               spa.addTemplateScript(tmplId, template, templateType);
-              //spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
+             //spa.console..info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
             },
             error: function (jqXHR, textStatus, errorThrown) {
-              //spa.console.error("Failed Loading Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]. [" + textStatus + ":" + errorThrown + "]");
+             //spa.console..error("Failed Loading Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]. [" + textStatus + ":" + errorThrown + "]");
             }
           });
         } else {
           axTemplateRequest = $.get(tmplPath, function (template) {
             spa.addTemplateScript(tmplId, template, templateType);
-            //spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
+           //spa.console..info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
           }, "html");
         }
         tAjaxRequests.push(axTemplateRequest);
       } else {
-        //spa.console.error("Template[" + tmplId + "] of [" + templateType + "] NOT defined in <script>.");
+       //spa.console..error("Template[" + tmplId + "] of [" + templateType + "] NOT defined in <script>.");
       }
     }
     else {
       var $tmplId = $("#"+tmplId);
       if (tmplReload) {
-        //spa.console.warn("Reload Template[" + tmplId + "] of [" + templateType + "]");
+       //spa.console..warn("Reload Template[" + tmplId + "] of [" + templateType + "]");
         $tmplId.remove();
         tAjaxRequests = spa.loadTemplate(tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload);
       } else if (spa.isBlank(($tmplId.html()))) {
-        //spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] script found EMPTY!");
+       //spa.console..warn("Template[" + tmplId + "] of [" + templateType + "] script found EMPTY!");
         var externalPath = "" + $tmplId.attr("path");
         if (!spa.isBlank((externalPath))) {
           templateType = ((($tmplId.attr("type")||"").ifBlankStr(templateType)).toLowerCase()).replace(/text\//gi, "");
-          //spa.console.info("prepare/remove to re-load Template[" + tmplId + "]  of [" + templateType + "] from external path: [" + externalPath + "]");
+         //spa.console..info("prepare/remove to re-load Template[" + tmplId + "]  of [" + templateType + "] from external path: [" + externalPath + "]");
           $tmplId.remove();
           tAjaxRequests = spa.loadTemplate(tmplId, externalPath, templateType, viewContainerId, tAjaxRequests, tmplReload);
         }
       } else {
-        //spa.console.info("Template[" + tmplId + "]  of [" + templateType + "] already found in local.");
+       //spa.console..info("Template[" + tmplId + "]  of [" + templateType + "] already found in local.");
       }
     }
-    //spa.console.groupEnd("spaTemplateAjaxQue");
+   //spa.console..groupEnd("spaTemplateAjaxQue");
 
     return (tAjaxRequests);
   };
@@ -4347,7 +4347,7 @@ window['app'] = window['app'] || {};
           $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!$.isEmptyObject($.i18n.map)) : $.i18n.loaded;
           spa.i18n.loaded = spa.i18n.loaded || $.i18n.loaded;
           if ((lang.length > 1) && (!$.i18n.loaded)) {
-            //spa.console.warn("Error Loading Language File [" + lang + "]. Loading default.");
+           //spa.console..warn("Error Loading Language File [" + lang + "]. Loading default.");
             spa.i18n.setLanguage("_", i18nSettings);
           }
           spa.i18n.apply();
@@ -4365,14 +4365,14 @@ window['app'] = window['app'] || {};
       i18nKey = ((i18nKey.substr(1)).trim());
       try { i18nKey = eval('('+i18nKey+')');
       } catch(e) {
-        //spa.console.error(e);
+       //spa.console..error(e);
       };
     }
     var retValue = i18nKey;
     try {
       retValue = (!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(i18nKey) : $.i18n.prop(i18nKey);
     }catch(e) {
-      //spa.console.error(e);
+     //spa.console..error(e);
     };
     return retValue;
   };
@@ -4521,7 +4521,7 @@ window['app'] = window['app'] || {};
 
   spa.initTogglePassword = function(scope){
     $(scope||'body').find('.toggle-password').each(function(idx, elPwd) {
-      //spa.console.info('Initializing toggle password', elPwd);
+     //spa.console..info('Initializing toggle password', elPwd);
       spa.togglePassword(elPwd);
     });
   };
@@ -4649,7 +4649,7 @@ window['app'] = window['app'] || {};
 
   spa.initTrackFormElChanges = function(scope){
     $(scope||'body').find('form.track-changes').each(function(idx, formEl){
-      //spa.console.info('Initializing Form Elements Track: Form ['+ (formEl['id'] || formEl['name']) +']');
+     //spa.console..info('Initializing Form Elements Track: Form ['+ (formEl['id'] || formEl['name']) +']');
       spa.trackFormElChange(formEl);
     });
   };
@@ -4755,7 +4755,7 @@ window['app'] = window['app'] || {};
           _fillData();
         },
         error: function (jqXHR, textStatus, errorThrown) {
-          //spa.console.error("Failed loading data from [" + data + "]. [" + textStatus + ":" + errorThrown + "]");
+         //spa.console..error("Failed loading data from [" + data + "]. [" + textStatus + ":" + errorThrown + "]");
           spa.api.onReqError(jqXHR, textStatus, errorThrown);
         }
       });
@@ -4768,11 +4768,11 @@ window['app'] = window['app'] || {};
       keyFormat = (keyFormat.match(/^[A-Z]/) != null) ? "AbC" : keyFormat;
 
       var dataKeys = spa.keysDotted(data);
-      //spa.console.group("fillData");
-      //spa.console.info(dataKeys);
+     //spa.console..group("fillData");
+     //spa.console..info(dataKeys);
 
       _.each(dataKeys, function (dataKeyPath) {
-        //spa.console.group(">>" + dataKeyPath);
+       //spa.console..group(">>" + dataKeyPath);
         var dataKey = ""+(dataKeyPath.replace(/[\[\]]/g, "_") || "");
         var dataKeyForFormatterFnSpec = dataKeyPath.replace(/\[[0-9]+\]/g, "");
         var isArrayKey = (/\[[0-9]+\]/).test(dataKeyPath);
@@ -4798,7 +4798,7 @@ window['app'] = window['app'] || {};
           "isArrayChild": isArrayKey
         };
         spa.trash.push(debugInfo);
-        //spa.console.info(debugInfo);
+       //spa.console..info(debugInfo);
         spa.trash.empty();
 
         var elSelector = (fillOptions.selectPattern).replace(/\?/g, dataKey);
@@ -4815,7 +4815,7 @@ window['app'] = window['app'] || {};
           }
         }
         var elCountInContext = $(context).find(elSelector).length;
-        //spa.console.info(">> " + elSelector + " found: " + elCountInContext);
+       //spa.console..info(">> " + elSelector + " found: " + elCountInContext);
         var dataValue = null;
         if (elCountInContext > 0) {
           dataValue = spa.find(data, dataKeyPath);
@@ -4829,10 +4829,10 @@ window['app'] = window['app'] || {};
               dataValue = fillOptions.formatterCommon(dataValue, dataKeyPath, data);
             }
           }
-          //spa.console.info({value: dataValue});
+         //spa.console..info({value: dataValue});
         }
         $(context).find(elSelector).each(function (index, el) {
-          //spa.console.info(el);
+         //spa.console..info(el);
           switch ((el.tagName).toUpperCase()) {
             case "INPUT":
               switch ((el.type).toLowerCase()) {
@@ -4882,10 +4882,10 @@ window['app'] = window['app'] || {};
           }
         });
 
-        //spa.console.groupEnd(">>" + dataKeyPath);
+       //spa.console..groupEnd(">>" + dataKeyPath);
       });
 
-      //spa.console.groupEnd("fillData");
+     //spa.console..groupEnd("fillData");
       if (fillOptions.resetElDefaultInContext) spa.resetElementsDefaultValue(context + " :input");
     }
   };
@@ -5046,6 +5046,10 @@ window['app'] = window['app'] || {};
       console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
       return;
     };
+    if (componentName.replace(/[a-z0-9]/gi,'')) {
+      console.error('Invalid component name '+componentName+'. Component name has invalid character.');
+      return;
+    };
 
     options = options || {};
     if (is(componentName, 'object')) {
@@ -5061,9 +5065,9 @@ window['app'] = window['app'] || {};
         }
         if (options.hasOwnProperty('require')) {
           spa.loadComponents(options['require'], function(){
-            //spa.console.log('Required components successfully loaded.');
+           //spa.console..log('Required components successfully loaded.');
           }, function(){
-            //spa.console.log('Failed to load required components.');
+           //spa.console..log('Failed to load required components.');
           });
         }
 
@@ -5095,12 +5099,12 @@ window['app'] = window['app'] || {};
       }
       if (spa.is(compList, 'object')) {
         _.each(Object.keys(compList), function(compName){
-          //spa.console.info('Registering spa-component:['+compName+']');
+         //spa.console..info('Registering spa-component:['+compName+']');
           spa.registerComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
         _.each(compList, function(compName){
-          //spa.console.info('Registering spa-component:['+compName+']');
+         //spa.console..info('Registering spa-component:['+compName+']');
           spa.registerComponent(compName.trim());
         });
       }
@@ -5159,20 +5163,47 @@ window['app'] = window['app'] || {};
       }
       if (spa.is(compList, 'object')) {
         _.each(Object.keys(compList), function(compName){
-          //spa.console.info('Extend spa-component:['+compName+']');
+         //spa.console..info('Extend spa-component:['+compName+']');
           spa.extendComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
         _.each(compList, function(compName){
-          //spa.console.info('Extend spa-component:['+compName+']');
+         //spa.console..info('Extend spa-component:['+compName+']');
           spa.extendComponent(compName.trim());
         });
       }
     }
   };
 
+  function _$renderCountUpdate(componentName){
+    if (app[componentName]) {
+      app[componentName]['__renderCount__'] = spa.toInt(spa.$renderCount(componentName)) + 1;
+    }
+  }
+  spa.$renderCount = function(componentName){
+    return spa.findSafe(window, 'app.'+componentName+'.__renderCount__', 0);
+  };
+  spa.refreshComponent = spa.$refresh = function (componentName, options) {
+    if (!componentName) return;
+    options = options || {};
+    if (!spa.is(options, 'object')) return;
+    if (!options.hasOwnProperty('renderCallback')) {
+      options['renderCallback'] = options['refreshCallback'] || ('app.'+componentName+'.refreshCallback');
+    }
+    options['isRefreshCall'] = true;
+
+   //spa.console..info('Calling refreshComponent: '+componentName+' with below options');
+   //spa.console..info(options);
+    spa.$render(componentName, options);
+  };
   spa.renderComponent = spa.$render = function (componentName, options) {
     if (!componentName) return;
+
+    if ( (!(options && is(options, 'object') && options['isRefreshCall'])) && spa.$renderCount(componentName) && spa.findSafe(window, 'app.'+componentName+'.refreshCallback', '')){
+     //spa.console..info('Component ['+componentName+'] has been rendered already. Refreshing instead of re-render.');
+      spa.refreshComponent(componentName, options);
+      return;
+    };
 
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
@@ -5180,8 +5211,8 @@ window['app'] = window['app'] || {};
       options['componentName'] = componentName;
     }
 
-    //spa.console.info('Called renderComponent: '+componentName+' with below options');
-    //spa.console.info(options);
+   //spa.console..info('Called renderComponent: '+componentName+' with below options');
+   //spa.console..info(options);
 
     var tmplId = '_rtt_'+componentName, tmplBody = '';
 
@@ -5192,8 +5223,8 @@ window['app'] = window['app'] || {};
       , _cScriptExt  = spa.defaults.components.scriptExt
       , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
       , _renderComp  = function(){
-          //spa.console.info('_renderComp > '+componentName+' with below options');
-          //spa.console.info(options);
+         //spa.console..info('_renderComp > '+componentName+' with below options');
+         //spa.console..info(options);
           if (!spa.components[componentName].hasOwnProperty('template')) {
             if (spa.components[componentName].hasOwnProperty('templateStr') || spa.components[componentName].hasOwnProperty('templateString')) {
               tmplBody = spa.components[componentName]['templateStr'] || spa.components[componentName]['templateString'] || '';
@@ -5205,57 +5236,57 @@ window['app'] = window['app'] || {};
               spa.components[componentName]['template'] = _cTmplFile;
             }
           }
-          //spa.console.info('render-options: spa.components['+componentName+']');
-          //spa.console.info(spa.components[componentName]);
+         //spa.console..info('render-options: spa.components['+componentName+']');
+         //spa.console..info(spa.components[componentName]);
           var renderOptions = (options && options['saveOptions'])?  spa.components[componentName] : $.extend({}, spa.components[componentName]);
           if (options) {
             if (!options.hasOwnProperty('mountComponent')) {
               delete renderOptions['mountComponent'];
             }
             $.extend(renderOptions, options);
-            //spa.console.info('Extended> render-options: spa.components['+componentName+']');
-            //spa.console.info(renderOptions);
+           //spa.console..info('Extended> render-options: spa.components['+componentName+']');
+           //spa.console..info(renderOptions);
           }
 
           if (renderOptions.hasOwnProperty('style') && spa.is(renderOptions.style, 'string')) {
             renderOptions['dataStyles'] = {};
             renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : renderOptions.style;
             delete renderOptions['style'];
-            //spa.console.info('Using component style for ['+componentName+']');
-            //spa.console.info(renderOptions);
+           //spa.console..info('Using component style for ['+componentName+']');
+           //spa.console..info(renderOptions);
           }
 
           spa.render(renderOptions);
         }
       , _parseComp = function(){
           if (_cScriptFile) {
-            //spa.console.info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
+           //spa.console..info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
           } else {
-            //spa.console.info('Skipped Loading component ['+componentName+'] source from script file.');
+           //spa.console..info('Skipped Loading component ['+componentName+'] source from script file.');
           };
-          //spa.console.info('In Source> spa.components['+componentName+']');
-          //spa.console.info(spa.components[componentName]);
+         //spa.console..info('In Source> spa.components['+componentName+']');
+         //spa.console..info(spa.components[componentName]);
           if (!spa.components.hasOwnProperty(componentName)) {
-            //spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Defining *NEW*');
+           //spa.console..warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Defining *NEW*');
             if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
             spa.components[componentName] = options;
-            //spa.console.info('NEW> spa.components['+componentName+']');
-            //spa.console.info(spa.components[componentName]);
+           //spa.console..info('NEW> spa.components['+componentName+']');
+           //spa.console..info(spa.components[componentName]);
           }
           _renderComp();
         };
 
     if (spa.components.hasOwnProperty(componentName)) {
-      //spa.console.info('Re-rending spa.components['+componentName+']');
-      //spa.console.info(spa.components[componentName]);
+     //spa.console..info('Re-rending spa.components['+componentName+']');
+     //spa.console..info(spa.components[componentName]);
       _renderComp();
     } else {
       if (_cScriptFile) {
-        //spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
+       //spa.console..info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
         $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
           .fail(function(){
-            //spa.console.error('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']');
-            //spa.console.warn('Continue Loading component ['+componentName+'] without script source from ['+_cScriptFile+']');
+           //spa.console..error('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']');
+           //spa.console..warn('Continue Loading component ['+componentName+'] without script source from ['+_cScriptFile+']');
             _parseComp();
           });
       } else {
@@ -5287,17 +5318,52 @@ window['app'] = window['app'] || {};
 
       if (spa.is(compList, 'object')) {
         _.each(Object.keys(compList), function(compName){
-          //spa.console.info('Rendering spa-component:['+compName+']');
+         //spa.console..info('Rendering spa-component:['+compName+']');
           spa.renderComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
         _.each(compList, function(compName){
-          //spa.console.info('Rendering spa-component:['+compName+']');
+         //spa.console..info('Rendering spa-component:['+compName+']');
           spa.renderComponent(compName.trim());
         });
       }
     }
 
+  };
+
+/*
+ * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
+ *
+ * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
+ * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array without options
+ * ( { compName1: {overrideOptions}, compName2: {overrideOptions}, ... } ) //as argument as Object
+ *
+ */
+  spa.refreshComponents = spa.$$refresh = function () {
+    if (arguments.length){
+      var compList = arguments; //spa.refreshComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) { //spa.refreshComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //spa.refreshComponents('compName1') | spa.refreshComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        } else {
+          compList = arguments[0]; // spa.refreshComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+        }
+      }
+
+      if (spa.is(compList, 'object')) {
+        _.each(Object.keys(compList), function(compName){
+         //spa.console..info('Rendering spa-component:['+compName+']');
+          spa.refreshComponent(compName, compList[compName]);
+        });
+      } else if (compList && compList.length) {
+        _.each(compList, function(compName){
+         //spa.console..info('Rendering spa-component:['+compName+']');
+          spa.refreshComponent(compName.trim());
+        });
+      }
+    }
   };
 
   spa.renderComponentsInHtml = function (scope, componentName, noDefer) {
@@ -5320,7 +5386,7 @@ window['app'] = window['app'] || {};
         if (deferRender) {
           if (!renderList.hasOwnProperty(spaCompName)) {
             var $sameCompRenderList = $(scope).find('[data-spa-component='+spaCompName+']');
-            //spa.console.log("component: "+spaCompName+" to render : "+$sameCompRenderList.length);
+           //spa.console..log("component: "+spaCompName+" to render : "+$sameCompRenderList.length);
             if ($sameCompRenderList.length>1) {
               spaCompOptions['mountComponent'] = {scope: scope, name: spaCompName};
             }
@@ -5343,7 +5409,7 @@ window['app'] = window['app'] || {};
           retObj[(keyPrefix + ((item.equals('.')? targetId : item).replace(/[^a-z0-9]/gi,'_')))] = (''+item);
         }
       });
-      //spa.console.log([keyPrefix, retObj]);
+     //spa.console..log([keyPrefix, retObj]);
       return retObj;
     },
     getFn:function(fnName) {
@@ -5372,16 +5438,16 @@ window['app'] = window['app'] || {};
         }
         if (_fn2Call) {
           if (_.isFunction(_fn2Call)) {
-            //spa.console.info("calling callback: " + fn2Call);
+           //spa.console..info("calling callback: " + fn2Call);
             _fn2Call.call(fnContext, fnArg);
           } else {
-            //spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
+           //spa.console..error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
         } else {
           if (("" + fn2Call).beginsWithStr("spa") && (("" + fn2Call).endsWithStr("_renderCallback"))) {
-            //spa.console.warn("Default Route renderCallback function <" + fn2Call + "> is NOT defined.");
+           //spa.console..warn("Default Route renderCallback function <" + fn2Call + "> is NOT defined.");
           } else {
-            //spa.console.error("CallbackFunction <" + fn2Call + "> is NOT defined.");
+           //spa.console..error("CallbackFunction <" + fn2Call + "> is NOT defined.");
           }
         }
       }
@@ -5396,7 +5462,7 @@ window['app'] = window['app'] || {};
               _.each(Object.keys(app[compName].events[eventId]), function(eventNames){
                 if (eventNames.indexOf('on')==0) {
                   _.each(eventNames.split('_'), function(eventName){
-                    //spa.console.log('registering component ['+compName+'] event: '+eventId+'-'+eventName);
+                   //spa.console..log('registering component ['+compName+'] event: '+eventId+'-'+eventName);
                     $(el).on(eventName.trimLeftStr('on').toLowerCase(), app[compName].events[eventId][eventNames]);
                   });
                 }
@@ -5582,8 +5648,8 @@ window['app'] = window['app'] || {};
       }
     }
 
-    //spa.console.log('spa.render with options:');
-    //spa.console.log(spaRVOptions);
+   //spa.console..log('spa.render with options:');
+   //spa.console..log(spaRVOptions);
 
     var $viewContainerId = $(viewContainerId);
     var _renderOptionInAttr = function(dataAttrKey) {
@@ -5606,23 +5672,23 @@ window['app'] = window['app'] || {};
 //      targetRenderMode = spaRVOptions.dataRenderMode;
 //    }
     var targetRenderMode = _renderOption('dataRenderMode', 'renderMode');
-    //spa.console.log("Render Mode: <"+targetRenderMode+">");
+   //spa.console..log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
     var spaTemplateEngine = (spa.defaults.dataTemplateEngine || "handlebars");
 
     /* Load Scripts Begins */
-    //spa.console.group("spaLoadingViewScripts");
+   //spa.console..group("spaLoadingViewScripts");
     if (!(useOptions && uOptions.hasOwnProperty('dataScriptsCache'))) /* NOT provided in Render Request */
     { /* Read from view container [data-scripts-cache='{true|false}'] */
       var scriptsCacheInTagData = _renderOptionInAttr('scriptsCache'); //("" + $(viewContainerId).data("scriptsCache")).replace(/undefined/, "");
       if (!spa.isBlank(scriptsCacheInTagData)) {
         spaRVOptions.dataScriptsCache = scriptsCacheInTagData.toBoolean();
-        //spa.console.info("Override [data-scripts-cache] with [data-scripts-cache] option in tag-attribute: " + spaRVOptions.dataScriptsCache);
+       //spa.console..info("Override [data-scripts-cache] with [data-scripts-cache] option in tag-attribute: " + spaRVOptions.dataScriptsCache);
       }
     }
     else {
-      //spa.console.info("Override [data-scripts-cache] with user option [dataScriptsCache]: " + spaRVOptions.dataScriptsCache);
+     //spa.console..info("Override [data-scripts-cache] with user option [dataScriptsCache]: " + spaRVOptions.dataScriptsCache);
     }
 
     var vScriptsList = _renderOptionInAttr('scripts'); //(""+ $(viewContainerId).data("scripts")).replace(/undefined/, "");
@@ -5646,52 +5712,52 @@ window['app'] = window['app'] || {};
     if (_.isArray(vScripts)) {
       _.remove(vScripts,function(item){ return !item; });
     }
-    //spa.console.info(vScripts);
+   //spa.console..info(vScripts);
     if (vScripts && (!$.isEmptyObject(vScripts))) {
       if (_.isArray(vScripts)) {
-        //spa.console.info("Convert array of script(s) without scriptID to object with scriptID(s).");
+       //spa.console..info("Convert array of script(s) without scriptID to object with scriptID(s).");
         var newScriptsObj = spa.renderUtils.array2ObjWithKeyPrefix(vScripts, '__scripts_', viewContainerId);
 //        var dynScriptIDForContainer;
 //        _.each(vScripts, function(scriptUrl, sIndex){
-//          //spa.console.log(scriptUrl);
+//         //spa.console..log(scriptUrl);
 //          if (scriptUrl) {
 //            dynScriptIDForContainer = "__scripts_" + ((''+scriptUrl).replace(/[^a-z0-9]/gi,'_'));
 //            newScriptsObj[dynScriptIDForContainer] = (""+scriptUrl);
 //          }
 //        });
-        //spa.console.info("Scripts(s) with scriptID(s).");
-        //spa.console.log(newScriptsObj);
+       //spa.console..info("Scripts(s) with scriptID(s).");
+       //spa.console..log(newScriptsObj);
         vScripts = (_.isEmpty(newScriptsObj))? {} : newScriptsObj;
       }
 
-      //spa.console.info("External scripts to be loaded [cache:" + (spaRVOptions.dataScriptsCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vScripts));
+     //spa.console..info("External scripts to be loaded [cache:" + (spaRVOptions.dataScriptsCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vScripts));
       var vScriptsNames = _.keys(vScripts);
 
-      //spa.console.group("kLoadingScripts");
+     //spa.console..group("kLoadingScripts");
       _.each(vScriptsNames, function (scriptId) {
         spaAjaxRequestsQue = spa.loadScript(scriptId, vScripts[scriptId], spaRVOptions.dataScriptsCache, spaAjaxRequestsQue);
       });
-      //spa.console.info("External Scripts Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
-      //spa.console.groupEnd("kLoadingScripts");
+     //spa.console..info("External Scripts Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
+     //spa.console..groupEnd("kLoadingScripts");
     }
     else {
-      //spa.console.info("No scripts defined [data-scripts] in view container [" + viewContainerId + "] to load.");
+     //spa.console..info("No scripts defined [data-scripts] in view container [" + viewContainerId + "] to load.");
     }
-    //spa.console.groupEnd("spaLoadingViewScripts");
+   //spa.console..groupEnd("spaLoadingViewScripts");
 
     /* Load Scripts Ends */
 
     /*Wait till scripts are loaded before proceed*/
     $.when.apply($, spaAjaxRequestsQue)
       .then(function () {
-        //spa.console.info("External Scripts Loaded.");
+       //spa.console..info("External Scripts Loaded.");
       })
       .fail(function () {
-        //spa.console.error("External Scripts Loading Failed! Unexpected!? Check the Script Path/Network.");
+       //spa.console..error("External Scripts Loading Failed! Unexpected!? Check the Script Path/Network.");
       });
 
     /* Load Data */
-    //spa.console.group("spaDataModel");
+   //spa.console..group("spaDataModel");
 
     //var dataModelName = ("" + $(viewContainerId).data("model")).replace(/undefined/, ""), viewDataModelName;
     //if (!spa.isBlank(spaRVOptions.dataModel)) {
@@ -5712,7 +5778,7 @@ window['app'] = window['app'] || {};
     var spaTemplateModelData = {};
     if (useParamData) {
       spaTemplateModelData[viewDataModelName] = spaRVOptions.data;
-      //spa.console.info("Loaded data model [" + dataModelName + "] from argument");
+     //spa.console..info("Loaded data model [" + dataModelName + "] from argument");
     }
     else {
       if (!(useOptions && uOptions.hasOwnProperty('dataCache'))) /* NOT provided in Render Request */
@@ -5720,11 +5786,11 @@ window['app'] = window['app'] || {};
         var dataCacheInTagData = _renderOptionInAttr('cache');//("" + $(viewContainerId).data("cache")).replace(/undefined/, "");
         if (!spa.isBlank(dataCacheInTagData)) {
           spaRVOptions.dataCache = dataCacheInTagData.toBoolean();
-          //spa.console.info("Override [data-cache] with [data-cache] option in tag-attribute: " + spaRVOptions.dataCache);
+         //spa.console..info("Override [data-cache] with [data-cache] option in tag-attribute: " + spaRVOptions.dataCache);
         }
       }
       else {
-        //spa.console.info("Override [data-cache] with user option [dataCache]: " + spaRVOptions.dataCache);
+       //spa.console..info("Override [data-cache] with user option [dataCache]: " + spaRVOptions.dataCache);
       }
       if (spa.isBlank(dataModelUrl)) { /*dataFound = false;*/
         spaTemplateModelData[viewDataModelName] = {};
@@ -5740,15 +5806,15 @@ window['app'] = window['app'] || {};
         var dataModelUrls = dataModelCollection['urls'];
 
         if (spa.isBlank(dataModelUrls)) {
-          //spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
+         //spa.console..warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
           spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions);
         }
         else { //Processing data-collection
           if (!_.isArray(dataModelUrls)) {
-            //spa.console.warn("Invalid [data-urls].Check the arguments or html markup. Rendering with empty data {}.");
+           //spa.console..warn("Invalid [data-urls].Check the arguments or html markup. Rendering with empty data {}.");
           }
           else {
-            //spa.console.info("Processing data-URLs");
+           //spa.console..info("Processing data-URLs");
             var dataIndexApi = 0, defaultAutoDataNamePrefix = dataModelCollection['nameprefix'] || "data";
             _.each(dataModelUrls, function (dataApi) {
               var defaultApiDataModelName = (defaultAutoDataNamePrefix + dataIndexApi)
@@ -5759,8 +5825,8 @@ window['app'] = window['app'] || {};
                 apiDataModelName = _.last(apiDataModelName.split("."), 1);
               }
               apiDataModelName = apiDataModelName.ifBlankStr(defaultApiDataModelName);
-              //spa.console.info('processing data-api for: ' + apiDataModelName);
-              //spa.console.log(dataApi);
+             //spa.console..info('processing data-api for: ' + apiDataModelName);
+             //spa.console..log(dataApi);
 
               if (apiDataUrl) {
                 if (_.has(dataApi, 'urlParams')) {
@@ -5785,7 +5851,7 @@ window['app'] = window['app'] || {};
                         try {
                           targetApiData = oResult.hasOwnProperty(targetDataModelName) ? oResult[targetDataModelName] : oResult;
                         } catch(e) {
-                          //spa.console.error("Error in Data Model ["+targetDataModelName+"] in URL ["+apiDataUrl+"].\n" + e.stack);
+                         //spa.console..error("Error in Data Model ["+targetDataModelName+"] in URL ["+apiDataUrl+"].\n" + e.stack);
                         }
                       }
                       if (spaTemplateModelData[viewDataModelName][apiDataModelName]) {
@@ -5795,7 +5861,7 @@ window['app'] = window['app'] || {};
                       else {
                         spaTemplateModelData[viewDataModelName][apiDataModelName] = targetApiData;
                       }
-                      //spa.console.info("Loaded data model [" + apiDataModelName + "] from [" + apiDataUrl + "]");
+                     //spa.console..info("Loaded data model [" + apiDataModelName + "] from [" + apiDataUrl + "]");
 
                       //Call user defined function on api-data success
                       var fnApiDataSuccess = dataApi['success'] || dataApi['onsuccess'] || dataApi['onSuccess'];
@@ -5812,7 +5878,7 @@ window['app'] = window['app'] || {};
                       }
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                      //spa.console.warn("Error processing data-api [" + apiDataUrl + "]");
+                     //spa.console..warn("Error processing data-api [" + apiDataUrl + "]");
                       //Call user defined function on api-data URL Error
                       var fnOnApiDataUrlErrorHandle = dataApi['error'] || dataApi['onerror'] || dataApi['onError'];
                       if (!fnOnApiDataUrlErrorHandle) {
@@ -5836,7 +5902,7 @@ window['app'] = window['app'] || {};
                 );//End of Ajax Que push
               }
               else {
-                //spa.console.error("data-api-url not found. Please check the arguments or html markup. Skipped this data-api request");
+               //spa.console..error("data-api-url not found. Please check the arguments or html markup. Skipped this data-api request");
               }
               dataIndexApi++;
             });
@@ -5850,7 +5916,7 @@ window['app'] = window['app'] || {};
           if (typeof eval("(" + localDataModelName + ")") != "undefined") { /*localDataModelObj = eval("("+localDataModelName+")");*/
             eval("(localDataModelObj=" + localDataModelName + ")");
           }
-          //spa.console.info("Using LOCAL Data Model: " + localDataModelName);
+         //spa.console..info("Using LOCAL Data Model: " + localDataModelName);
 
           if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
             spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
@@ -5858,7 +5924,7 @@ window['app'] = window['app'] || {};
             try {
               spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
             } catch(e) {
-              //spa.console.error("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
+             //spa.console..error("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
             }
           }
 
@@ -5867,7 +5933,7 @@ window['app'] = window['app'] || {};
           if (!spa.isBlank(spaRVOptions.dataUrlParams)){
             dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
           }
-          //spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
+         //spa.console..info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
           spaAjaxRequestsQue.push(
             $.ajax({
               url: dataModelUrl,
@@ -5889,10 +5955,10 @@ window['app'] = window['app'] || {};
                     };
                     spaTemplateModelData[viewDataModelName] = (!validateData && oResult.hasOwnProperty(dataModelName)) ? oResult[dataModelName] : oResult;
                   } catch(e) {
-                    //spa.console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
+                   //spa.console..error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
                   }
                 }
-                //spa.console.info("Loaded data model [" + dataModelName + "] from [" + dataModelUrl + "]");
+               //spa.console..info("Loaded data model [" + dataModelName + "] from [" + dataModelUrl + "]");
               },
               error: function (jqXHR, textStatus, errorThrown) {
                 //Call user defined function on Data URL Error
@@ -5912,9 +5978,9 @@ window['app'] = window['app'] || {};
         }
       }
     }
-    //spa.console.info("End of Data Processing");
-    //spa.console.log({o: spaTemplateModelData});
-    //spa.console.groupEnd("spaDataModel");
+   //spa.console..info("End of Data Processing");
+   //spa.console..log({o: spaTemplateModelData});
+   //spa.console..groupEnd("spaDataModel");
 
     if (dataFound) { /* Load Templates */
 
@@ -5944,22 +6010,22 @@ window['app'] = window['app'] || {};
         vTemplatesList = "";
       }
 
-      //spa.console.info("Templates:");
-      //spa.console.info(vTemplates);
+     //spa.console..info("Templates:");
+     //spa.console..info(vTemplates);
       //Handle if array without templateID, convert to object with auto templateID
       if (_.isArray(vTemplates) && !_.isEmpty(vTemplates)) {
-        //spa.console.info("Array of template(s) without templateID(s).");
+       //spa.console..info("Array of template(s) without templateID(s).");
         var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
 //        var dynTmplIDForContainer;
 //        _.each(vTemplates, function(templateUrl, sIndex){
-//          //spa.console.log(templateUrl);
+//         //spa.console..log(templateUrl);
 //          if (templateUrl) {
 //            dynTmplIDForContainer = "__tmpl_" + ((''+templateUrl).replace(/[^a-z0-9]/gi,'_'));
 //            newTemplatesObj[dynTmplIDForContainer] = (""+templateUrl);
 //          }
 //        });
-        //spa.console.info("Template(s) with template ID(s).");
-        //spa.console.log(newTemplatesObj);
+       //spa.console..info("Template(s) with template ID(s).");
+       //spa.console..log(newTemplatesObj);
         if (_.isEmpty(newTemplatesObj)) {
           vTemplates = {};
           vTemplatesList = "";
@@ -5980,79 +6046,79 @@ window['app'] = window['app'] || {};
           , _tmplLoc ="";
         if (spa.isBlank(_dataTemplate)) { //Not-in JS option
           if (!spa.isBlank(vTemplate2RenderInTag)) { //Found in tag
-            //spa.console.info("Template to load from location <"+vTemplate2RenderInTag+">");
+           //spa.console..info("Template to load from location <"+vTemplate2RenderInTag+">");
             _dataTemplate = vTemplate2RenderInTag;
           }
         }
 
         _dataTemplate = (_dataTemplate || "").trimStr();
-        //spa.console.info("Primary Template: <"+_dataTemplate+">");
+       //spa.console..info("Primary Template: <"+_dataTemplate+">");
         if (spa.isBlank(_dataTemplate) || _dataTemplate.equalsIgnoreCase("inline") || _dataTemplate.equals(".")){
-          //spa.console.info("Using target container (inline) content as template.");
+         //spa.console..info("Using target container (inline) content as template.");
           _tmplKey = ("_tmplInline_" +(viewContainerId.trimStr("#")));
         } else if (_dataTemplate.beginsWithStr("#")) {
-          //spa.console.info("Using page container <"+_dataTemplate+"> content as template.");
+         //spa.console..info("Using page container <"+_dataTemplate+"> content as template.");
           _tmplKey = _dataTemplate.trimStr("#");
         } else {
-          //spa.console.info("External path <"+_dataTemplate+"> content as template.");
+         //spa.console..info("External path <"+_dataTemplate+"> content as template.");
           _tmplKey = "__tmpl_" + ((''+_dataTemplate).replace(/[^a-z0-9]/gi,'_'));
           _tmplLoc = _dataTemplate;
         }
 
         vTemplates[_tmplKey] = _tmplLoc.replace(/['\"]/g,'');
-        //spa.console.info(vTemplates);
+       //spa.console..info(vTemplates);
       }
 
-      //spa.console.group("spaView");
+     //spa.console..group("spaView");
 
       if (vTemplates && (!$.isEmptyObject(vTemplates))) {
-        //spa.console.info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
+       //spa.console..info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
         var vTemplateNames = _.keys(vTemplates);
 
-        //spa.console.group("spaLoadingTemplates");
+       //spa.console..group("spaLoadingTemplates");
 
         /* Template Cache Begins: if false remove old templates */
-        //spa.console.group("spaLoadingTemplatesCache");
+       //spa.console..group("spaLoadingTemplatesCache");
         if (!(useOptions && uOptions.hasOwnProperty('dataTemplatesCache'))) /* NOT provided in Render Request */
         { /* Read from view container [data-templates-cache='{true|false}'] */
           //var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
           var templatesCacheInTagData = _renderOptionInAttr("templatesCache") || _renderOptionInAttr("templateCache") || _renderOptionInAttr("htmlsCache") || _renderOptionInAttr("htmlCache");
           if (!spa.isBlank(templatesCacheInTagData)) {
             spaRVOptions.dataTemplatesCache = templatesCacheInTagData.toBoolean();
-            //spa.console.info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
+           //spa.console..info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
           }
         }
         else {
-          //spa.console.info("Override [data-templates-cache] with user option [dataTemplatesCache]: " + spaRVOptions.dataTemplatesCache);
+         //spa.console..info("Override [data-templates-cache] with user option [dataTemplatesCache]: " + spaRVOptions.dataTemplatesCache);
         }
-        //spa.console.groupEnd("spaLoadingTemplatesCache");
+       //spa.console..groupEnd("spaLoadingTemplatesCache");
 
-        //spa.console.info("Load Templates");
-        //spa.console.info(vTemplates);
+       //spa.console..info("Load Templates");
+       //spa.console..info(vTemplates);
         _.each(vTemplateNames, function (tmplId, tmplIndex) {
-          //spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId]);
+         //spa.console..info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId]);
           spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache);
         });
 
         var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
 
-        //spa.console.info("External Data/Templates Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
-        //spa.console.groupEnd("spaLoadingTemplates");
+       //spa.console..info("External Data/Templates Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
+       //spa.console..groupEnd("spaLoadingTemplates");
 
-        //spa.console.info("Render TemplateID: "+vTemplate2RenderID);
+       //spa.console..info("Render TemplateID: "+vTemplate2RenderID);
 
         /* Load Styles Begins */
-        //spa.console.group("spaLoadingViewStyles");
+       //spa.console..group("spaLoadingViewStyles");
         if (!(useOptions && uOptions.hasOwnProperty('dataStylesCache'))) /* NOT provided in Render Request */
         { /* Read from view container [data-styles-cache='{true|false}'] */
           var stylesCacheInTagData = _renderOptionInAttr("stylesCache"); //("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
           if (!spa.isBlank(stylesCacheInTagData)) {
             spaRVOptions.dataStylesCache = stylesCacheInTagData.toBoolean();
-            //spa.console.info("Override [data-styles-cache] with [data-styles-cache] option in tag-attribute: " + spaRVOptions.dataStylesCache);
+           //spa.console..info("Override [data-styles-cache] with [data-styles-cache] option in tag-attribute: " + spaRVOptions.dataStylesCache);
           }
         }
         else {
-          //spa.console.info("Override [data-styles-cache] with user option [dataStylesCache]: " + spaRVOptions.dataStylesCache);
+         //spa.console..info("Override [data-styles-cache] with user option [dataStylesCache]: " + spaRVOptions.dataStylesCache);
         }
 
         var vStylesList = _renderOptionInAttr("styles"); //(""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
@@ -6070,42 +6136,42 @@ window['app'] = window['app'] || {};
         }
         if (vStyles && (!$.isEmptyObject(vStyles))) {
           if (_.isArray(vStyles)) {
-            //spa.console.info("Convert array of style(s) without styleID to object with styleID(s).");
+           //spa.console..info("Convert array of style(s) without styleID to object with styleID(s).");
             var newStylesObj = spa.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
 //            var dynStyleIDForContainer;
 //            _.each(vStyles, function(styleUrl, sIndex){
-//              //spa.console.log(styleUrl);
+//             //spa.console..log(styleUrl);
 //              if (styleUrl) {
 //                dynStyleIDForContainer = "__styles_" + ((''+styleUrl).replace(/[^a-z0-9]/gi,'_'));
 //                newStylesObj[dynStyleIDForContainer] = (""+styleUrl);
 //              }
 //            });
-            //spa.console.info("Style(s) with styleID(s).");
-            //spa.console.log(newStylesObj);
+           //spa.console..info("Style(s) with styleID(s).");
+           //spa.console..log(newStylesObj);
             vStyles = (_.isEmpty(newStylesObj))? {} : newStylesObj;
           }
 
-          //spa.console.info("External styles to be loaded [cache:" + (spaRVOptions.dataStylesCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vStyles));
+         //spa.console..info("External styles to be loaded [cache:" + (spaRVOptions.dataStylesCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vStyles));
           var vStylesNames = _.keys(vStyles);
 
-          //spa.console.group("spaLoadingStyles");
+         //spa.console..group("spaLoadingStyles");
           _.each(vStylesNames, function (styleId) {
             spaAjaxRequestsQue = spa.loadStyle(styleId, vStyles[styleId], spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
           });
-          //spa.console.info("External Styles Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
-          //spa.console.groupEnd("spaLoadingStyles");
+         //spa.console..info("External Styles Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
+         //spa.console..groupEnd("spaLoadingStyles");
         }
         else {
-          //spa.console.info("No styles defined [data-styles] in view container [" + viewContainerId + "] to load.");
+         //spa.console..info("No styles defined [data-styles] in view container [" + viewContainerId + "] to load.");
         }
-        //spa.console.groupEnd("spaLoadingViewStyles");
+       //spa.console..groupEnd("spaLoadingViewStyles");
         /* Load Styles Ends */
 
         $.when.apply($, spaAjaxRequestsQue)
           .then(function () {
 
-            //spa.console.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
-            //spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
+           //spa.console..group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+           //spa.console..info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
             if (spa.isBlank(targetRenderMode)) {
               $(viewContainerId).html("");
             }
@@ -6114,7 +6180,7 @@ window['app'] = window['app'] || {};
               var isValidData = !_renderOption('dataValidate', 'validate');
               if (!isValidData) {
                 //Get Validated using SPA.API
-                //spa.console.info('Validating Data');
+               //spa.console..info('Validating Data');
                 var fnDataValidate = _renderOption('dataValidate', 'validate');
                 if (fnDataValidate && (_.isString(fnDataValidate))) {
                   fnDataValidate = spa.findSafe(window, fnDataValidate);
@@ -6188,8 +6254,8 @@ window['app'] = window['app'] || {};
                 }
 
                 compiledTemplate = templateContentToBindAndRender;
-                //spa.console.log("Template Source:", templateContentToBindAndRender);
-                //spa.console.log("DATA for Template:", spaViewModel);
+               //spa.console..log("Template Source:", templateContentToBindAndRender);
+               //spa.console..log("DATA for Template:", spaViewModel);
                 if (!spa.isBlank(spaViewModel)) {
                   if ((typeof Handlebars != "undefined") && Handlebars && !spaRVOptions.skipDataBind) {
                     var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
@@ -6197,10 +6263,10 @@ window['app'] = window['app'] || {};
                     if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
                     compiledTemplate = preCompiledTemplate(data4Template);
                   } else {
-                    //spa.console.error("handlebars.js is not loaded.");
+                   //spa.console..error("handlebars.js is not loaded.");
                   }
                 }
-                //spa.console.log("Template Compiled:", compiledTemplate);
+               //spa.console..log("Template Compiled:", compiledTemplate);
 
                 doDeepRender = false;
                 retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
@@ -6237,7 +6303,8 @@ window['app'] = window['app'] || {};
                     break;
                 };
 
-                //spa.console.info("Render: SUCCESS");
+                _$renderCountUpdate(rCompName);
+               //spa.console..info("Render: SUCCESS");
                 var rhKeys = _.keys(spa.renderHistory);
                 var rhLen = rhKeys.length;
                 if (rhLen > spa.renderHistoryMax) {
@@ -6277,7 +6344,7 @@ window['app'] = window['app'] || {};
                   spa.initRoutes(viewContainerId);
                 };
 
-                //spa.console.log(retValue);
+               //spa.console..log(retValue);
 
                 /*
                  * Init togglePassword (eye icon)
@@ -6312,11 +6379,11 @@ window['app'] = window['app'] || {};
                   _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
                 }
                 var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
-                //spa.console.info("Processing callback: " + _fnCallbackAfterRender);
+               //spa.console..info("Processing callback: " + _fnCallbackAfterRender);
 
                 if (!isCallbackDisabled) {
                   if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
-                    //spa.console.info("calling default callback: spa.routes._renderCallback");
+                   //spa.console..info("calling default callback: spa.routes._renderCallback");
                     spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
                   }
                   spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
@@ -6328,7 +6395,7 @@ window['app'] = window['app'] || {};
                   $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
 
                   if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                    //spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                   //spa.console..info('mounting defered component', spaRVOptions.mountComponent);
                     $(viewContainerId).removeAttr('data-spa-component');
                     spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
                   };
@@ -6342,18 +6409,18 @@ window['app'] = window['app'] || {};
               }
             }
             catch(e) {
-              //spa.console.error("Error Rendering.\n" + e.stack);
+             //spa.console..error("Error Rendering.\n" + e.stack);
             }
-            //spa.console.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+           //spa.console..groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
           })
           .fail(function () {
-            //spa.console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
+           //spa.console..error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
           }).done(spa.runOnceOnRender);
       }
       else {
-        //spa.console.error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
+       //spa.console..error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
       }
-      //spa.console.groupEnd("spaView");
+     //spa.console..groupEnd("spaView");
     }
     return (retValue);
   };
@@ -6367,14 +6434,14 @@ window['app'] = window['app'] || {};
   spa.routeCurLocHash = function(){
     var curLocHash = (spa.getLocHash()||"").ifBlankStr(spa.routesOptions.defaultPageRoute);
     if (isSpaHashRouteOn && curLocHash && !spa.hasAutoRoutes(curLocHash)) {
-      //spa.console.info("Route current url-hash.");
+     //spa.console..info("Route current url-hash.");
       if (!spa.route(curLocHash)) {
-        //spa.console.warn("Current url-hash-route <"+curLocHash+"> FAILED and will try after "+spa.routeCurLocHashAttemptDelaySec+"sec.");
+       //spa.console..warn("Current url-hash-route <"+curLocHash+"> FAILED and will try after "+spa.routeCurLocHashAttemptDelaySec+"sec.");
         if (spa.routeCurLocHashAttempt < 5) {
           spa.routeCurLocHashAttempt++;
           setTimeout(spa.routeCurLocHash, (spa.routeCurLocHashAttemptDelaySec*1000));
         } else {
-          //spa.console.error("5 attempts to route current url-hash failed. Aborting further attempts.");
+         //spa.console..error("5 attempts to route current url-hash failed. Aborting further attempts.");
         }
       }
     }
@@ -6383,7 +6450,7 @@ window['app'] = window['app'] || {};
   spa.finallyOnRender = [];
   spa.runOnceOnRenderFunctions = [spa.routeCurLocHash];
   spa.runOnceOnRender = function(){
-    //spa.console.info("Render Complete.");
+   //spa.console..info("Render Complete.");
     if ((spa.runOnceOnRenderFunctions && !_.isEmpty(spa.runOnceOnRenderFunctions)) || (spa.finallyOnRender && !_.isEmpty(spa.finallyOnRender)) ) {
       if (!spa.runOnceOnRenderFunctions) spa.runOnceOnRenderFunctions = [];
       if (!_.isArray(spa.runOnceOnRenderFunctions)) {
@@ -6466,10 +6533,10 @@ window['app'] = window['app'] || {};
   });
 
   spa.initDataValidation = function () {
-    //spa.console.log("include validate framework lib (spa-validate.js) to use this feature!");
+   //spa.console..log("include validate framework lib (spa-validate.js) to use this feature!");
   };
   spa.doDataValidation = function () {
-    //spa.console.log("include validate framework lib (spa-validate.js) to use this feature!");
+   //spa.console..log("include validate framework lib (spa-validate.js) to use this feature!");
   };
 
   spa.properties = {
@@ -6529,10 +6596,10 @@ window['app'] = window['app'] || {};
       } else if (_.isObject(rPatternOptions)) {
         pushRoutePattern(rPatternOptions, overwrite);
       } else {
-        //spa.console.error("Invalid RoutePattern Options. Provide Array/Object of RouteOptions");
+       //spa.console..error("Invalid RoutePattern Options. Provide Array/Object of RouteOptions");
       }
     } else {
-      //spa.console.error("Empty RoutePattern Options.");
+     //spa.console..error("Empty RoutePattern Options.");
     }
   };
 
@@ -6546,7 +6613,7 @@ window['app'] = window['app'] || {};
           if (indexOfNameOrPattern>=0) {
             _.pullAt(spa.routePatterns.routes, indexOfNameOrPattern);
           } else {
-            //spa.console.error("Route Pattern Not Found for <"+rNameOrPattern+">");
+           //spa.console..error("Route Pattern Not Found for <"+rNameOrPattern+">");
           }
         }
       };
@@ -6558,7 +6625,7 @@ window['app'] = window['app'] || {};
       } else if (_.isString(rNamesOrPatterns)) {
         removeRoutePattern(rNamesOrPatterns);
       } else {
-        //spa.console.error("Invalid RoutePattern Name/Pattern. Provide Array/Name of RouteNames/Patterns");
+       //spa.console..error("Invalid RoutePattern Name/Pattern. Provide Array/Name of RouteNames/Patterns");
       }
     }
   };
@@ -6633,7 +6700,7 @@ window['app'] = window['app'] || {};
     if (spa.routes[routeName]) {
       spa.routes[routeName]($elRouteBase, routeParams, oTagRouteOptions);
     } else {
-      //spa.console.info("Route method <spa.routes."+routeName+"> NOT FOUND. Attempting to route using [data-sparoute] options.");
+     //spa.console..info("Route method <spa.routes."+routeName+"> NOT FOUND. Attempting to route using [data-sparoute] options.");
 
       var foundRouteTmplExt = (oTagRouteOptions.hasOwnProperty('ext')
       || oTagRouteOptions.hasOwnProperty('tmplext')
@@ -6666,7 +6733,7 @@ window['app'] = window['app'] || {};
       }
       var foundRenderTarget = spa.isElementExist(renderTarget);
 
-      //spa.console.info("Render Target <"+renderTarget+">");
+     //spa.console..info("Render Target <"+renderTarget+">");
       /*Cache Settings*/
       if (oTagRouteOptions.hasOwnProperty("dataCache")) {
         spaRenderOptions['dataCache'] = oTagRouteOptions['dataCache'];
@@ -6717,7 +6784,7 @@ window['app'] = window['app'] || {};
             break;
         }
       } else {
-        //spa.console.warn("Route without template");
+       //spa.console..warn("Route without template");
         spaRenderOptions.dataTemplates[tmplID] = "none";
       }
 
@@ -6743,11 +6810,11 @@ window['app'] = window['app'] || {};
             if (spa.routesOptions.loadDefaultScript) {
               spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
             } else {
-              //spa.console.warn("Script(s) not included. Use <spa.routesOptions.loadDefaultScript = true> to load default script <"+defaultScriptPath+">.");
+             //spa.console..warn("Script(s) not included. Use <spa.routesOptions.loadDefaultScript = true> to load default script <"+defaultScriptPath+">.");
             }
             break;
         }
-        //spa.console.log(spaRenderOptions['dataScripts']);
+       //spa.console..log(spaRenderOptions['dataScripts']);
       }
 
       /*Data and Params*/
@@ -6800,11 +6867,11 @@ window['app'] = window['app'] || {};
       }
       /*before Render function to modify options*/
 
-      //spa.console.info("Route Render Options Before preRenderProcess:");
-      //spa.console.info(spaRenderOptions);
+     //spa.console..info("Route Render Options Before preRenderProcess:");
+     //spa.console..info(spaRenderOptions);
       var beforeRenderOptions = {};
       var fnToRunBefore = oTagRouteOptions['before'] || oTagRouteOptions['beforeroute'] || oTagRouteOptions['beforeRoute'] || spa.routesOptions["beforeRoute"];
-      //spa.console.info("callBeforeRoute: "+fnToRunBefore);
+     //spa.console..info("callBeforeRoute: "+fnToRunBefore);
       if (fnToRunBefore) {
         if (!_.isFunction(fnToRunBefore) && _.isString(fnToRunBefore)) {
           if (fnToRunBefore.equals(defaultCallBeforeRoute)) { //TODO: why?
@@ -6817,7 +6884,7 @@ window['app'] = window['app'] || {};
           beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
           if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
         } else {
-          //spa.console.error("CallBeforeRouteFunction <"+oTagRouteOptions['before']+"> NOT FOUND.");
+         //spa.console..error("CallBeforeRouteFunction <"+oTagRouteOptions['before']+"> NOT FOUND.");
         }
       }
       if (defaultCallBeforeRoute) {
@@ -6828,8 +6895,8 @@ window['app'] = window['app'] || {};
         }
       }
 
-      //spa.console.info("Route Render Options After preRenderProcess:");
-      //spa.console.info(spaRenderOptions);
+     //spa.console..info("Route Render Options After preRenderProcess:");
+     //spa.console..info(spaRenderOptions);
       /*Ready to spaRender*/
       if ((!spaRenderOptions.hasOwnProperty("render") || (spaRenderOptions['render'])) &&
         (!oTagRouteOptions.hasOwnProperty("render") || (oTagRouteOptions['render']))) {
@@ -6870,9 +6937,9 @@ window['app'] = window['app'] || {};
       var elWithRoute = $("[data-sparoute][href='"+elRouteBase+"']");
       foundRouteElBase = !_.isEmpty(elWithRoute);
       if (!foundRouteElBase) {
-        //spa.console.warn("Route source element NOT FOUND for route <"+elRouteBase+">");
+       //spa.console..warn("Route source element NOT FOUND for route <"+elRouteBase+">");
         if (spa.routesOptions.usePatterns) {
-          //spa.console.info("Searching RoutePattern.");
+         //spa.console..info("Searching RoutePattern.");
           var rPatternRouteOptions;
           var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
             var matchFound=false;
@@ -6886,14 +6953,14 @@ window['app'] = window['app'] || {};
           });
 
           if (indexOfNameOrPattern<0) {
-            //spa.console.warn("Pattern not found.");
-            //spa.console.info(spa.routePatterns.routes);
+           //spa.console..warn("Pattern not found.");
+           //spa.console..info(spa.routePatterns.routes);
           } else {
-            //spa.console.info(rPatternRouteOptions);
+           //spa.console..info(rPatternRouteOptions);
             spa.routeRender(undefined, rPatternRouteOptions);
           }
         } else {
-          //spa.console.warn("Pattern match Disabled.");
+         //spa.console..warn("Pattern match Disabled.");
         }
       } else {
         elRouteBase = elWithRoute.get(0);
@@ -6902,11 +6969,11 @@ window['app'] = window['app'] || {};
 
     if (!foundRouteElBase) {
       if (routeOptions['forceroute'] || routeOptions['forceRoute']) {
-        //spa.console.warn("Attempt dynamic route.");
+       //spa.console..warn("Attempt dynamic route.");
         foundRouteElBase = true;
         elRouteBase = $("<a href='"+elRouteBase+"'></a>").get(0);
       } else {
-        //spa.console.warn("Exit Route.");
+       //spa.console..warn("Exit Route.");
         return false; //exit;
       }
     }
@@ -6922,7 +6989,7 @@ window['app'] = window['app'] || {};
       routeInitScope = routeInitOptions["context"] || routeInitOptions["scope"] || "";
     }
     if (routeInitOptions) {
-      //spa.console.info("Init routesOptions");
+     //spa.console..info("Init routesOptions");
       _.merge(spa.routesOptions, routeInitOptions);
 
       if (!isSpaHashRouteOn && spa.routesOptions.useHashRoute) _initWindowOnHashChange();
@@ -6934,7 +7001,7 @@ window['app'] = window['app'] || {};
       }
     }
 
-    //spa.console.info("Init spaRoutes. Scan for [data-sparoute] in context: <"+(routeInitScope||"body")+">");
+   //spa.console..info("Init spaRoutes. Scan for [data-sparoute] in context: <"+(routeInitScope||"body")+">");
     $(routeInitScope||"body").find("[data-sparoute]").each(function(index, el){
 
       if (!spa.isBlank((($(el).attr("href") || "")+"#").split("#")[1])) {
@@ -6994,17 +7061,19 @@ window['app'] = window['app'] || {};
     onReqError : function (jqXHR, textStatus, errorThrown) {
       //This function is to handles if Ajax request itself failed due to network error / server error
       //like 404 / 500 / timeout etc.
-      //spa.console.error([jqXHR, textStatus, errorThrown]);
-      //spa.console.error($(jqXHR.responseText).text());
+     //spa.console..error([jqXHR, textStatus, errorThrown]);
+     //spa.console..error($(jqXHR.responseText).text());
     },
     onResError : function () {
       //This function is to handle when spa.api.isCallSuccess returns false
     },
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
+      var apiDataType   = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('dataType'))? ajaxOptions['dataType'] : 'text';
+      var apiErroHandle = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : spa.api.onReqError;
       ajaxOptions = $.extend(ajaxOptions, {
-        dataType: 'text',
-        error: spa.api.onReqError,
+        dataType: apiDataType,
+        error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
           if (spa.api['isCallSuccess'](axResponse)) {
@@ -7020,22 +7089,49 @@ window['app'] = window['app'] || {};
         ajaxOptions.url = spa.api.url((ajaxOptions.url).trimLeftStr(spa.api.urlKeyIndicator), ajaxOptions.data);
       };
 
-      //spa.console.info('API(ajax) call with options', ajaxOptions);
+     //spa.console..info('API(ajax) call with options', ajaxOptions);
       //console.info(['API(ajax) call with options', ajaxOptions]);
       return $.ajax(ajaxOptions);
     },
     _params2AxOptions : function(){
-      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true };
+      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true }, hasPayLoad, axOverrideOptions;
       _.each(arguments, function(arg){
         switch(true){ //NOTE: DON'T CHANGE THE ORDER
-          case (_.isString(arg))  : oKey='url' ; break;
-          case (_.isFunction(arg)): oKey='_success'; break;
+          case (_.isString(arg))  : oKey='url';
+            if (axOptions['url']) {
+              hasPayLoad = true;
+              oKey='data';
+            }
+            break;
+          case (spa.is(arg, 'function')):
+            oKey='_success';
+            break;
           case (_.isBoolean(arg)) : oKey='async'; break;
-          case (_.isObject(arg))  : oKey='data'; break;
+          case (_.isObject(arg))  :
+            if ( hasPayLoad || arg.__hasPrimaryKeys('ajaxOptions|dataUrlParams') ) {
+              oKey='axOptions';
+              axOverrideOptions = arg.hasOwnProperty('ajaxOptions')? arg['ajaxOptions'] : arg;
+            } else {
+              oKey='data';
+              hasPayLoad = true;
+            }
+            break;
           default: oKey = 'unknown'; break;
         }
-        axOptions[oKey] = arg;
+        if (oKey != 'axOptions') axOptions[oKey] = arg;
       });
+
+      if (axOverrideOptions) {
+        if (axOverrideOptions['dataUrlParams']) {
+          if ((''+(axOptions['url'])).beginsWithStr(spa.api.urlKeyIndicator)){
+            axOptions.url = spa.api.url((axOptions.url).trimLeftStr(spa.api.urlKeyIndicator), axOverrideOptions['dataUrlParams']);
+          };
+          delete axOverrideOptions['dataUrlParams'];
+        };
+        _.merge(axOptions, axOverrideOptions);
+      }
+     //spa.console..log('API ajax options >>');
+     //spa.console..log(axOptions);
       return (axOptions);
     },
     get : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
@@ -7139,7 +7235,7 @@ window['app'] = window['app'] || {};
     var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
-        options.url = (spa.api.baseUrl || '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
+        options.url = (spa.api.baseUrl||'') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       } else {
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
@@ -7156,11 +7252,11 @@ window['app'] = window['app'] || {};
     } else {
       if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefix);
       if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
-        options.url = (spa.api.baseUrl || '') + actualUrl + (spa.api.liveUrlSuffix||'');
+        options.url = (spa.api.baseUrl||'') + actualUrl + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
     };
-    options.url = (options.url).replace(/{([^}])*}/g,'').replace(/\/\//g,'/'); //remove any optional url-params {xyz}
+    options.url = (options.url).replace(/{([^}])*}/g,'');//remove any optional url-params {xyz}
 
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
@@ -7189,7 +7285,7 @@ window['app'] = window['app'] || {};
 
     if ('onhashchange' in window) {
       if (spa.isBlank(sparouteInitOptions)) {
-        //spa.console.info("Registering HashRouting Listener");
+       //spa.console..info("Registering HashRouting Listener");
         window.addEventListener("hashchange", function(){
           if (spa.onUrlHashChange) {
             spa.onUrlHashChange(spa.urlHash([]));
@@ -7207,11 +7303,11 @@ window['app'] = window['app'] || {};
     /*Auto Render*/
     var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
     var autoRenderCount = $autoRenderElList.length;
-    //spa.console.info("Find and Render [rel='spaRender'] or [data-render] or [data-sparender] or [data-spa-render]. Found:"+autoRenderCount);
+   //spa.console..info("Find and Render [rel='spaRender'] or [data-render] or [data-sparender] or [data-spa-render]. Found:"+autoRenderCount);
     if (autoRenderCount) {
       $autoRenderElList.spaRender();
     } else {
-      //spa.console.info("Init SPA Render.");
+     //spa.console..info("Init SPA Render.");
       $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off' style='display:none'>&nbsp;</div>");
       $("#initSpaRender0").spaRender();
     }
@@ -7226,4 +7322,4 @@ window['app'] = window['app'] || {};
 
 })(this);
 
-//spa.console.info("spa loaded.");
+spa.console.info("spa loaded.");
