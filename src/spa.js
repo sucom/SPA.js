@@ -1,4 +1,4 @@
-/** @license SPA.js v2.33.1 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js v2.34.0 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -2425,7 +2425,7 @@ window['app'] = window['app'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.33.1';
+  spa.VERSION = '2.34.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5046,6 +5046,10 @@ window['app'] = window['app'] || {};
       console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
       return;
     };
+    if (componentName.replace(/[a-z0-9]/gi,'')) {
+      console.error('Invalid component name '+componentName+'. Component name has invalid character.');
+      return;
+    };
 
     options = options || {};
     if (is(componentName, 'object')) {
@@ -5171,8 +5175,35 @@ window['app'] = window['app'] || {};
     }
   };
 
+  function _$renderCountUpdate(componentName){
+    if (app[componentName]) {
+      app[componentName]['__renderCount__'] = spa.toInt(spa.$renderCount(componentName)) + 1;
+    }
+  }
+  spa.$renderCount = function(componentName){
+    return spa.findSafe(window, 'app.'+componentName+'.__renderCount__', 0);
+  };
+  spa.refreshComponent = spa.$refresh = function (componentName, options) {
+    if (!componentName) return;
+    options = options || {};
+    if (!spa.is(options, 'object')) return;
+    if (!options.hasOwnProperty('renderCallback')) {
+      options['renderCallback'] = options['refreshCallback'] || ('app.'+componentName+'.refreshCallback');
+    }
+    options['isRefreshCall'] = true;
+
+    spa.console.info('Calling refreshComponent: '+componentName+' with below options');
+    spa.console.info(options);
+    spa.$render(componentName, options);
+  };
   spa.renderComponent = spa.$render = function (componentName, options) {
     if (!componentName) return;
+
+    if ( (!(options && is(options, 'object') && options['isRefreshCall'])) && spa.$renderCount(componentName) && spa.findSafe(window, 'app.'+componentName+'.refreshCallback', '')){
+      spa.console.info('Component ['+componentName+'] has been rendered already. Refreshing instead of re-render.');
+      spa.refreshComponent(componentName, options);
+      return;
+    };
 
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
@@ -5298,6 +5329,41 @@ window['app'] = window['app'] || {};
       }
     }
 
+  };
+
+/*
+ * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
+ *
+ * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
+ * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array without options
+ * ( { compName1: {overrideOptions}, compName2: {overrideOptions}, ... } ) //as argument as Object
+ *
+ */
+  spa.refreshComponents = spa.$$refresh = function () {
+    if (arguments.length){
+      var compList = arguments; //spa.refreshComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) { //spa.refreshComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //spa.refreshComponents('compName1') | spa.refreshComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        } else {
+          compList = arguments[0]; // spa.refreshComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+        }
+      }
+
+      if (spa.is(compList, 'object')) {
+        _.each(Object.keys(compList), function(compName){
+          spa.console.info('Rendering spa-component:['+compName+']');
+          spa.refreshComponent(compName, compList[compName]);
+        });
+      } else if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Rendering spa-component:['+compName+']');
+          spa.refreshComponent(compName.trim());
+        });
+      }
+    }
   };
 
   spa.renderComponentsInHtml = function (scope, componentName, noDefer) {
@@ -6237,6 +6303,7 @@ window['app'] = window['app'] || {};
                     break;
                 };
 
+                _$renderCountUpdate(rCompName);
                 spa.console.info("Render: SUCCESS");
                 var rhKeys = _.keys(spa.renderHistory);
                 var rhLen = rhKeys.length;
@@ -7002,9 +7069,11 @@ window['app'] = window['app'] || {};
     },
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
+      var apiDataType   = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('dataType'))? ajaxOptions['dataType'] : 'text';
+      var apiErroHandle = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : spa.api.onReqError;
       ajaxOptions = $.extend(ajaxOptions, {
-        dataType: 'text',
-        error: spa.api.onReqError,
+        dataType: apiDataType,
+        error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
           if (spa.api['isCallSuccess'](axResponse)) {
@@ -7025,17 +7094,44 @@ window['app'] = window['app'] || {};
       return $.ajax(ajaxOptions);
     },
     _params2AxOptions : function(){
-      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true };
+      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true }, hasPayLoad, axOverrideOptions;
       _.each(arguments, function(arg){
         switch(true){ //NOTE: DON'T CHANGE THE ORDER
-          case (_.isString(arg))  : oKey='url' ; break;
-          case (_.isFunction(arg)): oKey='_success'; break;
+          case (_.isString(arg))  : oKey='url';
+            if (axOptions['url']) {
+              hasPayLoad = true;
+              oKey='data';
+            }
+            break;
+          case (spa.is(arg, 'function')):
+            oKey='_success';
+            break;
           case (_.isBoolean(arg)) : oKey='async'; break;
-          case (_.isObject(arg))  : oKey='data'; break;
+          case (_.isObject(arg))  :
+            if ( hasPayLoad || arg.__hasPrimaryKeys('ajaxOptions|dataUrlParams') ) {
+              oKey='axOptions';
+              axOverrideOptions = arg.hasOwnProperty('ajaxOptions')? arg['ajaxOptions'] : arg;
+            } else {
+              oKey='data';
+              hasPayLoad = true;
+            }
+            break;
           default: oKey = 'unknown'; break;
         }
-        axOptions[oKey] = arg;
+        if (oKey != 'axOptions') axOptions[oKey] = arg;
       });
+
+      if (axOverrideOptions) {
+        if (axOverrideOptions['dataUrlParams']) {
+          if ((''+(axOptions['url'])).beginsWithStr(spa.api.urlKeyIndicator)){
+            axOptions.url = spa.api.url((axOptions.url).trimLeftStr(spa.api.urlKeyIndicator), axOverrideOptions['dataUrlParams']);
+          };
+          delete axOverrideOptions['dataUrlParams'];
+        };
+        _.merge(axOptions, axOverrideOptions);
+      }
+      spa.console.log('API ajax options >>');
+      spa.console.log(axOptions);
       return (axOptions);
     },
     get : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
@@ -7139,7 +7235,7 @@ window['app'] = window['app'] || {};
     var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
-        options.url = (spa.api.baseUrl || '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
+        options.url = (spa.api.baseUrl||'') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       } else {
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
@@ -7156,11 +7252,11 @@ window['app'] = window['app'] || {};
     } else {
       if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefix);
       if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
-        options.url = (spa.api.baseUrl || '') + actualUrl + (spa.api.liveUrlSuffix||'');
+        options.url = (spa.api.baseUrl||'') + actualUrl + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
     };
-    options.url = (options.url).replace(/{([^}])*}/g,'').replace(/\/\//g,'/'); //remove any optional url-params {xyz}
+    options.url = (options.url).replace(/{([^}])*}/g,'');//remove any optional url-params {xyz}
 
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
