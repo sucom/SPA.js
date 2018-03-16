@@ -1,4 +1,4 @@
-/** @license SPA.js v2.35.0 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js v2.34.0 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -36,8 +36,7 @@
  * ===========================================================================
  */
 
-window['app'] = window['app'] || {api:{}};
-window['app']['api'] = window['app']['api'] || {};
+window['app'] = window['app'] || {};
 
 /* Avoid 'console' errors in browsers that lack a console*/
 (function() {
@@ -2426,7 +2425,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.35.0';
+  spa.VERSION = '2.34.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7070,10 +7069,10 @@ window['app']['api'] = window['app']['api'] || {};
     },
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
-      var defAjaxOptions = spa.findSafe(window, 'app.api.ajaxOptions', {});
+      var apiDataType   = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('dataType'))? ajaxOptions['dataType'] : 'text';
       var apiErroHandle = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : spa.api.onReqError;
-
-      ajaxOptions = $.extend({}, defAjaxOptions, ajaxOptions,  {
+      ajaxOptions = $.extend(ajaxOptions, {
+        dataType: apiDataType,
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
@@ -7086,25 +7085,12 @@ window['app']['api'] = window['app']['api'] || {};
         }
       });
 
-      if (!ajaxOptions['dataType']) {
-        ajaxOptions['dataType'] = 'text';
-      }
-
-      if (('json').equalsIgnoreCase(ajaxOptions['dataType']) && (!ajaxOptions['contentType'])) {
-        ajaxOptions['contentType'] = 'application/json';
-      }
-
-      if (ajaxOptions['data'] && spa.is(ajaxOptions['data'], 'object') && ajaxOptions['stringifyPayload']) {
-        delete ajaxOptions['stringifyPayload'];
-        ajaxOptions['data'] = JSON.stringify(ajaxOptions['data']);
-      }
-
       if ((ajaxOptions.url).beginsWithStr(spa.api.urlKeyIndicator)){
         ajaxOptions.url = spa.api.url((ajaxOptions.url).trimLeftStr(spa.api.urlKeyIndicator), ajaxOptions.data);
       };
 
-      if (app['debug'] || spa['debug']) console.info(['API(ajax) call with options', ajaxOptions]);
-
+      spa.console.info('API(ajax) call with options', ajaxOptions);
+      //console.info(['API(ajax) call with options', ajaxOptions]);
       return $.ajax(ajaxOptions);
     },
     _params2AxOptions : function(){
