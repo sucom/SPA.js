@@ -1,4 +1,8 @@
-# SPA.js
+# 
+
+# [SPA.js](https://spa.js.org/) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/sucom/SPA.js/blob/master/LICENSE)
+
+
 Single Page Application (SPA) Simplified Front-End Framework/Library. Visit https://spa.js.org/ for more details.
 
 # Why?
