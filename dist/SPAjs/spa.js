@@ -5,11 +5,7 @@
  *
  * Dependency: (hard)
  * 1. jQuery: http://jquery.com/
- * 2. lodash: https://lodash.com/
- * 3. handlebars: http://handlebarsjs.com/ || https://github.com/wycats/handlebars.js/
- *
- * Optional
- * {i18n}         : https://code.google.com/p/jquery-i18n-properties/
+ * 2. handlebars: http://handlebarsjs.com/ || https://github.com/wycats/handlebars.js/
  *
  * THIS CODE LICENSE: The MIT License (MIT)
 
