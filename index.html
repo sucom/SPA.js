@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html lang="en-US">
-
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="keywords" content="SPA, SPAJS, SPA.js, SPA JS, Single Page Application, Javascript Framework, Frontend Framework, Front-End Framework, one page application"
-  />
-  <meta name="description" content="SPA JS - (Single Page Application) framework is built on the popular paradigm “KISS” (Keep It Simple, Stupid) that emphasizes on keeping a framework simple and not complicating it. Ideally a powerful framework should do all the heavy lifting and must make it easy for the developers to focus on the product features and not the framework. The SPA JS framework is powerful yet simple to learn, easy to adapt and easy to scale. A component developed once can easily be deployed in any other SPA application without complex configurations. Give it a try, you will love it."
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="keywords" content="SPA, SPAJS, SPA.js, SPA JS, Single Page Application, Javascript Framework, Frontend Framework, Front-End Framework, one page application" />
+  <meta name="description" content="SPA JS - (Single Page Application) framework is built on the popular paradigm “KISS” (Keep It Simple, Stupid) that emphasizes on keeping a framework simple and not complicating it. Ideally a powerful framework should do all the heavy lifting and must make it easy for the developers to focus on the product features and not the framework. The SPA JS framework is powerful yet simple to learn, easy to adapt and easy to scale. A component developed once can easily be deployed in any other SPA application without complex configurations. Give it a try, you will love it." />
   <meta name="author" content="Kumar, Rajesh" />
   <meta name="robot" content="index,follow" />
   <title>SPA.js :: Single Page Application - Just Simplified</title>
   <link rel="icon" href="app/images/favicon.png" type="image/x-icon" />
+
+  <link rel="stylesheet" href="xlib2/bundle/styles.min.css" />
+  <!--
   <link rel="stylesheet" href="xlib2/bootstrap/css/bootstrap.min.css" />
   <link rel="stylesheet" href="xlib2/highlight/agate.min.css" />
-  <link rel="stylesheet" href="xlib2/highlight/linenumber.min.css">
-  <link rel="stylesheet" href="app/css/style.min.css" />
+  <link rel="stylesheet" href="xlib2/highlight/linenumber.min.css"> -->
 
+  <link rel="stylesheet" href="app/css/style.min.css" />
   <!-- Global Site Tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-107312380-1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments)
-    };
+    function gtag(){dataLayer.push(arguments)};
     gtag('js', new Date());
     gtag('config', 'UA-107312380-1');
   </script>
@@ -34,15 +31,20 @@
 
 <body>
   <div data-spa-component="main"></div>
+  <script src="xlib2/bundle/bundle1.min.js"></script>
+  <!--
   <script src="xlib2/jquery/jquery-3.2.1.min.js"></script>
   <script src="xlib2/bootstrap/js/popper.min.js"></script>
-  <script src="xlib2/bootstrap/js/bootstrap.min.js"></script>
+  <script src="xlib2/bootstrap/js/bootstrap.min.js"></script> -->
+
+  <script src="xlib2/bundle/bundle2.min.js"></script>
+  <!--
   <script src="xlib2/handlebars/handlebars-v4.0.11.js"></script>
   <script src="xlib2/highlight/highlight.pack.js"></script>
-  <script src="xlib2/highlight/linenumbers.min.js"></script>
+  <script src="xlib2/highlight/linenumbers.min.js"></script> -->
+
   <script src="src/spa-bundle.min.js"></script>
   <script src="app/js/app.min.js"></script>
-
 </body>
 
 </html>

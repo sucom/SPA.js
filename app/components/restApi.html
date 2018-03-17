@@ -6,14 +6,25 @@
   <h3>Signatures</h3>
   <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="REST API Signatures">
 
-spa.api.get(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+spa.api.get(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
 
-spa.api.post(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+spa.api.post(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
 
-spa.api.put(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+spa.api.put(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
 
-spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
+spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
   </script>
+
+  <blockquote>
+    <mark>NOTE:</mark>
+    <ul>
+      <li>- spa.api methods are short-hand methods for <mark>jQuery.ajax( )</mark></li>
+      <li>- for default ajaxOptions for all spa.api methods refer <a href="#getStarted/spaApi">SPA API Basic / Configuration</a> section</li>
+      <li>- ajaxOptions override param is supported only from SPA.js version:2.35.0+</li>
+      <li>- If neded, feel free to use <a href="http://api.jquery.com/jquery.ajax/" target="_blank">$.ajax( )</a> instead of spa.api methods</li>
+      <li>- Also feel free to use any javascript AJAX libraries like <a href="https://visionmedia.github.io/superagent/" target="_blank">SuperAgent</a>, <a href="https://github.github.io/fetch/" target="_blank">Fetch</a>, etc.</li>
+    </ul>
+  </blockquote>
   </section>
 
   <section>
@@ -58,6 +69,26 @@ spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean);
     //OR
     wait = true;  //async: false
   </script>
+
+  <h3>ajaxOptions:Object (optional);</h3>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: wait">
+    { ajaxOptions: {
+        dataType: 'json',
+        contentType: 'application/json',
+        headers: {
+          Accept: 'application/json',
+          locale: 'en_US',
+          authToken: 'ALBL-DJDUE8-93939-0099KKDKD-03939K-KSKSJDMDKIUFHSLS-38373DJ847DHKBLBJJ'
+        }
+    }}
+  </script>
+  <blockquote>
+    <mark>NOTE:</mark>
+    <ul>
+      <li>- for default ajaxOptions for all spa.api methods refer <a href="#getStarted/spaApi">SPA API Basic / Configuration</a> section</li>
+      <li>- ajaxOptions override param is supported only from SPA.js version:2.35.0+</li>
+    </ul>
+  </blockquote>
 
   </section>
 

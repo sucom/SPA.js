@@ -45,7 +45,22 @@
 //spa.api.baseUrl = 'https://live-api-server-address:port/';
 
 /* live-api url prefix to identify Live-Api calls */
-app['api'] = { liveApiPrefix: 'api/' };
+app['api'] = {
+  liveApiPrefix: 'api/',
+
+  ajaxOptions: {            //set default ajaxOptions for spa.api['get' | 'post' | 'put' | 'del'] methods;
+                            //supported from SPA.js version:2.35.0+
+                            //all jquery ajaxOptions [http://api.jquery.com/jquery.ajax/] are valid, except 'url', 'data', and 'success'
+
+    dataType: 'json',       //set dataType to 'json' and contentType to 'application/json'
+    stringifyPayload: true, //converts data Object to JSON.stringify(data)
+    headers: {              //Set request headers
+      Accept: 'application/json',
+      locale: 'en_US',
+      authToken: 'ALBL-DJDUE8-93939-0099KKDKD-03939K-KSKSJDMDKIUFHSLS-38373DJ847DHKBLBJJ'
+    }
+  }
+};
 
 /* All API Urls */
 /* $ prefix in Key refers to dataUrl for the component */
