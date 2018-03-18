@@ -1,6 +1,6 @@
+function updateGAPageView(){ ga('send', {hitType: 'pageview', page: ('/'+spa.urlHash()) });}
 spa.defaults.set( {components: {inFolder: false, scriptExt:''}} );
 hljs.configure({useBR:true, tabReplace:'  '});
-function updateGAPageView(){ga('send', {hitType: 'pageview', page: location.hash });}
 /* ----------------------------------- */
 spa.$extend('main', {
   renderCallback: function(){
