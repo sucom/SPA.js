@@ -1,4 +1,5 @@
 function updateGAPageView(){ga('send', 'pageview', { page: ('/'+spa.urlHash()) });}
+setInterval(updateGAPageView, 90000);
 spa.defaults.set( {components: {inFolder: false, scriptExt:''}} );
 hljs.configure({useBR:true, tabReplace:'  '});
 /* ----------------------------------- */
