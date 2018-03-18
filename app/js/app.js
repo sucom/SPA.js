@@ -1,4 +1,4 @@
-function updateGAPageView(){ ga('send', {hitType: 'pageview', page: ('/'+spa.urlHash()) });}
+function updateGAPageView(){ga('send', 'pageview', { page: ('/'+spa.urlHash()) });}
 spa.defaults.set( {components: {inFolder: false, scriptExt:''}} );
 hljs.configure({useBR:true, tabReplace:'  '});
 /* ----------------------------------- */
