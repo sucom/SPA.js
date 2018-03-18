@@ -31,6 +31,7 @@ spa.$extend('main', {
 /* ----------------------------------- */
 spa.onUrlHashChange = function(){
   app.main.loadMainComponent();
+  updateGAPageView();
 };
 /* ----------------------------------- */
 spa.$extend('getStarted', {
