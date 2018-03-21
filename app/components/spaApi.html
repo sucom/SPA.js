@@ -67,9 +67,13 @@ app['api'] = {
 
 /* ! in url => force to mock location */
 /* ~ in url => force to live location */
-/* {urlParamName}  => if live, replaced with actual urlParamValue
+/* {urlParamName}   => if live, replaced with actual urlParamValue
                     => if mock, replaced with string '_urlParamName'
-  {<urlParamName>} => replaced with actual urlParamValue
+
+  {<urlParamName>}  => replaced with actual urlParamValue, for both mock and live
+
+ {{<urlParamName>}} => if mock replaced with actual urlParamValue
+                    => if live removes entire param
 */
 $.extend(spa.api.urls, {
 
