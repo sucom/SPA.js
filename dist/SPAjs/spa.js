@@ -1,4 +1,4 @@
-/** @license SPA.js v2.35.0 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js v2.35.1 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -4323,10 +4323,13 @@ window['app']['api'] = window['app']['api'] || {};
     mode: 'map',
     callback: null
   };
+  spa.i18n.browserLang = function(){
+    return (navigator)? (navigator.language || navigator.userLanguage || 'en_US') : 'en_US';
+  };
   spa.i18n.setLanguage = function (lang, i18nSettings) {
     if ($.i18n) {
       $.i18n.map = {}; //empty dictionary before loading lang file
-      lang = lang || ($.i18n.browserLang()).replace(/-/g, "_");
+      lang = (lang || spa.i18n.browserLang()).replace(/-/g, "_");
       i18nSettings = $.extend(spa.i18n.settings, i18nSettings);
       $.i18n.properties({
         name: i18nSettings.name,
