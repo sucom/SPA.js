@@ -1,4 +1,4 @@
-/** @license SPA.js v2.35.1 | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.35.1';
+  spa.VERSION = '2.36.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3965,9 +3965,9 @@ window['app']['api'] = window['app']['api'] || {};
   spa.addScriptTag = function (scriptId, scriptSrc) {
     scriptId = scriptId.replace(/#/, "");
     spa.console.group("spaAddScriptTag");
-    if (!spa.isElementExist("#spaScriptsCotainer")) {
-      spa.console.info("#spaScriptsCotainer NOT Found! Creating one...");
-      $('body').append("<div id='spaScriptsCotainer' style='display:none' rel='Dynamic Scripts Container'></div>");
+    if (!spa.isElementExist("#spaScriptsContainer")) {
+      spa.console.info("#spaScriptsContainer NOT Found! Creating one...");
+      $('body').append("<div id='spaScriptsContainer' style='display:none' rel='Dynamic Scripts Container'></div>");
     }
     if (spa.isElementExist("#" + scriptId)) {
       spa.console.info("script [" + scriptId + "] already found in local.");
@@ -3975,7 +3975,7 @@ window['app']['api'] = window['app']['api'] || {};
     else {
       spa.console.info("script [" + scriptId + "] NOT found. Added script tag with src [" + scriptSrc + "]");
       var scriptSrcAttr = (scriptSrc)? "src='" + scriptSrc + "'" : "";
-      $("#spaScriptsCotainer").append("<script id='" + (scriptId) + "' type='text/javascript' "+scriptSrcAttr+"><\/script>");
+      $("#spaScriptsContainer").append("<script id='" + (scriptId) + "' type='text/javascript' "+scriptSrcAttr+"><\/script>");
     }
     spa.console.groupEnd("spaAddScriptTag");
   };
@@ -3984,16 +3984,16 @@ window['app']['api'] = window['app']['api'] || {};
   spa.addStyle = function (styleId, styleSrc) {
     styleId = styleId.replace(/#/, "");
     spa.console.group("spaAddStyle");
-    if (!spa.isElementExist("#spaStylesCotainer")) {
-      spa.console.info("#spaStylesCotainer NOT Found! Creating one...");
-      $('body').append("<div id='spaStylesCotainer' style='display:none' rel='Dynamic Styles Container'></div>");
+    if (!spa.isElementExist("#spaStylesContainer")) {
+      spa.console.info("#spaStylesContainer NOT Found! Creating one...");
+      $('body').append("<div id='spaStylesContainer' style='display:none' rel='Dynamic Styles Container'></div>");
     }
     if (spa.isElementExist("#" + styleId)) {
       spa.console.info("style [" + styleId + "] already found in local.");
     }
     else {
       spa.console.info("style [" + styleId + "] NOT found. Added link tag with href [" + styleSrc + "]");
-      $("#spaStylesCotainer").append("<link id='" + (styleId) + "' rel='stylesheet' type='text/css' href='" + styleSrc + "'\/>");
+      $("#spaStylesContainer").append("<link id='" + (styleId) + "' rel='stylesheet' type='text/css' href='" + styleSrc + "'\/>");
     }
     spa.console.groupEnd("spaAddStyle");
   };
@@ -4117,18 +4117,18 @@ window['app']['api'] = window['app']['api'] || {};
   spa.addTemplateScript = function (tmplId, tmplBody, tmplType) {
     tmplId = tmplId.replace(/#/, "");
     tmplType = tmplType  || 'x-template';
-    if (!spa.isElementExist("#spaViewTemplateCotainer")) {
-      spa.console.info("#spaViewTemplateCotainer NOT Found! Creating one...");
-      $('body').append("<div id='spaViewTemplateCotainer' style='display:none' rel='Template Container'></div>");
+    if (!spa.isElementExist("#spaViewTemplateContainer")) {
+      spa.console.info("#spaViewTemplateContainer NOT Found! Creating one...");
+      $('body').append("<div id='spaViewTemplateContainer' style='display:none' rel='Template Container'></div>");
     }
     spa.console.info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
     tmplBody = tmplBody.replace(/<( )*script/gi,'<_SCRIPTTAGINTEMPLATE_').replace(/<( )*(\/)( )*script/gi,'</_SCRIPTTAGINTEMPLATE_')
             .replace(/<( )*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<( )*(\/)( )*link/gi,'</_LINKTAGINTEMPLATE_');
-    $("#spaViewTemplateCotainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
+    $("#spaViewTemplateContainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
   };
   spa.updateTemplateScript = function (tmplId, tmplBody, tmplType){
     tmplId = tmplId.replace(/#/, "");
-    var $tmplScript = $('#spaViewTemplateCotainer').find('#'+tmplId);
+    var $tmplScript = $('#spaViewTemplateContainer').find('#'+tmplId);
     if ($tmplScript.length) {
       $tmplScript.remove();
     }
@@ -5873,7 +5873,12 @@ window['app']['api'] = window['app']['api'] || {};
                           fnApiDataSuccess(oResult, dataApi);
                         }
                         else if (_.isString(fnApiDataSuccess)) {
-                          eval("(" + fnApiDataSuccess + "(oResult, dataApi))");
+                          var _xSuccessFn_ = spa.findSafe(window, fnApiDataSuccess);
+                          if (typeof _xSuccessFn_ === "function") {
+                            _xSuccessFn_(oResult, dataApi);
+                          } else {
+                            spa.console.log('Unknown ajax success handle: '+fnApiDataSuccess);
+                          }
                         }
                       }
                     },
@@ -5892,7 +5897,12 @@ window['app']['api'] = window['app']['api'] || {};
                           fnOnApiDataUrlErrorHandle(jqXHR, textStatus, errorThrown);
                         }
                         else if (_.isString(fnOnApiDataUrlErrorHandle)) {
-                          eval("(" + fnOnApiDataUrlErrorHandle + "(jqXHR, textStatus, errorThrown))");
+                          var _xErrorFn_ = spa.findSafe(window, fnOnApiDataUrlErrorHandle);
+                          if (typeof _xErrorFn_ === "function") {
+                            _xErrorFn_(oResult, dataApi);
+                          } else {
+                            spa.console.log('Unknown ajax error handle: '+fnOnApiDataUrlErrorHandle);
+                          }
                         }
                       } else {
                         spa.api.onReqError(jqXHR, textStatus, errorThrown);
@@ -5970,7 +5980,12 @@ window['app']['api'] = window['app']['api'] || {};
                 if (spa.isBlank(fnOnDataUrlErrorHandle)){
                   spa.api.onReqError(jqXHR, textStatus, errorThrown);
                 } else {
-                  eval("(" + fnOnDataUrlErrorHandle + "(jqXHR, textStatus, errorThrown))");
+                  var _xErrFn_ = spa.findSafe(window, fnOnDataUrlErrorHandle);
+                  if (typeof _xErrFn_ === 'function') {
+                    _xErrFn_(jqXHR, textStatus, errorThrown);
+                  } else {
+                    spa.console.log('Unknown ajax error handle: '+fnOnDataUrlErrorHandle);
+                  }
                 }
               }
             })
