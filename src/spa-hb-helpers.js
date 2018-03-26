@@ -1495,6 +1495,13 @@
     return retValue;
   }
 
+  function _bytesToSize(inputVal){
+    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    if (inputVal == 0) return '0';
+    var i = parseInt(Math.floor(Math.log(inputVal) / Math.log(1024)));
+    return Math.round(inputVal / Math.pow(1024, i), 2) + ' ' + sizes[i];
+  }
+
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
       ':'              : _hbjshelper_, //+Block
@@ -1597,7 +1604,8 @@
       ':rand'          : _rand,
       ':randPwd'       : _randPwd,
       ':ifDefined'     : _isDefined,
-      ':ifUndefined'   : _isUndefined
+      ':ifUndefined'   : _isUndefined,
+      ':bytesToSize'   : _bytesToSize
 
     });
   };
