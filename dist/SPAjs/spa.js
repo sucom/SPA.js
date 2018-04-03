@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.36.0';
+  spa.VERSION = '2.36.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5839,7 +5839,7 @@ window['app']['api'] = window['app']['api'] || {};
                     data: _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {}),
                     cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
                     dataType: "text",
-                    success: function (result) {
+                    success: function (result, textStatus, jqXHR) {
                       var targetApiData
                         , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
                         , oResult = spa.toJSON(''+result, 'data');
@@ -5870,12 +5870,12 @@ window['app']['api'] = window['app']['api'] || {};
                       }
                       if (fnApiDataSuccess) {
                         if (_.isFunction(fnApiDataSuccess)) {
-                          fnApiDataSuccess(oResult, dataApi);
+                          fnApiDataSuccess.call(this, oResult, dataApi, textStatus, jqXHR);
                         }
                         else if (_.isString(fnApiDataSuccess)) {
                           var _xSuccessFn_ = spa.findSafe(window, fnApiDataSuccess);
                           if (typeof _xSuccessFn_ === "function") {
-                            _xSuccessFn_(oResult, dataApi);
+                            _xSuccessFn_.call(this, oResult, dataApi, textStatus, jqXHR);
                           } else {
                             spa.console.log('Unknown ajax success handle: '+fnApiDataSuccess);
                           }
@@ -5894,18 +5894,18 @@ window['app']['api'] = window['app']['api'] || {};
                       }
                       if (fnOnApiDataUrlErrorHandle) {
                         if (_.isFunction(fnOnApiDataUrlErrorHandle)) {
-                          fnOnApiDataUrlErrorHandle(jqXHR, textStatus, errorThrown);
+                          fnOnApiDataUrlErrorHandle.call(this, jqXHR, textStatus, errorThrown);
                         }
                         else if (_.isString(fnOnApiDataUrlErrorHandle)) {
                           var _xErrorFn_ = spa.findSafe(window, fnOnApiDataUrlErrorHandle);
                           if (typeof _xErrorFn_ === "function") {
-                            _xErrorFn_(oResult, dataApi);
+                            _xErrorFn_.call(this, oResult, dataApi);
                           } else {
                             spa.console.log('Unknown ajax error handle: '+fnOnApiDataUrlErrorHandle);
                           }
                         }
                       } else {
-                        spa.api.onReqError(jqXHR, textStatus, errorThrown);
+                        spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                       }
                     }
                   })
@@ -5978,11 +5978,11 @@ window['app']['api'] = window['app']['api'] || {};
                 //}
                 var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
                 if (spa.isBlank(fnOnDataUrlErrorHandle)){
-                  spa.api.onReqError(jqXHR, textStatus, errorThrown);
+                  spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                 } else {
                   var _xErrFn_ = spa.findSafe(window, fnOnDataUrlErrorHandle);
                   if (typeof _xErrFn_ === 'function') {
-                    _xErrFn_(jqXHR, textStatus, errorThrown);
+                    _xErrFn_.call(this, jqXHR, textStatus, errorThrown);
                   } else {
                     spa.console.log('Unknown ajax error handle: '+fnOnDataUrlErrorHandle);
                   }
@@ -7092,10 +7092,10 @@ window['app']['api'] = window['app']['api'] || {};
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
           if (spa.api['isCallSuccess'](axResponse)) {
-            ajaxOptions._success(axResponse, textStatus, jqXHR);
+            ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
           else {
-            spa.api.onResError(axResponse, textStatus, jqXHR);
+            spa.api.onResError.call(this, axResponse, textStatus, jqXHR);
           }
         }
       });
