@@ -1,0 +1,13 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Using Built-in Subexpressions</h2>
+  <p>Helps to invoke multiple helpers within single mustache. In other words calling helper within helper.</p>
+
+  <h3>The <mark>Subexpressions</mark></h3>
+  <p>Handlebars offers support for subexpressions, which allows you to invoke multiple helpers within a single mustache, and pass in the results of inner helper invocations as arguments to outer helpers. Subexpressions are delimited by parentheses.</p>
+  <script type="text/code" class="code trim no-num-tool">
+{{outer-helper (inner-helper 'inner-param') 'outer-param' }}
+
+  </script>
+  <p>In this case, <mark>inner-helper</mark> will get invoked with the string argument <mark>'inner-param'</mark>, and whatever the <mark>inner-helper</mark> function returns will get passed in as the first argument to <mark>outer-helper</mark> (and <mark>'outer-param'</mark> will get passed in as the second argument to <mark>outer-helper</mark>).
+  </p>
+</div>
