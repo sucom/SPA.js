@@ -31,7 +31,7 @@ spa['_validateDefaults'] = {
 
 spa['_validate'] = {
   _isOnOfflineValidation : false,
-  _validateAlertTemplate : '<div class="errortxt break-txt" data-i18n=""></div>',
+  _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
   _fn : {
       Required    : function _fnRequired(obj, msg) {
@@ -445,15 +445,29 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
       spa.console.log('registering an event: '+validateOnEvent);
       if (validateOnEvent.beginsWithStrIgnoreCase('on')) {
         $(el).on(jqEventName, function(){
-          var el = this;
+          var el = this, vFn;
           _.every(elValidateRules[validateOnEvent], function(validateRule){
             if (_.isArray(validateRule))
             { return _.every(validateRule, function(validateRuleInArray){
-                return (validateRuleInArray.fn(el, (validateRuleInArray.msg || $(el).data("validateMsg") || "")));
+                vFn = validateRuleInArray.fn;
+                if (spa.is(vFn, 'string')) {
+                  vFn = spa.findSafe(window, vFn);
+                }
+                if (!spa.is(vFn, 'function')) {
+                  console.error('data-validate-function Not Found: '+validateRuleInArray.fn);
+                }
+                return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRuleInArray.msg || $(el).data("validateMsg") || ""))) : false;
               });
             }
             else
-            { return (validateRule.fn(el, (validateRule.msg || $(el).data("validateMsg") || "")));
+            { vFn = validateRule.fn;
+              if (spa.is(vFn, 'string')) {
+                vFn = spa.findSafe(window, vFn);
+              }
+              if (!spa.is(vFn, 'function')) {
+                console.error('data-validate-function Not Found: '+validateRule.fn);
+              }
+              return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRule.msg || $(el).data("validateMsg") || ""))) : false;
             }
           });
         });

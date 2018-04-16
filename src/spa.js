@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.36.1';
+  spa.VERSION = '2.37.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6343,17 +6343,7 @@ window['app']['api'] = window['app']['api'] || {};
                   spa.i18n.apply(viewContainerId);
 
                   /*apply data-validation*/
-                  if (spa.hasOwnProperty('initDataValidation')) {
-                    var $el, $elData;
-                    $(viewContainerId).find('[data-validate-form],[data-validate-scope]').each(function (i, el){
-                      $el = $(el); $elData = $el.data();
-                      //Disable form submit;
-                      if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
-                      //clear validate msg on focus
-                      if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
-                      spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
-                    });
-                  }
+                  _initFormValidation(viewContainerId);
 
                   /*init spaRoute*/
                   spa.initRoutes(viewContainerId);
@@ -6438,6 +6428,20 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.groupEnd("spaView");
     }
     return (retValue);
+  };
+
+  function _initFormValidation(container){
+    if (spa.hasOwnProperty('initDataValidation')) {
+      var $el, $elData;
+      $(container || 'body').find('[data-validate-form],[data-validate-scope]').each(function (i, el){
+        $el = $(el); $elData = $el.data();
+        //Disable form submit;
+        if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
+        //clear validate msg on focus
+        if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
+        spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
+      });
+    }
   };
 
   spa.hasAutoRoutes = function(routeHash, operator){
@@ -7327,6 +7331,9 @@ window['app']['api'] = window['app']['api'] || {};
 
     /*init i18nLang*/
     init_i18n_Lang();
+
+    /*init formValidation*/
+    _initFormValidation();
 
     /*Auto Render*/
     var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
