@@ -288,8 +288,8 @@ spa['_validate'] = {
                       errMsgTemplate = errMsgTemplate || spa['_validate']._validateAlertTemplate;
 
                       var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<'));
-
                       forObj = $($(forObj).data("validateMsgEl")||forObj).get(0);
+                      $(forObj).parent()[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
                       var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
                       var i18nSpec = "";
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
@@ -334,8 +334,9 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var splitValidateEvents = function(eObj) {
     eObj = eObj || {};
     _.each(_.keys(eObj), function(eNames){
-      if (eNames.indexOf("_")>0){
+      if ((eNames.indexOf("on")==0) && (eNames.indexOf("_")>0)){
         _.each(eNames.split("_"), function(eName){
+          if (eName.indexOf('on') < 0) eName = 'on'+eName;
           if (eObj[eName])
           { if (_.isArray(eObj[eName]))
             { eObj[eName].push(eObj[eNames]);
@@ -470,9 +471,8 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
               return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRule.msg || $(el).data("validateMsg") || ""))) : false;
             }
           });
-        });
+        }); //End of jQuery Event Registration
       }
-
     });
   });
 };
