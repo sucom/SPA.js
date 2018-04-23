@@ -3000,6 +3000,21 @@ window['app']['api'] = window['app']['api'] || {};
     });
   };
 
+  var keyPauseTimer;
+  function initKeyPauseEvent(scope){
+    $(scope || 'body').find('[onKeyPause]:not([onKeyPauseReg])').each(function(i, el){
+      $(el).attr('onKeyPauseReg', '').on('input propertychange paste', function(){
+        var targetEl = this,
+            timeDelay = ((''+targetEl.getAttribute('data-pause-time')).replace(/[^0-9]/g,'') || '1250')*1;
+        if (keyPauseTimer) clearTimeout(keyPauseTimer);
+        keyPauseTimer = setTimeout(function(){
+          var fnName = targetEl.getAttribute('onKeyPause').split('(')[0], fn2Call=spa.findSafe(window,fnName);
+          if (fn2Call) fn2Call.call(targetEl, targetEl);
+        }, timeDelay);
+      });
+    });
+  }
+
   spa.getDocObj = function (objId) {
     var jqSelector = ((typeof objId) == "object") ? objId : ((objId.beginsWithStr("#") ? "" : "#") + objId);
     return ( $(jqSelector).get(0) );
@@ -6339,6 +6354,9 @@ window['app']['api'] = window['app']['api'] || {};
                   /*init KeyTracking*/
                   spa.initKeyTracking();
 
+                  /*init KeyPauseEvent*/
+                  initKeyPauseEvent(viewContainerId);
+
                   /*apply i18n*/
                   spa.i18n.apply(viewContainerId);
 
@@ -7328,6 +7346,9 @@ window['app']['api'] = window['app']['api'] || {};
 
     /*Key Tracking*/
     spa.initKeyTracking();
+
+    /*init KeyPauseEvent*/
+    initKeyPauseEvent();
 
     /*init i18nLang*/
     init_i18n_Lang();
