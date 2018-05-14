@@ -5499,6 +5499,7 @@ window['app']['api'] = window['app']['api'] || {};
    ,dataUrl                   : ""    // External Data(JSON) URL | local:dataModelVariableName
    ,dataUrlMethod             : ""    // GET | POST; default:GET
    ,dataUrlErrorHandle        : ""    // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
+   ,dataUrlHeaders            : {}    // dataUrl Headers (NO EQUIVALENT data-attribute) plain Object
    ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
    ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
    ,dataCache                 : false // External Data(JSON) Cache
@@ -5618,6 +5619,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataUrlParams: {}
       , dataUrlMethod: "GET"
       , dataUrlErrorHandle: ""
+      , dataUrlHeaders: {}
       , dataParams: {}
       , dataExtra:{}
       , data_    :{}
@@ -5963,11 +5965,12 @@ window['app']['api'] = window['app']['api'] || {};
             $.ajax({
               url: dataModelUrl,
               method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
+              headers: spaRVOptions.dataUrlHeaders,
               data: spaRVOptions.dataParams,
               cache: spaRVOptions.dataCache,
               dataType: "text",
               success: function (result) {
-                var oResult = spa.toJSON(''+result, 'data'),
+                var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
                     validateData = _renderOption('dataValidate', 'validate');
 
                 if (dataModelName.indexOf(".") > 0) {
@@ -7244,6 +7247,23 @@ window['app']['api'] = window['app']['api'] || {};
   spa.ajaxPreProcess;
   spa.onReady;
 
+  function _isLiveApiUrl(apiUrl, liveApiUrls){
+    var retValue = '',
+        liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', '');
+    if (liveApiPrefix) {
+      if (liveApiPrefix.indexOf(',')) {
+        var liveApiPrefixLst = liveApiPrefix.split(','), i=0, len=liveApiPrefixLst.length, liveApiPrefixX;
+        while (!retValue && i<len) {
+          liveApiPrefixX = liveApiPrefixLst[i++].trim();
+          retValue = (liveApiPrefixX && apiUrl.beginsWithStr(liveApiPrefixX))? liveApiPrefixX : '';
+        }
+      } else {
+        retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : '';
+      }
+    }
+    return retValue;
+  }
+
   function _ajaxSetReqHeaders(req, options){
     var reqHeadersToSend = spa.findSafe(window, 'app.api.reqHeaders');
     if (is(reqHeadersToSend, 'function')) reqHeadersToSend = reqHeadersToSend(req, options);
@@ -7252,8 +7272,7 @@ window['app']['api'] = window['app']['api'] || {};
         req.setRequestHeader(reqHeadKey, reqHeadersToSend[reqHeadKey]);
       });
     } else if (is(reqHeadersToSend, 'string')) {
-      var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
-      if (liveApiPrefix && (options.url).beginsWithStr(liveApiPrefix)) {
+      if (_isLiveApiUrl(options.url)) {
         options['data'] = options['data'] || '';
         options['data'] += (spa.isBlank(options['data'])? '':'&') + reqHeadersToSend;
       } else {
@@ -7282,7 +7301,7 @@ window['app']['api'] = window['app']['api'] || {};
       options['error'] = spa.api.onReqError;
     }
 
-    var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
+    var liveApiPrefixStr = '';
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
         options.url = (spa.api.baseUrl||'') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
@@ -7291,17 +7310,19 @@ window['app']['api'] = window['app']['api'] || {};
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
         actualUrl = actualUrl.trimLeftStr('!');
-        if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
+        liveApiPrefixStr = _isLiveApiUrl(actualUrl);
+        if (liveApiPrefixStr) {
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
-          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp(liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
+          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp(liveApiPrefixStr), "api_/").replace(/\?/, reqMethod+"/data.json");
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
     } else {
-      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefix);
-      if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
+      liveApiPrefixStr = _isLiveApiUrl(actualUrl);
+      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefixStr);
+      if (liveApiPrefixStr) {
         options.url = (spa.api.baseUrl||'') + actualUrl + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
