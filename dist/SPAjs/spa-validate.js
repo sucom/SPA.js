@@ -31,7 +31,7 @@ spa['_validateDefaults'] = {
 
 spa['_validate'] = {
   _isOnOfflineValidation : false,
-  _validateAlertTemplate : '<div class="errortxt break-txt" data-i18n=""></div>',
+  _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
   _fn : {
       Required    : function _fnRequired(obj, msg) {
@@ -288,8 +288,8 @@ spa['_validate'] = {
                       errMsgTemplate = errMsgTemplate || spa['_validate']._validateAlertTemplate;
 
                       var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<'));
-
                       forObj = $($(forObj).data("validateMsgEl")||forObj).get(0);
+                      $(forObj).parent()[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
                       var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
                       var i18nSpec = "";
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
@@ -334,8 +334,9 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var splitValidateEvents = function(eObj) {
     eObj = eObj || {};
     _.each(_.keys(eObj), function(eNames){
-      if (eNames.indexOf("_")>0){
+      if ((eNames.indexOf("on")==0) && (eNames.indexOf("_")>0)){
         _.each(eNames.split("_"), function(eName){
+          if (eName.indexOf('on') < 0) eName = 'on'+eName;
           if (eObj[eName])
           { if (_.isArray(eObj[eName]))
             { eObj[eName].push(eObj[eNames]);
@@ -445,20 +446,33 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
       spa.console.log('registering an event: '+validateOnEvent);
       if (validateOnEvent.beginsWithStrIgnoreCase('on')) {
         $(el).on(jqEventName, function(){
-          var el = this;
+          var el = this, vFn;
           _.every(elValidateRules[validateOnEvent], function(validateRule){
             if (_.isArray(validateRule))
             { return _.every(validateRule, function(validateRuleInArray){
-                return (validateRuleInArray.fn(el, (validateRuleInArray.msg || $(el).data("validateMsg") || "")));
+                vFn = validateRuleInArray.fn;
+                if (spa.is(vFn, 'string')) {
+                  vFn = spa.findSafe(window, vFn);
+                }
+                if (!spa.is(vFn, 'function')) {
+                  console.error('data-validate-function Not Found: '+validateRuleInArray.fn);
+                }
+                return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRuleInArray.msg || $(el).data("validateMsg") || ""))) : false;
               });
             }
             else
-            { return (validateRule.fn(el, (validateRule.msg || $(el).data("validateMsg") || "")));
+            { vFn = validateRule.fn;
+              if (spa.is(vFn, 'string')) {
+                vFn = spa.findSafe(window, vFn);
+              }
+              if (!spa.is(vFn, 'function')) {
+                console.error('data-validate-function Not Found: '+validateRule.fn);
+              }
+              return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRule.msg || $(el).data("validateMsg") || ""))) : false;
             }
           });
-        });
+        }); //End of jQuery Event Registration
       }
-
     });
   });
 };

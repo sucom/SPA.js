@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.36.1';
+  spa.VERSION = '2.37.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2999,6 +2999,21 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.info(element);
     });
   };
+
+  var keyPauseTimer;
+  function initKeyPauseEvent(scope){
+    $(scope || 'body').find('[onKeyPause]:not([onKeyPauseReg])').each(function(i, el){
+      $(el).attr('onKeyPauseReg', '').on('input propertychange paste', function(){
+        var targetEl = this,
+            timeDelay = ((''+targetEl.getAttribute('data-pause-time')).replace(/[^0-9]/g,'') || '1250')*1;
+        if (keyPauseTimer) clearTimeout(keyPauseTimer);
+        keyPauseTimer = setTimeout(function(){
+          var fnName = targetEl.getAttribute('onKeyPause').split('(')[0], fn2Call=spa.findSafe(window,fnName);
+          if (fn2Call) fn2Call.call(targetEl, targetEl);
+        }, timeDelay);
+      });
+    });
+  }
 
   spa.getDocObj = function (objId) {
     var jqSelector = ((typeof objId) == "object") ? objId : ((objId.beginsWithStr("#") ? "" : "#") + objId);
@@ -5484,6 +5499,7 @@ window['app']['api'] = window['app']['api'] || {};
    ,dataUrl                   : ""    // External Data(JSON) URL | local:dataModelVariableName
    ,dataUrlMethod             : ""    // GET | POST; default:GET
    ,dataUrlErrorHandle        : ""    // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
+   ,dataUrlHeaders            : {}    // dataUrl Headers (NO EQUIVALENT data-attribute) plain Object
    ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
    ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
    ,dataCache                 : false // External Data(JSON) Cache
@@ -5603,6 +5619,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataUrlParams: {}
       , dataUrlMethod: "GET"
       , dataUrlErrorHandle: ""
+      , dataUrlHeaders: {}
       , dataParams: {}
       , dataExtra:{}
       , data_    :{}
@@ -5777,7 +5794,7 @@ window['app']['api'] = window['app']['api'] || {};
 
     var spaTemplateModelData = {};
     if (useParamData) {
-      spaTemplateModelData[viewDataModelName] = spaRVOptions.data;
+      spaTemplateModelData[viewDataModelName] = (spa.is(spaRVOptions.data, 'function'))? (spaRVOptions.data()) : (spaRVOptions.data);
       spa.console.info("Loaded data model [" + dataModelName + "] from argument");
     }
     else {
@@ -5948,11 +5965,12 @@ window['app']['api'] = window['app']['api'] || {};
             $.ajax({
               url: dataModelUrl,
               method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
+              headers: spaRVOptions.dataUrlHeaders,
               data: spaRVOptions.dataParams,
               cache: spaRVOptions.dataCache,
               dataType: "text",
               success: function (result) {
-                var oResult = spa.toJSON(''+result, 'data'),
+                var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
                     validateData = _renderOption('dataValidate', 'validate');
 
                 if (dataModelName.indexOf(".") > 0) {
@@ -6339,21 +6357,14 @@ window['app']['api'] = window['app']['api'] || {};
                   /*init KeyTracking*/
                   spa.initKeyTracking();
 
+                  /*init KeyPauseEvent*/
+                  initKeyPauseEvent(viewContainerId);
+
                   /*apply i18n*/
                   spa.i18n.apply(viewContainerId);
 
                   /*apply data-validation*/
-                  if (spa.hasOwnProperty('initDataValidation')) {
-                    var $el, $elData;
-                    $(viewContainerId).find('[data-validate-form],[data-validate-scope]').each(function (i, el){
-                      $el = $(el); $elData = $el.data();
-                      //Disable form submit;
-                      if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
-                      //clear validate msg on focus
-                      if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
-                      spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
-                    });
-                  }
+                  _initFormValidation(viewContainerId);
 
                   /*init spaRoute*/
                   spa.initRoutes(viewContainerId);
@@ -6438,6 +6449,20 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.groupEnd("spaView");
     }
     return (retValue);
+  };
+
+  function _initFormValidation(container){
+    if (spa.hasOwnProperty('initDataValidation')) {
+      var $el, $elData;
+      $(container || 'body').find('[data-validate-form],[data-validate-scope]').each(function (i, el){
+        $el = $(el); $elData = $el.data();
+        //Disable form submit;
+        if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
+        //clear validate msg on focus
+        if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
+        spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
+      });
+    }
   };
 
   spa.hasAutoRoutes = function(routeHash, operator){
@@ -7222,6 +7247,23 @@ window['app']['api'] = window['app']['api'] || {};
   spa.ajaxPreProcess;
   spa.onReady;
 
+  function _isLiveApiUrl(apiUrl, liveApiUrls){
+    var retValue = '',
+        liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', '');
+    if (liveApiPrefix) {
+      if (liveApiPrefix.indexOf(',')>0) {
+        var liveApiPrefixLst = liveApiPrefix.split(','), i=0, len=liveApiPrefixLst.length, liveApiPrefixX;
+        while (!retValue && i<len) {
+          liveApiPrefixX = liveApiPrefixLst[i++].trim();
+          retValue = (liveApiPrefixX && apiUrl.beginsWithStr(liveApiPrefixX))? liveApiPrefixX : '';
+        }
+      } else {
+        retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : '';
+      }
+    }
+    return retValue;
+  }
+
   function _ajaxSetReqHeaders(req, options){
     var reqHeadersToSend = spa.findSafe(window, 'app.api.reqHeaders');
     if (is(reqHeadersToSend, 'function')) reqHeadersToSend = reqHeadersToSend(req, options);
@@ -7230,8 +7272,7 @@ window['app']['api'] = window['app']['api'] || {};
         req.setRequestHeader(reqHeadKey, reqHeadersToSend[reqHeadKey]);
       });
     } else if (is(reqHeadersToSend, 'string')) {
-      var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
-      if (liveApiPrefix && (options.url).beginsWithStr(liveApiPrefix)) {
+      if (_isLiveApiUrl(options.url)) {
         options['data'] = options['data'] || '';
         options['data'] += (spa.isBlank(options['data'])? '':'&') + reqHeadersToSend;
       } else {
@@ -7260,7 +7301,7 @@ window['app']['api'] = window['app']['api'] || {};
       options['error'] = spa.api.onReqError;
     }
 
-    var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix', '');
+    var liveApiPrefixStr = '';
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
         options.url = (spa.api.baseUrl||'') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
@@ -7269,17 +7310,19 @@ window['app']['api'] = window['app']['api'] || {};
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
         actualUrl = actualUrl.trimLeftStr('!');
-        if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
+        liveApiPrefixStr = _isLiveApiUrl(actualUrl);
+        if (liveApiPrefixStr) {
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
-          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp(liveApiPrefix), "api_/").replace(/\?/, reqMethod+"/data.json");
+          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp(liveApiPrefixStr), "api_/").replace(/\?/, reqMethod+"/data.json");
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
     } else {
-      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefix);
-      if (liveApiPrefix && actualUrl.beginsWithStr(liveApiPrefix)) {
+      liveApiPrefixStr = _isLiveApiUrl(actualUrl);
+      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefixStr);
+      if (liveApiPrefixStr) {
         options.url = (spa.api.baseUrl||'') + actualUrl + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
@@ -7325,8 +7368,14 @@ window['app']['api'] = window['app']['api'] || {};
     /*Key Tracking*/
     spa.initKeyTracking();
 
+    /*init KeyPauseEvent*/
+    initKeyPauseEvent();
+
     /*init i18nLang*/
     init_i18n_Lang();
+
+    /*init formValidation*/
+    _initFormValidation();
 
     /*Auto Render*/
     var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
