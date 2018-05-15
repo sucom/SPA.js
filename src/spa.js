@@ -5794,7 +5794,7 @@ window['app']['api'] = window['app']['api'] || {};
 
     var spaTemplateModelData = {};
     if (useParamData) {
-      spaTemplateModelData[viewDataModelName] = spaRVOptions.data;
+      spaTemplateModelData[viewDataModelName] = (spa.is(spaRVOptions.data, 'function'))? (spaRVOptions.data()) : (spaRVOptions.data);
       spa.console.info("Loaded data model [" + dataModelName + "] from argument");
     }
     else {
@@ -7251,7 +7251,7 @@ window['app']['api'] = window['app']['api'] || {};
     var retValue = '',
         liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', '');
     if (liveApiPrefix) {
-      if (liveApiPrefix.indexOf(',')) {
+      if (liveApiPrefix.indexOf(',')>0) {
         var liveApiPrefixLst = liveApiPrefix.split(','), i=0, len=liveApiPrefixLst.length, liveApiPrefixX;
         while (!retValue && i<len) {
           liveApiPrefixX = liveApiPrefixLst[i++].trim();
