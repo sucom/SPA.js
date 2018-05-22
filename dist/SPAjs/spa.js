@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.37.0';
+  spa.VERSION = '2.37.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5494,16 +5494,17 @@ window['app']['api'] = window['app']['api'] || {};
    * OR
    *
    uOption = {
-   data                      : {}    // Data(JSON Object) to be used in templates; for html data-attribute see dataUrl
+   data                       : {}      // Data(JSON Object) to be used in templates; for html data-attribute see dataUrl
 
-   ,dataUrl                   : ""    // External Data(JSON) URL | local:dataModelVariableName
-   ,dataUrlMethod             : ""    // GET | POST; default:GET
-   ,dataUrlErrorHandle        : ""    // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
-   ,dataUrlHeaders            : {}    // dataUrl Headers (NO EQUIVALENT data-attribute) plain Object
-   ,dataParams                : {}    // dataUrl Params (NO EQUIVALENT data-attribute)
-   ,dataModel                 : ""    // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
-   ,dataCache                 : false // External Data(JSON) Cache
-   ,dataValidate              : false // Validate Data before Rendering; boolean or function
+   ,dataUrl                   : ""     // External Data(JSON) URL | local:dataModelVariableName
+   ,dataUrlMethod             : ""     // GET | POST; default:GET
+   ,dataUrlErrorHandle        : ""     // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
+   ,dataUrlHeaders            : {}     // dataUrl Headers (NO EQUIVALENT data-attribute) plain Object
+   ,dataParams                : {}     // dataUrl Params (NO EQUIVALENT data-attribute)
+   ,dataType                  : ""     // dataType text | json
+   ,dataModel                 : ""     // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
+   ,dataCache                 : false  // External Data(JSON) Cache
+   ,dataValidate              : false  // Validate Data before Rendering; boolean or function
    ,dataProcess               : function or Function name in String
 
    ,dataCollection            : {}    // { urls: [ {
@@ -5511,6 +5512,7 @@ window['app']['api'] = window['app']['api'] || {};
    //            , url      : 'string:path-to-data-api'
    //            , urlParams: object: {paramKey1: paramValue1, paramKey2: paramValue2} ==> will replace in url: path-to-api/{paramKey1}/{paramKey2}
    //            , method   : 'string:GET | POST'; default:GET
+   //            , type     : 'string: text | json'; default:text
    //            , params   : object:ajax-pay-load
    //            , cache    : boolean:true|false; default:false
    //            , target   : 'string:data-key-in-api-result-json'
@@ -5621,6 +5623,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataUrlErrorHandle: ""
       , dataUrlHeaders: {}
       , dataParams: {}
+      , dataType: ""
       , dataExtra:{}
       , data_    :{}
       , dataDefaults:{}
@@ -5849,17 +5852,23 @@ window['app']['api'] = window['app']['api'] || {};
                 if (_.has(dataApi, 'urlParams')) {
                   apiDataUrl = spa.api.url(apiDataUrl, dataApi['urlParams']);
                 };
+
+                var dataAjaxReqHeaders = _.has(dataApi, 'headers')? dataApi.headers : spaRVOptions['dataUrlHeaders'];
+                if (spa.isBlank(dataAjaxReqHeaders)) {
+                  dataAjaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+                }
                 spaAjaxRequestsQue.push(
                   $.ajax({
                     url: apiDataUrl,
                     method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
+                    headers: dataAjaxReqHeaders,
                     data: _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {}),
                     cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
-                    dataType: "text",
+                    dataType: _.has(dataApi, 'type') ? dataApi.type : (spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text')),
                     success: function (result, textStatus, jqXHR) {
                       var targetApiData
                         , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
-                        , oResult = spa.toJSON(''+result, 'data');
+                        , oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result;
 
                       if (targetDataModelName.indexOf(".") > 0) {
                         targetApiData = spa.hasKey(oResult, targetDataModelName) ? spa.find(oResult, targetDataModelName) : oResult;
@@ -5961,14 +5970,18 @@ window['app']['api'] = window['app']['api'] || {};
             dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
           }
           spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
+          var ajaxReqHeaders = spaRVOptions.dataUrlHeaders;
+          if (spa.isBlank(ajaxReqHeaders)) {
+            ajaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+          }
           spaAjaxRequestsQue.push(
             $.ajax({
               url: dataModelUrl,
               method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
-              headers: spaRVOptions.dataUrlHeaders,
+              headers: ajaxReqHeaders,
               data: spaRVOptions.dataParams,
               cache: spaRVOptions.dataCache,
-              dataType: "text",
+              dataType: spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text'),
               success: function (result) {
                 var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
                     validateData = _renderOption('dataValidate', 'validate');
@@ -7281,6 +7294,12 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
 
+  function _isRelativePath(url) {
+    var urlBeginStr = url.getLeftStr(6).toLowerCase(),
+        isFullPath = (urlBeginStr.beginsWithStr('http:') || urlBeginStr.beginsWithStr('https:') || urlBeginStr.beginsWithStr('//'));
+    return !isFullPath;
+  }
+
   function _ajaxPrefilter(options, orgOptions, jqXHR){
 
     if ((options.url).beginsWithStr(spa.api.urlKeyIndicator)) {
@@ -7304,7 +7323,7 @@ window['app']['api'] = window['app']['api'] || {};
     var liveApiPrefixStr = '';
     if (spa.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
-        options.url = (spa.api.baseUrl||'') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
+        options.url = (_isRelativePath(actualUrl.trimLeftStr('~'))? (spa.api.baseUrl||'') : '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       } else {
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
@@ -7323,7 +7342,7 @@ window['app']['api'] = window['app']['api'] || {};
       liveApiPrefixStr = _isLiveApiUrl(actualUrl);
       if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefixStr);
       if (liveApiPrefixStr) {
-        options.url = (spa.api.baseUrl||'') + actualUrl + (spa.api.liveUrlSuffix||'');
+        options.url = (_isRelativePath(actualUrl)? (spa.api.baseUrl||'') : '') + actualUrl + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
     };
