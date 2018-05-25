@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.37.1';
+  spa.VERSION = '2.38.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2773,7 +2773,14 @@ window['app']['api'] = window['app']['api'] || {};
         thisStr = '{'+key4PrimaryDataTypes+':'+thisStr+'}';
       }
     }
-    return (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
+    var jsonObj = {};
+    try {
+      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
+    } catch(e){
+      console.warn('Error JSON Parse: Invalid String >> "'+str+'"');
+      console.error(e);
+    }
+    return jsonObj;
   };
   String.prototype.toJSON = function () {
     return spa.toJSON(''+this);

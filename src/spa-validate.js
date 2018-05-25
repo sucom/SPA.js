@@ -444,7 +444,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
       }
 
       spa.console.log('registering an event: '+validateOnEvent);
-      if (validateOnEvent.beginsWithStrIgnoreCase('on')) {
+      if (validateOnEvent.beginsWithStrIgnoreCase('on') && !('test'.equalsIgnoreCase(jqEventName)) ) {
         $(el).on(jqEventName, function(){
           var el = this, vFn;
           _.every(elValidateRules[validateOnEvent], function(validateRule){
