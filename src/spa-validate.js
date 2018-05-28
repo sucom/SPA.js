@@ -362,7 +362,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   spa.console.log(_.keys(commonValidateRules));
 
   var addRule2El, addRule2ElDir, overrideOfflineRule2El, elOfflineRule, commonRule2El;
-  var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/[^a-zA-Z0-9]/g,'');
+  var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/onRender/i,'').replace(/[^a-zA-Z0-9]/g,'');
   if (spa.isBlank(offlineValidationKey)) {
     var contextName = context.replace(/[^a-zA-Z0-9]/g,'');
     if (!spa['_validate']._offlineValidationRules.hasOwnProperty(contextName)) {
@@ -430,16 +430,22 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
       if (!_.isArray(elValidateRules[validateOnEvent])){
         elValidateRules[validateOnEvent] = [elValidateRules[validateOnEvent]];
       }
+      spa.console.log(elValidateRules);
 
       if (prepareOfflineValidationRules)
-      { _.each(elValidateRules[validateOnEvent], function(elValidateRule4Event){
-          if (elValidateRule4Event.offline) {
-            var newRule = {fn:elValidateRule4Event.fn, msg:elValidateRule4Event.msg};
-            if (!spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID]) spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID] = [];
-            if (_.indexOf(spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID], newRule)<0) {
-              spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID].push(newRule);
-            }
+      { _.each(elValidateRules[validateOnEvent], function(elValidateRule4Events){
+          if (!(spa.is(elValidateRule4Events, 'array'))) {
+            elValidateRule4Events = [elValidateRule4Events];
           }
+          _.each(elValidateRule4Events, function(elValidateRule4Event){
+            if (elValidateRule4Event.offline) {
+              var newRule = {fn:elValidateRule4Event.fn, msg:elValidateRule4Event.msg};
+              if (!spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID]) spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID] = [];
+              if (_.indexOf(spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID], newRule)<0) {
+                spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID].push(newRule);
+              }
+            }
+          });
         });
       }
 
@@ -477,7 +483,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   });
 };
 
-spa['validate'] = spa['doDataValidation'] = function(context, showMsg){
+spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg){
   var rulesScopeID     = (context.replace(/[^a-zA-Z0-9]/g,''))
     , validationScope  = "#"+(context.replace(/#/g, ""))
     , $validationScope = $(validationScope)
@@ -487,15 +493,22 @@ spa['validate'] = spa['doDataValidation'] = function(context, showMsg){
   { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
 
     var applyRules = function(elID){
-      var $el = $validationScope.find("#"+elID);
+      var $el = $validationScope.find("#"+elID), vFn;
       //var ignValidation = spa.toBoolean($el.data("ignoreValidationIfInvisible"));
       //var isVisible = $el.is(":visible");
       //if ($el.prop("type") && $el.prop("type").equalsIgnoreCase("hidden")) debugger;
       var retValue = (spa.toBoolean($el.data("ignoreValidationIfInvisible")) && !($el.is(":visible")));
       if (!retValue)
       { retValue = _.every(vRules[elID], function(vRule){
-          var fnResponse = vRule.fn($el, vRule.msg);
-          if (!fnResponse) { failedInfo = {errcode:2, el:$el, fn:vRule.fn, msg:vRule.msg}; }
+          vFn = vRule.fn;
+          if (spa.is(vFn, 'string')) {
+            vFn = spa.findSafe(window, vFn);
+          }
+          if (!spa.is(vFn, 'function')) {
+            console.error('data-validate-function Not Found: '+vRule.fn);
+          }
+          var fnResponse = (spa.is(vFn, 'function'))? (vFn.call($el, $el, (vRule.msg || $el.data("validateMsg") || ""))) : false;
+          if (!fnResponse) { failedInfo = {errcode:2, el:$el, fn:vRule.fn, msg:(vRule.msg || $el.data("validateMsg") || "")}; }
           return fnResponse;
         });
       }

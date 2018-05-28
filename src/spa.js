@@ -4606,12 +4606,16 @@ window['app']['api'] = window['app']['api'] || {};
     });
 
     function updateTrackForm($elForm){
-      var changedElcount = $elForm.find('.tracking-change.changed').length;
+      var changedElcount = $elForm.find('.tracking-change.changed').length,
+          enableCtrlEls = changedElcount>0;
+      if (enableCtrlEls && $elForm.is('[data-validate-form]') && $elForm.has('.validation-error').length) {
+        enableCtrlEls = false;
+      }
       $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
              .find('.ctrl-on-change')
-             .prop('disabled',!changedElcount)
-             .addClass(changedElcount?'':'disabled')
-             .removeClass(changedElcount?'disabled':'');
+             .prop('disabled',!enableCtrlEls)
+             .addClass(enableCtrlEls?'':'disabled')
+             .removeClass(enableCtrlEls?'disabled':'');
     }
 
     function eTrackChange(e){
@@ -6480,7 +6484,13 @@ window['app']['api'] = window['app']['api'] || {};
         if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
         //clear validate msg on focus
         if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
-        spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/#/g,'')) || el.id));
+        spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || el.id));
+        if (!$el.hasClass('track-changes') && $el.has('.ctrl-on-change').length) {
+          spa.trackFormElChange(el);
+        }
+        if ('onRender'.equalsIgnoreCase($elData['validateForm'])) {
+          spa.validate('#'+el.id, true);
+        }
       });
     }
   };
