@@ -289,7 +289,10 @@ spa['_validate'] = {
 
                       var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<'));
                       forObj = $($(forObj).data("validateMsgEl")||forObj).get(0);
-                      $(forObj).parent()[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
+                      var $forObj = $(forObj),
+                          errClassTargetSelector = $forObj.data('errorClassTarget'),
+                          $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObj.parent();
+                      $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
                       var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
                       var i18nSpec = "";
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
