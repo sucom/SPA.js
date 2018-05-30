@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.38.1';
+  spa.VERSION = '2.39.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4594,6 +4594,20 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
+  spa.updateTrackFormCtrls = function(elForm){
+    if (elForm) {
+      var $elForm = $(elForm),
+          changedElcount = $elForm.find('.tracking-change.changed').length,
+          validationErrCount = $elForm.find('.validation-error').length,
+          enableCtrlEls = (changedElcount>0 && validationErrCount==0);
+      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
+             .find('.ctrl-on-change')
+             .prop('disabled',!enableCtrlEls)
+             .addClass(enableCtrlEls?'':'disabled')
+             .removeClass(enableCtrlEls?'disabled':'');
+    }
+  };
+
   spa.trackFormElChange = function _trackFormElChange(elSelector, scope){
     var $elementsToTrack = $(scope||'body').find(elSelector);
 
@@ -4604,19 +4618,6 @@ window['app']['api'] = window['app']['api'] || {};
         elTrackChange(el);
       }
     });
-
-    function updateTrackForm($elForm){
-      var changedElcount = $elForm.find('.tracking-change.changed').length,
-          enableCtrlEls = changedElcount>0;
-      if (enableCtrlEls && $elForm.is('[data-validate-form]') && $elForm.has('.validation-error').length) {
-        enableCtrlEls = false;
-      }
-      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
-             .find('.ctrl-on-change')
-             .prop('disabled',!enableCtrlEls)
-             .addClass(enableCtrlEls?'':'disabled')
-             .removeClass(enableCtrlEls?'disabled':'');
-    }
 
     function eTrackChange(e){
       if ((e['type'] == 'change') || (e['key'] && (e.key.length == 1 || '~BackspaceDelete'.indexOf(e.key)>0))) {
@@ -4641,7 +4642,7 @@ window['app']['api'] = window['app']['api'] || {};
           if (isChanged && !this.multiple) isChanged = (def != this.selectedIndex);
         }
         $(this)[isChanged? 'addClass' : 'removeClass']('changed');
-        updateTrackForm($thisForm);
+        spa.updateTrackFormCtrls($thisForm);
         if (prvChgCount!=newChgCount && triggerFormChange) $thisForm.trigger('change');
       }
     }
@@ -4664,7 +4665,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
 
       $el.removeClass('track-change changed');
-      updateTrackForm($el.closest('form'));
+      spa.updateTrackFormCtrls($el.closest('form'));
 
       if (el.className.indexOf('tracking-change') < 0) {
         $el.addClass('tracking-change').on(trackEvents, eTrackChange);
@@ -6478,10 +6479,17 @@ window['app']['api'] = window['app']['api'] || {};
   function _initFormValidation(container){
     if (spa.hasOwnProperty('initDataValidation')) {
       var $el, $elData;
-      $(container || 'body').find('[data-validate-form],[data-validate-scope]').each(function (i, el){
+      $(container || 'body').find('[data-validate-form],[data-validate-scope]').filter(':not([data-validation-initialized])').each(function (i, el){
         $el = $(el); $elData = $el.data();
+        $el.attr('data-validation-initialized', '');
+
         //Disable form submit;
         if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
+
+        $el.on('change', function(){
+          spa.updateTrackFormCtrls(this);
+        });
+
         //clear validate msg on focus
         if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
         spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || el.id));
@@ -6491,6 +6499,7 @@ window['app']['api'] = window['app']['api'] || {};
         if ('onRender'.equalsIgnoreCase($elData['validateForm'])) {
           spa.validate('#'+el.id, true);
         }
+
       });
     }
   };
