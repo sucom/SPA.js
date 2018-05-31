@@ -568,11 +568,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   });
 };
 
-spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg){
+spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, validateAll){
   var rulesScopeID     = (context.replace(/[^a-zA-Z0-9]/g,''))
     , validationScope  = "#"+(context.replace(/#/g, ""))
     , $validationScope = $(validationScope)
-    , failedInfo={}, isAllOk;
+    , failedInfo=[], isAllOk;
 
   if (spa['_validate']._offlineValidationRules[rulesScopeID])
   { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
@@ -594,7 +594,10 @@ spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(conte
           }
           errMsg = (vRule.msg || $el.data("validateMsg") || "");
           var fnResponse = spa['_validate']._showValidateMsg($el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call($el, $el, errMsg)) : false));
-          if (!fnResponse) { failedInfo = {errcode:2, el:$el, fn:vRule.fn, msg:errMsg}; }
+          if (!fnResponse) {
+            var errObj = {errcode:2, el:$el, fn:vRule.fn, msg:errMsg};
+            failedInfo.push(errObj);
+          }
           return fnResponse;
         });
       }
@@ -607,7 +610,7 @@ spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(conte
     else
     { spa['_validate']._isOnOfflineValidation = !showMsg;
       isAllOk = _.every(_.keys(vRules), function(elID){
-        return (applyRules(elID));
+        return (applyRules(elID) || validateAll);
       });
       spa['_validate']._isOnOfflineValidation = false;
     }
@@ -617,4 +620,8 @@ spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(conte
   }
 
   return(failedInfo);
+};
+
+spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
+  spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
 };

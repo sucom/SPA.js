@@ -6478,9 +6478,11 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _initFormValidation(container){
     if (spa.hasOwnProperty('initDataValidation')) {
-      var $el, $elData;
+      var $el, $elData, hasCtrlElements;
       $(container || 'body').find('[data-validate-form],[data-validate-scope]').filter(':not([data-validation-initialized])').each(function (i, el){
-        $el = $(el); $elData = $el.data();
+        $el = $(el);
+        $elData = $el.data();
+        hasCtrlElements = $el.has('.ctrl-on-change').length;
         $el.attr('data-validation-initialized', '');
 
         //Disable form submit;
@@ -6493,13 +6495,14 @@ window['app']['api'] = window['app']['api'] || {};
         //clear validate msg on focus
         if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
         spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || el.id));
-        if (!$el.hasClass('track-changes') && $el.has('.ctrl-on-change').length) {
+        if (!$el.hasClass('track-changes') && hasCtrlElements) {
           spa.trackFormElChange(el);
         }
         if ('onRender'.equalsIgnoreCase($elData['validateForm'])) {
-          spa.validate('#'+el.id, true);
+          spa.validateForm('#'+el.id, true, true);
+        } else if (hasCtrlElements) {
+          spa.validateForm('#'+el.id, false, true);
         }
-
       });
     }
   };
