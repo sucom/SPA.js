@@ -359,7 +359,7 @@ spa['_validate'] = {
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
   }
-  , _showValidateMsg : function __showValidateMsg(forObj, msg, isValid, errMsgTemplate) {
+  , _showValidateMsg : function __showValidateMsg(forObj, msg, isValid, errMsgTemplate, skipCtrlUpdate) {
                       msg = msg || "";
                       if ((arguments.length>2) && _.isString(isValid)) { errMsgTemplate = isValid; }
                       if ((arguments.length>2) && _.isBoolean(isValid) && (isValid)) { msg = ""; }
@@ -372,7 +372,7 @@ spa['_validate'] = {
                           $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObj.parent();
                       if (!spa['_validate']._isOnOfflineValidation) {
                         $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
-                        spa.updateTrackFormCtrls(forObj['form']);
+                        if (!skipCtrlUpdate) spa.updateTrackFormCtrls(forObj['form']);
                       }
 
                       var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
@@ -595,7 +595,7 @@ spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, valid
             console.error('data-validate-function Not Found: '+vRule.fn);
           }
           errMsg = (vRule.msg || $el.data("validateMsg") || "");
-          var fnResponse = spa['_validate']._showValidateMsg($el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call($el, $el, errMsg)) : false));
+          var fnResponse = spa['_validate']._showValidateMsg($el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call($el, $el, errMsg)) : false), '', true);
           if (!fnResponse) {
             var errObj = {errcode:2, el:$el, fn:vRule.fn, msg:errMsg};
             failedInfo.push(errObj);
