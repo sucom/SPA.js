@@ -370,8 +370,10 @@ spa['_validate'] = {
                       var $forObj = $(forObj),
                           errClassTargetSelector = $forObj.data('errorClassTarget'),
                           $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObj.parent();
-                      $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
-                      spa.updateTrackFormCtrls(forObj['form']);
+                      if (!spa['_validate']._isOnOfflineValidation) {
+                        $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
+                        spa.updateTrackFormCtrls(forObj['form']);
+                      }
 
                       var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
                       var i18nSpec = "";

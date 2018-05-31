@@ -4598,8 +4598,8 @@ window['app']['api'] = window['app']['api'] || {};
     if (elForm) {
       var $elForm = $(elForm),
           changedElcount = $elForm.find('.tracking-change.changed').length,
-          validationErrCount = $elForm.find('.validation-error').length,
-          enableCtrlEls = (changedElcount>0 && validationErrCount==0);
+          validationErrFound = !spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))),
+          enableCtrlEls = (changedElcount>0 && !validationErrFound);
       $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
              .find('.ctrl-on-change')
              .prop('disabled',!enableCtrlEls)
@@ -6500,8 +6500,6 @@ window['app']['api'] = window['app']['api'] || {};
         }
         if ('onRender'.equalsIgnoreCase($elData['validateForm'])) {
           spa.validateForm('#'+el.id, true, true);
-        } else if (hasCtrlElements) {
-          spa.validateForm('#'+el.id, false, true);
         }
       });
     }
