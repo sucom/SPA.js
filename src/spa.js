@@ -7386,6 +7386,51 @@ window['app']['api'] = window['app']['api'] || {};
     if (app['debug'] || spa['debug']) console.log('ajax Options', options);
   }
 
+  /* Pub/Sub */
+  var _PubSubQue = {};
+  var _PubSub = {
+    pub: function(eventName, data){
+      var subCount=0;
+      _.each(_PubSubQue[eventName], function(fn2Call){
+        try{
+          if (fn2Call) {
+            fn2Call.call(data||{}, eventName, data);
+            subCount++;
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      });
+      return subCount;
+    },
+
+    sub: function(eventName, fnCallback){
+      if (!_PubSubQue.hasOwnProperty(eventName)) {
+        _PubSubQue[eventName] = [];
+      }
+      _PubSubQue[eventName].push(fnCallback);
+      return _PubSubQue[eventName].length;
+    },
+
+    unSub: function(eventName, subId){
+      var retValue = false;
+      if (_PubSubQue.hasOwnProperty(eventName)) {
+        retValue = true;
+        if (subId) {
+          _PubSubQue[eventName][subId-1] = null;
+        } else {
+          _PubSubQue[eventName] = [];
+        }
+      }
+      return retValue;
+    }
+  };
+  spa.event = {
+    on: _PubSub.sub,
+    off: _PubSub.unSub,
+    trigger: _PubSub.pub
+  };
+
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
