@@ -28,6 +28,7 @@ spa['_validateDefaults'] = {
   , phoneUS     : 'PhoneUS'
   , wordsize    : 'WordSize'
   , compare     : 'Compare'
+  , promise     : 'Promise'
 };
 
 spa['_validate'] = {
@@ -35,7 +36,16 @@ spa['_validate'] = {
   _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
   _fn : {
-      Required    : function _fnRequired(obj, msg) {
+      Promise     : function _fnPromise(forObj){
+                      if (!spa['_validate']._isOnOfflineValidation) {
+                        var $forObj = $(forObj), vRules = $forObj.data('validate')||'';
+                        if (/(promise)(\s)*:(\s)*(\'|\")/.test(vRules)) {
+                          spa['_validate']._addValidationClass($forObj, 'validation-pending');
+                        }
+                      }
+                      return true;
+                    }
+    , Required    : function _fnRequired(obj, msg) {
                       var elValue = spa.getElValue(obj);
                       return !(spa.isBlank(elValue));
                       //return spa['_validate']._showValidateMsg(obj, msg, !(spa.isBlank(elValue)));
@@ -396,6 +406,35 @@ spa['_validate'] = {
                       }
                       return isValid;
                     }
+
+  , _getValidationClassTarget: function(forObj){
+      var $forObj = $(forObj),
+          vClassTargetSelector = $forObj.data('errorClassTarget');
+      return ((vClassTargetSelector)? $forObj.closest(vClassTargetSelector) : $forObj.parent());
+    }
+  , _addValidationClass: function(forObj, className){
+      spa['_validate']._getValidationClassTarget(forObj).addClass(className);
+    }
+  , _removeValidationClass: function(forObj, className){
+      spa['_validate']._getValidationClassTarget(forObj).removeClass(className);
+    }
+  , _deferValidate: function(){ return true; }
+  , _registerPromise: function(promiseName, forObj, vFn, errMsg){
+      var deferValidate = !spa.isBlank(promiseName);
+      if (deferValidate) {
+        var $forObj  = $(forObj),
+            promises = $forObj.data('promises')||'',
+            isNewPromise = (promises.indexOf('['+promiseName+']')<0);
+        if (isNewPromise) {
+          spa.console.log('validating promise: '+promiseName);
+          promises += '['+promiseName+']';
+          $forObj.attr('data-promises', promises).data('promises', promises);
+          spa['_validate']._addValidationClass($forObj, 'validation-pending');
+          if (spa.is(vFn, 'function')) vFn.call($forObj, $forObj, errMsg, promiseName);
+        }
+      }
+      return deferValidate;
+    }
   , expose: function(exposeTo){
     exposeTo = exposeTo || {};
     Object.keys(spa['_validateDefaults']).forEach(function(key){
@@ -443,8 +482,20 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var $context = $(context);
   var elSelector = $context.data("validateElFilter") || "";
   var commonValidateRules = splitValidateEvents(spa.toJSON($context.data("validateCommon")||"{}"));
-  spa.console.log('keys Of commonValidateRules');
-  spa.console.log(_.keys(commonValidateRules));
+  var commonOnFocusRules = _.merge({},commonValidateRules['onFocus']);
+
+  spa.console.log('commonValidateRules');
+  var promiseCheckRule = {fn:_check.promise};
+  if (spa.isBlank(commonOnFocusRules)){
+    commonValidateRules['onFocus'] = promiseCheckRule;
+  } else {
+    if (!spa.is(commonOnFocusRules,'array')){
+      commonOnFocusRules = [commonOnFocusRules];
+    }
+    commonOnFocusRules.push(promiseCheckRule);
+  }
+  commonValidateRules['onFocus'] = commonOnFocusRules;
+  spa.console.log(commonValidateRules);
 
   var addRule2El, addRule2ElDir, overrideOfflineRule2El, elOfflineRule, commonRule2El;
   var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/onRender/i,'').replace(/[^a-zA-Z0-9]/g,'');
@@ -523,7 +574,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
             elValidateRule4Events = [elValidateRule4Events];
           }
           _.each(elValidateRule4Events, function(elValidateRule4Event){
-            if (elValidateRule4Event.offline) {
+            if (elValidateRule4Event.offline && !elValidateRule4Event['promise']) {
               var newRule = {fn:elValidateRule4Event.fn, msg:elValidateRule4Event.msg};
               if (!spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID]) spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID] = [];
               if (_.indexOf(spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID], newRule)<0) {
@@ -549,6 +600,9 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
                   console.error('data-validate-function Not Found: '+validateRuleInArray.fn);
                 }
                 errMsg = (validateRuleInArray.msg || $(el).data("validateMsg") || "");
+                if (spa['_validate']._registerPromise(validateRuleInArray['promise'], el, vFn, errMsg)) {
+                  vFn = spa['_validate']._deferValidate;
+                }
                 return spa['_validate']._showValidateMsg(el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false));
               });
             }
@@ -561,6 +615,9 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
                 console.error('data-validate-function Not Found: '+validateRule.fn);
               }
               errMsg = (validateRule.msg || $(el).data("validateMsg") || "");
+              if (spa['_validate']._registerPromise(validateRule['promise'], el, vFn, errMsg)){
+                vFn = spa['_validate']._deferValidate;
+              }
               return spa['_validate']._showValidateMsg(el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false));
             }
           });
@@ -625,5 +682,14 @@ spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, valid
 };
 
 spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
+  spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
+};
+spa['updateValidationPromise'] = function(promiseName, forObj, msg, isValid, errMsgTemplate){
+  var $forObj = $(forObj), promises = $forObj.data('promises')||'';
+  promises = promises.replace('['+promiseName+']','');
+  $forObj.attr('data-promises', promises).data('promises', promises);
+  if (spa.isBlank(promises)) {
+    spa['_validate']._removeValidationClass($forObj, 'validation-pending');
+  }
   spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
 };

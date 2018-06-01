@@ -4598,13 +4598,17 @@ window['app']['api'] = window['app']['api'] || {};
     if (elForm) {
       var $elForm = $(elForm),
           changedElcount = $elForm.find('.tracking-change.changed').length,
-          validationErrFound = !spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))),
-          enableCtrlEls = (changedElcount>0 && !validationErrFound);
-      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
-             .find('.ctrl-on-change')
-             .prop('disabled',!enableCtrlEls)
-             .addClass(enableCtrlEls?'':'disabled')
-             .removeClass(enableCtrlEls?'disabled':'');
+          validationErrFound = (!spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
+          enableCtrlEls = (changedElcount>0 && !validationErrFound),
+          $ctrlElements = $elForm.find('.ctrl-on-change'), $ctrlEl;
+      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount);
+      $ctrlElements.each(function(i, el){
+        $ctrlEl = $(el);
+        if ($ctrlEl.is(':disabled') == enableCtrlEls) {
+          $ctrlEl.prop('disabled',!enableCtrlEls).addClass(enableCtrlEls?'':'disabled').removeClass(enableCtrlEls?'disabled':'');
+          $ctrlEl.trigger('change');
+        }
+      });
     }
   };
 

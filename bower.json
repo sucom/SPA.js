@@ -1,4 +1,4 @@
-{
+ {
   "name": "spa.js",
   "description": "Single Page Application (SPA) Simplified Framework/Library",
   "main": "dist/spa-bundle.js",
