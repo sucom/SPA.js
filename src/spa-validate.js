@@ -27,6 +27,8 @@ spa['_validateDefaults'] = {
   , subnetmask  : 'Subnet'
   , phoneUS     : 'PhoneUS'
   , wordsize    : 'WordSize'
+  , compare     : 'Compare'
+  , promise     : 'Promise'
 };
 
 spa['_validate'] = {
@@ -34,34 +36,49 @@ spa['_validate'] = {
   _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
   _fn : {
-      Required    : function _fnRequired(obj, msg) {
+      Promise     : function _fnPromise(forObj){
+                      if (!spa['_validate']._isOnOfflineValidation) {
+                        var $forObj = $(forObj), vRules = $forObj.data('validate')||'';
+                        if (/(promise)(\s)*:(\s)*(\'|\")/.test(vRules)) {
+                          spa['_validate']._addValidationClass($forObj, 'validation-pending');
+                        }
+                      }
+                      return true;
+                    }
+    , Required    : function _fnRequired(obj, msg) {
                       var elValue = spa.getElValue(obj);
-                      return spa['_validate']._showValidateMsg(obj, msg, !(spa.isBlank(elValue)));
+                      return !(spa.isBlank(elValue));
+                      //return spa['_validate']._showValidateMsg(obj, msg, !(spa.isBlank(elValue)));
                     }
     , Digits      : function _fnValidDigits(obj, msg) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || (/^\d+$/.test(elValue)) );
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Numbers     : function _fnValidNumbers(obj, msg) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || (/^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test(elValue)) );
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Integer     : function _fnValidInteger(obj, msg) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || (/^-?\d+$/.test(elValue)) );
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Alpha       : function _fnValidAlpha(obj, msg) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || !(/[^a-z]/gi.test(elValue)) );
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , AlphaNumeric: function _fnValidAlphaNumeric(obj, msg) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || !(/[^a-z0-9]/gi.test(elValue)) );
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , PatternMatch: function _fnValidPatternMatch(obj, msg) {
                       var elValue = $(obj).val();
@@ -71,7 +88,8 @@ spa['_validate'] = {
                         isValid = rx.test(elValue);
                         if ($(obj).data("validatePatternOptions").indexOf("!")>=0) isValid = !isValid;
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , ValueRange  : function _fnValidValueRange(obj, msg) {
                       var elValue = $(obj).val();
@@ -96,19 +114,22 @@ spa['_validate'] = {
                           }
                         }
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , LengthMin   : function _fnValidLengthMin(obj, msg) {
                       var elValue = $(obj).val();
                       var minLen  = spa.toInt($(obj).attr("minlength"));
                       var isValid = (elValue.length >= minLen);
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , LengthMax   : function _fnValidLengthMax(obj, msg) {
                       var elValue = $(obj).val();
                       var maxLen  = spa.toInt($(obj).attr("maxlength"));
                       var isValid = (elValue.length <= maxLen);
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Lengths     : function _fnValidLengths(obj, msg){
                       var elValue = $(obj).val();
@@ -116,14 +137,16 @@ spa['_validate'] = {
                       var minLen  = spa.toInt($(obj).attr("minlength"));
                       var maxLen  = spa.toInt($(obj).attr("maxlength"));
                       var isValid = ((eLength >= minLen) && (eLength <= maxLen));
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , WordSize    : function _fnValidWordSize(obj, msg) {
                       var elValue = $(obj).val();
                       var maxWordSize = _.max(_.map((''+elValue).replace(/[-\n]/g,' ').split(' '), function(w) { return w.length; }));
                       var validWordSize = spa.toInt($(obj).data("validWordSize")) || 20;
                       var isValid = (maxWordSize <= validWordSize);
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Email       : function _fnValidEmail(obj, msg) {
                       var elValue = $(obj).val();
@@ -134,7 +157,8 @@ spa['_validate'] = {
                                  && /[a-z0-9]/i.test((elValue[elValue.length-1]))
                                   );
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Url         : function _fnValidUrl(obj, msg) {
                       var elValue = $(obj).val();
@@ -142,7 +166,8 @@ spa['_validate'] = {
                       if (!isValid) {
                         isValid = /^(https?|s?ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(elValue);
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , Date        : function _isValidDate(obj, msg) {
                       var elValue = $(obj).val();
@@ -190,7 +215,8 @@ spa['_validate'] = {
                           isValid = ( ( xDate.getFullYear() === yyyy ) && ( xDate.getMonth() === mm - 1 ) && ( xDate.getDate() === dd ) );
                         }
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , CardNo      : function _fnValidCardNo(obj, msg){
                       var elValue = $(obj).val();
@@ -217,7 +243,8 @@ spa['_validate'] = {
                           isValid = ((nCheck % 10) === 0);
                         }
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , IPv4        : function _fnValidIpv4(obj, msg){
                       var elValue = $(obj).val();
@@ -226,7 +253,8 @@ spa['_validate'] = {
                         isValid = ((/^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)$/i.test(elValue))
                                     && ( _.every(elValue.split('.'), function(part){ return ((part.length>1)? (!part.beginsWithStr("0")) : true); }) ));
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , IPv6        : function _fnValidIpv6(obj, msg){
                       var elValue = $(obj).val();
@@ -234,7 +262,8 @@ spa['_validate'] = {
                       if (!isValid){
                         isValid = /^((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))$/i.test(elValue);
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , IP          : function _fnValidIpAddress(obj, msg) {
                       var elValue = $(obj).val();
@@ -270,7 +299,8 @@ spa['_validate'] = {
                         var rxSubnet = new RegExp("^((128|192|224|240|248|252|254)\\.0\\.0\\.0)|(255\\.(((0|128|192|224|240|248|252|254)\\.0\\.0)|(255\\.(((0|128|192|224|240|248|252|254)\\.0)|255\\.(0|128|192|224|240|248|252|254)))))$");
                         isValid = ((rxSubnet.test(elValue)) && ( _.every(elValue.split('.'), function(part){ return ((part.length>1)? (!part.beginsWithStr("0")) : true); }) ));
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , PhoneUS     : function _fnValidPhoneUS(obj, msg) {
                       var elValue = $(obj).val();
@@ -278,10 +308,68 @@ spa['_validate'] = {
                       if (!isValid) {
                         isValid= (elValue.length > 9 && elValue.match(/^(\+?1-?)?(\([2-9]\d{2}\)|[2-9]\d{2})-?[2-9]\d{2}-?\d{4}$/));
                       }
-                      return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
+                    }
+    , Compare     : function _fnValidCompare(obj, msg){
+                      var isValid = true;
+                      var elValue = $(obj).val();
+                      var isValid = (elValue.length===0);
+                      if (!isValid) {
+                        var $el = $(obj);
+                        var elData = $el.data();
+                        var compareSpec = spa.toJSON(elData['validateCompare'] || '{}');
+                        var $compareTarget;
+                        if (!spa.isBlank(compareSpec) && (compareSpec['target'])) {
+                          $compareTarget = $(compareSpec['target']);
+                          var compareRule = compareSpec['valid'] || '=';
+                          var thisElValue = spa.getElValue(obj);
+                          var compElValue = spa.getElValue($compareTarget);
+                          if ( ('number'.equalsIgnoreCase(compareSpec['type']))
+                            || (compareRule.indexOf('<') >=0) || (compareRule.indexOf('>') >=0)  ) {
+                            thisElValue = spa.toFloat(thisElValue);
+                            compElValue = spa.toFloat(compElValue);
+                          };
+                          if ('date'.equalsIgnoreCase(compareSpec['type'])) {
+                            //TODO
+                            //thisElValue = spa.toDate(thisElValue, compareSpec['format']||'YYYY-MM-DD');
+                            //compElValue = spa.toDate(compElValue, compareSpec['format']||'YYYY-MM-DD');
+                            //compare Dates
+                          } else {
+                            switch(compareRule){
+                              case '!=' :
+                                isValid = thisElValue != compElValue;
+                                break;
+                              case '!==' :
+                              isValid = thisElValue !== compElValue;
+                              break;
+                              case '===' :
+                              isValid = thisElValue === compElValue;
+                              break;
+                              case '>' :
+                              isValid = thisElValue > compElValue;
+                              break;
+                              case '<' :
+                              isValid = thisElValue < compElValue;
+                              break;
+                              case '>=' :
+                              isValid = thisElValue >= compElValue;
+                              break;
+                              case '<=' :
+                              isValid = thisElValue <= compElValue;
+                              break;
+                              default:
+                              isValid = thisElValue == compElValue;
+                              break;
+                            }
+                          }
+                        }
+                      }
+                      return isValid;
+                      //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
   }
-  , _showValidateMsg : function __showValidateMsg(forObj, msg, isValid, errMsgTemplate) {
+  , _showValidateMsg : function __showValidateMsg(forObj, msg, isValid, errMsgTemplate, skipCtrlUpdate) {
                       msg = msg || "";
                       if ((arguments.length>2) && _.isString(isValid)) { errMsgTemplate = isValid; }
                       if ((arguments.length>2) && _.isBoolean(isValid) && (isValid)) { msg = ""; }
@@ -292,7 +380,11 @@ spa['_validate'] = {
                       var $forObj = $(forObj),
                           errClassTargetSelector = $forObj.data('errorClassTarget'),
                           $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObj.parent();
-                      $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
+                      if (!spa['_validate']._isOnOfflineValidation) {
+                        $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
+                        if (!skipCtrlUpdate) spa.updateTrackFormCtrls(forObj['form']);
+                      }
+
                       var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
                       var i18nSpec = "";
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
@@ -314,6 +406,35 @@ spa['_validate'] = {
                       }
                       return isValid;
                     }
+
+  , _getValidationClassTarget: function(forObj){
+      var $forObj = $(forObj),
+          vClassTargetSelector = $forObj.data('errorClassTarget');
+      return ((vClassTargetSelector)? $forObj.closest(vClassTargetSelector) : $forObj.parent());
+    }
+  , _addValidationClass: function(forObj, className){
+      spa['_validate']._getValidationClassTarget(forObj).addClass(className);
+    }
+  , _removeValidationClass: function(forObj, className){
+      spa['_validate']._getValidationClassTarget(forObj).removeClass(className);
+    }
+  , _deferValidate: function(){ return true; }
+  , _registerPromise: function(promiseName, forObj, vFn, errMsg){
+      var deferValidate = !spa.isBlank(promiseName);
+      if (deferValidate) {
+        var $forObj  = $(forObj),
+            promises = $forObj.data('promises')||'',
+            isNewPromise = (promises.indexOf('['+promiseName+']')<0);
+        if (isNewPromise) {
+          spa.console.log('validating promise: '+promiseName);
+          promises += '['+promiseName+']';
+          $forObj.attr('data-promises', promises).data('promises', promises);
+          spa['_validate']._addValidationClass($forObj, 'validation-pending');
+          if (spa.is(vFn, 'function')) vFn.call($forObj, $forObj, errMsg, promiseName);
+        }
+      }
+      return deferValidate;
+    }
   , expose: function(exposeTo){
     exposeTo = exposeTo || {};
     Object.keys(spa['_validateDefaults']).forEach(function(key){
@@ -361,8 +482,20 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var $context = $(context);
   var elSelector = $context.data("validateElFilter") || "";
   var commonValidateRules = splitValidateEvents(spa.toJSON($context.data("validateCommon")||"{}"));
-  spa.console.log('keys Of commonValidateRules');
-  spa.console.log(_.keys(commonValidateRules));
+  var commonOnFocusRules = _.merge({},commonValidateRules['onFocus']);
+
+  spa.console.log('commonValidateRules');
+  var promiseCheckRule = {fn:_check.promise};
+  if (spa.isBlank(commonOnFocusRules)){
+    commonValidateRules['onFocus'] = promiseCheckRule;
+  } else {
+    if (!spa.is(commonOnFocusRules,'array')){
+      commonOnFocusRules = [commonOnFocusRules];
+    }
+    commonOnFocusRules.push(promiseCheckRule);
+  }
+  commonValidateRules['onFocus'] = commonOnFocusRules;
+  spa.console.log(commonValidateRules);
 
   var addRule2El, addRule2ElDir, overrideOfflineRule2El, elOfflineRule, commonRule2El;
   var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/onRender/i,'').replace(/[^a-zA-Z0-9]/g,'');
@@ -441,7 +574,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
             elValidateRule4Events = [elValidateRule4Events];
           }
           _.each(elValidateRule4Events, function(elValidateRule4Event){
-            if (elValidateRule4Event.offline) {
+            if (elValidateRule4Event.offline && !elValidateRule4Event['promise']) {
               var newRule = {fn:elValidateRule4Event.fn, msg:elValidateRule4Event.msg};
               if (!spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID]) spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID] = [];
               if (_.indexOf(spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID], newRule)<0) {
@@ -455,7 +588,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
       spa.console.log('registering an event: '+validateOnEvent);
       if (validateOnEvent.beginsWithStrIgnoreCase('on') && !('test'.equalsIgnoreCase(jqEventName)) ) {
         $(el).on(jqEventName, function(){
-          var el = this, vFn;
+          var el = this, vFn, errMsg;
           _.every(elValidateRules[validateOnEvent], function(validateRule){
             if (_.isArray(validateRule))
             { return _.every(validateRule, function(validateRuleInArray){
@@ -466,7 +599,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
                 if (!spa.is(vFn, 'function')) {
                   console.error('data-validate-function Not Found: '+validateRuleInArray.fn);
                 }
-                return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRuleInArray.msg || $(el).data("validateMsg") || ""))) : false;
+                errMsg = (validateRuleInArray.msg || $(el).data("validateMsg") || "");
+                if (spa['_validate']._registerPromise(validateRuleInArray['promise'], el, vFn, errMsg)) {
+                  vFn = spa['_validate']._deferValidate;
+                }
+                return spa['_validate']._showValidateMsg(el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false));
               });
             }
             else
@@ -477,7 +614,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
               if (!spa.is(vFn, 'function')) {
                 console.error('data-validate-function Not Found: '+validateRule.fn);
               }
-              return (spa.is(vFn, 'function'))? (vFn.call(el, el, (validateRule.msg || $(el).data("validateMsg") || ""))) : false;
+              errMsg = (validateRule.msg || $(el).data("validateMsg") || "");
+              if (spa['_validate']._registerPromise(validateRule['promise'], el, vFn, errMsg)){
+                vFn = spa['_validate']._deferValidate;
+              }
+              return spa['_validate']._showValidateMsg(el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false));
             }
           });
         }); //End of jQuery Event Registration
@@ -486,17 +627,17 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   });
 };
 
-spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg){
+spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, validateAll){
   var rulesScopeID     = (context.replace(/[^a-zA-Z0-9]/g,''))
     , validationScope  = "#"+(context.replace(/#/g, ""))
     , $validationScope = $(validationScope)
-    , failedInfo={}, isAllOk;
+    , failedInfo=[], isAllOk;
 
   if (spa['_validate']._offlineValidationRules[rulesScopeID])
   { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
 
     var applyRules = function(elID){
-      var $el = $validationScope.find("#"+elID), vFn;
+      var $el = $validationScope.find("#"+elID), errMsg, vFn;
       //var ignValidation = spa.toBoolean($el.data("ignoreValidationIfInvisible"));
       //var isVisible = $el.is(":visible");
       //if ($el.prop("type") && $el.prop("type").equalsIgnoreCase("hidden")) debugger;
@@ -510,8 +651,12 @@ spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(conte
           if (!spa.is(vFn, 'function')) {
             console.error('data-validate-function Not Found: '+vRule.fn);
           }
-          var fnResponse = (spa.is(vFn, 'function'))? (vFn.call($el, $el, (vRule.msg || $el.data("validateMsg") || ""))) : false;
-          if (!fnResponse) { failedInfo = {errcode:2, el:$el, fn:vRule.fn, msg:(vRule.msg || $el.data("validateMsg") || "")}; }
+          errMsg = (vRule.msg || $el.data("validateMsg") || "");
+          var fnResponse = spa['_validate']._showValidateMsg($el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call($el, $el, errMsg)) : false), '', true);
+          if (!fnResponse) {
+            var errObj = {errcode:2, el:$el, fn:vRule.fn, msg:errMsg};
+            failedInfo.push(errObj);
+          }
           return fnResponse;
         });
       }
@@ -524,7 +669,7 @@ spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(conte
     else
     { spa['_validate']._isOnOfflineValidation = !showMsg;
       isAllOk = _.every(_.keys(vRules), function(elID){
-        return (applyRules(elID));
+        return (applyRules(elID) || validateAll);
       });
       spa['_validate']._isOnOfflineValidation = false;
     }
@@ -534,4 +679,17 @@ spa['validate'] = spa['validateForm'] = spa['doDataValidation'] = function(conte
   }
 
   return(failedInfo);
+};
+
+spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
+  spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
+};
+spa['updateValidationPromise'] = function(promiseName, forObj, msg, isValid, errMsgTemplate){
+  var $forObj = $(forObj), promises = $forObj.data('promises')||'';
+  promises = promises.replace('['+promiseName+']','');
+  $forObj.attr('data-promises', promises).data('promises', promises);
+  if (spa.isBlank(promises)) {
+    spa['_validate']._removeValidationClass($forObj, 'validation-pending');
+  }
+  spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
 };

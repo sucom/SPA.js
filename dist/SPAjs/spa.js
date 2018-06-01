@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.38.1';
+  spa.VERSION = '2.39.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4594,6 +4594,24 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
+  spa.updateTrackFormCtrls = function(elForm){
+    if (elForm) {
+      var $elForm = $(elForm),
+          changedElcount = $elForm.find('.tracking-change.changed').length,
+          validationErrFound = (!spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
+          enableCtrlEls = (changedElcount>0 && !validationErrFound),
+          $ctrlElements = $elForm.find('.ctrl-on-change'), $ctrlEl;
+      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount);
+      $ctrlElements.each(function(i, el){
+        $ctrlEl = $(el);
+        if ($ctrlEl.is(':disabled') == enableCtrlEls) {
+          $ctrlEl.prop('disabled',!enableCtrlEls).addClass(enableCtrlEls?'':'disabled').removeClass(enableCtrlEls?'disabled':'');
+          $ctrlEl.trigger('change');
+        }
+      });
+    }
+  };
+
   spa.trackFormElChange = function _trackFormElChange(elSelector, scope){
     var $elementsToTrack = $(scope||'body').find(elSelector);
 
@@ -4604,19 +4622,6 @@ window['app']['api'] = window['app']['api'] || {};
         elTrackChange(el);
       }
     });
-
-    function updateTrackForm($elForm){
-      var changedElcount = $elForm.find('.tracking-change.changed').length,
-          enableCtrlEls = changedElcount>0;
-      if (enableCtrlEls && $elForm.is('[data-validate-form]') && $elForm.has('.validation-error').length) {
-        enableCtrlEls = false;
-      }
-      $elForm.attr('data-changed', changedElcount).data('changed', changedElcount)
-             .find('.ctrl-on-change')
-             .prop('disabled',!enableCtrlEls)
-             .addClass(enableCtrlEls?'':'disabled')
-             .removeClass(enableCtrlEls?'disabled':'');
-    }
 
     function eTrackChange(e){
       if ((e['type'] == 'change') || (e['key'] && (e.key.length == 1 || '~BackspaceDelete'.indexOf(e.key)>0))) {
@@ -4641,7 +4646,7 @@ window['app']['api'] = window['app']['api'] || {};
           if (isChanged && !this.multiple) isChanged = (def != this.selectedIndex);
         }
         $(this)[isChanged? 'addClass' : 'removeClass']('changed');
-        updateTrackForm($thisForm);
+        spa.updateTrackFormCtrls($thisForm);
         if (prvChgCount!=newChgCount && triggerFormChange) $thisForm.trigger('change');
       }
     }
@@ -4664,7 +4669,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
 
       $el.removeClass('track-change changed');
-      updateTrackForm($el.closest('form'));
+      spa.updateTrackFormCtrls($el.closest('form'));
 
       if (el.className.indexOf('tracking-change') < 0) {
         $el.addClass('tracking-change').on(trackEvents, eTrackChange);
@@ -6477,19 +6482,28 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _initFormValidation(container){
     if (spa.hasOwnProperty('initDataValidation')) {
-      var $el, $elData;
-      $(container || 'body').find('[data-validate-form],[data-validate-scope]').each(function (i, el){
-        $el = $(el); $elData = $el.data();
+      var $el, $elData, hasCtrlElements;
+      $(container || 'body').find('[data-validate-form],[data-validate-scope]').filter(':not([data-validation-initialized])').each(function (i, el){
+        $el = $(el);
+        $elData = $el.data();
+        hasCtrlElements = $el.has('.ctrl-on-change').length;
+        $el.attr('data-validation-initialized', '');
+
         //Disable form submit;
         if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
+
+        $el.on('change', function(){
+          spa.updateTrackFormCtrls(this);
+        });
+
         //clear validate msg on focus
         if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
         spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || el.id));
-        if (!$el.hasClass('track-changes') && $el.has('.ctrl-on-change').length) {
+        if (!$el.hasClass('track-changes') && hasCtrlElements) {
           spa.trackFormElChange(el);
         }
         if ('onRender'.equalsIgnoreCase($elData['validateForm'])) {
-          spa.validate('#'+el.id, true);
+          spa.validateForm('#'+el.id, true, true);
         }
       });
     }
@@ -7371,6 +7385,51 @@ window['app']['api'] = window['app']['api'] || {};
 
     if (app['debug'] || spa['debug']) console.log('ajax Options', options);
   }
+
+  /* Pub/Sub */
+  var _PubSubQue = {};
+  var _PubSub = {
+    pub: function(eventName, data){
+      var subCount=0;
+      _.each(_PubSubQue[eventName], function(fn2Call){
+        try{
+          if (fn2Call) {
+            fn2Call.call(data||{}, eventName, data);
+            subCount++;
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      });
+      return subCount;
+    },
+
+    sub: function(eventName, fnCallback){
+      if (!_PubSubQue.hasOwnProperty(eventName)) {
+        _PubSubQue[eventName] = [];
+      }
+      _PubSubQue[eventName].push(fnCallback);
+      return _PubSubQue[eventName].length;
+    },
+
+    unSub: function(eventName, subId){
+      var retValue = false;
+      if (_PubSubQue.hasOwnProperty(eventName)) {
+        retValue = true;
+        if (subId) {
+          _PubSubQue[eventName][subId-1] = null;
+        } else {
+          _PubSubQue[eventName] = [];
+        }
+      }
+      return retValue;
+    }
+  };
+  spa.event = {
+    on: _PubSub.sub,
+    off: _PubSub.unSub,
+    trigger: _PubSub.pub
+  };
 
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
