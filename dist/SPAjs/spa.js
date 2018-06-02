@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.39.0';
+  spa.VERSION = '2.39.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7191,7 +7191,7 @@ window['app']['api'] = window['app']['api'] || {};
       return $.ajax(ajaxOptions);
     },
     _params2AxOptions : function(){
-      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true }, hasPayLoad, axOverrideOptions;
+      var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true }, hasPayLoad, axOverrideOptions, hasSuccessFn;
       _.each(arguments, function(arg){
         switch(true){ //NOTE: DON'T CHANGE THE ORDER
           case (_.isString(arg))  : oKey='url';
@@ -7201,7 +7201,12 @@ window['app']['api'] = window['app']['api'] || {};
             }
             break;
           case (spa.is(arg, 'function')):
-            oKey='_success';
+            if (!hasSuccessFn) {
+              hasSuccessFn = true;
+              oKey='_success';
+            } else {
+              oKey='error';
+            }
             break;
           case (_.isBoolean(arg)) : oKey='async'; break;
           case (_.isObject(arg))  :
