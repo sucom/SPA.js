@@ -119,14 +119,14 @@ spa['_validate'] = {
                     }
     , LengthMin   : function _fnValidLengthMin(obj, msg) {
                       var elValue = $(obj).val();
-                      var minLen  = spa.toInt($(obj).attr("minlength"));
+                      var minLen  = spa.toInt($(obj).data("minlength") || $(obj).attr("minlength"));
                       var isValid = (elValue.length >= minLen);
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
     , LengthMax   : function _fnValidLengthMax(obj, msg) {
                       var elValue = $(obj).val();
-                      var maxLen  = spa.toInt($(obj).attr("maxlength"));
+                      var maxLen  = spa.toInt($(obj).data("maxlength"));
                       var isValid = (elValue.length <= maxLen);
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
@@ -134,8 +134,8 @@ spa['_validate'] = {
     , Lengths     : function _fnValidLengths(obj, msg){
                       var elValue = $(obj).val();
                       var eLength = elValue.length;
-                      var minLen  = spa.toInt($(obj).attr("minlength"));
-                      var maxLen  = spa.toInt($(obj).attr("maxlength"));
+                      var minLen  = spa.toInt($(obj).data("minlength") || $(obj).attr("minlength"));
+                      var maxLen  = spa.toInt($(obj).data("maxlength"));
                       var isValid = ((eLength >= minLen) && (eLength <= maxLen));
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
