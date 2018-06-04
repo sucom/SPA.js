@@ -15,6 +15,23 @@ spa.event.off(eventName, eventRegistraionId); //unsubscribe a specific function 
 spa.event.trigger(eventName, data);
 //invoke all functions registered for this event with optional data
 
+
+//Example
+spa.event.on('cartUpdate', function(){
+  //update cart total
+});
+
+//In add to cart module
+spa.event.trigger('cartUpdate');
+
+//--------------------------------
+
+spa.event.on('notify', function(msg){
+  //display notification message;
+});
+
+spa.event.trigger('notify', 'Uploaded 3 files.');
+
   </script>
 
   </section>
