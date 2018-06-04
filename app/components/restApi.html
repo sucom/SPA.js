@@ -6,13 +6,13 @@
   <h3>Signatures</h3>
   <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="REST API Signatures">
 
-spa.api.get(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
+spa.api.get(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function, wait:Boolean, {ajaxOptions: {}} );
 
-spa.api.post(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
+spa.api.post(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function, wait:Boolean, {ajaxOptions: {}} );
 
-spa.api.put(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
+spa.api.put(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function, wait:Boolean, {ajaxOptions: {}} );
 
-spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {ajaxOptions: {}} );
+spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function, wait:Boolean, {ajaxOptions: {}} );
   </script>
 
   <blockquote>
@@ -59,6 +59,15 @@ spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, wait:Boolean, {aja
   <h3>onSuccessFn:Function (optional)</h3>
   <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: onSuccessFn">
     onSuccessFn = function(apiResponse) {
+      //doSomething
+    };
+  </script>
+
+  <h3>onErrorFn:Function (optional)</h3>
+  <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="Param: onSuccessFn">
+    //Supported from v2.39.1 onwards
+
+    onErrorFn = function(apiResponse) {
       //doSomething
     };
   </script>

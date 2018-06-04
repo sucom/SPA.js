@@ -1,0 +1,22 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Custom Events</h2>
+  <p>SPA JS comes with built-in methods for custom events.</p>
+
+  <section>
+  <h3>Signatures</h3>
+  <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="REST API Signatures">
+
+spa.event.on(eventName, callbackFn);
+//Returns eventRegistraionId (useful for unregister)
+
+spa.event.off(eventName); //unsubscribe all functions for this eventName
+spa.event.off(eventName, eventRegistraionId); //unsubscribe a specific function on this eventName
+
+spa.event.trigger(eventName, data);
+//invoke all functions registered for this event with optional data
+
+  </script>
+
+  </section>
+
+</div>
