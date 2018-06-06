@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.39.2';
+  spa.VERSION = '2.39.3';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4533,7 +4533,7 @@ window['app']['api'] = window['app']['api'] || {};
       var $eyeEl = $('<i class="icon eye"></i>');
       $eyeEl.on('click', function(){
         var $eyeIcon = $(this),
-            $pwdEl   = $eyeIcon.prev('.toggle-password'),
+            $pwdEl   = $eyeIcon.prevAll('.toggle-password'),
             newState = ($pwdEl.attr('type') == 'text')? 'password' : 'text';
         $pwdEl.attr('type', newState).toggleClass('text').focus();
       });

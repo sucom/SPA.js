@@ -376,16 +376,26 @@ spa['_validate'] = {
                       errMsgTemplate = errMsgTemplate || spa['_validate']._validateAlertTemplate;
 
                       var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<'));
-                      forObj = $($(forObj).data("validateMsgEl")||forObj).get(0);
                       var $forObj = $(forObj),
+                          $forObjParent = $forObj.parent(),
                           errClassTargetSelector = $forObj.data('errorClassTarget'),
-                          $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObj.parent();
+                          $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObjParent,
+                          errElPosition = $forObj.data('errorPosition');
+                      forObj = $forObj.get(0);
+
                       if (!spa['_validate']._isOnOfflineValidation) {
                         $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
                         if (!skipCtrlUpdate) spa.updateTrackFormCtrls(forObj['form']);
                       }
 
-                      var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $(forObj).next();
+                      var alertObj = (isCustomErrMsgElement)? $(errMsgTemplate) : $forObj.next();
+                      if (!isCustomErrMsgElement && errElPosition){
+                        if ('first'.equalsIgnoreCase(errElPosition)) {
+                          alertObj = $forObjParent.children().first();
+                        } else if ('last'.equalsIgnoreCase(errElPosition)){
+                          alertObj = $forObjParent.children().last();
+                        }
+                      }
                       var i18nSpec = "";
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
                       { if (msg.beginsWithStrIgnoreCase("i18n:"))
@@ -400,7 +410,17 @@ spa['_validate'] = {
                       }
                       else
                       { if (!spa.isBlank(msg))
-                        { $(errMsgTemplate).insertAfter($(forObj));
+                        { if (errElPosition) {
+                            if ('first'.equalsIgnoreCase(errElPosition)) {
+                              $(errMsgTemplate).prependTo($forObjParent);
+                            } else if ('last'.equalsIgnoreCase(errElPosition)){
+                              $(errMsgTemplate).appendTo($forObjParent);
+                            } else {
+                              $(errMsgTemplate).insertAfter($forObj);
+                            }
+                          } else {
+                            $(errMsgTemplate).insertAfter($forObj);
+                          }
                           spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
                         }
                       }
