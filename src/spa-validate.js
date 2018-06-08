@@ -384,7 +384,7 @@ spa['_validate'] = {
                       forObj = $forObj.get(0);
 
                       if (!spa['_validate']._isOnOfflineValidation) {
-                        $erClassTarget[(isValid === false)? 'addClass' : 'removeClass']('validation-error');
+                        $erClassTarget.removeClass('has-error-msg no-error-msg')[(isValid === false)? 'addClass' : 'removeClass']('validation-error '+(!!msg? 'has-error-msg' : 'no-error-msg'));
                         if (!skipCtrlUpdate) spa.updateTrackFormCtrls(forObj['form']);
                       }
 
@@ -608,7 +608,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
       spa.console.log('registering an event: '+validateOnEvent);
       if (validateOnEvent.beginsWithStrIgnoreCase('on') && !('test'.equalsIgnoreCase(jqEventName)) ) {
         $(el).on(jqEventName, function(){
-          var el = this, vFn, errMsg;
+          var el = this, vFn, errMsg, vFnResponse;
           _.every(elValidateRules[validateOnEvent], function(validateRule){
             if (_.isArray(validateRule))
             { return _.every(validateRule, function(validateRuleInArray){
@@ -623,7 +623,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
                 if (spa['_validate']._registerPromise(validateRuleInArray['promise'], el, vFn, errMsg)) {
                   vFn = spa['_validate']._deferValidate;
                 }
-                return spa['_validate']._showValidateMsg(el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false));
+                vFnResponse = ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false);
+                if (spa.is(vFnResponse, 'boolean')) {
+                  spa['_validate']._showValidateMsg(el, errMsg, vFnResponse);
+                };
+                return vFnResponse;
               });
             }
             else
@@ -638,7 +642,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
               if (spa['_validate']._registerPromise(validateRule['promise'], el, vFn, errMsg)){
                 vFn = spa['_validate']._deferValidate;
               }
-              return spa['_validate']._showValidateMsg(el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false));
+              vFnResponse = ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false);
+              if (spa.is(vFnResponse, 'boolean')) {
+                spa['_validate']._showValidateMsg(el, errMsg, vFnResponse);
+              }
+              return vFnResponse;
             }
           });
         }); //End of jQuery Event Registration
@@ -647,7 +655,13 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   });
 };
 
-spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, validateAll){
+spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(context, showMsg, validateAll){
+  var elIDs;
+  if (spa.is(arguments[1], 'string')) {
+    elIDs       = '#'+(arguments[1].replace(/ /g,'').replace(/,/g,',#'))+',';
+    showMsg     = arguments[2];
+    validateAll = arguments[3];
+  }
   var rulesScopeID     = (context.replace(/[^a-zA-Z0-9]/g,''))
     , validationScope  = "#"+(context.replace(/#/g, ""))
     , $validationScope = $(validationScope)
@@ -657,7 +671,7 @@ spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, valid
   { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
 
     var applyRules = function(elID){
-      var $el = $validationScope.find("#"+elID), errMsg, vFn;
+      var $el = $validationScope.find("#"+elID), el=$el[0], errMsg, vFn, vFnResponse;
       //var ignValidation = spa.toBoolean($el.data("ignoreValidationIfInvisible"));
       //var isVisible = $el.is(":visible");
       //if ($el.prop("type") && $el.prop("type").equalsIgnoreCase("hidden")) debugger;
@@ -672,12 +686,17 @@ spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, valid
             console.error('data-validate-function Not Found: '+vRule.fn);
           }
           errMsg = (vRule.msg || $el.data("validateMsg") || "");
-          var fnResponse = spa['_validate']._showValidateMsg($el, errMsg, ((spa.is(vFn, 'function'))? (vFn.call($el, $el, errMsg)) : false), '', true);
-          if (!fnResponse) {
-            var errObj = {errcode:2, el:$el, fn:vRule.fn, msg:errMsg};
+
+          vFnResponse = ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false);
+          if (spa.is(vFnResponse, 'boolean')) {
+            spa['_validate']._showValidateMsg($el, errMsg, vFnResponse, '', true);
+          }
+
+          if (!vFnResponse) {
+            var errObj = {errcode:2, el:el, fn:vRule.fn, msg:errMsg};
             failedInfo.push(errObj);
           }
-          return fnResponse;
+          return vFnResponse;
         });
       }
       return retValue;
@@ -687,15 +706,23 @@ spa['validateForm'] = spa['doDataValidation'] = function(context, showMsg, valid
     { failedInfo = {errcode:1, errmsg:"Rules not found in scope ["+context+"]."};
     }
     else
-    { spa['_validate']._isOnOfflineValidation = !showMsg;
-      isAllOk = _.every(_.keys(vRules), function(elID){
-        return (applyRules(elID) || validateAll);
+    { var rules2Validate = _.keys(vRules);
+      if (elIDs) {
+        rules2Validate = _.map(rules2Validate, function(elID){
+          return (elIDs.indexOf('#'+elID+',')>=0)? elID : '';
+        });
+      }
+      spa['_validate']._isOnOfflineValidation = !showMsg;
+      isAllOk = _.every(rules2Validate, function(elID){
+        return elID? (applyRules(elID) || validateAll) : true;
       });
       spa['_validate']._isOnOfflineValidation = false;
     }
   }
   else
-  { failedInfo = {errcode:1, errmsg:"Scope not found."};
+  { if ($validationScope.is('[data-validate-form]')) {
+      failedInfo = {errcode:1, errmsg:"Scope not found."};
+    }
   }
 
   return(failedInfo);

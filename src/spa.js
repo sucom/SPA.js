@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.39.3';
+  spa.VERSION = '2.40.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4598,7 +4598,7 @@ window['app']['api'] = window['app']['api'] || {};
     if (elForm) {
       var $elForm = $(elForm),
           changedElcount = $elForm.find('.tracking-change.changed').length,
-          validationErrFound = (!spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
+          validationErrFound = ( !spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
           enableCtrlEls = (changedElcount>0 && !validationErrFound),
           $ctrlElements = $elForm.find('.ctrl-on-change'), $ctrlEl;
       $elForm.attr('data-changed', changedElcount).data('changed', changedElcount);
@@ -7394,26 +7394,50 @@ window['app']['api'] = window['app']['api'] || {};
   /* Pub/Sub */
   var _PubSubQue = {};
   var _PubSub = {
-    pub: function(eventName, data){
-      var subCount=0;
-      _.each(_PubSubQue[eventName], function(fn2Call){
+    pub: function(eventName, data, onAllOk, onFail){
+      var eventData, isFailed;
+      if (spa.is(data, 'function')) {
+        onFail  = arguments[2];
+        onAllOk = arguments[1];
+      } else {
+        eventData = arguments[1];
+      }
+
+      var subCount=0, fn2Call, fnResponse, retValue=[];
+      _.each(_PubSubQue[eventName], function(sub){
         try{
+          subCount++;
+          fn2Call = sub.fn;
+          fnResponse = null;
           if (fn2Call) {
-            fn2Call.call(data||{}, eventName, data);
-            subCount++;
+            fnResponse = fn2Call.call(eventData||{}, eventName, eventData, onAllOk, onFail);
+          }
+          retValue.push({id: ''+(sub.name || subCount), response: fnResponse});
+          if (!isFailed && spa.is(fnResponse, 'boolean')){
+            isFailed = !fnResponse;
           }
         } catch(e) {
+          console.warn('Execution error in subscribed function:'+sub.name+' on-'+eventName);
           console.error(e);
         }
       });
-      return subCount;
+      if (isFailed) {
+        if (onFail && spa.is(onFail, 'function')) {
+          onFail();
+        }
+      } else {
+        if (onAllOk && spa.is(onAllOk, 'function')) {
+          onAllOk();
+        }
+      }
+      return retValue;
     },
 
-    sub: function(eventName, fnCallback){
+    sub: function(eventName, fnCallback, fnName){
       if (!_PubSubQue.hasOwnProperty(eventName)) {
         _PubSubQue[eventName] = [];
       }
-      _PubSubQue[eventName].push(fnCallback);
+      _PubSubQue[eventName].push({fn: fnCallback, name: fnName});
       return _PubSubQue[eventName].length;
     },
 
@@ -7433,7 +7457,8 @@ window['app']['api'] = window['app']['api'] || {};
   spa.event = {
     on: _PubSub.sub,
     off: _PubSub.unSub,
-    trigger: _PubSub.pub
+    trigger: _PubSub.pub,
+    announce: _PubSub.pub
   };
 
   $(document).ready(function(){
