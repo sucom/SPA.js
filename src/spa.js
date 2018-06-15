@@ -7304,10 +7304,12 @@ window['app']['api'] = window['app']['api'] || {};
         var liveApiPrefixLst = liveApiPrefix.split(','), i=0, len=liveApiPrefixLst.length, liveApiPrefixX;
         while (!retValue && i<len) {
           liveApiPrefixX = liveApiPrefixLst[i++].trim();
-          retValue = (liveApiPrefixX && apiUrl.beginsWithStr(liveApiPrefixX))? liveApiPrefixX : '';
+          //retValue = (liveApiPrefixX && apiUrl.beginsWithStr(liveApiPrefixX))? liveApiPrefixX : '';
+          retValue = liveApiPrefixX? (apiUrl.beginsWithStr(liveApiPrefixX)? liveApiPrefixX : (!_isRelativePath(apiUrl) && apiUrl.indexOf(liveApiPrefixX)>0 ? liveApiPrefixX : '') ) : '';
         }
       } else {
-        retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : '';
+        //retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : '';
+        retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : (!_isRelativePath(apiUrl) && apiUrl.indexOf(liveApiPrefix)>0 ? liveApiPrefix : '');
       }
     }
     return retValue;
@@ -7370,7 +7372,7 @@ window['app']['api'] = window['app']['api'] || {};
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
-          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp(liveApiPrefixStr), "api_/").replace(/\?/, reqMethod+"/data.json");
+          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), "api_/").replace(/\?/, reqMethod+"/data.json");
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
       }
@@ -7394,11 +7396,11 @@ window['app']['api'] = window['app']['api'] || {};
   /* Pub/Sub */
   var _PubSubQue = {};
   var _PubSub = {
-    pub: function(eventName, data, onAllOk, onFail){
+    pub: function(eventName, data, onAllOk, onAnyFail){
       var eventData, isFailed;
       if (spa.is(data, 'function')) {
-        onFail  = arguments[2];
-        onAllOk = arguments[1];
+        onAnyFail = arguments[2];
+        onAllOk   = arguments[1];
       } else {
         eventData = arguments[1];
       }
@@ -7410,7 +7412,7 @@ window['app']['api'] = window['app']['api'] || {};
           fn2Call = sub.fn;
           fnResponse = null;
           if (fn2Call) {
-            fnResponse = fn2Call.call(eventData||{}, eventName, eventData, onAllOk, onFail);
+            fnResponse = fn2Call.call(eventData||{}, eventName, eventData, onAllOk, onAnyFail);
           }
           retValue.push({id: ''+(sub.name || subCount), response: fnResponse});
           if (!isFailed && spa.is(fnResponse, 'boolean')){
@@ -7422,12 +7424,12 @@ window['app']['api'] = window['app']['api'] || {};
         }
       });
       if (isFailed) {
-        if (onFail && spa.is(onFail, 'function')) {
-          onFail();
+        if (onAnyFail && spa.is(onAnyFail, 'function')) {
+          onAnyFail(retValue);
         }
       } else {
         if (onAllOk && spa.is(onAllOk, 'function')) {
-          onAllOk();
+          onAllOk(retValue);
         }
       }
       return retValue;
