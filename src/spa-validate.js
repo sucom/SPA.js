@@ -729,7 +729,9 @@ spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(conte
 };
 
 spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
-  spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
+  $(forObj).each(function(i, el){
+    spa['_validate']._showValidateMsg(el, msg, isValid, errMsgTemplate);
+  });
 };
 spa['updateValidationPromise'] = function(promiseName, forObj, msg, isValid, errMsgTemplate){
   var $forObj = $(forObj), promises = $forObj.data('promises')||'';
@@ -738,5 +740,7 @@ spa['updateValidationPromise'] = function(promiseName, forObj, msg, isValid, err
   if (spa.isBlank(promises)) {
     spa['_validate']._removeValidationClass($forObj, 'validation-pending');
   }
-  spa['_validate']._showValidateMsg(forObj, msg, isValid, errMsgTemplate);
+  $forObj.each(function(i, el){
+    spa['_validate']._showValidateMsg(el, msg, isValid, errMsgTemplate);
+  });
 };
