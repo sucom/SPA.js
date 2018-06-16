@@ -733,14 +733,20 @@ spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
     spa['_validate']._showValidateMsg(el, msg, isValid, errMsgTemplate);
   });
 };
-spa['updateValidationPromise'] = function(promiseName, forObj, msg, isValid, errMsgTemplate){
-  var $forObj = $(forObj), promises = $forObj.data('promises')||'';
-  promises = promises.replace('['+promiseName+']','');
-  $forObj.attr('data-promises', promises).data('promises', promises);
-  if (spa.isBlank(promises)) {
-    spa['_validate']._removeValidationClass($forObj, 'validation-pending');
-  }
-  $forObj.each(function(i, el){
+spa['updateValidationPromise'] = function(promiseNames, forObj, msg, isValid, errMsgTemplate){
+  var $forObjs = $(forObj), $forObj, pendingPromises;
+
+  $forObjs.each(function(i, el){
+    $forObj  = $(el);
+
+    _.each((promiseNames.split(',')), function(promiseName){
+      pendingPromises = ($forObj.data('promises')||'').replace('['+(promiseName.trim())+']','');
+      $forObj.attr('data-promises', pendingPromises).data('promises', pendingPromises);
+      if (spa.isBlank(pendingPromises)) {
+        spa['_validate']._removeValidationClass($forObj, 'validation-pending');
+      }
+    });
+
     spa['_validate']._showValidateMsg(el, msg, isValid, errMsgTemplate);
   });
 };
