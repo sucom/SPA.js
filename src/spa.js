@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = spa;
 
   /* Current version. */
-  spa.VERSION = '2.40.1';
+  spa.VERSION = '2.41.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5091,6 +5091,9 @@ window['app']['api'] = window['app']['api'] || {};
       componentName = componentName.trim();
       if (componentName) {
         options['componentName'] = componentName;
+        if (!options.hasOwnProperty('beforeRender')) {
+          options['beforeRender'] = 'app.'+componentName+'.beforeRender';
+        }
         if (!options.hasOwnProperty('renderCallback')) {
           options['renderCallback'] = 'app.'+componentName+'.renderCallback';
         }
@@ -5161,7 +5164,7 @@ window['app']['api'] = window['app']['api'] || {};
           options = options.call(spa.components[componentName] || {});
         }
         options = spa.is(options, 'object')? options : {};
-        if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, renderCallback: 'app.'+componentName+'.renderCallback'};
+        if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.beforeRender', renderCallback: 'app.'+componentName+'.renderCallback'};
         if (spa.components[componentName]) {
           if (options['__prop__']) {
             _.merge(spa.components[componentName], $.extend({},options['__prop__']));
@@ -5218,6 +5221,9 @@ window['app']['api'] = window['app']['api'] || {};
     if (!componentName) return;
     options = options || {};
     if (!spa.is(options, 'object')) return;
+    if (!options.hasOwnProperty('beforeRender')) {
+      options['beforeRender'] = options['beforeRefresh'] || ('app.'+componentName+'.beforeRefresh');
+    }
     if (!options.hasOwnProperty('renderCallback')) {
       options['renderCallback'] = options['refreshCallback'] || ('app.'+componentName+'.refreshCallback');
     }
@@ -5552,7 +5558,8 @@ window['app']['api'] = window['app']['api'] || {};
    ,dataStyles                : {}    // styles (css) to be loaded along with templates
    ,dataStylesCache           : true  // cache of dataStyles
 
-   ,dataRenderCallback        : ""    // single javascript function name to run after render
+   ,dataBeforeRender          : ""    // single javascript functionName to run before render
+   ,dataRenderCallback        : ""    // single javascript functionName to run after render
    ,dataRenderMode            : ""    // "":Replace target | "append" : Append to target | "prepend" : Prepend to target
 
    ,dataRenderId              : ""    // Render Id, may be used to locate in spa.renderHistory[dataRenderId], auto-generated key if not defined
@@ -5599,6 +5606,7 @@ window['app']['api'] = window['app']['api'] || {};
                       , styleCache            : "dataStylesCache"
                       , stylesCache           : "dataStylesCache"
                       , renderType            : "dataRenderType"
+                      , beforeRender          : "dataBeforeRender"
                       , dataRenderCallBack    : "dataRenderCallback"
                       , renderCallback        : "dataRenderCallback"
                       , renderCallBack        : "dataRenderCallback"
@@ -5660,6 +5668,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataStyles: {}
       , dataStylesCache: true
 
+      , dataBeforeRender: ''
       , dataRenderCallback: ""
       , dataRenderMode: ""
       , skipDataBind:false
@@ -6333,6 +6342,26 @@ window['app']['api'] = window['app']['api'] || {};
                 doDeepRender = false;
                 retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
+
+                //Callback Function's context
+                var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
+                if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
+                  delete renderCallbackContext['__prop__']['data']['_global_'];
+                  delete renderCallbackContext['__prop__']['data']['_this_'];
+                  delete renderCallbackContext['__prop__']['data']['_this'];
+                }
+                if (retValue['model']) {
+                  delete retValue['model']['_global_'];
+                  delete retValue['model']['_this_'];
+                  delete retValue['model']['_this'];
+                }
+
+                //beforeRender
+                var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender');
+                if (fnBeforeRender){
+                  spa.renderUtils.runCallbackFn(fnBeforeRender, undefined, renderCallbackContext);
+                };
+
                 /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
                   if (!spa.isBlank(spaRVOptions.dataRenderType)) {
                     targetRenderContainerType = spaRVOptions.dataRenderType;
@@ -6415,18 +6444,6 @@ window['app']['api'] = window['app']['api'] || {};
                 /*
                  * Default component's callback
                  */
-                var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
-                if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
-                  delete renderCallbackContext['__prop__']['data']['_global_'];
-                  delete renderCallbackContext['__prop__']['data']['_this_'];
-                  delete renderCallbackContext['__prop__']['data']['_this'];
-                }
-                if (retValue['model']) {
-                  delete retValue['model']['_global_'];
-                  delete retValue['model']['_this_'];
-                  delete retValue['model']['_this'];
-                }
-
                 spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
 
                 var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
