@@ -4401,7 +4401,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.i18n.text = function (i18nKey, data) {
     var dMessage = spa.i18n.value(i18nKey);
-    if (data) {
+    if (data && spa.is(data, 'object')) {
       var msgParamValue = "";
       _.each(_.keys(data), function (key) {
         msgParamValue = "" + data[key];
