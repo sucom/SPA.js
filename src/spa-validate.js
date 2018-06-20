@@ -655,10 +655,18 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   });
 };
 
+/*
+ *
+ * spa.validateForm('formID', true)
+ * spa.validateForm('formID', true, true)
+ * spa.validateForm('formID', 'elID1, elID2', true)
+ * spa.validateForm('formID', 'elID1, elID2', true, true)
+ *
+ */
 spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(context, showMsg, validateAll){
   var elIDs;
   if (spa.is(arguments[1], 'string')) {
-    elIDs       = '#'+(arguments[1].replace(/ /g,'').replace(/,/g,',#'))+',';
+    elIDs       = '#'+(arguments[1].replace(/[ #]/g,'').replace(/,/g,',#'))+',';
     showMsg     = arguments[2];
     validateAll = arguments[3];
   }
