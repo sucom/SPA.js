@@ -399,9 +399,10 @@ spa['_validate'] = {
                       var i18nSpec = "";
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
                       { if (msg.beginsWithStrIgnoreCase("i18n:"))
-                        { var i18nKey = msg.replace(/i18n:/gi,"");
-                          i18nSpec = "{html:'"+i18nKey+"'}";
-                          msg = $.i18n.prop(i18nKey);
+                        { var i18nInfo = _.split(msg, ',', 2),
+                              i18nKey = i18nInfo[0].replace(/i18n:/gi,""),
+                              i18nData = i18nInfo[1] ? spa.toJSON(i18nInfo[1].replace(/i18n-data:/gi,"")):{};
+                          msg = spa.i18n.text(i18nKey, i18nData);
                         }
                         if (!spa['_validate']._isOnOfflineValidation)
                         { $(alertObj).data("i18n",i18nSpec);
