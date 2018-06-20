@@ -406,8 +406,8 @@ spa['_validate'] = {
                           msg = spa.i18n.text(i18nKey, spa.toJSON(i18nData));
                         }
                         if (!spa['_validate']._isOnOfflineValidation)
-                        { $(alertObj).data("i18n",i18nSpec);
-                          $(alertObj).data("i18nData",i18nData);
+                        { $(alertObj).attr("i18n",i18nSpec).data("i18n",i18nSpec);
+                          $(alertObj).attr("i18nData",i18nData).data("i18nData",i18nData);
                           $(alertObj).html(msg);
                         }
                       }
