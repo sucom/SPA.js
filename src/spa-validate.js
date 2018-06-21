@@ -399,14 +399,14 @@ spa['_validate'] = {
                       var i18nKey='', i18nSpec='', i18nData='';
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
                       { if (msg.beginsWithStrIgnoreCase("i18n:"))
-                        { i18nKey  = (msg.getLeftStr('|')).replace(/i18n:/gi, '');
+                        { i18nKey  = (msg.getLeftStr('|') || msg).replace(/i18n:/gi, '');
                           i18nData = msg.getRightStr('|');
                           i18nSpec = "{html:'" + i18nKey + "'}";
                           msg = spa.i18n.text(i18nKey, spa.toJSON(i18nData));
                         }
                         if (!spa['_validate']._isOnOfflineValidation)
-                        { $(alertObj).attr("i18n",i18nSpec).data("i18n",i18nSpec);
-                          $(alertObj).attr("i18nData",i18nData).data("i18nData",i18nData);
+                        { $(alertObj).attr("data-i18n",i18nSpec).data("i18n",i18nSpec);
+                          $(alertObj).attr("data-i18n-data",i18nData).data("i18nData",i18nData);
                           $(alertObj).html(msg);
                         }
                       }
