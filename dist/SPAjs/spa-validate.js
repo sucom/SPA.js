@@ -396,15 +396,17 @@ spa['_validate'] = {
                           alertObj = $forObjParent.children().last();
                         }
                       }
-                      var i18nSpec = "";
+                      var i18nKey='', i18nSpec='', i18nData='';
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
                       { if (msg.beginsWithStrIgnoreCase("i18n:"))
-                        { var i18nKey = msg.replace(/i18n:/gi,"");
-                          i18nSpec = "{html:'"+i18nKey+"'}";
-                          msg = $.i18n.prop(i18nKey);
+                        { i18nKey  = (msg.getLeftStr('|') || msg).replace(/i18n:/gi, '');
+                          i18nData = msg.getRightStr('|');
+                          i18nSpec = "{html:'" + i18nKey + "'}";
+                          msg = spa.i18n.text(i18nKey, spa.toJSON(i18nData));
                         }
                         if (!spa['_validate']._isOnOfflineValidation)
-                        { $(alertObj).data("i18n",i18nSpec);
+                        { $(alertObj).attr("data-i18n",i18nSpec).data("i18n",i18nSpec);
+                          $(alertObj).attr("data-i18n-data",i18nData).data("i18nData",i18nData);
                           $(alertObj).html(msg);
                         }
                       }
@@ -655,10 +657,18 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   });
 };
 
+/*
+ *
+ * spa.validateForm('formID', true)
+ * spa.validateForm('formID', true, true)
+ * spa.validateForm('formID', 'elID1, elID2', true)
+ * spa.validateForm('formID', 'elID1, elID2', true, true)
+ *
+ */
 spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(context, showMsg, validateAll){
   var elIDs;
   if (spa.is(arguments[1], 'string')) {
-    elIDs       = '#'+(arguments[1].replace(/ /g,'').replace(/,/g,',#'))+',';
+    elIDs       = '#'+(arguments[1].replace(/[ #]/g,'').replace(/,/g,',#'))+',';
     showMsg     = arguments[2];
     validateAll = arguments[3];
   }
