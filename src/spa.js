@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.isSpaHashRouteOn=false;
 
   /* Expose spa to window */
-  win.spa = spa;
+  win.spa = win.__ = spa;
 
   /* Current version. */
   spa.VERSION = '2.41.0';
@@ -4410,6 +4410,41 @@ window['app']['api'] = window['app']['api'] || {};
       });
     }
     return (''+dMessage).trimLeftStr('[').trimRightStr('\\]');
+  };
+
+  spa.i18n.update = function(elSelector, i18nKeySpec, apply){
+    i18nKeySpec = i18nKeySpec || '';
+    var $el = $(elSelector), oldSpec = $el.attr('data-i18n') || '', newSpec = '', oldSpecJSON, newSpecJSON;
+
+    if (spa.isBlank(oldSpec) || (i18nKeySpec.indexOf(':')==0) || (i18nKeySpec.indexOf('=')==0) || ((oldSpec.indexOf(':')<=0) && (i18nKeySpec.indexOf(':')<=0)) ) {
+      newSpec = i18nKeySpec.trimLeftStr(':').trimLeftStr('=');
+    } else {
+      oldSpecJSON = (oldSpec.indexOf(':')>0)?     spa.toJSON(oldSpec||{})     : {html: (oldSpec.trimLeftStr(':').replace(/'/g,'')) };
+      newSpecJSON = (i18nKeySpec.indexOf(':')>0)? spa.toJSON(i18nKeySpec||{}) : {html: (i18nKeySpec.trimLeftStr(':').replace(/'/g,'')) };
+
+      _.each(Object.keys(oldSpecJSON), function(key){
+        _.each(key.split('_'), function(sKey){
+          if (sKey) oldSpecJSON[sKey] = oldSpecJSON[key];
+        });
+      });
+      _.each(Object.keys(newSpecJSON), function(key){
+        _.each(key.split('_'), function(sKey){
+          if (sKey) newSpecJSON[sKey] = newSpecJSON[key];
+        });
+      });
+
+      var finalSpec = _.merge({}, oldSpecJSON, newSpecJSON);
+      _.each(Object.keys(finalSpec), function(key){
+        if (key.indexOf('_')<=0){
+          newSpec += key+":'"+(finalSpec[key])+"',";
+        }
+      });
+      newSpec = newSpec.trimRightStr(',');
+    }
+
+    $el.attr('data-i18n', newSpec).data('i18n', newSpec);
+    if (apply || spa.is(apply, 'undefined')) spa.i18n.apply(elSelector);
+    return $el;
   };
 
   spa.i18n.apply = spa.i18n.render = function (contextRoot, elSelector) {
