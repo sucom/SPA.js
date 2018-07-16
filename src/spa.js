@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.41.0';
+  spa.VERSION = '2.42.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4631,14 +4631,17 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.updateTrackFormCtrls = function(elForm){
     if (elForm) {
-      var $elForm = $(elForm),
-          changedElcount = $elForm.find('.tracking-change.changed').length,
-          validationErrFound = ( !spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
-          enableCtrlEls = (changedElcount>0 && !validationErrFound),
-          $ctrlElements = $elForm.find('.ctrl-on-change'), $ctrlEl;
+      var $elForm             = $(elForm),
+          changedElcount      = $elForm.find('.tracking-change.changed').length,
+          validationErrFound  = ( !spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
+          enableCtrlEls4Ch    = (changedElcount>0 && !validationErrFound),
+          enableCtrlEls4Valid = (!validationErrFound),
+          $ctrlElements       = $elForm.find('.ctrl-on-change,.ctrl-on-validate'), $ctrlEl, enableCtrlEls;
       $elForm.attr('data-changed', changedElcount).data('changed', changedElcount);
+
       $ctrlElements.each(function(i, el){
         $ctrlEl = $(el);
+        enableCtrlEls = $ctrlEl.hasClass('ctrl-on-change')? enableCtrlEls4Ch : enableCtrlEls4Valid;
         if ($ctrlEl.is(':disabled') == enableCtrlEls) {
           $ctrlEl.prop('disabled',!enableCtrlEls).addClass(enableCtrlEls?'':'disabled').removeClass(enableCtrlEls?'disabled':'');
           $ctrlEl.trigger('change');
