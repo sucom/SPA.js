@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.42.1';
+  spa.VERSION = '2.43.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4641,12 +4641,19 @@ window['app']['api'] = window['app']['api'] || {};
           validationErrFound  = ( !spa.isBlank(spa.validateForm('#'+$elForm.attr('id'))) || $elForm.find('.validation-error,.validation-pending').length),
           enableCtrlEls4Ch    = (changedElcount>0 && !validationErrFound),
           enableCtrlEls4Valid = (!validationErrFound),
-          $ctrlElements       = $elForm.find('.ctrl-on-change,.ctrl-on-validate'), $ctrlEl, enableCtrlEls;
+          $ctrlElements       = $elForm.find('.ctrl-on-change,.ctrl-on-validate'), $ctrlEl, enableCtrlEls, fnOnBeforeChange, fn2Run;
       $elForm.attr('data-changed', changedElcount).data('changed', changedElcount);
 
       $ctrlElements.each(function(i, el){
         $ctrlEl = $(el);
         enableCtrlEls = $ctrlEl.hasClass('ctrl-on-change')? enableCtrlEls4Ch : enableCtrlEls4Valid;
+        fnOnBeforeChange = $ctrlEl.attr('onBeforeChange');
+        if (!spa.isBlank(fnOnBeforeChange)) {
+          if (fnOnBeforeChange.indexOf('(')>0) fnOnBeforeChange = fnOnBeforeChange.getLeftStr('(');
+          fn2Run = spa.findSafe(window, (fnOnBeforeChange.trim()), undefined);
+          enableCtrlEls = spa.is(fn2Run, 'function')? (!!fn2Run.call(el, enableCtrlEls)) : enableCtrlEls;
+        }
+
         if ($ctrlEl.is(':disabled') == enableCtrlEls) {
           $ctrlEl.prop('disabled',!enableCtrlEls).addClass(enableCtrlEls?'':'disabled').removeClass(enableCtrlEls?'disabled':'');
           $ctrlEl.trigger('change');
