@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.42.0';
+  spa.VERSION = '2.42.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4463,9 +4463,14 @@ window['app']['api'] = window['app']['api'] || {};
         var $el = $(el),
             i18nSpecStr = $el.data("i18n") || '';
         if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
-        var i18nSpec = spa.toJSON(i18nSpecStr || "{}");
-        var i18nData = i18nSpec['i18ndata'];
-        if (i18nData) delete i18nSpec['i18ndata'];
+        var i18nSpec = spa.toJSON(i18nSpecStr || "{}"),
+            i18nData = i18nSpec['data'] || i18nSpec['i18ndata'];
+        if (i18nData) {
+          delete i18nSpec['data'];
+          delete i18nSpec['i18ndata'];
+        } else {
+          i18nData = spa.toJSON($el.data("i18nData") || "{}");
+        }
         if (i18nSpec && !$.isEmptyObject(i18nSpec)) {
           _.each(_.keys(i18nSpec), function (attrSpec) {
             var i18nKey = i18nSpec[attrSpec];
