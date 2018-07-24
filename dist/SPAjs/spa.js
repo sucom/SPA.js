@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.43.0';
+  spa.VERSION = '2.44.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4342,6 +4342,7 @@ window['app']['api'] = window['app']['api'] || {};
     ext: '.txt',
     encoding: 'UTF-8',
     cache: true,
+    async: true,
     mode: 'map',
     callback: null
   };
@@ -4379,6 +4380,9 @@ window['app']['api'] = window['app']['api'] || {};
         }
       });
     }
+  };
+  spa.i18n.setLang = function(lang, i18nSettings){
+    spa.i18n.setLanguage(lang, (_.merge({path:'app/language/'}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), i18nSettings||{})));
   };
 
   spa.i18n.value = function(i18nKey) {
@@ -7319,6 +7323,7 @@ window['app']['api'] = window['app']['api'] || {};
   };//End of spa.api{}
   //API Section Ends
 
+  spa.i18n.onLangChange;
   spa.i18n.displayLang = function(){
     var selectedLang = $('html').attr('lang');
     if (selectedLang){
@@ -7336,6 +7341,11 @@ window['app']['api'] = window['app']['api'] || {};
   function init_i18n_Lang() {
     function setLang(uLang, options) {
       if (uLang) {
+        if (spa.i18n.onLangChange) {
+          var fnOnLangChange = spa.i18n.onLangChange,
+              nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang) : uLang;
+          uLang = (spa.is(nLang, 'string'))? nLang : uLang;
+        }
         $('html').attr('lang', uLang.replace('_', '-'));
         spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
       }
@@ -7351,12 +7361,21 @@ window['app']['api'] = window['app']['api'] || {};
       }});
     });
 
-    var defaultLang = $('body').attr('i18n-lang');
+    var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
     if (defaultLang) {
-      setLang(defaultLang);
-      setTimeout(function(){
-        spa.i18n.displayLang();
-      }, 500);
+      if (initialLang == '*') {
+        initialLang = spa.i18n.browserLang();
+        if ((','+defaultLang+',').indexOf(','+initialLang+',') < 0) {
+          initialLang = defaultLang.split(',')[1] || '';
+        }
+      }
+
+      if (initialLang) {
+        setLang(initialLang);
+        setTimeout(function(){
+          spa.i18n.displayLang();
+        }, 500);
+      }
     }
   }
 
