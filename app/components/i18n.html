@@ -49,7 +49,9 @@
     <h3>Enable i18n</h3>
     <p>To enable i18n feature, in the HTML body tag add attribute <mark>i18n-lang</mark> with value of default i18n Language Code ( <mark>lc_CC</mark> )</p>
     <script type="text/code" class="code trim no-num-tool" data-lang="html">
-      <_body i18n-lang="en_US">
+      <_body i18n-lang="en_US"> <!-- loads en_US lang file -->
+
+      <_body i18n-lang="*,en_US,fr_FR"> <!-- attempts to load default browser Lang. if not found in the given list (comma separated), loads en_US (1st in the list) lang file -->
     </script>
   </section>
 
