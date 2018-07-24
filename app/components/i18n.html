@@ -69,11 +69,22 @@
     </script>
 
     <h4>Using Script</h4>
+    <p>Use <mark>spa.i18n.setLang</mark> method to change the language using script manually.</p>
     <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="componentX.js">
 
   //on Click event of Language selection element
-  spa.i18n.setLanguage('ja_JP');
+  spa.i18n.setLang('ja_JP');
 
+
+    </script>
+
+    <h4>onLangChange</h4>
+    <p>Optionally define your custom function <mark>spa.i18n.onLangChange</mark> to call before the language change. The Optional return value of this function overrides the language that is about to be set.</p>
+    <script type="text/code" class="code no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+
+spa.i18n.onLangChange = function(lang){
+  console.log(lang);
+};
 
     </script>
 
