@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.44.0';
+  spa.VERSION = '2.44.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3464,6 +3464,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.getElValue = function (el, escHTML) {
     el = $(el).get(0);
+    if (!el) return;
     var elValue, unchkvalue;
     switch ((el.tagName).toUpperCase()) {
       case "INPUT":
