@@ -523,15 +523,17 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/onRender/i,'').replace(/[^a-zA-Z0-9]/g,'');
   if (spa.isBlank(offlineValidationKey)) {
     var contextName = context.replace(/[^a-zA-Z0-9]/g,'');
-    if (!spa['_validate']._offlineValidationRules.hasOwnProperty(contextName)) {
-      offlineValidationKey = contextName;
-    }
+    //if (!spa['_validate']._offlineValidationRules.hasOwnProperty(contextName)) {
+      offlineValidationKey = contextName; //Always build new offline rules.
+    //}
   }
   spa.console.log('offlineValidationKey: '+offlineValidationKey);
   var prepareOfflineValidationRules = (!spa.isBlank(offlineValidationKey));
   if (prepareOfflineValidationRules)
-  { spa['_validate']._offlineValidationRules[offlineValidationKey] = {rules:{}};
+  { spa.console.log('resetting the rules for '+offlineValidationKey);
+    spa['_validate']._offlineValidationRules[offlineValidationKey] = {rules:{}};
   }
+  spa.console.log(offlineValidationKey, spa['_validate']._offlineValidationRules[offlineValidationKey]);
 
   $context.find(elSelector+"[data-validate]").each(function(index, el){
     var elID = $(el).prop("id");
