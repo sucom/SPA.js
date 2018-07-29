@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.44.1';
+  spa.VERSION = '2.45.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7459,6 +7459,20 @@ window['app']['api'] = window['app']['api'] || {};
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
           }
+
+          if ( (/({)(.[^}])*}/).test(actualUrl) ) {
+            spa.console.log('URL has params>>', actualUrl, options.data);
+            try {
+              var urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
+              actualUrl = spa.api.url(actualUrl.replace(/{{/g,'{').replace(/}}/g,'}'), urlParamsData);
+            } catch (e){};
+            spa.console.log('Updated URL>>', actualUrl);
+          };
+
+          if ((/{([^}])*(}+)/).test(actualUrl)) {
+            console.error('URL has undefined params >', actualUrl);
+          }
+
           options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), "api_/").replace(/\?/, reqMethod+"/data.json");
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
         }
@@ -7471,7 +7485,11 @@ window['app']['api'] = window['app']['api'] || {};
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
     };
-    options.url = (options.url).replace(/{([^}])*}/g,'');//remove any optional url-params {xyz}
+
+    //Final Ajax URL
+    spa.console.log('Final Ajax Url >', options.url);
+    options.url = (options.url).replace(/{([^}])*(}+)(\/*)/g,''); //remove any optional url-params {xyz}
+    spa.console.log('Final Ajax Url Parsed >', options.url);
 
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
