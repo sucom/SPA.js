@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.45.1';
+  spa.VERSION = '2.46.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4283,7 +4283,7 @@ window['app']['api'] = window['app']['api'] || {};
    * */
   spa.urlHash = function (returnOf, hashDelimiter) {
     var retValue = (spa.getLocHash() || "#").substring(1);
-    if (returnOf) {
+    if (returnOf || _.isNumber(returnOf)) {
       hashDelimiter = hashDelimiter || "/";
       retValue = retValue.beginsWithStr(hashDelimiter) ? retValue.substring(retValue.indexOf(hashDelimiter) + (hashDelimiter.length)) : retValue;
       var hashArray = (retValue.length)? retValue.split(hashDelimiter) : [];
@@ -6473,6 +6473,11 @@ window['app']['api'] = window['app']['api'] || {};
                   /*init KeyPauseEvent*/
                   initKeyPauseEvent(viewContainerId);
 
+                  /*display selected i18n lang*/
+                  if ($(viewContainerId).find('.lang-icon,.lang-text').length) {
+                    spa.i18n.displayLang();
+                  }
+
                   /*apply i18n*/
                   spa.i18n.apply(viewContainerId);
 
@@ -7328,23 +7333,27 @@ window['app']['api'] = window['app']['api'] || {};
   spa.i18n.displayLang = function(){
     var selectedLang = $('html').attr('lang');
     if (selectedLang){
-      var selLangCode = selectedLang.replace('-', '_'),
-          $el = $('[data-i18n-lang="'+(selLangCode)+'"]'),
-          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode;
+      var selLangCode   = selectedLang,
+          selLangCode_  = selectedLang.replace('-', '_'),
+          $el           = $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]'),
+          i18nKey       = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_,
+          langClassType = '-';
       $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
       if ($el.length) {
+        langClassType = ($($el[0]).data('i18nLang') || '').replace(/[a-z]/gi,'');
         $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' '));
       }
-      $('.lang-icon').addClass(selLangCode);
+      $('.lang-icon').addClass( (langClassType=='-')? selLangCode : selLangCode_ );
       spa.i18n.apply('.lang-text');
     }
+    return selectedLang;
   };
   function init_i18n_Lang() {
-    function setLang(uLang, options) {
+    function setLang(uLang, options, isAuto) {
       if (uLang) {
         if (spa.i18n.onLangChange) {
           var fnOnLangChange = spa.i18n.onLangChange,
-              nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang) : uLang;
+              nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
           uLang = (spa.is(nLang, 'string'))? nLang : uLang;
         }
         $('html').attr('lang', uLang.replace('_', '-'));
@@ -7353,11 +7362,16 @@ window['app']['api'] = window['app']['api'] || {};
     }
     $(document).on("click", "[data-i18n-lang]", function() {
       var elData = $(this).data(),
-          selLangCode = (elData['i18nLang']||'').replace('-', '_'),
-          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode;
-      setLang(selLangCode, { callback: function(){
+          selLangCode  = (elData['i18nLang']||''),
+          selLangCode_ = (elData['i18nLang']||'').replace('-', '_'),
+          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_;
+      setLang(selLangCode_, { callback: function(){
+        var langClassType = '-', $langSelElement = $('[data-i18n-lang]:first');
+        if ($langSelElement.length) {
+          langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
+        }
         $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
-        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass(selLangCode);
+        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
         spa.i18n.apply('.lang-text');
       }});
     });
@@ -7366,13 +7380,22 @@ window['app']['api'] = window['app']['api'] || {};
     if (defaultLang) {
       if (initialLang == '*') {
         initialLang = spa.i18n.browserLang();
-        if ((','+defaultLang+',').indexOf(','+initialLang+',') < 0) {
-          initialLang = defaultLang.split(',')[1] || '';
+        if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
+          initialLang = initialLang.getLeftStr(2).toLowerCase();
+          var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
+          for (var i=0; i<supportedLangs.length; i++){
+            supportedLang = (supportedLangs[i] || '').trim();
+            if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
+              matchLang = supportedLang;
+              break;
+            }
+          }
+          initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
         }
       }
 
       if (initialLang) {
-        setLang(initialLang);
+        setLang(initialLang, {}, true);
         setTimeout(function(){
           spa.i18n.displayLang();
         }, 500);
@@ -7430,7 +7453,7 @@ window['app']['api'] = window['app']['api'] || {};
     if ((options.url).beginsWithStr(spa.api.urlKeyIndicator)) {
       options.url = spa.api.url((options.url).trimLeftStr(spa.api.urlKeyIndicator), options.data);
     };
-    var actualUrl = options.url;
+    var actualUrl = options.url, isMockReq;
 
     //any request Header to send?
     var reqHeaders = spa.findSafe(window, 'app.api.reqHeaders');
@@ -7471,6 +7494,7 @@ window['app']['api'] = window['app']['api'] || {};
 
           options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), "api_/").replace(/\?/, reqMethod+"/data.json");
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
+          isMockReq = true;
         }
       }
     } else {
@@ -7503,6 +7527,11 @@ window['app']['api'] = window['app']['api'] || {};
     if (spa.ajaxPreProcess) {
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
     }
+
+    if (isMockReq) {
+      options['headers'] = _.merge({}, options['headers'], {'Z-Live-URL':actualUrl, 'Z-Payload': spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data']) });
+      delete options['data'];
+    };
 
     if (app['debug'] || spa['debug']) console.log('ajax Options', options);
   }
