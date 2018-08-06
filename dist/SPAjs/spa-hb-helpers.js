@@ -839,7 +839,10 @@
       fnCallResponse = fn2call.apply(fnContext, arguments);
     }
     if (isBlockCall(helperOptions)) {
-      if (is(fnCallResponse, 'undefined')) {
+      if ( is(fnCallResponse, 'undefined') ||
+          (is(fnCallResponse, 'boolean|number|string') && !fnCallResponse) ||
+          (is(fnCallResponse, 'array|object') && spa.isBlank(fnCallResponse))
+         ) {
         return helperOptions.inverse(fnCallResponse);
       } else {
         return helperOptions.fn(fnCallResponse);
