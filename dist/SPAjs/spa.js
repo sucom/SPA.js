@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.46.1';
+  spa.VERSION = '2.46.2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4454,7 +4454,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.i18n.apply = spa.i18n.render = function (contextRoot, elSelector) {
     if (spa.i18n.loaded || window['Liferay']) {
-      contextRoot = contextRoot || "body";
+      contextRoot = contextRoot || "html";
       elSelector = elSelector || "";
       var isTag = contextRoot.beginsWithStr("<");
       if (isTag) {
@@ -6474,7 +6474,7 @@ window['app']['api'] = window['app']['api'] || {};
                   initKeyPauseEvent(viewContainerId);
 
                   /*display selected i18n lang*/
-                  if ($(viewContainerId).find('.lang-icon,.lang-text').length) {
+                  if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
                     spa.i18n.displayLang();
                   }
 
@@ -7339,7 +7339,9 @@ window['app']['api'] = window['app']['api'] || {};
           i18nKey       = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_,
           langClassType = '-';
       $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
+      $('[data-i18n-lang]').removeClass('active');
       if ($el.length) {
+        $el.addClass('active');
         langClassType = ($($el[0]).data('i18nLang') || '').replace(/[a-z]/gi,'');
         $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' '));
       }
@@ -7372,6 +7374,8 @@ window['app']['api'] = window['app']['api'] || {};
         }
         $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
         $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
+        $('[data-i18n-lang]').removeClass('active');
+        $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
         spa.i18n.apply('.lang-text');
       }});
     });
