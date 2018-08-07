@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.46.2';
+  spa.VERSION = '2.47.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6328,7 +6328,9 @@ window['app']['api'] = window['app']['api'] || {};
                 retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
                 retValue['model'] = spaTemplateModelData[viewDataModelName];
                 if (fnDataProcess && _.isFunction(fnDataProcess)) {
-                  retValue['model'] = fnDataProcess.call($.extend({}, (app[rCompName] || {})), spaTemplateModelData[viewDataModelName], spaRVOptions);
+                  var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
+                      compDataProps = _.pick(dataProcessContext, ['data','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']);
+                  retValue['model'] = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
                   if (!_.isObject(retValue['model'])) {
                     retValue['model'] = retValue['modelOriginal'];
                   }
