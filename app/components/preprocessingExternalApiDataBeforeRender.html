@@ -8,7 +8,7 @@
     spa.$('componentX', {
 
       dataUrl: '@apiUrlKey',
-      dataProcess: function( apiResponse ) {
+      dataProcess: function( apiResponse, componentDataProperties ) {
 
         apiResponse['fullName'] = apiResponse.firstName + ' ' + apiResponse.lastName;
         apiResponse['newField'] = 'New Value';
@@ -25,7 +25,7 @@
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$render('componentX', {
 
-      dataProcess: function( apiResponse ) {
+      dataProcess: function( apiResponse, componentDataProperties ) {
 
         //doSomething...
 
