@@ -37,26 +37,4 @@
     spa.$$render( { componentX: { options }, componentY: { options } } );
   </script>
 
-  <h2>Remove/Destroy Component(s)</h2>
-  <h3><mark>spa.$remove</mark> - Removes rendered component from DOM</h3>
-  <h3><mark>spa.$destroy</mark> - Removes rendered component from DOM and removes from SPA 'app' scope completely.</h3>
-
-  <p>Remove/Destroy Component(S) from DOM/SPA.</p>
-  <script type="text/code" class="code trim" data-lang="JavaScript">
-    spa.$remove( 'componentX' );
-
-    spa.$destroy( 'componentX' );
-
-    /*
-    pass arguments as following to remove/destroy multiple components.
-
-    ( 'componentX', 'componentY', 'componentZ' ) //comma separated arguments
-    OR
-    ( 'componentX, componentY, componentZ' ) //single string comma separated
-    OR
-    ( ['componentX', 'componentY', 'componentZ'] ) //as array
-
-    */
-  </script>
-
 </div>
