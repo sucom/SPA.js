@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.47.0';
+  spa.VERSION = '2.48.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5272,6 +5272,18 @@ window['app']['api'] = window['app']['api'] || {};
   spa.$renderCount = function(componentName){
     return spa.findSafe(window, 'app.'+componentName+'.__renderCount__', 0);
   };
+
+  spa.removeComponent = function (componentName) {
+    var $componentContainer = $('[data-rendered-component="'+(componentName.trim())+'"]');
+    if ($componentContainer.length) {
+      $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
+    }
+  };
+  spa.destroyComponent = function (componentName) {
+    spa.removeComponent(componentName);
+    delete app[(componentName.trim())];
+  };
+
   spa.refreshComponent = spa.$refresh = function (componentName, options) {
     if (!componentName) return;
     options = options || {};
@@ -5453,6 +5465,62 @@ window['app']['api'] = window['app']['api'] || {};
         _.each(compList, function(compName){
           spa.console.info('Rendering spa-component:['+compName+']');
           spa.refreshComponent(compName.trim());
+        });
+      }
+    }
+  };
+
+  /*
+   * ( 'compName1' ) //as argument
+   * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments
+   *
+   * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated
+   * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array
+   *
+   */
+  spa.removeComponents = spa.$remove = spa.$$remove = function () {
+    if (arguments.length){
+      var compList = arguments; //spa.removeComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) { //spa.removeComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //spa.removeComponents('compName1') | spa.renderComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        }
+      }
+
+      if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Removing spa-component:['+compName.trim()+']');
+          spa.removeComponent(compName.trim());
+        });
+      }
+    }
+  };
+
+  /*
+   * ( 'compName1' ) //as argument
+   * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments
+   *
+   * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated
+   * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array
+   *
+   */
+  spa.destroyComponents = spa.$destroy = spa.$$destroy = function () {
+    if (arguments.length){
+      var compList = arguments; //spa.destroyComponents('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) { //spa.destroyComponents(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //spa.destroyComponents('compName1') | spa.renderComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        }
+      }
+
+      if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Destroying spa-component:['+compName.trim()+']');
+          spa.destroyComponent(compName.trim());
         });
       }
     }
@@ -6451,6 +6519,7 @@ window['app']['api'] = window['app']['api'] || {};
                     break;
                 };
 
+                $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
                 _$renderCountUpdate(rCompName);
                 spa.console.info("Render: SUCCESS");
                 var rhKeys = _.keys(spa.renderHistory);
