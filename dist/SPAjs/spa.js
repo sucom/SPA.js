@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.48.0';
+  spa.VERSION = '2.49.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5132,38 +5132,88 @@ window['app']['api'] = window['app']['api'] || {};
       console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
       return;
     };
-    if (componentName.replace(/[a-z0-9]/gi,'')) {
-      console.error('Invalid component name '+componentName+'. Component name has invalid character.');
-      return;
-    };
 
+    var req2Create = !!options;
     options = options || {};
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
-      componentName = options['name'] || options['componentName'] || (''+spa.now());
+      componentName = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
     }
     if (is(componentName, 'string') && componentName) {
       componentName = componentName.trim();
       if (componentName) {
-        options['componentName'] = componentName;
-        if (!options.hasOwnProperty('beforeRender')) {
-          options['beforeRender'] = 'app.'+componentName+'.beforeRender';
-        }
-        if (!options.hasOwnProperty('renderCallback')) {
-          options['renderCallback'] = 'app.'+componentName+'.renderCallback';
-        }
-        if (options.hasOwnProperty('require')) {
-          spa.loadComponents(options['require'], function(){
-            spa.console.log('Required components successfully loaded.');
-          }, function(){
-            spa.console.log('Failed to load required components.');
-          });
-        }
 
-        options = adjustComponentOptions(componentName, options);
+        if (req2Create) {
+          //Create New Component
+          if (componentName.replace(/[a-z0-9]/gi,'')) {
+            console.error('Invalid component name '+componentName+'. Component name has invalid character.');
+            return;
+          };
 
-        spa.components[componentName] = options;
-        spa.extendComponent(componentName);
+          if (spa.components[componentName]) {
+            //already registered
+            console.error('Component ['+componentName+'] has been created already.');
+            return;
+          }
+
+          options['componentName'] = componentName;
+          if (!options.hasOwnProperty('beforeRender')) {
+            options['beforeRender'] = 'app.'+componentName+'.beforeRender';
+          }
+          if (!options.hasOwnProperty('renderCallback')) {
+            options['renderCallback'] = 'app.'+componentName+'.renderCallback';
+          }
+          if (options.hasOwnProperty('require')) {
+            spa.loadComponents(options['require'], function(){
+              spa.console.log('Required components successfully loaded.');
+            }, function(){
+              spa.console.log('Failed to load required components.');
+            });
+          }
+
+          options = adjustComponentOptions(componentName, options);
+
+          spa.components[componentName] = options;
+          spa.extendComponent(componentName);
+
+        } else {
+          //Req to get DOM
+          var elSelector, $retDOM, compIndex=-1;
+          if (componentName.indexOf(' ')>0) {
+            elSelector    = componentName.getRightStr(' ').trim();
+            componentName = componentName.getLeftStr(' ');
+          }
+
+          if (componentName.indexOf(':')>0) {
+            compIndex = spa.toInt(componentName.getRightStr(':').trim());
+            componentName = componentName.getLeftStr(':');
+          }
+
+          if (!spa.components[componentName]) {
+            console.warn('Unknown SPA Component ['+componentName+'].');
+          }
+
+          $retDOM = $('[data-rendered-component="'+componentName+'"]');
+          if ($retDOM.length && compIndex>=0) {
+            $retDOM = $($retDOM[compIndex]);
+          }
+          if (elSelector && $retDOM.length) {
+            if (elSelector[0] == '<') {
+              elSelector = elSelector.getRightStr(0).trim();
+              if ($retDOM.find('[data-rendered-component]').length) {
+                $retDOM = $retDOM.find(elSelector).filter(function(){
+                            return (($(this).closest('[data-rendered-component]').data('renderedComponent')) == componentName);
+                          });
+              } else {
+                $retDOM = $retDOM.find(elSelector);
+              }
+            } else {
+              $retDOM = $retDOM.find(elSelector);
+            }
+          }
+
+          return $retDOM;
+        }
       }
     }
   };
@@ -5274,16 +5324,93 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   spa.removeComponent = function (componentName) {
-    var $componentContainer = $('[data-rendered-component="'+(componentName.trim())+'"]');
-    if ($componentContainer.length) {
-      $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
+    componentName = (componentName || '').trim();
+    if (componentName) {
+      var $componentContainer = $('[data-rendered-component="'+(componentName)+'"]');
+      if ($componentContainer.length) {
+        $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
+      }
     }
   };
   spa.destroyComponent = function (componentName) {
-    spa.removeComponent(componentName);
-    delete app[(componentName.trim())];
+    componentName = (componentName || '').trim();
+    if (componentName) {
+      spa.removeComponent(componentName);
+      delete app[componentName];
+    }
+  };
+  spa.showComponent = function (componentName) {
+    componentName = (componentName || '').trim();
+    if (componentName) {
+      $('[data-rendered-component="'+componentName+'"]').show();
+    }
+  };
+  spa.hideComponent = function (componentName) {
+    componentName = (componentName || '').trim();
+    if (componentName) {
+      $('[data-rendered-component="'+componentName+'"]').hide();
+    }
+  };
+  spa.disableComponent = function (componentName) {
+    componentName = (componentName || '').trim();
+    if (componentName) {
+      $('[data-rendered-component="'+componentName+'"]').css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
+    }
+  };
+  spa.enableComponent = function (componentName) {
+    componentName = (componentName || '').trim();
+    if (componentName) {
+      $('[data-rendered-component="'+componentName+'"]').css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
+    }
   };
 
+  /*
+   * ( 'compName1' )                                   //as argument
+   * ( 'compName1', 'compName2', 'compName3', ... )    //as arguments
+   *
+   * ( 'compName1, compName2, compName3, ...' )        //as Single String with comma separated
+   * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array
+   */
+  function _spaComponentOp(){
+    var actionName = this.action;
+    if (arguments.length){
+      var compList = arguments; //('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) { //(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //('compName1') | ('compName1,compName2');
+          compList = arguments[0].split(',');
+        }
+      }
+      spa.console.log(compList);
+      if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info(actionName+' spa-component:['+compName.trim()+']');
+          spa[actionName](compName.trim());
+        });
+      }
+    }
+  }
+  spa.removeComponents = spa.$remove = spa.$$remove = function () {
+    _spaComponentOp.apply({action: 'removeComponent'}, arguments);
+  };
+  spa.destroyComponents = spa.$destroy = spa.$$destroy = function () {
+    _spaComponentOp.apply({action: 'destroyComponent'}, arguments);
+  };
+  spa.showComponents = spa.$show = spa.$$show = function () {
+    _spaComponentOp.apply({action: 'showComponent'}, arguments);
+  };
+  spa.hideComponents = spa.$hide = spa.$$hide = function () {
+    _spaComponentOp.apply({action: 'hideComponent'}, arguments);
+  };
+  spa.enableComponents = spa.$enable = spa.$$enable = function () {
+    _spaComponentOp.apply({action: 'enableComponent'}, arguments);
+  };
+  spa.disableComponents = spa.$disable = spa.$$disable = function () {
+    _spaComponentOp.apply({action: 'disableComponent'}, arguments);
+  };
+
+  //////////////////////////////////////////////////////////////////////////////////
   spa.refreshComponent = spa.$refresh = function (componentName, options) {
     if (!componentName) return;
     options = options || {};
@@ -5399,131 +5526,46 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
-/*
- * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
- *
- * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
- * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array without options
- * ( { compName1: {overrideOptions}, compName2: {overrideOptions}, ... } ) //as argument as Object
- *
- */
+ /*
+  * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
+  *
+  * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
+  * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array without options
+  * ( { compName1: {overrideOptions}, compName2: {overrideOptions}, ... } ) //as argument as Object
+  *
+  */
+  function _spaRenderRefreshComponents(){
+    var actionName = this.action;
+    if (arguments.length){
+      var compList = arguments;                //('compName1', 'compName2', 'compName3');
+      if (arguments.length == 1) {
+        if (_.isArray(arguments[0])) {         //(['compName1', 'compName2', 'compName3']);
+          compList = arguments[0];
+        } else if (_.isString(arguments[0])) { //('compName1') | spa.renderComponents('compName1,compName2');
+          compList = arguments[0].split(',');
+        } else {
+          compList = arguments[0];             //( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+        }
+      }
+
+      if (spa.is(compList, 'object')) {
+        _.each(Object.keys(compList), function(compName){
+          spa.console.info('Rendering spa-component:['+compName+']');
+          spa[actionName](compName, compList[compName]);
+        });
+      } else if (compList && compList.length) {
+        _.each(compList, function(compName){
+          spa.console.info('Rendering spa-component:['+compName+']');
+          spa[actionName](compName.trim());
+        });
+      }
+    }
+  }
   spa.renderComponents = spa.$$render = function () {
-    if (arguments.length){
-      var compList = arguments; //spa.renderComponents('compName1', 'compName2', 'compName3');
-      if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) { //spa.renderComponents(['compName1', 'compName2', 'compName3']);
-          compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //spa.renderComponents('compName1') | spa.renderComponents('compName1,compName2');
-          compList = arguments[0].split(',');
-        } else {
-          compList = arguments[0]; // spa.renderComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
-        }
-      }
-
-      if (spa.is(compList, 'object')) {
-        _.each(Object.keys(compList), function(compName){
-          spa.console.info('Rendering spa-component:['+compName+']');
-          spa.renderComponent(compName, compList[compName]);
-        });
-      } else if (compList && compList.length) {
-        _.each(compList, function(compName){
-          spa.console.info('Rendering spa-component:['+compName+']');
-          spa.renderComponent(compName.trim());
-        });
-      }
-    }
-
+    _spaRenderRefreshComponents.apply({action: 'renderComponent'}, arguments);
   };
-
-/*
- * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
- *
- * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
- * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array without options
- * ( { compName1: {overrideOptions}, compName2: {overrideOptions}, ... } ) //as argument as Object
- *
- */
   spa.refreshComponents = spa.$$refresh = function () {
-    if (arguments.length){
-      var compList = arguments; //spa.refreshComponents('compName1', 'compName2', 'compName3');
-      if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) { //spa.refreshComponents(['compName1', 'compName2', 'compName3']);
-          compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //spa.refreshComponents('compName1') | spa.refreshComponents('compName1,compName2');
-          compList = arguments[0].split(',');
-        } else {
-          compList = arguments[0]; // spa.refreshComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
-        }
-      }
-
-      if (spa.is(compList, 'object')) {
-        _.each(Object.keys(compList), function(compName){
-          spa.console.info('Rendering spa-component:['+compName+']');
-          spa.refreshComponent(compName, compList[compName]);
-        });
-      } else if (compList && compList.length) {
-        _.each(compList, function(compName){
-          spa.console.info('Rendering spa-component:['+compName+']');
-          spa.refreshComponent(compName.trim());
-        });
-      }
-    }
-  };
-
-  /*
-   * ( 'compName1' ) //as argument
-   * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments
-   *
-   * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated
-   * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array
-   *
-   */
-  spa.removeComponents = spa.$remove = spa.$$remove = function () {
-    if (arguments.length){
-      var compList = arguments; //spa.removeComponents('compName1', 'compName2', 'compName3');
-      if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) { //spa.removeComponents(['compName1', 'compName2', 'compName3']);
-          compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //spa.removeComponents('compName1') | spa.renderComponents('compName1,compName2');
-          compList = arguments[0].split(',');
-        }
-      }
-
-      if (compList && compList.length) {
-        _.each(compList, function(compName){
-          spa.console.info('Removing spa-component:['+compName.trim()+']');
-          spa.removeComponent(compName.trim());
-        });
-      }
-    }
-  };
-
-  /*
-   * ( 'compName1' ) //as argument
-   * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments
-   *
-   * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated
-   * ( ['compName1', 'compName2', 'compName3', ... ] ) //as Single Array
-   *
-   */
-  spa.destroyComponents = spa.$destroy = spa.$$destroy = function () {
-    if (arguments.length){
-      var compList = arguments; //spa.destroyComponents('compName1', 'compName2', 'compName3');
-      if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) { //spa.destroyComponents(['compName1', 'compName2', 'compName3']);
-          compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //spa.destroyComponents('compName1') | spa.renderComponents('compName1,compName2');
-          compList = arguments[0].split(',');
-        }
-      }
-
-      if (compList && compList.length) {
-        _.each(compList, function(compName){
-          spa.console.info('Destroying spa-component:['+compName.trim()+']');
-          spa.destroyComponent(compName.trim());
-        });
-      }
-    }
+    _spaRenderRefreshComponents.apply({action: 'refreshComponent'}, arguments);
   };
 
   spa.renderComponentsInHtml = function (scope, componentName, noDefer) {
@@ -6761,6 +6803,24 @@ window['app']['api'] = window['app']['api'] || {};
   $.extend({
     spaRender: function (obj, opt) {
       $(obj).spaRender(opt);
+    }
+  });
+
+  //Extend jQuery for Util Functions
+  $.fn.extend({
+    disable: function(disable){
+      if ((!!disable) || spa.is(disable, 'undefined')) {
+        return this.css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
+      } else {
+        return this.enable(true);
+      }
+    },
+    enable: function(enable){
+      if ((!!enable) || spa.is(enable, 'undefined')) {
+        return this.css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
+      } else {
+        return this.disable(true);
+      }
     }
   });
 

@@ -1,14 +1,14 @@
 <div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
-  <h2>Remove/Destroy Component(s)</h2>
+  <h2>Show/Hide Component(s)</h2>
   <h6>(from v2.49.0+)</h6>
-  <h3><mark>spa.$remove</mark> - Removes rendered component from DOM</h3>
-  <h3><mark>spa.$destroy</mark> - Removes rendered component from DOM and removes from SPA 'app' scope completely.</h3>
+  <h3><mark>spa.$show</mark> - Shows rendered component(s) in DOM</h3>
+  <h3><mark>spa.$hide</mark> - Hides rendered component(s) in DOM.</h3>
 
-  <p>Remove/Destroy Component(S) from DOM/SPA.</p>
+  <p>Show/Hide Component(S) from DOM/SPA.</p>
   <script type="text/code" class="code trim" data-lang="JavaScript">
-    spa.$remove( 'componentX' );
+    spa.$show( 'componentX' );
 
-    spa.$destroy( 'componentX' );
+    spa.$hide( 'componentX' );
 
     /*
     pass arguments as following to remove/destroy multiple components.

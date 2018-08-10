@@ -1,0 +1,29 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Query/Select element(s) from rendered component</h2>
+  <h6>(from v2.49.0+)</h6>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+
+    spa.$( 'componentX' );
+    //Returns jQuery Object of the container of the rendered componentX.
+
+    spa.$( 'componentX .btn' );
+    //Returns jQuery Object of elements(.btn) within the rendered componentX.
+    //Includes any other component's elements(.btn) rendered within componentX.
+
+    spa.$( 'componentX < .btn' );
+    //Returns jQuery Object of elements(.btn) within the rendered componentX.
+    //Excludes any other component's elements(.btn) rendered within componentX.
+
+    //This helps to chain any jQuery opertions on the return results.
+    spa.$( 'componentX .btn' ).addClass( 'some-class' );
+
+    //if multiple instances of componentX is rendered, use :index for specific instance of componentX.
+    spa.$( 'componentX:0 .btn' );
+
+    //use jQuery's add method to combine mutliple element selectors from different components, if needed.
+    spa.$('componentX .btn').add( spa.$('componentY .btn') );
+
+
+  </script>
+</div>
