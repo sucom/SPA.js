@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.49.0';
+  spa.VERSION = '2.49.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4602,12 +4602,10 @@ window['app']['api'] = window['app']['api'] || {};
         isChanged = (el.checked != el.defaultChecked);
       } else if ('radio' == el.type) {
         $(el).closest('form').find(':radio[name="'+el.name+'"]').each(function(idx, rEl){
-          if (rEl.checked == rEl.defaultChecked) $(rEl).removeClass('changed');
           isChanged = isChanged || (rEl.checked != rEl.defaultChecked);
         });
       } else if ('INPUT,TEXTAREA'.indexOf(el.tagName) >= 0) {
         isChanged = (el.value != el.defaultValue);
-        triggerFormChange = (e['type'] != 'change');
       } else if ('SELECT' == el.tagName) {
         var def=0, oIndex, oLength, opt;
         for (oIndex=0, oLength=el.options.length; oIndex < oLength; oIndex++) {
