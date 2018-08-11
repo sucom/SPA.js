@@ -1,0 +1,70 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+	<h2>Custom Helpers</h2>
+	<p>The component specific custom helpers can be used to process the expression(data) within the template.</p>
+
+  componentX template (<mark>componentX.html</mark>):
+  <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+    <div>
+
+      <div>
+        <span><b>Name</b></span>:
+        <span>
+          <!-- calls app.componentX.getTitle function with argument gender -->
+          {{:fn '{$}getTitle' gender }}
+
+          {{ first_name }} {{ last_name }}
+        </span>
+      </div>
+
+      <div>
+        <span><b>eMail</b></span>:
+        <span>{{:upper email }}</span>
+      </div>
+
+    </div>
+	</script>
+
+  componentX script (<mark>componentX.js</mark>):
+  <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+    spa.$('viewData', {
+
+      data: {
+        "id": 1,
+        "first_name": "Cordey",
+        "last_name": "Janous",
+        "email": "cjanous0@guardian.co.uk",
+        "gender": "Female"
+      }
+
+    });
+
+    spa.$extend('viewData', {
+
+      getTitle: function( gender ) {
+        return {'Male': 'Mr.', 'Female': 'Ms.'}[gender];
+      }
+
+    });
+  </script>
+
+	<h3>Example</h3>
+	<p>For a quick start,
+	  <ol>
+		<li>1. download these examples
+			<a href="spa-examples_cdn/ex003-spa-basic-template-helper-custom.zip" download="" target="_blank">Custom Helpers</a>,
+		</li>
+		<li>2. unzip to your workspace.</li>
+		<li>3. open the folder in Visual Studio Code or any editor.</li>
+		<li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+	  </ol>
+	</p>
+
+	<h2>Global Custom Handlebars Helpers</h2>
+  <p>For global custom helpers refer to native <mark>Handlebars.registerHelper</mark> method.
+    <ul>
+      <li><a href="https://handlebarsjs.com/expressions.html" target="_blank">Expression Helper</a></li>
+      <li><a href="https://handlebarsjs.com/block_helpers.html" target="_blank">Block Helper</a></li>
+    </ul>
+  </p>
+
+</div>
