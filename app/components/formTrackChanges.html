@@ -1,8 +1,247 @@
 <div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
-  <h1>SPA Forms</h1>
+  <h1>SPA Form - Track Changes</h1>
 
   <section>
-    <p>Coming soon in SPAjs. Lightweight fully configurable form-validation with i18n feature is work-in-progress.
+    <p>SPAjs simplified the development effort to track element(s) changes with control buttons.</p>
+
+    <h3>Example</h3>
+    <p>For a quick start,
+      <ol>
+        <li>1. download this <a href="spa-examples_cdn/ex009-spa-basic-template-form-track-changes.zip" download="" target="_blank">example bundle</a>.</li>
+        <li>2. unzip to your workspace.</li>
+        <li>3. open the folder in Visual Studio Code or any editor.</li>
+        <li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+      </ol>
     </p>
   </section>
+
+  <section>
+    <h3>Enable Track Changes using class</h3>
+    <p>
+      <ol>
+        <li>1. using the form class: <mark>track-changes</mark></li>
+        <li>2. using the element class: <mark>track-change</mark></li>
+        <li>3. using the button class: <mark>ctrl-on-change</mark></li>
+      </ol>
+    </p>
+  </section>
+
+  <section>
+    <h3>Using FORM class <mark>track-changes</mark></h3>
+
+    <p><i>componentX.html</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <div>
+
+        <!-- add "track-changes" class in form tag -->
+        <form class="track-changes">
+
+          <div class="input-group">
+            <div>First Name:</div>
+            <input type="text" name="firstname" value="{{ firstName }}">
+          </div>
+
+          <div class="input-group">
+            <div>Last Name:</div>
+            <input type="text" name="lastname" value="{{ lastName }}">
+          </div>
+
+          <div class="input-group">
+            <div>Email:</div>
+            <input type="text" name="email" value="{{ email }}">
+          </div>
+
+          <div class="input-group">
+            <button>Update</button>
+          </div>
+
+        </form>
+
+      </div>
+    </script>
+
+    <p><i>componentX.css</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="css" data-title="componentX.css">
+      .input-group {
+        box-sizing: border-box;
+      }
+
+      input, input:focus {
+        outline: none;
+        border: 0;
+        border-bottom: 1px solid #ccc;
+        margin: 15px;
+      }
+
+      /* on change the element will have this "changed" class */
+      input.changed{
+        border-bottom: 1px solid orange;
+      }
+    </script>
+
+    <p><i>componentX.js</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+      spa.$('componentX', {
+
+        target: '#containerComponent',
+
+        style: '.',
+
+        data: {
+          "id": 1,
+          "firstName": "Cordey",
+          "lastName": "Janous",
+          "email": "em@ail.com",
+          "gender": "Female",
+          "active": true
+        }
+
+
+      });
+    </script>
+
+  </section>
+
+  <section>
+    <h3>Using ELEMENT class <mark>track-change</mark></h3>
+
+    <p>If needed, the specific elements can be tracked using element class <mark>track-change</mark></p>
+
+    <p><i>componentX.html</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <div>
+
+        <!-- NOTE: NO 'track-changes' CLASS in form tag -->
+        <form>
+
+          <div class="input-group">
+            <div>First Name:</div>
+            <input type="text" name="firstname" value="{{ firstName }}">
+          </div>
+
+          <div class="input-group">
+            <div>Last Name:</div>
+            <input type="text" name="lastname" value="{{ lastName }}">
+          </div>
+
+          <div class="input-group">
+            <div>Email:</div>
+
+            <!-- only tracking email field -->
+            <input class="track-change" type="text" name="email" value="{{ email }}">
+
+          </div>
+
+          <div class="input-group">
+            <button>Update</button>
+          </div>
+
+        </form>
+
+      </div>
+    </script>
+  </section>
+
+  <section>
+    <h3>Using Control BUTTON class <mark>ctrl-on-change</mark></h3>
+
+    <p>The form's control buttons can be enabled/disabled using BUTTON class <mark>ctrl-on-change</mark></p>
+
+    <p><i>componentX.html</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <div>
+
+        <!-- NOTE: NO 'track-changes' CLASS in form tag -->
+        <form>
+
+          <div class="input-group">
+            <div>First Name:</div>
+            <input type="text" name="firstname" value="{{ firstName }}">
+          </div>
+
+          <div class="input-group">
+            <div>Last Name:</div>
+            <input type="text" name="lastname" value="{{ lastName }}">
+          </div>
+
+          <div class="input-group">
+            <div>Email:</div>
+            <input type="text" name="email" value="{{ email }}">
+          </div>
+
+          <div class="input-group">
+            <!-- add "ctrl-on-change" class to contol button(s) -->
+            <button class="ctrl-on-change">Update</button>
+          </div>
+
+        </form>
+
+      </div>
+    </script>
+
+    <p>Optionaly, a methor can intercept the enable/disable of the control buttons using event-attribute <mark>onBeforeChange</mark> of the specific button.</p>
+
+    <p><i>componentX.html</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <!-- ................. -->
+
+      <div class="input-group">
+        <!-- add "ctrl-on-change" class to contol button(s) -->
+        <button class="ctrl-on-change" onBeforeChange="{$}beforeChange();">Update</button>
+      </div>
+
+      <!-- ................. -->
+    </script>
+
+    <p><i>componentX.js</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+      spa.$extend('componentX', {
+
+        beforeChange: function( isEnable ){
+          console.log('Button to be Enabled ', isEnable);
+
+          //do something and return true/false
+          //true: to enable the button
+          //false: to disable the button
+
+          return isEnable;
+        }
+
+      });
+    </script>
+
+  </section>
+
+  <section>
+    <h3>Check whether Form Element(s) or Specific Element(s) have been Changed using script.</h3>
+
+    <p><i>componentX.js</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript">
+      // ................
+
+      spa.$('componentX #formID').isChanged(); //RETURNS true if any one of the elements has been changed. RETURNS false if no changes.
+
+      spa.$('componentX #formID').isChanged( 'all' ); //RETURNS true if ALL the elements have been changed, otherwise false.
+
+      spa.$('componentX #formID .mandate').isChanged(); //RETURNS true if any one of the (.mandate) elements has been changed. RETURNS false if no changes.
+
+      spa.$('componentX #formID .mandate').isChanged( 'all' ); //RETURNS true if ALL the (.mandate) elements have been changed, otherwise false.
+
+      // ................
+    </script>
+
+  </section>
+
+  <section>
+    <h3>Example</h3>
+    <p>For a quick start,
+      <ol>
+        <li>1. download this <a href="spa-examples_cdn/ex009-spa-basic-template-form-track-changes.zip" download="" target="_blank">example bundle</a>.</li>
+        <li>2. unzip to your workspace.</li>
+        <li>3. open the folder in Visual Studio Code or any editor.</li>
+        <li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+      </ol>
+    </p>
+  </section>
+
 </div>
