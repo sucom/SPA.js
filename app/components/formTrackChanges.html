@@ -233,6 +233,22 @@
   </section>
 
   <section>
+    <h3>To reset FORM</h3>
+
+    <p><i>componentX.js</i></p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript">
+      // ................
+
+      spa.$('componentX #formID').trackChanges() //Re-initializes the whole form #formID
+
+      spa.$('componentX #formID .mandate').trackChanges(); //Re-initializes (.mandate) elements.
+
+      // ................
+    </script>
+
+  </section>
+
+  <section>
     <h3>Example</h3>
     <p>For a quick start,
       <ol>
