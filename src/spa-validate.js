@@ -537,6 +537,10 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
 
   $context.find(elSelector+"[data-validate]").each(function(index, el){
     var elID = $(el).prop("id");
+    if (!elID) {
+      elID = (el['name'] || el['type'])+index;
+      $(el).attr('id', elID);
+    }
     var elValidateRules={};
     var elValidateRuleSpec = $(el).data("validate");
     if (elValidateRuleSpec && elValidateRuleSpec.indexOf("{")<0)
@@ -715,7 +719,11 @@ spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(conte
     };
 
     if ($.isEmptyObject(vRules))
-    { failedInfo = {errcode:1, errmsg:"Rules not found in scope ["+context+"]."};
+    { var eCode= 1, eMsg = "Offline rules not found in scope ["+context+"].";
+      if ($validationScope.find('.validation-error,.validation-pending').length) {
+        eCode= 3; eMsg += " Found .validation-error|.validation-pending";
+      }
+      failedInfo = [{errcode:eCode, errmsg:eMsg}];
     }
     else
     { var rules2Validate = _.keys(vRules);
@@ -732,8 +740,10 @@ spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(conte
     }
   }
   else
-  { if ($validationScope.is('[data-validate-form]')) {
-      failedInfo = {errcode:1, errmsg:"Scope not found."};
+  { if (!$validationScope.length) {
+      failedInfo = [{errcode:1, errmsg:"Form Not Found."}];
+    } else if ($validationScope.is('[data-validate-form]')) {
+      failedInfo = [{errcode:1, errmsg:"Form Not Initialized."}];
     }
   }
 
