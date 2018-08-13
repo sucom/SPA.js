@@ -540,7 +540,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   $context.find(elSelector+"[data-validate]").each(function(index, el){
     var elID = $(el).prop("id");
     if (!elID) {
-      elID = (el['name'] || el['type'])+index;
+      elID = (el['name'] || el['type']).replace(/[^a-z]/gi,'')+index;
       $(el).attr('id', elID);
     }
     var elValidateRules={};
