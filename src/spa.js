@@ -6696,7 +6696,7 @@ window['app']['api'] = window['app']['api'] || {};
         $el.attr('id', formId);
       }
       $elData = $el.data();
-      hasCtrlElements = $el.has('.ctrl-on-change').length;
+      hasCtrlElements = $el.has('.ctrl-on-change,.ctrl-on-validate').length;
 
       if (!$el.is('[data-validate-form]')) $el.attr('data-validate-form', '');
       $el.attr('data-validation-initialized', '');
@@ -6905,6 +6905,14 @@ window['app']['api'] = window['app']['api'] || {};
         return [{errcode:1, errmsg:"Form Not Found."}];
       }
       return (vResponse.length==1)? vResponse[0] : vResponse;
+    },
+    updateValidation: function(isValid, invalidErrMsg){
+      this.each(function(i, el){
+        spa._validate._showValidateMsg(el, invalidErrMsg, isValid);
+      });
+    },
+    updateValidationPromise: function(promiseNames, isValid, invalidErrMsg){
+      spa.updateValidationPromise(promiseNames, this, invalidErrMsg, isValid);
     }
   });
 
