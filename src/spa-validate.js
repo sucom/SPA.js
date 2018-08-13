@@ -505,11 +505,11 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var elSelector = $context.data("validateElFilter") || "";
   var commonValidateRules = splitValidateEvents(spa.toJSON($context.data("validateCommon")||"{}"));
   var commonOnFocusRules  = _.merge({},commonValidateRules['onFocus']);
-  var vDefaults           = spa.toJSON($context.data("validateDefaults") || {});
-  var isDefaultOffline    = ''+(!!vDefaults['offline']);
+  var vFormDefaults       = spa.toJSON($context.data("validateDefaults") || {});
+  var isDefaultOfflineG   = !!vFormDefaults['offline'];
 
   spa.console.log('commonValidateRules');
-  var promiseCheckRule = {fn:_check.promise};
+  var promiseCheckRule = {fn:'_check.promise', offline:false};
   if (spa.isBlank(commonOnFocusRules)){
     commonValidateRules['onFocus'] = promiseCheckRule;
   } else {
@@ -545,9 +545,10 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
     }
     var elValidateRules={};
     var elValidateRuleSpec = $(el).data("validate");
+    var elValidateDefaults = spa.toJSON($(el).data("validateDefaults") || {});
     if (elValidateRuleSpec && elValidateRuleSpec.indexOf("{")<0) //TODO:Need to revisit this specification
     { var elValidateEvents     = ($(el).data("validateEvents")||"onBlur").replace(/[^a-z]/gi," ").normalizeStr().replace(/ /g,"_");
-      var elValidateOffline    = ",offline:"+($(el).data("validateOffline") || isDefaultOffline || "false");
+      var elValidateOffline    = ",offline:"+($(el).data("validateOffline") || isDefaultOfflineG || "false");
       var elValidateFunctions  = "{fn:"+(elValidateRuleSpec.replace(/[,;]/," ").normalizeStr().replace(/ /g, elValidateOffline+"},{fn:"))+elValidateOffline+"}";
       elValidateRuleSpec = "{"+elValidateEvents+":["+elValidateFunctions+"]}";
       //$(el).data("validate", elValidateRuleSpec);
@@ -604,6 +605,8 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
             elValidateRule4Events = [elValidateRule4Events];
           }
           _.each(elValidateRule4Events, function(elValidateRule4Event){
+            if (!elValidateRule4Event.hasOwnProperty('offline')) elValidateRule4Event['offline'] = isDefaultOfflineG;
+            spa.console.log(elValidateRule4Event);
             if (elValidateRule4Event.offline && !elValidateRule4Event['promise']) {
               var newRule = {fn:elValidateRule4Event.fn, msg:elValidateRule4Event.msg};
               if (!spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID]) spa['_validate']._offlineValidationRules[offlineValidationKey].rules[elID] = [];

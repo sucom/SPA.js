@@ -6709,7 +6709,7 @@ window['app']['api'] = window['app']['api'] || {};
       });
 
       //clear validate msg on focus
-      if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg}}');
+      if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg, offline:false}}');
       spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || formId));
       if (!$el.hasClass('track-changes') && hasCtrlElements) {
         spa.trackFormElChange(el);
