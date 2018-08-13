@@ -6686,7 +6686,7 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _initFormValidation(el){
-    var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = spa.findSafe(spa, '_validate.defaults.offline', false);
+    var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = spa.findSafe(spa, '_validate.defaults.offline', true);
 
     if ($el.length == 1) {
       formId  = $el.attr('id') || '';
@@ -6697,7 +6697,7 @@ window['app']['api'] = window['app']['api'] || {};
       $elData = $el.data();
       hasCtrlElements = $el.has('.ctrl-on-change,.ctrl-on-validate').length;
 
-      if (hasCtrlElements && enableDefaultOffline) {
+      if (enableDefaultOffline) {
         var vDefaults = (($el.attr('data-validate-defaults')||'').trim());
         if (vDefaults) {
           if (vDefaults.indexOf('offline')<0) {

@@ -32,7 +32,7 @@ spa['_validateDefaults'] = {
 };
 
 spa['_validate'] = {
-  defaults: {offline: false},
+  defaults: {offline: true},
   _isOnOfflineValidation : false,
   _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
