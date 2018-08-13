@@ -6904,25 +6904,26 @@ window['app']['api'] = window['app']['api'] || {};
       });
     },
     validateForm: function(elFilter, showMsg, validateAll){
-      var vResponse=[], $form = this;
+      var vResponse, $form = this;
       if ($form.length>1) {
-        return [{errcode:1, errmsg:"Too many forms to validate."}];
+        vResponse = [{errcode:1, errmsg:"Too many forms to validate."}];
       } else if ($form.length==1) {
         var formId = '#'+$form.attr('id'), elType = ($form.prop('tagName')||'').toUpperCase();
         if ('FORM' == elType) {
           if (spa.is(elFilter,'string')) {
             var elIDs = $form.find(elFilter).map(function(){ return this.id; }).get().join();
-            vResponse.push(spa.validateForm(formId, elIDs, showMsg, validateAll));
+            vResponse = spa.validateForm(formId, elIDs, showMsg, validateAll);
           } else {
-            vResponse.push(spa.validateForm(formId, arguments[0], arguments[1]));
+            vResponse = spa.validateForm(formId, arguments[0], arguments[1]);
           }
         } else {
-          return [{errcode:1, errmsg:"NOT a FORM"}];
+          vResponse = [{errcode:1, errmsg:"NOT a FORM"}];
         }
       } else {
-        return [{errcode:1, errmsg:"Form Not Found."}];
+        vResponse = [{errcode:1, errmsg:"Form Not Found."}];
       }
-      return (vResponse.length==1)? vResponse[0] : vResponse;
+
+      return vResponse;
     },
     updateValidation: function(isValid, invalidErrMsg){
       this.each(function(i, el){
