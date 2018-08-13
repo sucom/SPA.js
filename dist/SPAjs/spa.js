@@ -6685,9 +6685,8 @@ window['app']['api'] = window['app']['api'] || {};
     });
   }
 
-
   function _initFormValidation(el){
-    var $el = $(el), formId, $elData, hasCtrlElements;
+    var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = spa.findSafe(spa, '_validate.defaults.offline', false);
 
     if ($el.length == 1) {
       formId  = $el.attr('id') || '';
@@ -6697,6 +6696,23 @@ window['app']['api'] = window['app']['api'] || {};
       }
       $elData = $el.data();
       hasCtrlElements = $el.has('.ctrl-on-change,.ctrl-on-validate').length;
+
+      if (hasCtrlElements && enableDefaultOffline) {
+        var vDefaults = (($el.attr('data-validate-defaults')||'').trim());
+        if (vDefaults) {
+          if (vDefaults.indexOf('offline')<0) {
+            if (vDefaults.endsWithStr('}')) {
+              var insertPos = vDefaults.lastIndexOf('}');
+              vDefaults = [vDefaults.slice(0, insertPos), ',offline:true', vDefaults.slice(insertPos)].join('');
+            } else {
+              vDefaults += ',offline:true';
+            }
+          }
+          $el.attr('data-validate-defaults', vDefaults);
+        } else {
+          $el.attr('data-validate-defaults', '{offline:true}');
+        }
+      }
 
       if (!$el.is('[data-validate-form]')) $el.attr('data-validate-form', '');
       $el.attr('data-validation-initialized', '');
@@ -6888,18 +6904,20 @@ window['app']['api'] = window['app']['api'] || {};
       });
     },
     validateForm: function(elFilter, showMsg, validateAll){
-      var vResponse=[], $elements = this;
-      if ($elements.length) {
-        for(var i=0; i < $elements.length; i++){
-          var formId = '#'+$elements[i].id, elType = $elements[i].tagName.toUpperCase();
-          if ('FORM' == elType) {
-            if (spa.is(elFilter,'string')) {
-              var elIDs = $($elements[i]).find(elFilter).map(function(){ return this.id; }).get().join();
-              vResponse.push(spa.validateForm(formId, elIDs, showMsg, validateAll));
-            } else {
-              vResponse.push(spa.validateForm(formId, arguments[0], arguments[1]));
-            }
+      var vResponse=[], $form = this;
+      if ($form.length>1) {
+        return [{errcode:1, errmsg:"Too many forms to validate."}];
+      } else if ($form.length==1) {
+        var formId = '#'+$form.attr('id'), elType = ($form.prop('tagName')||'').toUpperCase();
+        if ('FORM' == elType) {
+          if (spa.is(elFilter,'string')) {
+            var elIDs = $form.find(elFilter).map(function(){ return this.id; }).get().join();
+            vResponse.push(spa.validateForm(formId, elIDs, showMsg, validateAll));
+          } else {
+            vResponse.push(spa.validateForm(formId, arguments[0], arguments[1]));
           }
+        } else {
+          return [{errcode:1, errmsg:"NOT a FORM"}];
         }
       } else {
         return [{errcode:1, errmsg:"Form Not Found."}];

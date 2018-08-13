@@ -32,6 +32,7 @@ spa['_validateDefaults'] = {
 };
 
 spa['_validate'] = {
+  defaults: {offline: false},
   _isOnOfflineValidation : false,
   _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
@@ -505,7 +506,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
   var elSelector = $context.data("validateElFilter") || "";
   var commonValidateRules = splitValidateEvents(spa.toJSON($context.data("validateCommon")||"{}"));
   var commonOnFocusRules  = _.merge({},commonValidateRules['onFocus']);
-  var vFormDefaults       = spa.toJSON($context.data("validateDefaults") || {});
+  var vFormDefaults       = spa.toJSON($context.attr("data-validate-defaults") || {});
   var isDefaultOfflineG   = !!vFormDefaults['offline'];
 
   spa.console.log('commonValidateRules');
@@ -545,7 +546,6 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
     }
     var elValidateRules={};
     var elValidateRuleSpec = $(el).data("validate");
-    var elValidateDefaults = spa.toJSON($(el).data("validateDefaults") || {});
     if (elValidateRuleSpec && elValidateRuleSpec.indexOf("{")<0) //TODO:Need to revisit this specification
     { var elValidateEvents     = ($(el).data("validateEvents")||"onBlur").replace(/[^a-z]/gi," ").normalizeStr().replace(/ /g,"_");
       var elValidateOffline    = ",offline:"+($(el).data("validateOffline") || isDefaultOfflineG || "false");
