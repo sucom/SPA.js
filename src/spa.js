@@ -6439,7 +6439,7 @@ window['app']['api'] = window['app']['api'] || {};
                 retValue['model'] = spaTemplateModelData[viewDataModelName];
                 if (fnDataProcess && _.isFunction(fnDataProcess)) {
                   var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
-                      compDataProps = _.pick(dataProcessContext, ['data','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']);
+                      compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']);
                   retValue['model'] = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
                   if (!_.isObject(retValue['model'])) {
                     retValue['model'] = retValue['modelOriginal'];
@@ -6526,7 +6526,8 @@ window['app']['api'] = window['app']['api'] || {};
                 //beforeRender
                 var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender');
                 if (fnBeforeRender){
-                  spa.renderUtils.runCallbackFn(fnBeforeRender, undefined, renderCallbackContext);
+                  var fnBeforeRenderParam = { view: retValue.view, data: retValue['model'] };
+                  spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
                 };
 
                 /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
