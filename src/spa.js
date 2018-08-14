@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.50.0-RC8';
+  spa.VERSION = '2.50.0-RC9';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5088,13 +5088,18 @@ window['app']['api'] = window['app']['api'] || {};
         , templateExt: '.html'
         , scriptExt: '.js'
         , callback:''
+        , extend$data: true
       },
       set: function(oNewValues, newValue) {
         if (typeof oNewValues == 'object') {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
           _.merge(this, oNewValues);
         } else if (typeof oNewValues == 'string') {
-          spa.setSimpleObjProperty(this, oNewValues, newValue);
+          if (oNewValues == 'components.extend$data') {
+            spa.defaults.components.extend$data = newValue;
+          } else {
+            spa.setSimpleObjProperty(this, oNewValues, newValue);
+          }
         }
         return this;
       }
@@ -5828,6 +5833,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataValidate: false
       , dataProcess: ''
       , dataCache: false
+      , extend$data : spa.defaults.components.extend$data
 
       , dataCollection: {}
 
@@ -6460,7 +6466,7 @@ window['app']['api'] = window['app']['api'] || {};
                     if (compLocOrApiData.hasOwnProperty('spaComponent')) {
                       app[rCompName]['$data'] = {};
                     } else {
-                      app[rCompName]['$data'] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData);
+                      app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData) : {};
                     }
                     app[rCompName]['__global__']= window || {};
                   }
