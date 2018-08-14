@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.50.0-RC9';
+  spa.VERSION = '2.50.0-RC10';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2943,6 +2943,44 @@ window['app']['api'] = window['app']['api'] || {};
   spa.year = function (n) {
     n = n || 0;
     return ((new Date()).getFullYear() + (spa.toInt(n)));
+  };
+
+  //approx memory size
+  spa.sizeOf = function _sizeOf(obj, format) {
+    var bytes = 0;
+
+    function sizeOf(obj) {
+      if(obj !== null && obj !== undefined) {
+        switch(typeof obj) {
+          case 'number':
+            bytes += 8; break;
+          case 'string':
+            bytes += obj.length * 2; break;
+          case 'boolean':
+            bytes += 4; break;
+          case 'object':
+            var objClass = Object.prototype.toString.call(obj).slice(8, -1);
+            if(objClass === 'Object' || objClass === 'Array') {
+              for(var key in obj) {
+                if(!obj.hasOwnProperty(key)) continue;
+                bytes += key.length * 2;
+                sizeOf(obj[key]);
+              }
+            } else bytes += obj.toString().length * 2;
+            break;
+        }
+      }
+      return bytes;
+    };
+
+    function formatByteSize(bytes) {
+        if (bytes < 1024) { return bytes + " B"; }
+        else if (bytes < 1048576) { return (bytes / 1024).toFixed(3) + " KB"; }
+        else if (bytes < 1073741824) { return (bytes / 1048576).toFixed(3) + " MB"; }
+        else { return (bytes / 1073741824).toFixed(3) + " GB"; }
+    };
+
+    return (spa.is(format, 'undefined') || format)? formatByteSize(sizeOf(obj)) : sizeOf(obj);
   };
 
   /*String to Array; spa.range("N1..N2:STEP")
