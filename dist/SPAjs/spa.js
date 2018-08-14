@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.50.0-RC7';
+  spa.VERSION = '2.50.0-RC8';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5337,6 +5337,14 @@ window['app']['api'] = window['app']['api'] || {};
     if (componentName) {
       spa.removeComponent(componentName);
       delete app[componentName];
+      if (spa.components[componentName]) {
+        var tmplScriptId = spa.findSafe(spa.components[componentName], 'template', '');
+        if (tmplScriptId && !tmplScriptId.beginsWithStr('#')) {
+          tmplScriptId = "#__tmpl_" + ((''+tmplScriptId).replace(/[^a-z0-9]/gi,'_'));
+        }
+        $('script'+tmplScriptId).remove();
+        delete spa.components[componentName];
+      }
     }
   };
   spa.showComponent = function (componentName) {
