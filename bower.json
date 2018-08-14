@@ -3,7 +3,7 @@
   "description": "Single Page Application (SPA) Simplified Framework/Library",
   "main": "dist/spa-bundle.js",
 
-  "version": "2.50.0-RC8",
+  "version": "2.50.0-RC9",
   "license": "MIT",
   "homepage": "https://github.com/sucom/SPA.js",
 
