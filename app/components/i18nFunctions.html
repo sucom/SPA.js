@@ -4,29 +4,68 @@
   <section>
     <p>sample Language_en_US.txt:
     <script type="text/code" class="code no-num-tool" data-lang="Diff" data-title="sample Language_en_US.txt">
+... ... ...
 
 warning.select.none = Select {itemName} from the {listName}.
-confirm.action      = Are you sure to {action}.
 
+itemName          = item
+listName          = list
 
+itemName.member   = Member
+listName.member   = Members
+
+itemName.role     = Role
+listName.role     = Roles
+
+confirm.action    = Are you sure to {action}?
+
+action.save       = Save
+action.delete     = Delete
+
+... ... ...
     </script></p>
 
     <h3>Passing Params to Language Text</h3>
     <p>The i18n text can have varibles to display values in run-time using single curly braces <mark>{ variableName }</mark></p>
 
+    <h4>&gt; in HTML</h4>
     <p>Use <mark>data-i18n-data</mark> attribute in Component template to pass the values to the variables.</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <span data-i18n="html:'warning.select.none', data:{itemName:'{itemName.member}', listName:'{listName.member}'}" ></span>
+      <!-- will result: Select Member from the Members. -->
 
+      <!-- OR -->
+
+      <span data-i18n="warning.select.none" data-i18n-data="itemName:'{itemName.role}', listName:'{listName.role}'" ></span>
+      <!-- will result: Select Role from the Roles. -->
+    </script>
+
+    <h4>&gt; in script</h4>
     <p>Use <mark>spa.i18n.text</mark> function to pass the values to the variables.</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="javascript" data-title="componentX.js">
+      spa.i18n.text( 'confirm.action', { action:'{action.save}' } );
+
+      //will return >> Are you sure to Save?
+    </script>
+
+    <blockquote>
+      <p>NOTE: the param-value can be any one of ...</p>
+      <ul>
+        <li>'A Message'</li>
+        <li>{another.i18n.key}</li>
+        <li>{@javascript.variable.name}</li>
+      </ul>
+    </blockquote>
 
   </section>
 
   <section>
-    <h3>i18n Functions</h3>
+    <h3>i18n javascript functions Summary</h3>
     <p><mark>spa.i18n.text(</mark> <strong>i18nKey</strong> <mark>)</mark> ==&gt; returns the text for the <strong>i18nKey</strong> from the active language file.</p>
 
-    <p><mark>spa.i18n.text(</mark> <strong>i18nKey</strong>, <strong>paramsValue</strong> <mark>)</mark> ==&gt; returns the text for the <strong>i18nKey</strong> (replaced variables with <stron>paramsValues</stron>) from the active language file.</p>
+    <p><mark>spa.i18n.text(</mark> <strong>i18nKey</strong>, <strong>paramsJSON</strong> <mark>)</mark> ==&gt; returns the text for the <strong>i18nKey</strong> (replaces variables with <strong>paramsJSON</strong>) from the <strong>active</strong> language file.</p>
 
-    <p><mark>spa.i18n.apply()</mark> ==&gt; applies active language's i18n text for the entire body elements.</p>
+    <p><mark>spa.i18n.apply()</mark> ==&gt; applies active language's i18n text for the entire HTML document.</p>
 
     <p><mark>spa.i18n.apply(</mark> <strong>context</strong> <mark>)</mark> ==&gt; applies active language's i18n text for the <strong>context</strong>'s elements.</p>
 

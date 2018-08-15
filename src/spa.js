@@ -4445,7 +4445,7 @@ window['app']['api'] = window['app']['api'] || {};
     function _i18nValue(iKey){
       var retStr = iKey;
       try {
-        retStr = ''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : $.i18n.prop(iKey));
+        retStr = (''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : $.i18n.prop(iKey))).trim();
         if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
           retStr = _stripEnds(retStr);
         }
@@ -4463,11 +4463,11 @@ window['app']['api'] = window['app']['api'] || {};
   spa.i18n.text = function (i18nKey, data) {
     var dMessage = spa.i18n.value(i18nKey);
     if (data && spa.is(data, 'object')) {
-      var msgParamValue = "";
+      var msgParamValue = "", msgParamValueTrim="";
       _.each(_.keys(data), function (key) {
-        msgParamValue = ""+ data[key];
-        if (msgParamValue && (msgParamValue.beginsWithStrIgnoreCase("i18n:") || msgParamValue.beginsWithStrIgnoreCase("@")) ) msgParamValue = spa.i18n.value(msgParamValue);
-        dMessage = dMessage.replace(new RegExp("{" + key + "}", "g"), msgParamValue);
+        msgParamValue = ""+data[key]; msgParamValueTrim = msgParamValue.trim();
+        if (msgParamValue && (msgParamValueTrim.beginsWithStrIgnoreCase("i18n:") || msgParamValueTrim.beginsWithStrIgnoreCase("@")) ) msgParamValue = spa.i18n.value(msgParamValueTrim);
+        dMessage = dMessage.replace(new RegExp("{\\s*("+(key.trim())+")\\s*}", "g"), msgParamValue);
       });
     }
 
@@ -4479,7 +4479,7 @@ window['app']['api'] = window['app']['api'] || {};
           isDuplicateKey = (isDuplicateKey || lookupKeys.indexOf(key)>=0);
           if (!isDuplicateKey) {
             lookupKeys.push(key);
-            xMsg = xMsg.replace((new RegExp('{'+key+'}', 'g')), spa.i18n.value(key));
+            xMsg = xMsg.replace((new RegExp('{\\s*('+(key.trim())+')\\s*}', 'g')), spa.i18n.value(key));
           }
         });
 
