@@ -223,8 +223,9 @@ spa['_validate'] = {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid)
-                      { // accept only spaces, digits and dashes && digits length > 14
-                        if ( (!(/[^0-9 \-]+/.test(elValue))) && (elValue.replace(/[^0-9]/g,'').length>14)) {
+                      { // accept only spaces, digits and dashes && digits length 15(Ames) or 16(Visa/Master)
+                        var hasValidChar = (!(/[^0-9 \-]+/.test(elValue))), cDigits=elValue.replace(/[^0-9]/g,''), digitsLen = cDigits.length;
+                        if (hasValidChar && digitsLen && ('0345'.indexOf(cDigits[0])>0) && ((digitsLen==15) || (digitsLen==16)) ) {
                           var nCheck = 0, nDigit = 0, bEven = false;
                           var cValue = elValue.replace(/\D/g, "");
                           for (var n = cValue.length - 1; n >= 0; n--)
