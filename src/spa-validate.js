@@ -384,6 +384,7 @@ spa['_validate'] = {
 
                       if (!spa['_validate']._isOnOfflineValidation) {
                         $erClassTarget.removeClass('has-error-msg no-error-msg')[(isValid === false)? 'addClass' : 'removeClass']('validation-error '+(!!msg? 'has-error-msg' : 'no-error-msg'));
+                        $forObj[(isValid === false)? 'addClass' : 'removeClass']('invalid-data');
                         if (!skipCtrlUpdate) spa.updateTrackFormCtrls(forObj['form']);
                       }
 
