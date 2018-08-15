@@ -1,8 +1,414 @@
 <div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
-  <h1>SPA Forms</h1>
+  <h1>SPA Forms - Validation</h1>
+  <p>SPAjs bundle comes with built-in declarative (HTML attribute) form validation feature with an option to do custom validation.</p>
+
+  <!-- <section>
+    <h2>Examples</h2>
+
+    <p>For a quick start,
+      <ol>
+        <li>1. download this <a href="spa-examples_cdn/ex-spa-form-validation.zip" download="" target="_blank">examples bundle</a>.</li>
+        <li>2. unzip to your workspace.</li>
+        <li>3. open the folder in Visual Studio Code or any editor.</li>
+        <li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+      </ol>
+    </p>
+  </section> -->
 
   <section>
-    <p>Coming soon in SPAjs. Lightweight fully configurable form-validation with i18n feature is work-in-progress.
+    <h2>Rules:</h2>
+    <blockquote>
+      <p>
+        <ul>
+          <li>1. Form must have an id attribute.</li>
+          <li>2. Individual form element must be wrapped by div or span or label or p or any tag.</li>
+          <li>3. Individual form element must have name attribute. Avoid using name or id attributes with reserved words like id or name. Refer <a href="https://github.com/jquery/jquery/issues/4156" target="_blank" rel="noopener noreferrer">name issue</a> for more details.</li>
+        </ul>
+      </p>
+    </blockquote>
+
+  </section>
+
+  <section>
+    <h2>SPA built-in validation</h2>
+
+    <p>Add custom styles for the validation error message, input element and it's container.
+      <script type="text/code" class="code trim no-num-tool" data-lang="css">
+        form .error-txt { /* style for error text next the element, when validation fails */
+          color: red;
+        }
+
+        form .invalid-data { /* style for form element, when vaidation fails */
+
+        }
+
+        form .validation-error { /* style for form element's wrapper/container element, when vaidation fails */
+
+        }
+      </script>
+    </p>
+
+    <p><i>componentX.html</i></p>
+    <p>Step-1: Setup Form.
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="1,3,5">
+        <form id="FormX"> <!-- 1. form must have an [id] attribute with unique value -->
+
+          <div class="input-group"> <!-- 2. form element must be wrapped;  .validation-error class will be added when validation fails. -->
+            <div>Email:</div>
+            <input type="text" name="email"> <!-- 3. must have valid [name] attribute;  .invalid-data class will be added when validation fails -->
+          </div>
+
+        </form>
+      </script>
+    </p>
+
+    <p>Step-2: add <mark>data-validate</mark> attribute.
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="5">
+      <form id="FormX">
+
+        <div class="input-group">
+          <div>Email:</div>
+          <input type="text" name="email" data-validate="{onKeyup: [ {fn:'_check.email', msg:'Invalid email.'} ] }" >
+        </div>
+
+        <div>
+          <button onClick="{$}saveForm();"> Save </button>
+        </div>
+      </form>
+      </script>
+
+
+      <strong>data-validate</strong> attribute ...
+      <ul>
+        <li>1. It's JSON structure</li>
+        <li>2. Primary keys are event names like <strong>onKeyup: [ ]</strong> ,
+          <strong>onKeydown: [ ]</strong> , <strong>onKeypress: [ ]</strong> ,
+          <strong>onFocus: [ ]</strong>, <strong>onBlur: [ ]</strong> , etc.</li>
+        <li>3. The events can be combined using underscore (_) <strong>like onKeyup_Blur: [ ]</strong></li>
+        <li>4. The event is an array of validation rules</li>
+        <li>5. A simple validation rule is a JSON with <strong>fn:</strong> and <strong>msg:</strong> properties.</li>
+        <li>6. <strong>fn:</strong> is an validation function name (String) and <strong>msg:</strong> is an error message (String).</li>
+        <li>7. <strong>msg:</strong> can be a simple message or an i18n-key. Example: <strong>msg:'Invalid email address.'</strong> OR <strong>msg:'i18n:msg.invalid.email'</strong></li>
+        <li>8. <strong>fn:</strong> can be any one of the built-in validation functions' name.
+          <blockquote>
+          <p>
+            <ul>
+              <li>'_check.required'     </li>
+              <li>'_check.digits'       </li>
+              <li>'_check.numbers'      </li>
+              <li>'_check.integer'      </li>
+              <li>'_check.alphabet'     </li>
+              <li>'_check.alphanumeric' </li>
+              <li>'_check.email'        </li>
+              <li>'_check.url'          </li>
+              <li>'_check.cardno'       </li>
+              <li>'_check.ipv4'         </li>
+              <li>'_check.ipv6'         </li>
+              <li>'_check.ipaddress'    </li>
+              <li>'_check.subnetmask'   </li>
+              <li>'_check.phoneUS'      </li>
+              <li>'_check.pattern'      </li>
+              <li>'_check.range'        </li>
+              <li>'_check.fixedlength'  </li>
+              <li>'_check.minlength'    </li>
+              <li>'_check.maxlength'    </li>
+              <li>'_check.wordsize'     </li>
+            </ul>
+          </p>
+          </blockquote>
+        </li>
+        <li>9. Additional parameters (data) to these validation functions to be passed via <strong>data-xxx</strong> attributes of the element.
+        <table width="100%">
+          <tr><th width="20%">Function Name</th><th>data-xxx attributes</th></tr>
+          <tr><td>'_check.required'     </td><td> --- </td></tr>
+          <tr><td>'_check.digits'       </td><td> --- </td></tr>
+          <tr><td>'_check.numbers'      </td><td> --- </td></tr>
+          <tr><td>'_check.integer'      </td><td> --- </td></tr>
+          <tr><td>'_check.alphabet'     </td><td> --- </td></tr>
+          <tr><td>'_check.alphanumeric' </td><td> --- </td></tr>
+          <tr><td>'_check.email'        </td><td> --- </td></tr>
+          <tr><td>'_check.url'          </td><td> --- </td></tr>
+          <tr><td>'_check.cardno'       </td><td> --- </td></tr>
+          <tr><td>'_check.ipv4'         </td><td> --- </td></tr>
+          <tr><td>'_check.ipv6'         </td><td> --- </td></tr>
+          <tr><td>'_check.ipaddress'    </td><td> --- </td></tr>
+          <tr><td>'_check.subnetmask'   </td><td> --- </td></tr>
+          <tr><td>'_check.phoneUS'      </td><td> --- </td></tr>
+          <tr><td>'_check.pattern'      </td>
+              <td>
+                <ul>
+                  <li><strong>data-validate-pattern</strong>="<strong>RegEx-String</strong>"</li>
+                  <li><strong>data-validate-pattern-options</strong>="<strong>!gi</strong>" //optional, any combination of characters.<p>
+                    != NOT<br>
+                    g= global<br>
+                    i= ignore-case<br>
+                  </p></li>
+                </ul>
+              </td></tr>
+          <tr><td>'_check.range'        </td>
+            <td>
+              <strong>data-validate-range</strong>="<strong>from-number:to-number</strong>"
+              <p>
+                <ul>
+                  <li><strong>0:10</strong> = valid if element-value is between 0 and 10</li>
+                  <li><strong>0:</strong>   = valid if element-value is greater than 0</li>
+                  <li><strong>:10</strong>  = valid if element-value is less than 10</li>
+                </ul>
+              </p>
+            </td>
+          </tr>
+          <tr><td>'_check.minlength'    </td>
+            <td>
+              <strong>data-minlength</strong>="NUMBER"
+            </td>
+          </tr>
+          <tr><td>'_check.maxlength'    </td>
+            <td>
+              <strong>data-maxlength</strong>="NUMBER"
+            </td>
+          </tr>
+          <tr><td>'_check.fixedlength'  </td>
+            <td>
+              <strong>data-minlength</strong>="NUMBER"
+              <strong>data-maxlength</strong>="NUMBER"
+            </td>
+          </tr>
+          <tr><td>'_check.wordsize'     </td>
+            <td>
+              <strong>data-valid-word-size="<strong>NUMBER</strong>"</strong>
+            </td>
+          </tr>
+        </table>
+        </li>
+      </ul>
+
+
+    </p>
+
+  </section>
+
+  <p><i>componentX.js</i></p>
+  <section>
+    <h2>Validation using script</h2>
+    <p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+      spa.$extend('componentX', {
+
+        saveForm: function(){
+
+          var validationErrors = spa.validateForm( '#FormX' );
+          //if form validation is success, returns an empty array [], else returns collection of errors in an array [ {...} ]
+
+          console.log( validationErrors );
+
+          if ( spa.isBlank( validationErrors ) ) {
+
+            //NO Errors.
+
+          }
+        }
+
+      });
+      </script>
+    </p>
+
+    <blockquote>
+      <p><mark>spa.validateForm( FormId:String, elSelector:String, showMsg:Boolean, validateAll:Boolean )</mark></p>
+      <br>
+      <p><mark>spa.validateForm( '#FormX' )</mark> Silent validation. Does not show validation error messages. Stops when 1st validation error occurs.</p>
+      <p><mark>spa.validateForm( '#FormX', true )</mark> Shows validation error messages. Stops when 1st validation error occurs.</p>
+      <p><mark>spa.validateForm( '#FormX', false, true )</mark> Silent validation. Does not shows validation error messages. Validates all elements.</p>
+      <p><mark>spa.validateForm( '#FormX', true, true )</mark> Shows validation error messages. Validates all elements.</p>
+      <br>
+      <p><mark>spa.validateForm( '#FormX', '.mandate' )</mark> Validates only .mandate fields.</p>
+    </blockquote>
+  </section>
+
+  <section>
+    <h2>Form validation with control(enable/disable) button(s)</h2>
+    <p>Add <mark>ctrl-on-change</mark> class to control button(s) to enable/disable based on form change and validation.
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="9">
+      <form id="FormX">
+
+        <div class="input-group">
+          <div>Email:</div>
+          <input type="text" name="email" data-validate="{onKeyup: [ {fn:'_check.email', msg:'Invalid email.'} ] }" >
+        </div>
+
+        <div>
+          <button class="ctrl-on-change" onClick="{$}saveForm();"> Save </button>
+        </div>
+
+      </form>
+      </script>
+    </p>
+    <p>In addition, control enable/disable state just before change, using <mark>onBeforeChange</mark> event attribute.
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="9">
+      <form id="FormX">
+
+        <div class="input-group">
+          <div>Email:</div>
+          <input type="text" name="email" data-validate="{onKeyup: [ {fn:'_check.email', msg:'Invalid email.'} ] }" >
+        </div>
+
+        <div>
+          <button class="ctrl-on-change" onBeforeChange="{$}checkBeforeChange();" onClick="{$}saveForm();"> Save </button>
+        </div>
+
+      </form>
+      </script>
+    </p>
+    <p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+      spa.$extend('componentX', {
+
+        //... ...
+
+        checkBeforeChange: function( enableBtn ){
+
+          //doSomething
+
+          return enableBtn; //Send true to enable, false to disable the button.
+        }
+
+        //... ...
+
+      });
+      </script>
     </p>
   </section>
+
+  <section>
+    <h2>Validate onRender</h2>
+    <p>To validate the entire form on render add <mark>data-validate-form="onRender"</mark> attribute to FORM tag.
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="1">
+      <form id="FormX" data-validate-form="onRender">
+
+        ... ... ...
+
+      </form>
+    </script>
+    </p>
+  </section>
+
+  <section>
+    <h2>Custom validation</h2>
+    <p>Define the custom validation functions in a component and mention the <mark>name</mark> of the function in <mark>fn:</mark> property of data-validate rule.</p>
+    <p><i>componentX.html</i>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="5">
+      <form id="FormX">
+
+        <div class="input-group">
+          <div>Email:</div>
+          <input type="text" name="email" data-validate="{onKeyup: [ {fn:'{$}validateEmail', msg:'Invalid email.'} ] }" >
+        </div>
+
+      </form>
+      </script>
+    </p>
+    <p><i>componentX.js</i>
+      <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+      spa.$extend('componentX', {
+
+        //... ...
+
+        validateEmail: function( el ){
+
+          var isValid = false;
+
+          //do custom validation and return validation result true or false.
+
+          return isValid;
+        }
+
+        //... ...
+
+      });
+      </script>
+    </p>
+
+    <blockquote>
+      <p>NOTE: You can have all custom validation functions in one component and refer to it in any other component.</p>
+    </blockquote>
+
+    <p><i>componentX.html</i>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html" data-lines="5">
+      <form id="FormX">
+
+        <div class="input-group">
+          <div>Email:</div>
+          <input type="text" name="email" data-validate="{onKeyup: [ {fn:'{$validation}email', msg:'Invalid email.'} ] }" >
+        </div>
+
+      </form>
+      </script>
+    </p>
+
+    <p><i>validation.js</i>
+      <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="validation.js">
+      spa.$extend('validation', {
+
+        //... ...
+
+        email: function( el ){
+
+          var isValid = false;
+
+          //do custom validation and return validation result true or false.
+
+          return isValid;
+        },
+
+        zip: function( el ){
+
+          var isValid = false;
+
+          //do custom validation and return validation result true or false.
+
+          return isValid;
+        }
+
+
+        //... ...
+
+      });
+      </script>
+    </p>
+
+    <p><i>componentX.js</i>
+      <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
+      spa.$('componentX', {
+
+        require: 'validation',
+
+        target: 'containerComponetX'
+
+        //... ...
+
+      });
+
+
+      spa.$extend('componentX', {
+
+        //... ...
+
+      });
+      </script>
+    </p>
+
+  </section>
+
+  <!-- <section>
+    <h2>Examples</h2>
+
+    <p>For a quick start,
+      <ol>
+        <li>1. download this <a href="spa-examples_cdn/ex-spa-form-validation.zip" download="" target="_blank">examples bundle</a>.</li>
+        <li>2. unzip to your workspace.</li>
+        <li>3. open the folder in Visual Studio Code or any editor.</li>
+        <li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+      </ol>
+    </p>
+  </section> -->
+
 </div>
