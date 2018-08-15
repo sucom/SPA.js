@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.50.0-RC10';
+  spa.VERSION = '2.50.0-RC11';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2658,25 +2658,29 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
 
-  String.prototype.extractStrBetweenIn = function (bS, eS) {
+  String.prototype.extractStrBetweenIn = function (bS, eS, unique) {
     if (!bS) {
       bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
       bS = (bS)? bS[0] : '';
     };
     eS = eS || getMatchStr(bS);
-    return (''+this).match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
+    var retArr = (''+this).match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
+    if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
+    return retArr;
   };
 
-  String.prototype.extractStrBetweenEx = function (bS, eS) {
+  String.prototype.extractStrBetweenEx = function (bS, eS, unique) {
     if (!bS) {
       bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
       bS = (bS)? bS[0] : '';
     };
     eS = eS || getMatchStr(bS);
     var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
-    return ((''+this).match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
-      return x.replace(rx,'');
-    });
+    var retArr = ((''+this).match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
+        return x.replace(rx,'');
+      });
+    if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
+    return retArr;
   };
 
   spa.strToNative = function(srcStr){
@@ -2719,8 +2723,8 @@ window['app']['api'] = window['app']['api'] || {};
   //eS: '}'
   //unique: false ==> ['{param1}','{param2}','{param3}','{param1}']
   //unique: true  ==> ['{param1}','{param2}','{param3}']
-  spa.extractStrBetweenIn = function (srcStr, bS, eS){
-    return (srcStr||'').extractStrBetweenInc(bS, eS);
+  spa.extractStrBetweenIn = function (srcStr, bS, eS, unique){
+    return (srcStr||'').extractStrBetweenIn(bS, eS, unique);
   };
 
   //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
@@ -2728,8 +2732,8 @@ window['app']['api'] = window['app']['api'] || {};
   //eS: '}'
   //unique: false ==> ['param1','param2','param3','param1']
   //unique: true  ==> ['param1','param2','param3']
-  spa.extractStrBetweenEx = function (srcStr, bS, eS){
-    return (srcStr||'').extractStrBetweenExc(bS, eS);
+  spa.extractStrBetweenEx = function (srcStr, bS, eS, unique){
+    return (srcStr||'').extractStrBetweenEx(bS, eS, unique);
   };
 
   spa.strToArray = function(srcStr) {
@@ -3901,15 +3905,21 @@ window['app']['api'] = window['app']['api'] || {};
 
   Object.defineProperties(Array.prototype, {
     '__toObject': {
-      value : function(key){
-        var retObj = {}, itemKey;
+      value : function(valAsKey){
+        var retObj = {};
         this.forEach(function(item, index){
-          if (is(item, 'object')) {
-            itemKey = (key)? (is(item, 'object')? spa.findSafe(item, key) : index ) : index;
-            retObj[ itemKey ] = item;
-          }
+          (valAsKey)? retObj[ item ] = index : retObj[ index ] = item;
         });
         return retObj;
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__unique': {
+      value: function() {
+        return this.filter(function (value, index, self) {
+          return self.indexOf(value) === index;
+        });
       },
       enumerable : false,
       configurable: false
@@ -4428,18 +4438,26 @@ window['app']['api'] = window['app']['api'] || {};
     i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
     if (i18nKey.beginsWithStrIgnoreCase('@')) {
       i18nKey = ((i18nKey.substr(1)).trim());
-      try { i18nKey = eval('('+i18nKey+')');
-      } catch(e) {
-        spa.console.error(e);
-      };
+      i18nKey = spa.findSafe(window, i18nKey, i18nKey);
     }
-    var retValue = i18nKey;
-    try {
-      retValue = (!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(i18nKey) : $.i18n.prop(i18nKey);
-    }catch(e) {
-      spa.console.error(e);
-    };
-    return retValue;
+    return _i18nValue(i18nKey);
+
+    function _i18nValue(iKey){
+      var retStr = iKey;
+      try {
+        retStr = ''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : $.i18n.prop(iKey));
+        if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
+          retStr = _stripEnds(retStr);
+        }
+      } catch(e){
+        spa.console.error(e);
+      }
+      return retStr;
+
+      function _stripEnds(Str) {
+        return Str.substring(1, Str.length-1);
+      }
+    }
   };
 
   spa.i18n.text = function (i18nKey, data) {
@@ -4447,12 +4465,35 @@ window['app']['api'] = window['app']['api'] || {};
     if (data && spa.is(data, 'object')) {
       var msgParamValue = "";
       _.each(_.keys(data), function (key) {
-        msgParamValue = "" + data[key];
-        if (msgParamValue && msgParamValue.beginsWithStrIgnoreCase("i18n:")) msgParamValue = spa.i18n.value(msgParamValue.replace(/i18n:/gi, ""));
-        dMessage = dMessage.replace(new RegExp("{" + key + "}", "gi"), msgParamValue);
+        msgParamValue = ""+ data[key];
+        if (msgParamValue && (msgParamValue.beginsWithStrIgnoreCase("i18n:") || msgParamValue.beginsWithStrIgnoreCase("@")) ) msgParamValue = spa.i18n.value(msgParamValue);
+        dMessage = dMessage.replace(new RegExp("{" + key + "}", "g"), msgParamValue);
       });
     }
-    return (''+dMessage).trimLeftStr('[').trimRightStr('\\]');
+
+    var lookupKeys=[i18nKey], isDuplicateKey;
+    function parseMessage( xMsg ){
+      var varList = spa.extractStrBetweenEx(xMsg, '{', '}', true);
+      if (!spa.isBlank(varList)) {
+        _.each(varList, function(key){
+          isDuplicateKey = (isDuplicateKey || lookupKeys.indexOf(key)>=0);
+          if (!isDuplicateKey) {
+            lookupKeys.push(key);
+            xMsg = xMsg.replace((new RegExp('{'+key+'}', 'g')), spa.i18n.value(key));
+          }
+        });
+
+        if (isDuplicateKey) {
+          console.error('i18nKey circular issue found:', lookupKeys.join(' > '));
+          return xMsg;
+        } else {
+          return parseMessage( xMsg );
+        }
+      }
+      return xMsg;
+    }
+
+    return parseMessage(dMessage);
   };
 
   spa.i18n.update = function(elSelector, i18nKeySpec, apply){

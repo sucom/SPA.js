@@ -1,6 +1,22 @@
 <div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
   <h2>Component's Extended Properties</h2>
-  <h3><mark>Custom Properties/Methods</mark></h3>
+
+  <h3>Default Properties/Methods</h3>
+  <p>
+    <mark>app.componentX.$data</mark> the data, which has been used in template.
+  </p>
+  <p>
+    <mark>app.componentX.renderCallback</mark> function, which will be called after rendering (spa.$render).
+  </p>
+  <p>
+    <mark>app.componentX.refreshCallback</mark> function, which will be called after refresh (spa.$refresh).
+  </p>
+  <p>
+    <mark>app.componentX.events</mark> the collection of events, which will be registered on component's DOM elements after render or refresh.
+  </p>
+
+
+  <h3>Custom Properties/Methods</h3>
 
   <p>A component can have it's custom properties and methods</p>
 
@@ -26,13 +42,78 @@
     });
   </script>
 
+
+  <h3>Accessing Component’s Extended Properties and Methods</h3>
+  <h4>&gt; in Script (componentX.js)</h4>
+
+  <p>The component’s extended properties and methods can be accessed using app.componentX.<mark>PropertyOrMethodName</mark> or app.componentX[ <mark>'PropertyOrMethodName'</mark> ]</p>
+
+  <p>Within extended methods, the properties or methods can be accessed using <mark>this.</mark> keyword.</p>
+
+  <p>Note: <mark>this.$data</mark> refers to the Component’s Final Data (base property) i.e. The final data which goes to the template. (Refer above example)</p>
+
+  <h4>&gt; in HTML (template) (componentX.html)</h4>
+  <p>The component’s extended properties can be accessed using <mark>{{ {@$}propertyName }}</mark> for the current component's propertyName or <mark>{{ {@$componentY}propertyName }}</mark> for componentY's propertyName.</p>
+  <script type="text/code" class="code trim" data-lang="html" data-title="componentX.html" data-lines="3,8,13">
+    <div>
+      <span><b>member.name in current component's extended property</b></span>:
+      <p>{{ {@$}member.name }}</p>
+    </div>
+
+    <div>
+      <span><b>member.name in another Component</b></span>:
+      <p> {{ {@$dataStore}member.name }} </p> <!-- [dataStore] component's extended property -->
+    </div>
+
+    <div>
+      <span><b>member.name in Global(window) Scope</b></span>:
+      <p> {{ _global_.appData.member.name }} </p> <!-- window scope appData object's property -->
+    </div>
+
+  </script>
+
+  <p>The component’s extended methods can be accessed using <mark> onClick="{$}methodName();" </mark> for the current component's methodName or <mark> onClick="{$componentY}methodName();" </mark> for componentY's methodName.</p>
+
+  <script type="text/code" class="code trim" data-lang="html" data-title="componentX.html" data-lines="10">
+    <form id="formProfile">
+      <div>
+        <span>Name:</span>
+        <span><input type="text" name="username" value=""></span>
+      </div>
+
+      ... ...
+
+      <div>
+        <button class="btn" onClick="{$}saveProfile();"> Submit </button>
+      </div>
+
+    </form>
+
+  </script>
+
+  <h3>Important note on component's <mark>$data</mark> property:</h3>
   <blockquote>
-    <strong>Accessing Component’s Extended Properties and Methods</strong>
-    <p>The component’s extended properties and methods can be accessed using app.componentX.<mark>PropertyOrMethodName</mark> or app.componentX[ <mark>'PropertyOrMethodName'</mark> ]</p>
+    <p>The <mark>$data</mark> is available by default to all the components. However, if required, it can be disabled/enabled using global or component's property.</p>
+    <p>Global Settings. To be initialized just after spa.js bundle is loaded. For more settings see <a href="#getStarted/componentsDefaults">Components Defaults</a> section.</p>
 
-    <p>Within extended methods, the properties or methods can be accessed using <mark>this.</mark> keyword.</p>
+    <script type="text/code" class="code trim" data-lang="JavaScript">
+      spa.defaults.set( {components: {extend$data: false} } );
 
-    <p>Note: <mark>this.$data</mark> refers to the Component’s Final Data (base property) i.e. The final data which goes to the template. (Refer above example)</p>
+      //OR
+
+      spa.defaults.set('components.extend$data', false);
+    </script>
+
+    <p>Component level settings</p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+      spa.$('componentX', {
+
+        target: '#containerComponentX',
+
+        extend$data: false
+
+      });
+    </script>
 
   </blockquote>
 

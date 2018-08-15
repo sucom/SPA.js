@@ -7,7 +7,7 @@
     <h3>To Simple Object ( <mark>spa.serializeFormToSimpleObject</mark> )</h3>
     <p>
     <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-      <form id="FormX" onsubmit="return false;">
+      <form id="FormX">
 
         <input type="text" name="fname"   value="First Name">
         <input type="text" name="lname"   value="Last Name">
@@ -53,7 +53,7 @@ spa.$extend('componentX', {
       <h3>To Structured Object ( <mark>spa.serializeFormToObject</mark> )</h3>
       <p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-        <form id="FormX" onsubmit="return false;">
+        <form id="FormX">
 
           <input type="text" name="user.fname"   value="First Name">
           <input type="text" name="user.lname"   value="Last Name">
@@ -100,6 +100,36 @@ spa.$extend('componentX', {
     </section>
 
 
+    <h3>Important note on element names.</h3>
+    <blockquote>
+      <p><mark>Avoid</mark> reserved names as value of name or id attribute. Refer <a href="https://github.com/jquery/jquery/issues/4156" target="_blank" rel="noopener noreferrer">issue</a> for more details.</p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <form id="FormX">
+
+          <input type="text" name="id"    value="12345">
+          <input type="text" name="name"  value="Smith">
+
+          ... ...
+
+        </form>
+      </script>
+    </blockquote>
+
+    <blockquote>
+      <p>While using <mark>spa.serializeFormToObject( '#FormX' )</mark>, use dot ( <mark>.</mark> ) as key delimitter in element name attribute if element's name is camelCased or TitleCased or all-uppercase.</p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <form id="FormX">
+
+          <input type="text" name=".empId"     value="12345">
+          <input type="text" name=".UserName"  value="Smith">
+          <input type="text" name=".AGE"       value="45">
+
+          ... ...
+
+        </form>
+      </script>
+
+    </blockquote>
 
 
 </div>
