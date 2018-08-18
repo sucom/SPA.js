@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.50.0';
+  spa.VERSION = '2.51.0-RC1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2583,7 +2583,8 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   String.prototype.isNumberStr = function () {
-    return ((((''+this).replace(/[0-9.]/g, "")).trimStr()).length == 0);
+    var inStr = (''+this).trim(); nonNumStr = ((inStr.replace(/[0-9]/g, "").replace('.','')).trimStr()), sign = inStr[0];
+    return (inStr && ((nonNumStr.length == 0) || ((nonNumStr.length == 1) && ((sign=='+') || (sign=='-')))));
   };
 
   String.prototype.normalizeStr = function () {
@@ -2868,7 +2869,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   spa.isNumber = function (str) {
-    return (((("" + str).replace(/[0-9.]/g, "")).trimStr()).length == 0);
+    return (''+str).isNumberStr();
   };
 
   spa.toBoolean = function (str) {
@@ -3429,7 +3430,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   spa.parseKeyStr = function (keyName, changeToLowerCase) {
-    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\[\]\?\*-]/g, ""));
+    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\$\[\]\?\*-]/g, ""));
   };
 
   var arrayIndexPointsToMap = {};
@@ -3923,7 +3924,35 @@ window['app']['api'] = window['app']['api'] || {};
       },
       enumerable : false,
       configurable: false
+    },
+
+    '__isFirst': {
+      value: function(value, ignoreCase) {
+        var firstArrValue = this[0];
+        if (ignoreCase) {
+          firstArrValue = firstArrValue.toLowerCase();
+          value = value.toLowerCase();
+        }
+        return (firstArrValue == value);
+      },
+      enumerable : false,
+      configurable: false
+    },
+
+    '__isLast': {
+      value: function(value, ignoreCase) {
+        var lastArrValue = this[this.length-1];
+        if (ignoreCase) {
+          lastArrValue = lastArrValue.toLowerCase();
+          value = value.toLowerCase();
+        }
+        return (lastArrValue == value);
+      },
+      enumerable : false,
+      configurable: false
     }
+
+
   });
 
   Object.defineProperties(Object.prototype, {
@@ -4336,7 +4365,11 @@ window['app']['api'] = window['app']['api'] || {};
       retValue = retValue.beginsWithStr(hashDelimiter) ? retValue.substring(retValue.indexOf(hashDelimiter) + (hashDelimiter.length)) : retValue;
       var hashArray = (retValue.length)? retValue.split(hashDelimiter) : [];
       if (_.isNumber(returnOf)) {
-        retValue = (hashArray && hashArray.length > returnOf) ? hashArray[returnOf] : "";
+        if (returnOf<0) {
+          retValue = hashArray[hashArray.length-1];
+        } else {
+          retValue = (hashArray && hashArray.length > returnOf) ? hashArray[returnOf] : "";
+        }
       }
       else if (_.isArray(returnOf)) {
         retValue = (returnOf.length === 0) ? hashArray : _.zipObject(returnOf, hashArray);
@@ -5168,8 +5201,20 @@ window['app']['api'] = window['app']['api'] || {};
         , scriptExt: '.js'
         , callback:''
         , extend$data: true
+      }
+
+    , routes: {
+      attr: {
+        route: 'data-spa-route',
+        onNavAway: 'onNavAway'
       },
-      set: function(oNewValues, newValue) {
+      className: {
+        show : 'SHOW-SPA-NAV',
+        block: 'BLOCK-SPA-NAV',
+        allow: 'ALLOW-SPA-NAV'
+      }
+    }
+    , set: function(oNewValues, newValue) {
         if (typeof oNewValues == 'object') {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
           _.merge(this, oNewValues);
@@ -5236,7 +5281,7 @@ window['app']['api'] = window['app']['api'] || {};
 
           if (spa.components[componentName]) {
             //already registered
-            console.error('Component ['+componentName+'] has been created already.');
+            //console.error('Component ['+componentName+'] has been created already.');
             return;
           }
 
@@ -6697,13 +6742,16 @@ window['app']['api'] = window['app']['api'] || {};
                   /*apply data-validation*/
                   _initFormValidationInScope(viewContainerId);
 
+                  /*init SPA routes; a simple routing solution */
+                  _initRouteHash(viewContainerId);
+
                   /*
                    * Init togglePassword (eye icon)
                    */
                   spa.initTogglePassword(viewContainerId);
 
                   /*init spaRoute*/
-                  spa.initRoutes(viewContainerId);
+                  spa.initRoutesX(viewContainerId);
                 };
 
                 spa.console.log(retValue);
@@ -6951,6 +6999,16 @@ window['app']['api'] = window['app']['api'] || {};
 
   //Extend jQuery for Util Functions
   $.fn.extend({
+    spa$: function(){
+      return this.map(function(){ return $(this).closest('[data-rendered-component]'); });
+    },
+    spa$name: function(){
+      var retValue = this.map(function(){ return $(this).closest('[data-rendered-component]').attr('data-rendered-component'); });
+      return (retValue.length == 1)? retValue[0] : retValue;
+    },
+    inBlockedSpaNavContainer:function(){
+      return !!(this.closest(_blockNavClass).length);
+    },
     disable: function(disable){
       if ((!!disable) || spa.is(disable, 'undefined')) {
         return this.css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
@@ -7480,7 +7538,7 @@ window['app']['api'] = window['app']['api'] || {};
     }// if foundRouteElBase
   };
 
-  spa.initRoutes = function(routeInitScope, routeInitOptions) {
+  spa.initRoutesX = function(routeInitScope, routeInitOptions) {
     if (typeof routeInitScope == "object") {
       routeInitOptions = routeInitScope;
       routeInitScope = routeInitOptions["context"] || routeInitOptions["scope"] || "";
@@ -7946,6 +8004,226 @@ window['app']['api'] = window['app']['api'] || {};
     announce: _PubSub.pub
   };
 
+  /* *************** data-spa-route - SPA Route Solution Begins ************************ */
+  var _onAutoRoute  = true
+    , _routeOnClick = false
+    , _prevUrlHash  = ''
+    , _blockNav
+    , _blockNavClassName  = ''
+    , _blockNavClass      = ''
+    , _allowNavClassName  = ''
+    , _showNavClassName   = ''
+    , _showNavClass       = ''
+    , _attrSpaRoute       = ''
+    , _attrOnNavAway      = '';
+
+  function _initRoutesDefaults(){
+    _blockNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV');
+    _blockNavClass      = ('.'+_blockNavClassName);
+    _allowNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.allow', '') || 'ALLOW-SPA-NAV');
+    _showNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.show', '')  || 'SHOW-SPA-NAV');
+    _showNavClass       = ('.'+_showNavClassName);
+    _attrSpaRoute       = (spa.findSafe(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route');
+    _attrOnNavAway      = (spa.findSafe(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway');
+  }
+
+  function _blockSpaNavigation(){
+    _blockNav = true;
+    $('body :first').addClass( _blockNavClassName );
+  }
+  function _allowSpaNavigation(){
+    $( _blockNavClass ).removeClass( _blockNavClassName );
+    _blockNav = false;
+  }
+  function _showSpaNavigation(){
+    $('body').addClass( _showNavClassName );
+  }
+  function _hideSpaNavigation(){
+    $('body').removeClass( _showNavClassName );
+    $( _showNavClass ).removeClass( _showNavClassName );
+  }
+  function _isToShowSpaNav(){
+    return ($('body').hasClass( _showNavClassName ) || !!$( _showNavClass ).length);
+  }
+  function _isSpaNavBlocked(){
+    return !!$( _blockNavClass ).length;
+  }
+  function _isSpaNavAllowed(){
+    return !$( _blockNavClass ).length;
+  }
+  function _inBlockedSpaNavContainer(el){
+    return !!($(el).closest(_blockNavClass).length);
+  }
+  function _blockBrowserNav(){
+    if (_blockNav) _replaceUrlHash(_prevUrlHash);
+  }
+  function _onWindowReload(){
+    var i18nMsgKey = 'spa.message.on.window.reload';
+    if (_blockNav) return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+  }
+  function _handleNavAwayEvent(toUrl, $byEl){
+    spa.console.log('Trying to navigate away from:['+ _prevUrlHash +'] To:['+ toUrl +'] by', $byEl);
+    var $container, onNavAway, navAwayTargetSelector, $navAwayTarget, navAwayFn, byEl;
+    $(_blockNavClass).each(function(){
+      $container = $(this);
+      onNavAway = ($container.attr( _attrOnNavAway )||'').trim();
+      if (onNavAway[0] == '#' || onNavAway[0] == '>') {
+        navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substr(1).trim() : onNavAway;
+        $navAwayTarget = $container.find(navAwayTargetSelector);
+        if ($navAwayTarget.length) {
+          if ($byEl) byEl = "id:'"+$byEl.attr('id')+"', spaRoute:'"+$byEl.attr( _attrSpaRoute )+"'";
+          $navAwayTarget.data('navToUrl', toUrl).attr('data-nav-to-url', toUrl);
+          $navAwayTarget.data('navBy', byEl).attr('data-nav-by', byEl);
+          $navAwayTarget[0].click();
+        }
+      } else {
+        navAwayFn = spa.findSafe(window, onNavAway.split('(')[0].split(';')[0] );
+        if (navAwayFn && spa.is(navAwayFn, 'function')) {
+          navAwayFn.call($container, $container, toUrl, $byEl);
+        }
+      }
+    });
+  }
+
+  spa.blockNav     = _blockSpaNavigation;
+  spa.allowNav     = _allowSpaNavigation;
+  spa.showNav      = _showSpaNavigation;
+  spa.hideNav      = _hideSpaNavigation;
+  spa.isNavBlocked = _isSpaNavBlocked;
+  spa.isNavAllowed = _isSpaNavAllowed;
+  spa.isToShowNav  = _isToShowSpaNav;
+  spa.isInBlockedSpaNavContainer = _inBlockedSpaNavContainer;
+
+  window.onpageshow = function(e) { if (e.persisted) _blockBrowserNav(); };
+  window.onbeforeunload = _onWindowReload;
+
+  function _routeSpaUrlOnHashChange(){
+    var urlHash = '#'+spa.urlHash();
+    spa.console.log('Url To ['+urlHash+'] on click:'+_routeOnClick+' block-Navigation:'+_blockNav);
+    if ((!_isToShowSpaNav) || (!_routeOnClick && _blockNav)) {
+      _replaceUrlHash(_prevUrlHash);
+      if (_prevUrlHash != urlHash) {
+        _handleNavAwayEvent(urlHash);
+      }
+    } else {
+      _prevUrlHash = urlHash;
+      _triggerNextHash( _onAutoRoute || !_routeOnClick );
+    }
+  }
+
+  function _triggerNextHash( reset ){
+    _onAutoRoute = spa.is(reset, 'undefined')? _onAutoRoute : reset;
+    var hashList = spa.urlHash([]), lastHashIndex = hashList.length-1, curHashName, isLastHash;
+    if (_onAutoRoute) {
+      for (var i = lastHashIndex; i>=0; i--) {
+        if (!_onAutoRoute) break;
+        curHashName = hashList[i]; isLastHash = (i == lastHashIndex);
+        if (curHashName) {
+          var $hashTriggerEl = $('['+((_attrSpaRoute).trim())+'$="/'+curHashName+'"]:not(:disabled):not(.disabled .AUTO-ROUTING):first');
+          if ($hashTriggerEl.length) {
+            _onAutoRoute = !isLastHash;
+            $hashTriggerEl.addClass('AUTO-ROUTING').trigger($hashTriggerEl.data('routeEvent') || 'click');
+          }
+        }
+      }
+    }
+    _routeOnClick = false;
+  };
+
+  function _replaceUrlHash(newHashUrl) {
+    var _hashUpdateLink = $('#_spaRouteLink_');
+    if (!_hashUpdateLink.length) {
+      _hashUpdateLink = $('<a id="_spaRouteLink_" href=""></a>');
+      $('body').append(_hashUpdateLink);
+    }
+    _hashUpdateLink.attr('href', newHashUrl||'#')[0].click();
+  }
+
+  function _updateUrlHash(newHashUrl, delayUpdate) {
+    _onAutoRoute = false;
+    var _hashUpdateLink = $('#_spaRouteLink_');
+    if (!_hashUpdateLink.length) {
+      _hashUpdateLink = $('<a id="_spaRouteLink_" href=""></a>');
+      $('body').append(_hashUpdateLink);
+    }
+    if (newHashUrl) _hashUpdateLink.attr('href', newHashUrl);
+    if (!delayUpdate) {
+      _routeOnClick  = true;
+      (spa.isToShowNav())? _hashUpdateLink[0].click() : _prevUrlHash = newHashUrl;
+    }
+  }
+
+  function _onRouteElClick(){
+    var spaRoutePath = spa.urlHash([]);
+    var $routeEl    = $(this)
+      , routeData
+      , usePrevHash
+      , delayUpdate
+      , routeDir
+      , routeName
+      , newHashUrl;
+
+    function update(newRouteData) {
+      routeData   = (newRouteData||'').trim();
+      usePrevHash = (routeData[0] == '<')
+      delayUpdate = (routeData[0] == '>')
+      routeDir    = routeData[delayUpdate? 1: 0]
+      routeName   = routeData.substr(delayUpdate? 2 : 1)
+    }
+
+    update($routeEl.attr( (_attrSpaRoute).trim() ));
+
+    if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
+      $routeEl.removeClass('AUTO-ROUTING');
+      return;
+    }
+
+    if (routeDir == '^') {
+      if (spa.isBlank(spaRoutePath)) {
+        update(routeData.substr(1));
+      } else {
+        routeDir='#';routeName = spa.urlHash();
+      }
+    }
+    switch (routeDir) {
+      case '#': spaRoutePath = [routeName];
+        break;
+      case '/':
+        var resetFrom = spaRoutePath.indexOf( routeName.split('/')[0] );
+        if (resetFrom>0) spaRoutePath.length = resetFrom;
+        spaRoutePath.push(routeName);
+        break;
+      case '-':
+        var revCount = spa.toInt(routeName.replace(/[^0-9]/g,'')) || 1;
+        if (spaRoutePath.length) {
+          spaRoutePath.length = spaRoutePath.length-revCount;
+        }
+        break;
+    }
+
+    if (!usePrevHash) newHashUrl = '#'+(spaRoutePath.join('/'));
+
+    if (_blockNav) {
+      if (!( usePrevHash || $routeEl.hasClass(_allowNavClassName) || $routeEl.inBlockedSpaNavContainer())) {
+        delayUpdate = true;
+        _handleNavAwayEvent(newHashUrl, $routeEl);
+      }
+    }
+
+    _updateUrlHash(newHashUrl, delayUpdate);
+  }
+
+  function _initRouteHash(scope){
+    $(scope||'body').find('['+((_attrSpaRoute).trim())+']:not(.ROUTE)').each(function(i, el){
+      $(el).addClass('ROUTE').off('click', _onRouteElClick).on('click', _onRouteElClick);
+    });
+    _triggerNextHash();
+    _blockNav = spa.isNavBlocked();
+  }
+  spa.initRoutes = _initRouteHash;
+  /* ***************  SPA Route Solution Ends ************************ */
+
+
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
@@ -7958,16 +8236,19 @@ window['app']['api'] = window['app']['api'] || {};
 
     var sparouteInitOptions = $("body").data("sparouteInit");
     if (sparouteInitOptions) {
-      spa.initRoutes(spa.toJSON(sparouteInitOptions));
+      spa.initRoutesX(spa.toJSON(sparouteInitOptions));
     };
 
     /*Init spaRoutes*/
-    spa.initRoutes("body");
+    spa.initRoutesX("body");
 
     if ('onhashchange' in window) {
       if (spa.isBlank(sparouteInitOptions)) {
         spa.console.info("Registering HashRouting Listener");
         window.addEventListener("hashchange", function(){
+          _routeSpaUrlOnHashChange();
+
+          //custome function trigger
           if (spa.onUrlHashChange) {
             spa.onUrlHashChange(spa.urlHash([]));
           }
@@ -7988,6 +8269,17 @@ window['app']['api'] = window['app']['api'] || {};
     _initSpaElements();
     spa.initTrackFormElChanges();
     _initFormValidationInScope();
+
+    /*init SPA routes; a simple routing solution */
+    _prevUrlHash = '#'+spa.urlHash();
+    var spaRoutesDefaults = $('body').attr('data-spa-routes');
+    if (!spa.isBlank(spaRoutesDefaults)) {
+      spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
+      _.merge(spa.defaults.routes, spaRoutesDefaults);
+    }
+    _initRoutesDefaults();
+    //if (!$('body').hasClass('HIDE-SPA-NAV')) $('body').addClass( _showNavClassName );
+    _initRouteHash();
 
     /*Auto Render*/
     var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
