@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.51.0-RC1';
+  spa.VERSION = '2.51.0-RC2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5209,7 +5209,7 @@ window['app']['api'] = window['app']['api'] || {};
         onNavAway: 'onNavAway'
       },
       className: {
-        show : 'SHOW-SPA-NAV',
+        hide : 'HIDE-SPA-NAV',
         block: 'BLOCK-SPA-NAV',
         allow: 'ALLOW-SPA-NAV'
       }
@@ -6816,16 +6816,35 @@ window['app']['api'] = window['app']['api'] || {};
     return (retValue);
   };
 
-  function _initSpaElements(scope){
-    //Fix Forms
-    $(scope||'body').find('form:not([onsubmit])').each(function(i, form){
-      $(form).attr('onsubmit', 'return false;').addClass('spa-form'); //Disable form submit
-    });
-    //Fix a tag
-    $(scope||'body').find('a:not([href])').each(function(i, a){
-      $(a).attr('href', 'javascript:;').addClass('spa-link'); //Disable href
-    });
+  function _disabledElClick(e) {
+    var $el = $(this);
+    if ($el.hasClass('disabled') || $el.is('[disabled]') || $el.is(':disabled') ) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return;
+    } else {
+      eval( $el.attr('onclickX') );
+    }
   }
+  function _initSpaElements(scope){
+    var $context  = $(scope||'body')
+      , $forms    = $context.find('form:not([onsubmit])')
+      , $aLinksEx = $context.find('a[href]:not([href^="#"]):not([href^="javascript:"]):not([target])')
+      , $aLinksIn = $context.find('a:not([href])')
+      , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclickx])');
+
+    //Fix Forms
+    $forms.attr('onsubmit', 'return false;').addClass('spa-form'); //Disable form submit
+
+    //Fix a tags
+    $aLinksEx.attr('target', '_blank').addClass('spa-external-link'); //set target for external links
+    $aLinksIn.attr('href', 'javascript:;').addClass('spa-link'); //disable href for internal links
+
+    //Fix clickable elements button for disable
+    $clickEls.addClass('as-btn').renameAttr('onclick', 'onclickX').on('click', _disabledElClick);
+  }
+  spa.initElementsIn = _initSpaElements;
 
   function _initFormValidation(el){
     var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = spa.findSafe(spa, '_validate.defaults.offline', true);
@@ -7001,6 +7020,13 @@ window['app']['api'] = window['app']['api'] || {};
   $.fn.extend({
     spa$: function(){
       return this.map(function(){ return $(this).closest('[data-rendered-component]'); });
+    },
+    renameAttr: function(oldName, newName){
+      this.each(function(){
+        this.setAttribute(newName, this.getAttribute(oldName));
+        this.removeAttribute(oldName);
+      });
+      return this;
     },
     spa$name: function(){
       var retValue = this.map(function(){ return $(this).closest('[data-rendered-component]').attr('data-rendered-component'); });
@@ -8005,45 +8031,48 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* *************** data-spa-route - SPA Route Solution Begins ************************ */
-  var _onAutoRoute  = true
-    , _routeOnClick = false
-    , _prevUrlHash  = ''
+  var _onAutoRoute     = true
+    , _autoRoutesFound = []
+    , _maxAutoRoute    = 100
+    , _routeOnClick    = false
+    , _prevUrlHash     = ''
     , _blockNav
     , _blockNavClassName  = ''
     , _blockNavClass      = ''
     , _allowNavClassName  = ''
-    , _showNavClassName   = ''
-    , _showNavClass       = ''
     , _attrSpaRoute       = ''
     , _attrOnNavAway      = '';
 
+  function _initAutoRoute() {
+    _autoRoutesFound = [];
+    _maxAutoRoute = 100;
+  }
   function _initRoutesDefaults(){
     _blockNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV');
     _blockNavClass      = ('.'+_blockNavClassName);
     _allowNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.allow', '') || 'ALLOW-SPA-NAV');
-    _showNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.show', '')  || 'SHOW-SPA-NAV');
-    _showNavClass       = ('.'+_showNavClassName);
+    _hideNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.hide', '')  || 'HIDE-SPA-NAV');
+    _hideNavClass       = ('.'+_hideNavClassName);
     _attrSpaRoute       = (spa.findSafe(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route');
     _attrOnNavAway      = (spa.findSafe(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway');
   }
 
-  function _blockSpaNavigation(){
-    _blockNav = true;
-    $('body :first').addClass( _blockNavClassName );
+  function _blockSpaNavigation(scope){
+    $(scope || 'body :first').addClass( _blockNavClassName );
+    _blockNav = _isSpaNavBlocked() || true; //safe!!!
   }
-  function _allowSpaNavigation(){
-    $( _blockNavClass ).removeClass( _blockNavClassName );
-    _blockNav = false;
+  function _allowSpaNavigation(scope){
+    $( scope || _blockNavClass ).removeClass( _blockNavClassName );
+    _blockNav = _isSpaNavBlocked();
   }
   function _showSpaNavigation(){
-    $('body').addClass( _showNavClassName );
+    $('body').removeClass( _hideNavClassName );
   }
   function _hideSpaNavigation(){
-    $('body').removeClass( _showNavClassName );
-    $( _showNavClass ).removeClass( _showNavClassName );
+    $('body').addClass( _hideNavClassName );
   }
   function _isToShowSpaNav(){
-    return ($('body').hasClass( _showNavClassName ) || !!$( _showNavClass ).length);
+    return (!$('body').hasClass( _hideNavClassName ));
   }
   function _isSpaNavBlocked(){
     return !!$( _blockNavClass ).length;
@@ -8069,17 +8098,17 @@ window['app']['api'] = window['app']['api'] || {};
       onNavAway = ($container.attr( _attrOnNavAway )||'').trim();
       if (onNavAway[0] == '#' || onNavAway[0] == '>') {
         navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substr(1).trim() : onNavAway;
-        $navAwayTarget = $container.find(navAwayTargetSelector);
+        $navAwayTarget = $container.find(navAwayTargetSelector).filter(':not(.disabled):not(:disabled)');
         if ($navAwayTarget.length) {
           if ($byEl) byEl = "id:'"+$byEl.attr('id')+"', spaRoute:'"+$byEl.attr( _attrSpaRoute )+"'";
           $navAwayTarget.data('navToUrl', toUrl).attr('data-nav-to-url', toUrl);
           $navAwayTarget.data('navBy', byEl).attr('data-nav-by', byEl);
-          $navAwayTarget[0].click();
+          $navAwayTarget.trigger('click');
         }
       } else {
         navAwayFn = spa.findSafe(window, onNavAway.split('(')[0].split(';')[0] );
         if (navAwayFn && spa.is(navAwayFn, 'function')) {
-          navAwayFn.call($container, $container, toUrl, $byEl);
+          navAwayFn.call($container, toUrl, $container, $byEl);
         }
       }
     });
@@ -8094,8 +8123,10 @@ window['app']['api'] = window['app']['api'] || {};
   spa.isToShowNav  = _isToShowSpaNav;
   spa.isInBlockedSpaNavContainer = _inBlockedSpaNavContainer;
 
-  window.onpageshow = function(e) { if (e.persisted) _blockBrowserNav(); };
-  window.onbeforeunload = _onWindowReload;
+  function _ctrlBrwowserNav(){
+    window.onpopstate = window.onpageshow = function(e) { if (e.persisted) _blockBrowserNav(); };
+    window.onbeforeunload = _onWindowReload;
+  }
 
   function _routeSpaUrlOnHashChange(){
     var urlHash = '#'+spa.urlHash();
@@ -8112,15 +8143,19 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _triggerNextHash( reset ){
+    if (reset) _initAutoRoute();
     _onAutoRoute = spa.is(reset, 'undefined')? _onAutoRoute : reset;
     var hashList = spa.urlHash([]), lastHashIndex = hashList.length-1, curHashName, isLastHash;
+    if (_maxAutoRoute<0) _onAutoRoute = false;
     if (_onAutoRoute) {
+      _maxAutoRoute--;
       for (var i = lastHashIndex; i>=0; i--) {
-        if (!_onAutoRoute) break;
         curHashName = hashList[i]; isLastHash = (i == lastHashIndex);
+        if (!_onAutoRoute || (_autoRoutesFound.indexOf(curHashName)>=0)) break;
         if (curHashName) {
-          var $hashTriggerEl = $('['+((_attrSpaRoute).trim())+'$="/'+curHashName+'"]:not(:disabled):not(.disabled .AUTO-ROUTING):first');
+          var $hashTriggerEl = $('['+((_attrSpaRoute).trim())+'$="/'+curHashName+'"]:not(:disabled):not(.disabled):not(.AUTO-ROUTING):first');
           if ($hashTriggerEl.length) {
+            _autoRoutesFound.push(curHashName);
             _onAutoRoute = !isLastHash;
             $hashTriggerEl.addClass('AUTO-ROUTING').trigger($hashTriggerEl.data('routeEvent') || 'click');
           }
@@ -8139,8 +8174,8 @@ window['app']['api'] = window['app']['api'] || {};
     _hashUpdateLink.attr('href', newHashUrl||'#')[0].click();
   }
 
-  function _updateUrlHash(newHashUrl, delayUpdate) {
-    _onAutoRoute = false;
+  function _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute) {
+    _onAutoRoute = continueAutoRoute;
     var _hashUpdateLink = $('#_spaRouteLink_');
     if (!_hashUpdateLink.length) {
       _hashUpdateLink = $('<a id="_spaRouteLink_" href=""></a>');
@@ -8153,7 +8188,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
 
-  function _onRouteElClick(){
+  function _onRouteElClick(e){
     var spaRoutePath = spa.urlHash([]);
     var $routeEl    = $(this)
       , routeData
@@ -8161,17 +8196,28 @@ window['app']['api'] = window['app']['api'] || {};
       , delayUpdate
       , routeDir
       , routeName
-      , newHashUrl;
+      , newHashUrl
+      , continueAutoRoute
+      , elClick = $routeEl.attr('onrouteclick');
+
+    if ($routeEl.hasClass('disabled') || $routeEl.is(':disabled')) {
+      e.stopImmediatePropagation();
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
 
     function update(newRouteData) {
       routeData   = (newRouteData||'').trim();
-      usePrevHash = (routeData[0] == '<')
-      delayUpdate = (routeData[0] == '>')
-      routeDir    = routeData[delayUpdate? 1: 0]
-      routeName   = routeData.substr(delayUpdate? 2 : 1)
+      usePrevHash = (routeData[0] == '<');
+      delayUpdate = (routeData[0] == '>');
+      routeDir    = routeData[delayUpdate? 1: 0];
+      routeName   = routeData.substr(delayUpdate? 2 : 1);
+      continueAutoRoute = false;
     }
-
     update($routeEl.attr( (_attrSpaRoute).trim() ));
+
+    if (elClick) eval( elClick );
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
       $routeEl.removeClass('AUTO-ROUTING');
@@ -8182,7 +8228,9 @@ window['app']['api'] = window['app']['api'] || {};
       if (spa.isBlank(spaRoutePath)) {
         update(routeData.substr(1));
       } else {
-        routeDir='#';routeName = spa.urlHash();
+        continueAutoRoute = true;
+        routeDir  = '#';
+        routeName = spa.urlHash();
       }
     }
     switch (routeDir) {
@@ -8210,13 +8258,19 @@ window['app']['api'] = window['app']['api'] || {};
       }
     }
 
-    _updateUrlHash(newHashUrl, delayUpdate);
+    _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute);
   }
 
   function _initRouteHash(scope){
-    $(scope||'body').find('['+((_attrSpaRoute).trim())+']:not(.ROUTE)').each(function(i, el){
-      $(el).addClass('ROUTE').off('click', _onRouteElClick).on('click', _onRouteElClick);
-    });
+    // $(scope||'body').find('['+((_attrSpaRoute).trim())+']:not(.ROUTE)').each(function(i, el){
+    //   var $el = $(el);
+    //   $el.renameAttr('onclick', 'onRouteClick').addClass('ROUTE').off('click', _onRouteElClick).on('click', _onRouteElClick);
+    // });
+    $(scope||'body').find('['+((_attrSpaRoute).trim())+']:not(.ROUTE)')
+      .renameAttr('onclick', 'onRouteClick')
+      .addClass('ROUTE')
+      .off('click', _onRouteElClick)
+      .on('click', _onRouteElClick);
     _triggerNextHash();
     _blockNav = spa.isNavBlocked();
   }
@@ -8239,7 +8293,16 @@ window['app']['api'] = window['app']['api'] || {};
       spa.initRoutesX(spa.toJSON(sparouteInitOptions));
     };
 
-    /*Init spaRoutes*/
+    /*init SPA routes; a simple routing solution */
+    _prevUrlHash = '#'+spa.urlHash();
+    var spaRoutesDefaults = $('body').attr('data-spa-routes');
+    if (!spa.isBlank(spaRoutesDefaults)) {
+      spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
+      _.merge(spa.defaults.routes, spaRoutesDefaults);
+    }
+    _initRoutesDefaults();
+
+    /*Init spaRoutes old: to be discontinued ... */
     spa.initRoutesX("body");
 
     if ('onhashchange' in window) {
@@ -8271,14 +8334,7 @@ window['app']['api'] = window['app']['api'] || {};
     _initFormValidationInScope();
 
     /*init SPA routes; a simple routing solution */
-    _prevUrlHash = '#'+spa.urlHash();
-    var spaRoutesDefaults = $('body').attr('data-spa-routes');
-    if (!spa.isBlank(spaRoutesDefaults)) {
-      spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
-      _.merge(spa.defaults.routes, spaRoutesDefaults);
-    }
-    _initRoutesDefaults();
-    //if (!$('body').hasClass('HIDE-SPA-NAV')) $('body').addClass( _showNavClassName );
+    _ctrlBrwowserNav();
     _initRouteHash();
 
     /*Auto Render*/
