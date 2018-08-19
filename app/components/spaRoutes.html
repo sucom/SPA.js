@@ -1,0 +1,243 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Routes</h1>
+  <h6>(from v2.51.0+)</h6>
+  <p>&nbsp;</p>
+  <p>SPAjs bundle comes with built-in declarative (HTML attribute) SEO friendly routing feature with an option to control browser navigation.</p>
+
+  <!-- <section>
+    <h2>Examples</h2>
+
+    <p>For a quick start,
+      <ol>
+        <li>1. download this <a href="spa-examples_cdn/ex-spa-form-validation.zip" download="" target="_blank">examples bundle</a>.</li>
+        <li>2. unzip to your workspace.</li>
+        <li>3. open the folder in Visual Studio Code or any editor.</li>
+        <li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+      </ol>
+    </p>
+  </section> -->
+
+  <section>
+    <h2>Rules:</h2>
+    <blockquote>
+      <p>
+        <ul>
+          <li>1. DO NOT use <mark>a[href]</mark> for spa-routes.</li>
+          <li>2. Route name - Keep It Simple. Only Alpha-numeric characters ( a-z A-Z 0-9 ) with dash ( - ) and/or underscore ( _ ).</li>
+          <li>3. Route element must have <mark>[onclick]</mark> event-attribute defined in HTML.</li>
+        </ul>
+      </p>
+    </blockquote>
+  </section>
+
+  <section>
+    <h2>Route [attribute]</h2>
+    <p>SPAjs uses custom attribute <mark>[data-spa-route]</mark> to specify route path in HTML.</p>
+
+    <p>Attribute <mark>[data-spa-route]</mark> can be added to any HTML element, which has <mark>[onclick]</mark> event-attribute defined in HTML.
+      Refer Component's UI section for <a href="#getStarted/eventBindingInTemplate">event-binding in Templates</a>.
+      Use route element's <mark>[data-]</mark> attributes to pass data (from Template) to onclick (route) functions.
+
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <button data-spa-route="#/home" onclick="{$}authenticateUser();">Login</button>
+
+        ... ...
+
+        <a data-spa-route="#/home/view-profile" onclick=" ... " class=" ... ">View Profile</a>
+
+        <a data-spa-route="#/home/edit-profile" onclick=" ... " class=" ... ">Edit Profile</a>
+
+        ... ...
+
+        <span data-spa-route="#/home/settings" onclick=" ... " class=" ... ">
+
+          ... ...
+
+        </span>
+      </script>
+    </p>
+
+    <p><mark>Route-Path</mark> spcification.
+      <ul>
+        <li>If begins with <mark>#</mark>, Replaces the complete route path.</li>
+        <li>If begins with <mark>/</mark>, Inserts/Appends to existing route path.</li>
+        <li>If begins with <mark>-</mark>, Reduces the path by a number (default: 1) followed by <mark>-</mark>.</li>
+      </ul>
+
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <a data-spa-route="#/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <!-- replaces the prvious route url
+
+          if exisiting path: //127.0.0.1/index.html#/home/settings/network
+            the new path ==> //127.0.0.1/index.html#/home/view-profile
+        -->
+
+        ... ...
+
+        <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <!-- inserts to existing path if exisiting path contains /home, else appends to the existing path
+
+          if exisiting path: //127.0.0.1/index.html#/home
+            the new path ==> //127.0.0.1/index.html#/home/view-profile
+
+          if exisiting path: //127.0.0.1/index.html#
+            the new path ==> //127.0.0.1/index.html#/home/view-profile
+        -->
+
+        ... ...
+
+        <button data-spa-route="-" onclick=" ... " class=" ... "> Cancel </button>
+        <!-- reduces the existing path by 1 from end. For more specify a Number after -
+
+          if exisiting path: //127.0.0.1/index.html#/home/view-profile
+            the new path ==> //127.0.0.1/index.html#/home
+        -->
+      </script>
+
+      <ul>
+        <li>If begins with <mark>^</mark>, does not replace the existing path, if exists. If not, then applies the rule (as above) specified after <mark>^</mark>.</li>
+        <li>If begins with <mark>&gt;</mark>, does not update the existing path in the address path, but remembers for the next route triggered with <mark>&lt;</mark></li>
+        <li>If begins with <mark>&lt;</mark>, applies the stored route by <mark>&gt;</mark>.</li>
+      </ul>
+
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <button data-spa-route="^#/home" onclick="{$}authenticateUser();">Login</button>
+        <!-- When the bookmarked url is loaded and stopped by a login screen
+          and then the Login-click event retains the path (bookmarked-url) to navigate after login. -->
+
+        ... ...
+
+        <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <!-- inserts to existing path if exisiting path contains /home, else appends to the existing path
+
+          if exisiting path: //127.0.0.1/index.html#/home
+            the new path ==> //127.0.0.1/index.html#/home/view-profile
+
+          if exisiting path: //127.0.0.1/index.html#
+            the new path ==> //127.0.0.1/index.html#/home/view-profile
+        -->
+
+        ... ...
+
+        <button data-spa-route=">-" onclick=" ... " class=" ... "> Cancel </button>
+        <!-- reduces the existing path by 1 from end. For more specify a Number after -
+
+          if exisiting path: //127.0.0.1/index.html#/home/edit-profile
+            the new path ==> //127.0.0.1/index.html#/home (Stored for later route by < )
+        -->
+
+
+        <button data-spa-route="<" onclick=" ... " class=" ... "> Yes, Cancel </button>
+        <-- replaces with the stored path
+
+          if exisiting path: //127.0.0.1/index.html#/home/edit-profile
+
+          the stored path ==> //127.0.0.1/index.html#/home
+
+          the new path ==> //127.0.0.1/index.html#/home
+        -->
+      </script>
+    </p>
+
+  </section>
+
+  <section>
+    <h2>Block browser's navigation.</h2>
+    <p>It's easy to block browser's navigation within SPA using a class <mark>BLOCK-SPA-NAV</mark>.
+      If any component's HTML element contains the class <mark>BLOCK-SPA-NAV</mark>, then the browser's navigation BACK and RLOAD will be blocked.
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+      <form id="FormX" class="BLOCK-SPA-NAV">
+        <!-- when this component is rendered, the browser's navigation will be restricted.
+          Forces the user to navigate only by the UI elements within SPA.
+        -->
+
+        ... ... ...
+
+        <div>
+          <button onclick="..."> Cancel </button>
+        </div>
+
+        <div>
+          <button onclick="..."> Save </button>
+        </div>
+
+      </form>
+      </script>
+    </p>
+    <p>In addition to the restriction a cutom function can be called using <mark>[onNavAway]</mark> event attribute.
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <form id="FormX" class="BLOCK-SPA-NAV" onNavAway="{$}confirmBeforeLeave();">
+          <!-- When the user navigates away using browser's navigation (BACK or RELOAD) or any other UI element outside this FORM,
+            this component's method "confirmBeforeLeave" will be invoked with 3 params (toUrl, $BLOCK-SPA-NAV-Container, $byEl)
+            if the navigation is BACK or RELOAD, the $byEl will be undefined.
+          -->
+
+          ... ... ...
+
+          <div>
+            <button onclick="..."> Cancel </button>
+          </div>
+
+          <div>
+            <button onclick="..."> Save </button>
+          </div>
+
+        </form>
+      </script>
+    </p>
+
+    <p>Instead of a cutom function, the <mark>[onNavAway]</mark> event attribute can point to an element within the container,
+      whose [onclick] event will be triggered based on it's enable state.
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <form id="FormX" class="BLOCK-SPA-NAV" onNavAway="#btnCancel">
+          <!-- When the user navigates away using browser's navigation (BACK or RELOAD) or any other UI element outside this FORM,
+            this component's #btnCancel button's onclick event will be triggered (if the button state is enabled) with NO PARAMS.
+            However, the toUrl and byEl's [id] and [data-spa-route] attributes will be added to the target (#btnCancel) element.
+            Just follow the below example and investigate the function arguments and it's data properties.
+          -->
+
+          ... ... ...
+
+          <div>
+            <button id="btnCancel" onclick="{$}cancel(this);"> Cancel </button>
+          </div>
+
+          <div>
+            <button id="btnSubmit" onclick="..."> Save </button>
+          </div>
+
+        </form>
+      </script>
+    </p>
+  </section>
+
+  <section>
+    <h2>Hide Routes</h2>
+    <p>If needed, the display of routes url in the browser's address bar can be disabled using body class <mark>HIDE-SPA-NAV</mark>.
+      <p><i>index.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="index.html">
+      <body class="HIDE-SPA-NAV">
+      </script>
+    </p>
+  </section>
+
+  <!-- <section>
+    <h2>Examples</h2>
+
+    <p>For a quick start,
+      <ol>
+        <li>1. download this <a href="spa-examples_cdn/ex-spa-form-validation.zip" download="" target="_blank">examples bundle</a>.</li>
+        <li>2. unzip to your workspace.</li>
+        <li>3. open the folder in Visual Studio Code or any editor.</li>
+        <li>4. open index.html with LiveServer (VS Code Extension) or your local web server.</li>
+      </ol>
+    </p>
+  </section> -->
+
+</div>
