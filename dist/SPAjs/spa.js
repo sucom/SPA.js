@@ -6824,7 +6824,7 @@ window['app']['api'] = window['app']['api'] || {};
       e.stopImmediatePropagation();
       return;
     } else {
-      eval( $el.attr('onclickX') );
+      eval( $el.attr('onclicknative') );
     }
   }
   function _initSpaElements(scope){
@@ -6832,7 +6832,7 @@ window['app']['api'] = window['app']['api'] || {};
       , $forms    = $context.find('form:not([onsubmit])')
       , $aLinksEx = $context.find('a[href]:not([href^="#"]):not([href^="javascript:"]):not([target])')
       , $aLinksIn = $context.find('a:not([href])')
-      , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclickx])');
+      , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclicknative])');
 
     //Fix Forms
     $forms.attr('onsubmit', 'return false;').addClass('spa-form'); //Disable form submit
@@ -6842,7 +6842,7 @@ window['app']['api'] = window['app']['api'] || {};
     $aLinksIn.attr('href', 'javascript:;').addClass('spa-link'); //disable href for internal links
 
     //Fix clickable elements button for disable
-    $clickEls.addClass('as-btn').renameAttr('onclick', 'onclickX').on('click', _disabledElClick);
+    $clickEls.addClass('as-btn').renameAttr('onclick', 'onclicknative').on('click', _disabledElClick);
   }
   spa.initElementsIn = _initSpaElements;
 
