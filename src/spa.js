@@ -2422,7 +2422,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.51.0';
+  spa.VERSION = '2.52.0-RC1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4348,8 +4348,15 @@ window['app']['api'] = window['app']['api'] || {};
    * current window location = http://xyz.com/page#/hash0/hash1/hash2
    * spa.getLocHash()   => "#/hash0/hash1/hash2"
    * */
-  spa.getLocHash = function(){
-    return window.location.hash || "";
+  spa.getLocHash = function(urlHashBase){
+    var urlHash = (window.location.hash).replace('#','');
+    //if (!urlHash && !spa.is(urlHashBase, 'undefined') && (urlHashBase!='#')) {
+    if (!(urlHash || spa.is(urlHashBase, 'undefined') || urlHashBase=='#')) {
+      urlHash = (window.location.pathname)
+                .replace(/(\/)*(index|default)\.([a-z])*/i,'')
+                .replace((urlHashBase.replace(/\s*/g, '').trimRightStr("/")), '');
+    }
+    return urlHash;
   };
   /*Get URL Hash value
    * if url = http://xyz.com/page#/hash0/hash1/hash2
@@ -4358,10 +4365,9 @@ window['app']['api'] = window['app']['api'] || {};
    * spa.urlHash([]) => ["hash0", "hash1", "hash2"]
    * spa.urlHash(["key0", "key1", "key3"]) => {"key0":"hash0", "key1":"hash1", "key2":"hash2"}
    * */
-  spa.urlHash = function (returnOf, hashDelimiter) {
-    var retValue = (spa.getLocHash() || "#").substring(1);
+  spa.urlHash = function (returnOf, urlHashBase) {
+    var hashDelimiter = "/", retValue = spa.getLocHash(urlHashBase);
     if (returnOf || _.isNumber(returnOf)) {
-      hashDelimiter = hashDelimiter || "/";
       retValue = retValue.beginsWithStr(hashDelimiter) ? retValue.substring(retValue.indexOf(hashDelimiter) + (hashDelimiter.length)) : retValue;
       var hashArray = (retValue.length)? retValue.split(hashDelimiter) : [];
       if (_.isNumber(returnOf)) {
@@ -4379,6 +4385,10 @@ window['app']['api'] = window['app']['api'] || {};
     }
     return retValue;
   };
+  spa.urlHashFull = function(urlHashBase) {
+    urlHashBase = urlHashBase || '#';
+    return urlHashBase+spa.urlHash('', urlHashBase);
+  }
   /*Similar to spa.urlParam on HashParams*/
   spa.hashParam = function (name) {
     var retValue = (''+spa.urlHash('?'));
@@ -5204,6 +5214,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
 
     , routes: {
+      base: '#',
       attr: {
         route: 'data-spa-route',
         onNavAway: 'onNavAway'
@@ -8031,12 +8042,16 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* *************** data-spa-route - SPA Route Solution Begins ************************ */
-  var _onAutoRoute     = true
-    , _autoRoutesFound = []
-    , _maxAutoRoute    = 100
-    , _routeOnClick    = false
-    , _prevUrlHash     = ''
+  var _urlHashBase        = '#'
     , _blockNav
+    , _onAutoRoute        = true
+    , _autoRoutesFound    = []
+    , _maxAutoRoute       = 100
+    , _routeOnClick       = false
+    , _prevUrlHash        = ''
+    , _isDelayed          = false
+    , _isDelayedOnUrl     = ''
+    , _lastBlockedUrl     = ''
     , _blockNavClassName  = ''
     , _blockNavClass      = ''
     , _allowNavClassName  = ''
@@ -8048,6 +8063,7 @@ window['app']['api'] = window['app']['api'] || {};
     _maxAutoRoute = 100;
   }
   function _initRoutesDefaults(){
+    _urlHashBase        = (spa.findSafe(spa, 'defaults.routes.base', '')            || '#');
     _blockNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV');
     _blockNavClass      = ('.'+_blockNavClassName);
     _allowNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.allow', '') || 'ALLOW-SPA-NAV');
@@ -8086,11 +8102,23 @@ window['app']['api'] = window['app']['api'] || {};
   function _blockBrowserNav(){
     if (_blockNav) _replaceUrlHash(_prevUrlHash);
   }
+  function _onpageshow() {
+    //if (e.persisted)
+    _blockBrowserNav();
+  }
+  function _onPopStateChange(){
+    _routeSpaUrlOnHashChange();
+    //custom function trigger
+    if (spa.onUrlHashChange) {
+      spa.onUrlHashChange(spa.urlHash([], _urlHashBase));
+    }
+  }
   function _onWindowReload(){
     var i18nMsgKey = 'spa.message.on.window.reload';
     if (_blockNav) return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
   }
   function _handleNavAwayEvent(toUrl, $byEl){
+    _lastBlockedUrl = toUrl;
     spa.console.log('Trying to navigate away from:['+ _prevUrlHash +'] To:['+ toUrl +'] by', $byEl);
     var $container, onNavAway, navAwayTargetSelector, $navAwayTarget, navAwayFn, byEl;
     $(_blockNavClass).each(function(){
@@ -8124,37 +8152,50 @@ window['app']['api'] = window['app']['api'] || {};
   spa.isInBlockedSpaNavContainer = _inBlockedSpaNavContainer;
 
   function _ctrlBrwowserNav(){
-    window.onpopstate = window.onpageshow = function(e) { if (e.persisted) _blockBrowserNav(); };
+    window.onpageshow = _onpageshow;
+    window.onpopstate = _onPopStateChange;
     window.onbeforeunload = _onWindowReload;
   }
 
   function _routeSpaUrlOnHashChange(){
-    var urlHash = '#'+spa.urlHash();
-    spa.console.log('Url To ['+urlHash+'] on click:'+_routeOnClick+' block-Navigation:'+_blockNav);
+    var urlHash = spa.urlHashFull(_urlHashBase);
+    spa.console.log('on Hash Change: Url To [',urlHash,'] from[',_prevUrlHash,'] on click:',_routeOnClick,' block-Navigation:',_blockNav,'isDelayed:', _isDelayed);
     if ((!_isToShowSpaNav) || (!_routeOnClick && _blockNav)) {
-      _replaceUrlHash(_prevUrlHash);
-      if (_prevUrlHash != urlHash) {
+      spa.console.log('------------->', _prevUrlHash, urlHash, _isDelayed, _isDelayedOnUrl);
+      spa.console.log('lastBlocked:',_lastBlockedUrl);
+      if (!_lastBlockedUrl) _lastBlockedUrl = _prevUrlHash;
+      if (_urlHashBase[0] == '#') {
+        _replaceUrlHash(_isDelayed? _isDelayedOnUrl : _prevUrlHash, urlHash);
+        if (_lastBlockedUrl == urlHash) _handleNavAwayEvent(urlHash);
+      } else {
+        _replaceUrlHash(_isDelayed? _isDelayedOnUrl : _prevUrlHash, urlHash);
         _handleNavAwayEvent(urlHash);
       }
+
     } else {
-      _prevUrlHash = urlHash;
+      //_prevUrlHash = urlHash;
       _triggerNextHash( _onAutoRoute || !_routeOnClick );
     }
   }
 
   function _triggerNextHash( reset ){
+    //console.log('Finding next hash ...', reset);
     if (reset) _initAutoRoute();
     _onAutoRoute = spa.is(reset, 'undefined')? _onAutoRoute : reset;
-    var hashList = spa.urlHash([]), lastHashIndex = hashList.length-1, curHashName, isLastHash;
+    var hashList = spa.urlHash([], _urlHashBase), lastHashIndex = hashList.length-1, curHashName, isLastHash;
+
     if (_maxAutoRoute<0) _onAutoRoute = false;
     if (_onAutoRoute) {
       _maxAutoRoute--;
       for (var i = lastHashIndex; i>=0; i--) {
         curHashName = hashList[i]; isLastHash = (i == lastHashIndex);
+        //console.log('... '+curHashName);
         if (!_onAutoRoute || (_autoRoutesFound.indexOf(curHashName)>=0)) break;
         if (curHashName) {
+          //console.log('... ... '+curHashName);
           var $hashTriggerEl = $('['+((_attrSpaRoute).trim())+'$="/'+curHashName+'"]:not(:disabled):not(.disabled):not(.AUTO-ROUTING):first');
           if ($hashTriggerEl.length) {
+            //console.log('... ... ... '+curHashName);
             _autoRoutesFound.push(curHashName);
             _onAutoRoute = !isLastHash;
             $hashTriggerEl.addClass('AUTO-ROUTING').trigger($hashTriggerEl.data('routeEvent') || 'click');
@@ -8165,31 +8206,55 @@ window['app']['api'] = window['app']['api'] || {};
     _routeOnClick = false;
   };
 
-  function _replaceUrlHash(newHashUrl) {
-    var _hashUpdateLink = $('#_spaRouteLink_');
-    if (!_hashUpdateLink.length) {
-      _hashUpdateLink = $('<a id="_spaRouteLink_" href=""></a>');
-      $('body').append(_hashUpdateLink);
+  function _updateBrowserAddress(newAddress, delayUpdate){
+    spa.console.log('_updateBrowserAddress >>>>>>>>>[', newAddress, ']delay:',delayUpdate,'prev:', _prevUrlHash);
+    var useLink = (_urlHashBase[0] == '#');
+    if (newAddress) {
+      _prevUrlHash = newAddress;
+      if (useLink) {
+        spa.console.log( newAddress );
+        var _hashUpdateLink = $('#_spaRouteLink_');
+        if (!_hashUpdateLink.length) {
+          _hashUpdateLink = $('<a id="_spaRouteLink_" href=""></a>');
+          $('body').append(_hashUpdateLink);
+        }
+        _hashUpdateLink.attr('href', newAddress)[0].click();
+      } else {
+        spa.console.log( newAddress );
+        newAddress = (newAddress.trimLeftStr('/'));
+        if (newAddress[0] != '#') {
+          newAddress = '//'+window.location.host+'/'+((_urlHashBase+newAddress).trimLeftStr('/'));
+        }
+        spa.console.log('>>>>>>>>>>>>>>>>> '+ newAddress );
+        history.pushState(null, null, newAddress);
+      }
     }
-    _hashUpdateLink.attr('href', newHashUrl||'#')[0].click();
+  }
+  function _replaceUrlHash(newHashUrl, insteadOf) {
+    spa.console.log('replacing URL', newHashUrl, 'with', insteadOf);
+    _updateBrowserAddress(newHashUrl);
   }
 
   function _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute) {
     _onAutoRoute = continueAutoRoute;
-    var _hashUpdateLink = $('#_spaRouteLink_');
-    if (!_hashUpdateLink.length) {
-      _hashUpdateLink = $('<a id="_spaRouteLink_" href=""></a>');
-      $('body').append(_hashUpdateLink);
-    }
-    if (newHashUrl) _hashUpdateLink.attr('href', newHashUrl);
-    if (!delayUpdate) {
+    _isDelayed   = delayUpdate;
+    _isDelayedOnUrl = delayUpdate? _prevUrlHash : '';
+    if (delayUpdate) {
+      _prevUrlHash = newHashUrl;
+    } else {
       _routeOnClick  = true;
-      (spa.isToShowNav())? _hashUpdateLink[0].click() : _prevUrlHash = newHashUrl;
+      if (spa.isToShowNav()) {
+        if (!_onAutoRoute) _updateBrowserAddress(newHashUrl, delayUpdate);
+      } else {
+        _prevUrlHash = newHashUrl;
+      }
     }
   }
 
   function _onRouteElClick(e){
-    var spaRoutePath = spa.urlHash([]);
+    var spaRoutePath = spa.urlHash([], _urlHashBase);
+    //console.clear();
+    //console.log('Current Route:', spaRoutePath);
     var $routeEl    = $(this)
       , routeData
       , usePrevHash
@@ -8230,26 +8295,49 @@ window['app']['api'] = window['app']['api'] || {};
       } else {
         continueAutoRoute = true;
         routeDir  = '#';
-        routeName = spa.urlHash();
+        routeName = spa.urlHash('', _urlHashBase);
       }
     }
+
+    if ('#/-<'.indexOf(routeDir)<0) {
+      routeName = routeDir+routeName;
+      routeDir = '?';
+    }
+
+    function insertOrAppendToPath(){
+      var resetFrom = spaRoutePath.indexOf( routeName.split('/')[0] );
+      if (resetFrom>=0) spaRoutePath.length = resetFrom;
+      spaRoutePath.push(routeName);
+    }
+
+    spa.console.log('Route Dir:', routeDir);
     switch (routeDir) {
-      case '#': spaRoutePath = [routeName];
-        break;
+      case '#': //spaRoutePath = [routeName]; break;
       case '/':
-        var resetFrom = spaRoutePath.indexOf( routeName.split('/')[0] );
-        if (resetFrom>0) spaRoutePath.length = resetFrom;
-        spaRoutePath.push(routeName);
-        break;
+        spaRoutePath = [routeName]; break;
+        // if (_urlHashBase[0] != '#') {
+        //   spaRoutePath = [routeName];
+        // } else {
+        //   insertOrAppendToPath();
+        // }
+        // break;
       case '-':
         var revCount = spa.toInt(routeName.replace(/[^0-9]/g,'')) || 1;
         if (spaRoutePath.length) {
           spaRoutePath.length = spaRoutePath.length-revCount;
         }
         break;
+      case '<':
+        newHashUrl = _prevUrlHash;
+        break;
+      case '?':
+        insertOrAppendToPath();
+      break;
     }
 
-    if (!usePrevHash) newHashUrl = '#'+(spaRoutePath.join('/'));
+    if (!usePrevHash) {
+      newHashUrl = _urlHashBase+('/'+(spaRoutePath.join('/').trimLeftStr('/')));
+    }
 
     if (_blockNav) {
       if (!( usePrevHash || $routeEl.hasClass(_allowNavClassName) || $routeEl.inBlockedSpaNavContainer())) {
@@ -8257,6 +8345,8 @@ window['app']['api'] = window['app']['api'] || {};
         _handleNavAwayEvent(newHashUrl, $routeEl);
       }
     }
+
+    //console.log('Routing to...', newHashUrl, 'delay:', delayUpdate, 'prev:', _prevUrlHash);
 
     _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute);
   }
@@ -8294,12 +8384,12 @@ window['app']['api'] = window['app']['api'] || {};
     };
 
     /*init SPA routes; a simple routing solution */
-    _prevUrlHash = '#'+spa.urlHash();
     var spaRoutesDefaults = $('body').attr('data-spa-routes');
     if (!spa.isBlank(spaRoutesDefaults)) {
       spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
       _.merge(spa.defaults.routes, spaRoutesDefaults);
     }
+    _prevUrlHash = spa.urlHashFull( _urlHashBase );
     _initRoutesDefaults();
 
     /*Init spaRoutes old: to be discontinued ... */
@@ -8309,12 +8399,12 @@ window['app']['api'] = window['app']['api'] || {};
       if (spa.isBlank(sparouteInitOptions)) {
         spa.console.info("Registering HashRouting Listener");
         window.addEventListener("hashchange", function(){
-          _routeSpaUrlOnHashChange();
-
-          //custome function trigger
-          if (spa.onUrlHashChange) {
-            spa.onUrlHashChange(spa.urlHash([]));
-          }
+          // moved to onpopstate
+          // _routeSpaUrlOnHashChange();
+          // //custom function trigger
+          // if (spa.onUrlHashChange) {
+          //   spa.onUrlHashChange(spa.urlHash([], _urlHashBase));
+          // }
         });
       }
     }

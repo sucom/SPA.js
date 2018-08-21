@@ -22,7 +22,7 @@
     <blockquote>
       <p>
         <ul>
-          <li>1. DO NOT use <mark>a[href]</mark> attribute for spa-routes.</li>
+          <li>1. DO NOT use <mark>a[href]</mark> attribute for spa-routes as [href] is not a valid attribute for span,div,button,i, etc., which can be used for routes.</li>
           <li>2. Route name - Keep It Simple. Only Alpha-numeric characters ( a-z A-Z 0-9 ) with dash ( - ) and/or underscore ( _ ).</li>
         </ul>
       </p>
@@ -60,7 +60,7 @@
     <p><mark>Route-Path</mark> spcification.
       <ul>
         <li>If begins with <mark>#</mark>, Replaces the complete route path.</li>
-        <li>If begins with <mark>/</mark>, Inserts/Appends to existing route path.</li>
+        <li>If begins with <mark>/</mark>, Replaces the complete route path.</li>
         <li>If begins with <mark>-</mark>, Reduces the path by a number (default: 1) followed by <mark>-</mark>.</li>
       </ul>
 
@@ -76,13 +76,25 @@
         ... ...
 
         <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
-        <!-- inserts to existing path if exisiting path contains /home, else appends to the existing path
+        <!-- replace the existing path
 
           if exisiting path: //127.0.0.1/index.html#/home
             the new path ==> //127.0.0.1/index.html#/home/view-profile
 
           if exisiting path: //127.0.0.1/index.html#
             the new path ==> //127.0.0.1/index.html#/home/view-profile
+        -->
+
+        ... ...
+
+        <a data-spa-route="member/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <!-- inserts to existing path if exisiting path contains "member", else appends to the existing path
+
+          if exisiting path: //127.0.0.1/index.html#/home/member
+            the new path ==> //127.0.0.1/index.html#/home/member/view-profile
+
+          if exisiting path: //127.0.0.1/index.html#/home
+            the new path ==> //127.0.0.1/index.html#/home/member/view-profile
         -->
 
         ... ...
@@ -110,12 +122,12 @@
         ... ...
 
         <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
-        <!-- inserts to existing path if exisiting path contains /home, else appends to the existing path
+        <!-- replaces the existing path
 
           if exisiting path: //127.0.0.1/index.html#/home
             the new path ==> //127.0.0.1/index.html#/home/view-profile
 
-          if exisiting path: //127.0.0.1/index.html#
+          if exisiting path: //127.0.0.1/index.html#/home/settings
             the new path ==> //127.0.0.1/index.html#/home/view-profile
         -->
 
@@ -223,6 +235,52 @@
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="index.html">
       <body class="HIDE-SPA-NAV">
       </script>
+    </p>
+  </section>
+
+  <section>
+    <h2>Routes without hash (#)</h2>
+    <h6>(from v2.52.0+)</h6>
+    <p>If needed, the routes can be done without hash ( <mark>#</mark> ).
+      Instead, the slash ( <mark>/</mark> ) will be used. After the SPA ( <mark>index.html</mark> ) is loaded, all routes will be handled at the browser side.
+      However, when the page re-loads or loaded by a bookmark, the web server needs to be configured to load the SPA (index.html)
+      and the path to the index file must be mentioned in the <mark>base[href]</mark> attribute <mark>(&lt;base href="/path-to-index-file"&gt;)</mark>
+      inside the <mark>&lt;head&gt;</mark> tag as well as in <mark>&lt;body&gt;</mark> tag.
+      <p><i>index.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="index.html" data-lines="13,22">
+      <!DOCTYPE html>
+      <html>
+
+      <_head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta http-equiv="cache-control" content="no-cache">
+        <meta http-equiv="expires" content="0">
+        <meta http-equiv="pragma" content="no-cache">
+
+        <base href="/"> <!-- or  href="/my-app-context" -->
+
+        <title>Stealth(identity)</title>
+        <link rel="shortcut icon" href="brand/favicon.png" type="image/vnd.microsoft.icon" />
+        <link rel="stylesheet" href="xlib/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="xlib/bootstrap/css/bootstrap-slider.min.css">
+        <link rel="stylesheet" href="app/styles/styles.css" />
+      </_head>
+
+      <_body data-spa-routes="base:'/'"> <!-- or base:'/my-app-context' -->
+
+        ...
+
+      </_body>
+
+      </script>
+    </p>
+    <p>
+      <blockquote>
+        <mark>Caution: The non-hash routing is an experimental feature and requires a server-side configuration.</mark>
+      </blockquote>
     </p>
   </section>
 
