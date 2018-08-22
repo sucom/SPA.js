@@ -2415,14 +2415,15 @@ window['app']['api'] = window['app']['api'] || {};
     if (!(this instanceof spa)) { return new spa(obj); }
   };
 
+  //ToBeRemoved
   /*Flag for URL Hash Routing*/
-  win.isSpaHashRouteOn=false;
+  //win.isSpaHashRouteOn=false;
 
   /* Expose spa to window */
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.52.0-RC1';
+  spa.VERSION = '2.52.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2480,31 +2481,32 @@ window['app']['api'] = window['app']['api'] || {};
   /* event handler for window.onhashchange */
   spa.onUrlHashChange;
 
+  //ToBeRemoved
   /* spa rounte management internal functions */
-  function _initWindowOnHashChange(){
-    if ('onhashchange' in window) {
-      isSpaHashRouteOn = true;
-      spa.console.info("Registering HashRouting Listener");
-      window.onhashchange = function () {
-        /* ocEvent
-         .oldURL : "http://dev.semantic-test.com/ui/home.html#user/changePassword"
-         .newURL : "http://dev.semantic-test.com/ui/home.html#user/profile"
-         .timeStamp : 1443191735330
-         .type:"hashchange"
-         */
-        var cHash = window.location.hash;
-        spa.console.info("onHashChange: "+cHash);
-        if (cHash) {
-          spa.route(cHash);
-        } else if (spa.routesOptions.defaultPageRoute) {
-          spa.route(spa.routesOptions.defaultPageRoute);
-        }
-      };
-    }
-  };
-  function _stopWindowOnHashChange(){
-    window.onhashchange = undefined;
-  };
+  // function _initWindowOnHashChange(){
+  //   if ('onhashchange' in window) {
+  //     isSpaHashRouteOn = true;
+  //     spa.console.info("Registering HashRouting Listener");
+  //     window.onhashchange = function () {
+  //       /* ocEvent
+  //        .oldURL : "http://dev.semantic-test.com/ui/home.html#user/changePassword"
+  //        .newURL : "http://dev.semantic-test.com/ui/home.html#user/profile"
+  //        .timeStamp : 1443191735330
+  //        .type:"hashchange"
+  //        */
+  //       var cHash = window.location.hash;
+  //       spa.console.info("onHashChange: "+cHash);
+  //       if (cHash) {
+  //         spa.route(cHash);
+  //       } else if (spa.routesOptions.defaultPageRoute) {
+  //         spa.route(spa.routesOptions.defaultPageRoute);
+  //       }
+  //     };
+  //   }
+  // };
+  // function _stopWindowOnHashChange(){
+  //   window.onhashchange = undefined;
+  // };
 
   /* **********************Date prototypes*********************** */
   /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
@@ -4385,9 +4387,12 @@ window['app']['api'] = window['app']['api'] || {};
     }
     return retValue;
   };
+  function _getAboluteUrl(base, url){
+    return ((base || '').trimRightStr('/'))+'/'+((url || '').trimLeftStr('/'));
+  }
   spa.urlHashFull = function(urlHashBase) {
     urlHashBase = urlHashBase || '#';
-    return urlHashBase+spa.urlHash('', urlHashBase);
+    return _getAboluteUrl(urlHashBase, spa.urlHash('', urlHashBase));
   }
   /*Similar to spa.urlParam on HashParams*/
   spa.hashParam = function (name) {
@@ -4406,23 +4411,24 @@ window['app']['api'] = window['app']['api'] || {};
    }
    *
    * */
-  spa.routeMatch = function (routePattern, urlHash) {
-    var rxParamMatcher = new RegExp(":[a-zA-Z0-9\\_\\-]+", "g")
-      , routeMatcher = new RegExp(routePattern.replace(rxParamMatcher, '([\\w\\+\\-\\|\\.\\?]+)'))
-      , _keysSrc = routePattern.match(rxParamMatcher)
-      , _values  = urlHash.match(routeMatcher)
-      , _matchResult = (_values && !_.isEmpty(_values))? _values.shift() : ""
-      , _keys   = (_keysSrc && !_.isEmpty(_keysSrc))? _keysSrc.join(',').replace(/:/g,'').split(',') : []
-      , _values = (_values && !_.isEmpty(_values))? _values.join(',').replace(/\?/g, '').split(',') : []
-      , retValue = undefined;
-    if (_matchResult) {
-      retValue = {
-        hkeys: _keysSrc
-        , params: _.zipObject(_keys, _values)
-      };
-    }
-    return (retValue);
-  };
+  //ToBeRemoved/used the pattern matching logic
+  // spa.routeMatch = function (routePattern, urlHash) {
+  //   var rxParamMatcher = new RegExp(":[a-zA-Z0-9\\_\\-]+", "g")
+  //     , routeMatcher = new RegExp(routePattern.replace(rxParamMatcher, '([\\w\\+\\-\\|\\.\\?]+)'))
+  //     , _keysSrc = routePattern.match(rxParamMatcher)
+  //     , _values  = urlHash.match(routeMatcher)
+  //     , _matchResult = (_values && !_.isEmpty(_values))? _values.shift() : ""
+  //     , _keys   = (_keysSrc && !_.isEmpty(_keysSrc))? _keysSrc.join(',').replace(/:/g,'').split(',') : []
+  //     , _values = (_values && !_.isEmpty(_values))? _values.join(',').replace(/\?/g, '').split(',') : []
+  //     , retValue = undefined;
+  //   if (_matchResult) {
+  //     retValue = {
+  //       hkeys: _keysSrc
+  //       , params: _.zipObject(_keys, _values)
+  //     };
+  //   }
+  //   return (retValue);
+  // };
 
 
   /* i18n support */
@@ -5794,11 +5800,12 @@ window['app']['api'] = window['app']['api'] || {};
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
         } else {
-          if (("" + fn2Call).beginsWithStr("spa") && (("" + fn2Call).endsWithStr("_renderCallback"))) {
-            spa.console.warn("Default Route renderCallback function <" + fn2Call + "> is NOT defined.");
-          } else {
+          //ToBeRemoved
+          // if (("" + fn2Call).beginsWithStr("spa") && (("" + fn2Call).endsWithStr("_renderCallback"))) {
+          //   spa.console.warn("Default Route renderCallback function <" + fn2Call + "> is NOT defined.");
+          // } else {
             spa.console.error("CallbackFunction <" + fn2Call + "> is NOT defined.");
-          }
+          // }
         }
       }
     },
@@ -6762,7 +6769,7 @@ window['app']['api'] = window['app']['api'] || {};
                   spa.initTogglePassword(viewContainerId);
 
                   /*init spaRoute*/
-                  spa.initRoutesX(viewContainerId);
+                  //spa.initRoutesX(viewContainerId);
                 };
 
                 spa.console.log(retValue);
@@ -6784,10 +6791,11 @@ window['app']['api'] = window['app']['api'] || {};
                 spa.console.info("Processing callback: " + _fnCallbackAfterRender);
 
                 if (!isCallbackDisabled) {
-                  if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
-                    spa.console.info("calling default callback: spa.routes._renderCallback");
-                    spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
-                  }
+                  // ToBeRemoved
+                  // if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
+                  //   spa.console.info("calling default callback: spa.routes._renderCallback");
+                  //   spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
+                  // }
                   spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
                 }
 
@@ -6817,7 +6825,7 @@ window['app']['api'] = window['app']['api'] || {};
           })
           .fail(function () {
             spa.console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
-          }).done(spa.runOnceOnRender);
+          });//.done(spa.runOnceOnRender);
       }
       else {
         spa.console.error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
@@ -6920,49 +6928,50 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
-  spa.hasAutoRoutes = function(routeHash, operator){
-    var elSelector = "[data-sparoute-default]"+(routeHash? "[href"+(operator?operator:"")+"='"+routeHash+"']" : "");
-    return ($(elSelector).length > 0);
-  };
-  spa.routeCurLocHashAttemptDelaySec = 3;
-  spa.routeCurLocHashAttempt=0;
-  spa.routeCurLocHash = function(){
-    var curLocHash = (spa.getLocHash()||"").ifBlankStr(spa.routesOptions.defaultPageRoute);
-    if (isSpaHashRouteOn && curLocHash && !spa.hasAutoRoutes(curLocHash)) {
-      spa.console.info("Route current url-hash.");
-      if (!spa.route(curLocHash)) {
-        spa.console.warn("Current url-hash-route <"+curLocHash+"> FAILED and will try after "+spa.routeCurLocHashAttemptDelaySec+"sec.");
-        if (spa.routeCurLocHashAttempt < 5) {
-          spa.routeCurLocHashAttempt++;
-          setTimeout(spa.routeCurLocHash, (spa.routeCurLocHashAttemptDelaySec*1000));
-        } else {
-          spa.console.error("5 attempts to route current url-hash failed. Aborting further attempts.");
-        }
-      }
-    }
-  };
+  //ToBeRemoved
+  // spa.hasAutoRoutes = function(routeHash, operator){
+  //   var elSelector = "[data-sparoute-default]"+(routeHash? "[href"+(operator?operator:"")+"='"+routeHash+"']" : "");
+  //   return ($(elSelector).length > 0);
+  // };
+  // spa.routeCurLocHashAttemptDelaySec = 3;
+  // spa.routeCurLocHashAttempt=0;
+  // spa.routeCurLocHash = function(){
+  //   var curLocHash = (spa.getLocHash()||"").ifBlankStr(spa.routesOptions.defaultPageRoute);
+  //   if (isSpaHashRouteOn && curLocHash && !spa.hasAutoRoutes(curLocHash)) {
+  //     spa.console.info("Route current url-hash.");
+  //     if (!spa.route(curLocHash)) {
+  //       spa.console.warn("Current url-hash-route <"+curLocHash+"> FAILED and will try after "+spa.routeCurLocHashAttemptDelaySec+"sec.");
+  //       if (spa.routeCurLocHashAttempt < 5) {
+  //         spa.routeCurLocHashAttempt++;
+  //         setTimeout(spa.routeCurLocHash, (spa.routeCurLocHashAttemptDelaySec*1000));
+  //       } else {
+  //         spa.console.error("5 attempts to route current url-hash failed. Aborting further attempts.");
+  //       }
+  //     }
+  //   }
+  // };
 
-  spa.finallyOnRender = [];
-  spa.runOnceOnRenderFunctions = [spa.routeCurLocHash];
-  spa.runOnceOnRender = function(){
-    spa.console.info("Render Complete.");
-    if ((spa.runOnceOnRenderFunctions && !_.isEmpty(spa.runOnceOnRenderFunctions)) || (spa.finallyOnRender && !_.isEmpty(spa.finallyOnRender)) ) {
-      if (!spa.runOnceOnRenderFunctions) spa.runOnceOnRenderFunctions = [];
-      if (!_.isArray(spa.runOnceOnRenderFunctions)) {
-        spa.runOnceOnRenderFunctions = [spa.runOnceOnRenderFunctions];
-      }
-      if (_.isArray(spa.runOnceOnRenderFunctions)) {
-        if (spa.finallyOnRender) {
-          if (!_.isArray(spa.finallyOnRender)){ spa.finallyOnRender = [spa.finallyOnRender]; }
-          spa.runOnceOnRenderFunctions = spa.runOnceOnRenderFunctions.concat(spa.finallyOnRender);
-        }
-        _.each(spa.runOnceOnRenderFunctions, function(fn){
-          if (_.isFunction(fn)) fn();
-        });
-      }
-      spa.finallyOnRender = spa.runOnceOnRenderFunctions = undefined;
-    }
-  };
+  // spa.finallyOnRender = [];
+  // spa.runOnceOnRenderFunctions = [spa.routeCurLocHash];
+  // spa.runOnceOnRender = function(){
+  //   spa.console.info("Render Complete.");
+  //   if ((spa.runOnceOnRenderFunctions && !_.isEmpty(spa.runOnceOnRenderFunctions)) || (spa.finallyOnRender && !_.isEmpty(spa.finallyOnRender)) ) {
+  //     if (!spa.runOnceOnRenderFunctions) spa.runOnceOnRenderFunctions = [];
+  //     if (!_.isArray(spa.runOnceOnRenderFunctions)) {
+  //       spa.runOnceOnRenderFunctions = [spa.runOnceOnRenderFunctions];
+  //     }
+  //     if (_.isArray(spa.runOnceOnRenderFunctions)) {
+  //       if (spa.finallyOnRender) {
+  //         if (!_.isArray(spa.finallyOnRender)){ spa.finallyOnRender = [spa.finallyOnRender]; }
+  //         spa.runOnceOnRenderFunctions = spa.runOnceOnRenderFunctions.concat(spa.finallyOnRender);
+  //       }
+  //       _.each(spa.runOnceOnRenderFunctions, function(fn){
+  //         if (_.isFunction(fn)) fn();
+  //       });
+  //     }
+  //     spa.finallyOnRender = spa.runOnceOnRenderFunctions = undefined;
+  //   }
+  // };
 
   /* Internal wrapper for jQuery.spaRender */
   spa.setElIdIfNot = function(el) {
@@ -7135,110 +7144,110 @@ window['app']['api'] = window['app']['api'] || {};
     version: spa.VERSION
   };
 
-  /* spaRoute
+  /* spaRoute OLD complex not published
    * */
-  spa.routes = {};
-  spa.routesOptions = {
-      useHashRoute: true
-    , usePatterns:true
-    , defaultPageRoute : ""
-    , beforeRoute : ""
-    , defaultTemplateExt : ".html"
-    , defaultScriptExt : ".js"
-    , loadDefaultScript:true
-    , defaultRouteTargetContainerIdPrefix  : "routeContainer_"
-    , defaultRouteTemplateContainerIdPrefix: "template_"
-  };
+  // spa.routes = {};
+  // spa.routesOptions = {
+  //     useHashRoute: true
+  //   , usePatterns:true
+  //   , defaultPageRoute : ""
+  //   , beforeRoute : ""
+  //   , defaultTemplateExt : ".html"
+  //   , defaultScriptExt : ".js"
+  //   , loadDefaultScript:true
+  //   , defaultRouteTargetContainerIdPrefix  : "routeContainer_"
+  //   , defaultRouteTemplateContainerIdPrefix: "template_"
+  // };
 
-  spa.routePatterns = {
-    routes: []
-    , register: undefined //Object of pattern and function eg. {name:"memberDetailsView", pattern:"#member/view?:memid", routeoptions:{}}
-    , deregister: undefined //input [String | Array] of pattern
-  };
+  // spa.routePatterns = {
+  //   routes: []
+  //   , register: undefined //Object of pattern and function eg. {name:"memberDetailsView", pattern:"#member/view?:memid", routeoptions:{}}
+  //   , deregister: undefined //input [String | Array] of pattern
+  // };
 
-  spa.routePatterns.register = function(rPatternOptions, overwrite) {
-    //validate and Push {name:"xyz", pattern:"", routeoptions:{}}
-    if (rPatternOptions && !_.isEmpty(rPatternOptions)) {
-      var pushRoutePattern = function(rOptions, _overwrite) {
-        if (_.has(rOptions, "pattern")){
-          rOptions["pattern"] = rOptions["pattern"].replace(/\?/g, "\\?");
+  // spa.routePatterns.register = function(rPatternOptions, overwrite) {
+  //   //validate and Push {name:"xyz", pattern:"", routeoptions:{}}
+  //   if (rPatternOptions && !_.isEmpty(rPatternOptions)) {
+  //     var pushRoutePattern = function(rOptions, _overwrite) {
+  //       if (_.has(rOptions, "pattern")){
+  //         rOptions["pattern"] = rOptions["pattern"].replace(/\?/g, "\\?");
 
-          if (!_.has(rOptions, "name")){
-            rOptions['name'] = rOptions['pattern'].replace(/[^a-z0-9_]/gi, '');
-          }
-          if (!_.has(rOptions, "routeoptions")) {
-            rOptions['routeoptions'] = {};
-          }
-          if (!_.find(spa.routePatterns.routes, {'pattern':rOptions['pattern']})){ //No Duplicate Pattern
-            if (_.find(spa.routePatterns.routes, {'name':rOptions['name']})){ //If find duplicate name
-              if (_overwrite) {
-                spa.routePatterns.routes.push(rOptions);
-              }
-            } else {
-              spa.routePatterns.routes.push(rOptions);
-            }
-          }
-        }
-      };
+  //         if (!_.has(rOptions, "name")){
+  //           rOptions['name'] = rOptions['pattern'].replace(/[^a-z0-9_]/gi, '');
+  //         }
+  //         if (!_.has(rOptions, "routeoptions")) {
+  //           rOptions['routeoptions'] = {};
+  //         }
+  //         if (!_.find(spa.routePatterns.routes, {'pattern':rOptions['pattern']})){ //No Duplicate Pattern
+  //           if (_.find(spa.routePatterns.routes, {'name':rOptions['name']})){ //If find duplicate name
+  //             if (_overwrite) {
+  //               spa.routePatterns.routes.push(rOptions);
+  //             }
+  //           } else {
+  //             spa.routePatterns.routes.push(rOptions);
+  //           }
+  //         }
+  //       }
+  //     };
 
-      if (_.isArray(rPatternOptions)){
-        _.each(rPatternOptions, function(rOpt){
-          pushRoutePattern(rOpt, overwrite);
-        });
-      } else if (_.isObject(rPatternOptions)) {
-        pushRoutePattern(rPatternOptions, overwrite);
-      } else {
-        spa.console.error("Invalid RoutePattern Options. Provide Array/Object of RouteOptions");
-      }
-    } else {
-      spa.console.error("Empty RoutePattern Options.");
-    }
-  };
+  //     if (_.isArray(rPatternOptions)){
+  //       _.each(rPatternOptions, function(rOpt){
+  //         pushRoutePattern(rOpt, overwrite);
+  //       });
+  //     } else if (_.isObject(rPatternOptions)) {
+  //       pushRoutePattern(rPatternOptions, overwrite);
+  //     } else {
+  //       spa.console.error("Invalid RoutePattern Options. Provide Array/Object of RouteOptions");
+  //     }
+  //   } else {
+  //     spa.console.error("Empty RoutePattern Options.");
+  //   }
+  // };
 
-  spa.routePatterns.deregister = function(rNamesOrPatterns){
-    if (rNamesOrPatterns && !_.isEmpty(rNamesOrPatterns)) {
-      var removeRoutePattern = function(rNameOrPattern){
-        if (rNameOrPattern) {
-          var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
-            return (opt.name == rNameOrPattern || opt.pattern == rNameOrPattern);
-          });
-          if (indexOfNameOrPattern>=0) {
-            _.pullAt(spa.routePatterns.routes, indexOfNameOrPattern);
-          } else {
-            spa.console.error("Route Pattern Not Found for <"+rNameOrPattern+">");
-          }
-        }
-      };
+  // spa.routePatterns.deregister = function(rNamesOrPatterns){
+  //   if (rNamesOrPatterns && !_.isEmpty(rNamesOrPatterns)) {
+  //     var removeRoutePattern = function(rNameOrPattern){
+  //       if (rNameOrPattern) {
+  //         var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
+  //           return (opt.name == rNameOrPattern || opt.pattern == rNameOrPattern);
+  //         });
+  //         if (indexOfNameOrPattern>=0) {
+  //           _.pullAt(spa.routePatterns.routes, indexOfNameOrPattern);
+  //         } else {
+  //           spa.console.error("Route Pattern Not Found for <"+rNameOrPattern+">");
+  //         }
+  //       }
+  //     };
 
-      if (_.isArray(rNamesOrPatterns)){
-        _.each(rNamesOrPatterns, function(rNorP){
-          removeRoutePattern(rNorP);
-        });
-      } else if (_.isString(rNamesOrPatterns)) {
-        removeRoutePattern(rNamesOrPatterns);
-      } else {
-        spa.console.error("Invalid RoutePattern Name/Pattern. Provide Array/Name of RouteNames/Patterns");
-      }
-    }
-  };
+  //     if (_.isArray(rNamesOrPatterns)){
+  //       _.each(rNamesOrPatterns, function(rNorP){
+  //         removeRoutePattern(rNorP);
+  //       });
+  //     } else if (_.isString(rNamesOrPatterns)) {
+  //       removeRoutePattern(rNamesOrPatterns);
+  //     } else {
+  //       spa.console.error("Invalid RoutePattern Name/Pattern. Provide Array/Name of RouteNames/Patterns");
+  //     }
+  //   }
+  // };
 
-  spa.routeName = function(hashRoute){
-    var _hashRoute = (hashRoute || spa.urlHash());
-    if (_hashRoute.containsStr("\\?")) {
-      _hashRoute = _hashRoute.split("?")[0];
-    }
-    return (_hashRoute.trimLeftStr("#")).replace(/[^a-z0-9]/gi,'_');
-  };
+  // spa.routeName = function(hashRoute){
+  //   var _hashRoute = (hashRoute || spa.urlHash());
+  //   if (_hashRoute.containsStr("\\?")) {
+  //     _hashRoute = _hashRoute.split("?")[0];
+  //   }
+  //   return (_hashRoute.trimLeftStr("#")).replace(/[^a-z0-9]/gi,'_');
+  // };
 
-  spa.routeContainerId = function(hashRoute){
-    var routeTargetContainerPrefix = ((spa.routesOptions.defaultRouteTargetContainerIdPrefix).trimLeftStr("#"));
-    return (routeTargetContainerPrefix+spa.routeName(hashRoute));
-  };
+  // spa.routeContainerId = function(hashRoute){
+  //   var routeTargetContainerPrefix = ((spa.routesOptions.defaultRouteTargetContainerIdPrefix).trimLeftStr("#"));
+  //   return (routeTargetContainerPrefix+spa.routeName(hashRoute));
+  // };
 
-  spa.routeTemplateId = function(hashRoute){
-    var routeTargetContainerPrefix = ((spa.routesOptions.defaultRouteTemplateContainerIdPrefix).trimLeftStr("#"));
-    return (routeTargetContainerPrefix+spa.routeName(hashRoute));
-  };
+  // spa.routeTemplateId = function(hashRoute){
+  //   var routeTargetContainerPrefix = ((spa.routesOptions.defaultRouteTemplateContainerIdPrefix).trimLeftStr("#"));
+  //   return (routeTargetContainerPrefix+spa.routeName(hashRoute));
+  // };
 
   /*
     spa.routeRender = function(elRouteBase, routeOptions)
@@ -7254,250 +7263,250 @@ window['app']['api'] = window['app']['api'] || {};
       [before | beforeroute | beforeRoute]      : '' or function(){} or functionName //Optional: default: spa.routesOptions.beforeRoute
     }
   */
-  spa.routeRender = function(elRouteBase, routeOptions){
-    var $elRouteBase = (elRouteBase)? $(elRouteBase) : undefined;
+  // spa.routeRender = function(elRouteBase, routeOptions){
+  //   var $elRouteBase = (elRouteBase)? $(elRouteBase) : undefined;
 
-    var tagRouteOptions = ($elRouteBase)? ( (""+$elRouteBase.data("sparoute")) || "") : ("");
-    if (   (tagRouteOptions.trimStr()).equalsIgnoreCase("false")
-        || (tagRouteOptions.trimStr()).equalsIgnoreCase("no")
-        || (tagRouteOptions.trimStr()).equalsIgnoreCase("off")
-       ) tagRouteOptions = "quit:true";
-    var oTagRouteOptions = (tagRouteOptions)? spa.toJSON(tagRouteOptions) : {};
+  //   var tagRouteOptions = ($elRouteBase)? ( (""+$elRouteBase.data("sparoute")) || "") : ("");
+  //   if (   (tagRouteOptions.trimStr()).equalsIgnoreCase("false")
+  //       || (tagRouteOptions.trimStr()).equalsIgnoreCase("no")
+  //       || (tagRouteOptions.trimStr()).equalsIgnoreCase("off")
+  //      ) tagRouteOptions = "quit:true";
+  //   var oTagRouteOptions = (tagRouteOptions)? spa.toJSON(tagRouteOptions) : {};
 
-    //Override with jsRouteOptions
-    _.merge(oTagRouteOptions, routeOptions);
+  //   //Override with jsRouteOptions
+  //   _.merge(oTagRouteOptions, routeOptions);
 
-    if (oTagRouteOptions.hasOwnProperty("quit") && (oTagRouteOptions['quit'])) {
-      return; //abort route
-    }
+  //   if (oTagRouteOptions.hasOwnProperty("quit") && (oTagRouteOptions['quit'])) {
+  //     return; //abort route
+  //   }
 
-    var routeNameWithPath = "#RouteNotDefinedInHREF";
-    if ($elRouteBase) {
-      routeNameWithPath = $elRouteBase.attr("href");
-    } else if (routeOptions['urlhash']) {
-      routeNameWithPath = routeOptions['urlhash']['url'];
-    }
-    routeNameWithPath = (routeNameWithPath).trimLeftStr("#");
+  //   var routeNameWithPath = "#RouteNotDefinedInHREF";
+  //   if ($elRouteBase) {
+  //     routeNameWithPath = $elRouteBase.attr("href");
+  //   } else if (routeOptions['urlhash']) {
+  //     routeNameWithPath = routeOptions['urlhash']['url'];
+  //   }
+  //   routeNameWithPath = (routeNameWithPath).trimLeftStr("#");
 
-    var routeParams = "";
-    if (routeNameWithPath.containsStr("\\?")) {
-      var _routeParts = routeNameWithPath.split("?");
-      routeNameWithPath = _routeParts[0];
-      routeParams = _routeParts[1];
-    }
-    var routeName = oTagRouteOptions['name'] || (spa.routeName(routeNameWithPath));
+  //   var routeParams = "";
+  //   if (routeNameWithPath.containsStr("\\?")) {
+  //     var _routeParts = routeNameWithPath.split("?");
+  //     routeNameWithPath = _routeParts[0];
+  //     routeParams = _routeParts[1];
+  //   }
+  //   var routeName = oTagRouteOptions['name'] || (spa.routeName(routeNameWithPath));
 
-    routeNameWithPath += routeNameWithPath.endsWithStr("/")? "index" : "";
+  //   routeNameWithPath += routeNameWithPath.endsWithStr("/")? "index" : "";
 
-    if (spa.routes[routeName]) {
-      spa.routes[routeName]($elRouteBase, routeParams, oTagRouteOptions);
-    } else {
-      spa.console.info("Route method <spa.routes."+routeName+"> NOT FOUND. Attempting to route using [data-sparoute] options.");
+  //   if (spa.routes[routeName]) {
+  //     spa.routes[routeName]($elRouteBase, routeParams, oTagRouteOptions);
+  //   } else {
+  //     spa.console.info("Route method <spa.routes."+routeName+"> NOT FOUND. Attempting to route using [data-sparoute] options.");
 
-      var foundRouteTmplExt = (oTagRouteOptions.hasOwnProperty('ext')
-      || oTagRouteOptions.hasOwnProperty('tmplext')
-      || oTagRouteOptions.hasOwnProperty('tmplExt'));
+  //     var foundRouteTmplExt = (oTagRouteOptions.hasOwnProperty('ext')
+  //     || oTagRouteOptions.hasOwnProperty('tmplext')
+  //     || oTagRouteOptions.hasOwnProperty('tmplExt'));
 
-      //foundRenderTarget = oTagRouteOptions['target'] && spa.isElementExist(oTagRouteOptions['target'])
-      var renderTarget      = ""+((oTagRouteOptions['target']||"").trimStr())
-        , tmplExt           = (foundRouteTmplExt)? (oTagRouteOptions['ext'] || oTagRouteOptions['tmplext'] || oTagRouteOptions['tmplExt']) : (spa.routesOptions["defaultTemplateExt"]||"")
-        , defaultTmplPath   = (routeNameWithPath+tmplExt+"?"+routeParams).trimRightStr("\\?")
-        , defaultScriptPath = routeNameWithPath+(spa.routesOptions["defaultScriptExt"]||".js")
-        , defaultCallBeforeRoute = "spa.routes."+routeName+"_before"
-        , defaultRenderCallback  = "spa.routes."+routeName+"_renderCallback"
-        , useTargetOptions = spa.findIgnoreCase(oTagRouteOptions, "usetargetoptions")
-        , spaRenderOptions = {
-            dataRenderCallback : defaultRenderCallback
-          , rElRouteOptions : oTagRouteOptions
-          , rElDataAttr: ($elRouteBase)? $elRouteBase.data() : {}
-        };
+  //     //foundRenderTarget = oTagRouteOptions['target'] && spa.isElementExist(oTagRouteOptions['target'])
+  //     var renderTarget      = ""+((oTagRouteOptions['target']||"").trimStr())
+  //       , tmplExt           = (foundRouteTmplExt)? (oTagRouteOptions['ext'] || oTagRouteOptions['tmplext'] || oTagRouteOptions['tmplExt']) : (spa.routesOptions["defaultTemplateExt"]||"")
+  //       , defaultTmplPath   = (routeNameWithPath+tmplExt+"?"+routeParams).trimRightStr("\\?")
+  //       , defaultScriptPath = routeNameWithPath+(spa.routesOptions["defaultScriptExt"]||".js")
+  //       , defaultCallBeforeRoute = "spa.routes."+routeName+"_before"
+  //       , defaultRenderCallback  = "spa.routes."+routeName+"_renderCallback"
+  //       , useTargetOptions = spa.findIgnoreCase(oTagRouteOptions, "usetargetoptions")
+  //       , spaRenderOptions = {
+  //           dataRenderCallback : defaultRenderCallback
+  //         , rElRouteOptions : oTagRouteOptions
+  //         , rElDataAttr: ($elRouteBase)? $elRouteBase.data() : {}
+  //       };
 
-      //TODO: support for key 'html' instead of 'template'
-      if (oTagRouteOptions.hasOwnProperty('template') && !oTagRouteOptions.hasOwnProperty('templates')) {
-        oTagRouteOptions['templates'] = oTagRouteOptions['template'];
-        delete oTagRouteOptions['template'];
-      }
+  //     //TODO: support for key 'html' instead of 'template'
+  //     if (oTagRouteOptions.hasOwnProperty('template') && !oTagRouteOptions.hasOwnProperty('templates')) {
+  //       oTagRouteOptions['templates'] = oTagRouteOptions['template'];
+  //       delete oTagRouteOptions['template'];
+  //     }
 
-      if (renderTarget.equalsIgnoreCase(".")) {
-        renderTarget = "#"+spa.setElIdIfNot($elRouteBase);
-      } else if (spa.isBlank(renderTarget)) {
-        renderTarget = ("#"+spa.routeContainerId(routeName));
-      }
-      var foundRenderTarget = spa.isElementExist(renderTarget);
+  //     if (renderTarget.equalsIgnoreCase(".")) {
+  //       renderTarget = "#"+spa.setElIdIfNot($elRouteBase);
+  //     } else if (spa.isBlank(renderTarget)) {
+  //       renderTarget = ("#"+spa.routeContainerId(routeName));
+  //     }
+  //     var foundRenderTarget = spa.isElementExist(renderTarget);
 
-      spa.console.info("Render Target <"+renderTarget+">");
-      /*Cache Settings*/
-      if (oTagRouteOptions.hasOwnProperty("dataCache")) {
-        spaRenderOptions['dataCache'] = oTagRouteOptions['dataCache'];
-      }
-      if (oTagRouteOptions.hasOwnProperty("templatesCache") || oTagRouteOptions.hasOwnProperty("templateCache") || oTagRouteOptions.hasOwnProperty("htmlsCache") || oTagRouteOptions.hasOwnProperty("htmlCache")) {
-        spaRenderOptions['dataTemplatesCache'] = oTagRouteOptions['templatesCache'] || oTagRouteOptions['templateCache'] || oTagRouteOptions['htmlsCache'] || oTagRouteOptions['htmlCache'];
-      }
-      if (oTagRouteOptions.hasOwnProperty("scriptsCache") || oTagRouteOptions.hasOwnProperty("scriptCache")) {
-        spaRenderOptions['dataScriptsCache'] = oTagRouteOptions['scriptsCache'] || oTagRouteOptions['scriptCache'];
-      }
+  //     spa.console.info("Render Target <"+renderTarget+">");
+  //     /*Cache Settings*/
+  //     if (oTagRouteOptions.hasOwnProperty("dataCache")) {
+  //       spaRenderOptions['dataCache'] = oTagRouteOptions['dataCache'];
+  //     }
+  //     if (oTagRouteOptions.hasOwnProperty("templatesCache") || oTagRouteOptions.hasOwnProperty("templateCache") || oTagRouteOptions.hasOwnProperty("htmlsCache") || oTagRouteOptions.hasOwnProperty("htmlCache")) {
+  //       spaRenderOptions['dataTemplatesCache'] = oTagRouteOptions['templatesCache'] || oTagRouteOptions['templateCache'] || oTagRouteOptions['htmlsCache'] || oTagRouteOptions['htmlCache'];
+  //     }
+  //     if (oTagRouteOptions.hasOwnProperty("scriptsCache") || oTagRouteOptions.hasOwnProperty("scriptCache")) {
+  //       spaRenderOptions['dataScriptsCache'] = oTagRouteOptions['scriptsCache'] || oTagRouteOptions['scriptCache'];
+  //     }
 
-      /*Templates*/
-      //TODO: support for key 'htmls' instead of 'templates'
-      spaRenderOptions['dataTemplates'] = {};
-      var tmplID= "__spaRouteTemplate_" + routeName;
-      if (!oTagRouteOptions.hasOwnProperty("templates") || (oTagRouteOptions['templates'])) {
-        var oTagRouteOptionsTemplates = oTagRouteOptions['templates'];
-        var rTemplateId = spa.routeTemplateId(routeName);
-        var routeTemplateContainerID = "#"+rTemplateId;
-        var hashTmplID = "__tmpl_"+rTemplateId;
-        switch(true) {
-          case (_.isString(oTagRouteOptionsTemplates)) :
-            var targetTmplId = tmplID;
-            var tmplPath = oTagRouteOptionsTemplates.trimStr();
-            if ((tmplPath).equalsIgnoreCase('.')) {
-              tmplPath = defaultTmplPath;
-            } else if ((tmplPath).equalsIgnoreCase('#')) {
-              targetTmplId = hashTmplID;
-              tmplPath = routeTemplateContainerID;
-            }
-            spaRenderOptions.dataTemplates[targetTmplId] = tmplPath.ifBlankStr("none");
-            break;
-          case (_.isArray(oTagRouteOptionsTemplates)) :
-            if (_.indexOf(oTagRouteOptionsTemplates, '.')>=0) { //Include default path-template (external)
-              spaRenderOptions.dataTemplates[tmplID+"_dot"] = defaultTmplPath;
-              _.pull(oTagRouteOptionsTemplates, '.');
-            }
-            if (_.indexOf(oTagRouteOptionsTemplates, '#')>=0) { //Include route hash-template (internal)
-              spaRenderOptions.dataTemplates[hashTmplID] = routeTemplateContainerID;
-              _.pull(oTagRouteOptionsTemplates, '#');
-            }
-            _.each(oTagRouteOptionsTemplates, function(templateUrl, sIndex){
-              spaRenderOptions.dataTemplates[tmplID + '_'+(sIndex+1)] = templateUrl.ifBlankStr("none");
-            });
-            break;
-          default:
-            spaRenderOptions.dataTemplates[tmplID] = defaultTmplPath;
-            break;
-        }
-      } else {
-        spa.console.warn("Route without template");
-        spaRenderOptions.dataTemplates[tmplID] = "none";
-      }
+  //     /*Templates*/
+  //     //TODO: support for key 'htmls' instead of 'templates'
+  //     spaRenderOptions['dataTemplates'] = {};
+  //     var tmplID= "__spaRouteTemplate_" + routeName;
+  //     if (!oTagRouteOptions.hasOwnProperty("templates") || (oTagRouteOptions['templates'])) {
+  //       var oTagRouteOptionsTemplates = oTagRouteOptions['templates'];
+  //       var rTemplateId = spa.routeTemplateId(routeName);
+  //       var routeTemplateContainerID = "#"+rTemplateId;
+  //       var hashTmplID = "__tmpl_"+rTemplateId;
+  //       switch(true) {
+  //         case (_.isString(oTagRouteOptionsTemplates)) :
+  //           var targetTmplId = tmplID;
+  //           var tmplPath = oTagRouteOptionsTemplates.trimStr();
+  //           if ((tmplPath).equalsIgnoreCase('.')) {
+  //             tmplPath = defaultTmplPath;
+  //           } else if ((tmplPath).equalsIgnoreCase('#')) {
+  //             targetTmplId = hashTmplID;
+  //             tmplPath = routeTemplateContainerID;
+  //           }
+  //           spaRenderOptions.dataTemplates[targetTmplId] = tmplPath.ifBlankStr("none");
+  //           break;
+  //         case (_.isArray(oTagRouteOptionsTemplates)) :
+  //           if (_.indexOf(oTagRouteOptionsTemplates, '.')>=0) { //Include default path-template (external)
+  //             spaRenderOptions.dataTemplates[tmplID+"_dot"] = defaultTmplPath;
+  //             _.pull(oTagRouteOptionsTemplates, '.');
+  //           }
+  //           if (_.indexOf(oTagRouteOptionsTemplates, '#')>=0) { //Include route hash-template (internal)
+  //             spaRenderOptions.dataTemplates[hashTmplID] = routeTemplateContainerID;
+  //             _.pull(oTagRouteOptionsTemplates, '#');
+  //           }
+  //           _.each(oTagRouteOptionsTemplates, function(templateUrl, sIndex){
+  //             spaRenderOptions.dataTemplates[tmplID + '_'+(sIndex+1)] = templateUrl.ifBlankStr("none");
+  //           });
+  //           break;
+  //         default:
+  //           spaRenderOptions.dataTemplates[tmplID] = defaultTmplPath;
+  //           break;
+  //       }
+  //     } else {
+  //       spa.console.warn("Route without template");
+  //       spaRenderOptions.dataTemplates[tmplID] = "none";
+  //     }
 
-      /*Scripts*/
-      var useScripts = (!oTagRouteOptions.hasOwnProperty("scripts") || (oTagRouteOptions['scripts']));
-      if (useScripts) {
-        spaRenderOptions['dataScripts'] = {};
-        var scriptID = "__spaRouteScript_" + routeName;
-        switch(true) {
-          case (_.isString(oTagRouteOptions['scripts'])) :
-            spaRenderOptions.dataScripts[scriptID] = ((oTagRouteOptions['scripts']).equalsIgnoreCase('.'))? defaultScriptPath : oTagRouteOptions['scripts'];
-            break;
-          case (_.isArray(oTagRouteOptions['scripts'])) :
-            if (_.indexOf(oTagRouteOptions['scripts'], '.')>=0) { //Include default script
-              spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
-              _.pull(oTagRouteOptions['scripts'], '.');
-            }
-            _.each(oTagRouteOptions['scripts'], function(scriptUrl, sIndex){
-              spaRenderOptions.dataScripts[scriptID + '_'+(sIndex+1)] = scriptUrl;
-            });
-            break;
-          default:
-            if (spa.routesOptions.loadDefaultScript) {
-              spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
-            } else {
-              spa.console.warn("Script(s) not included. Use <spa.routesOptions.loadDefaultScript = true> to load default script <"+defaultScriptPath+">.");
-            }
-            break;
-        }
-        spa.console.log(spaRenderOptions['dataScripts']);
-      }
+  //     /*Scripts*/
+  //     var useScripts = (!oTagRouteOptions.hasOwnProperty("scripts") || (oTagRouteOptions['scripts']));
+  //     if (useScripts) {
+  //       spaRenderOptions['dataScripts'] = {};
+  //       var scriptID = "__spaRouteScript_" + routeName;
+  //       switch(true) {
+  //         case (_.isString(oTagRouteOptions['scripts'])) :
+  //           spaRenderOptions.dataScripts[scriptID] = ((oTagRouteOptions['scripts']).equalsIgnoreCase('.'))? defaultScriptPath : oTagRouteOptions['scripts'];
+  //           break;
+  //         case (_.isArray(oTagRouteOptions['scripts'])) :
+  //           if (_.indexOf(oTagRouteOptions['scripts'], '.')>=0) { //Include default script
+  //             spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
+  //             _.pull(oTagRouteOptions['scripts'], '.');
+  //           }
+  //           _.each(oTagRouteOptions['scripts'], function(scriptUrl, sIndex){
+  //             spaRenderOptions.dataScripts[scriptID + '_'+(sIndex+1)] = scriptUrl;
+  //           });
+  //           break;
+  //         default:
+  //           if (spa.routesOptions.loadDefaultScript) {
+  //             spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
+  //           } else {
+  //             spa.console.warn("Script(s) not included. Use <spa.routesOptions.loadDefaultScript = true> to load default script <"+defaultScriptPath+">.");
+  //           }
+  //           break;
+  //       }
+  //       spa.console.log(spaRenderOptions['dataScripts']);
+  //     }
 
-      /*Data and Params*/
-      if (oTagRouteOptions['dataUrl'] || oTagRouteOptions['dataurl']) {
-        var tagDataUrl = oTagRouteOptions['dataurl'] || oTagRouteOptions['dataUrl'];
-        var spaRenderDataUrls = spa.toRenderDataStructure(tagDataUrl, routeParams, spa.findSafe(routeOptions, "urlhash.urlParams.params", {}) );
-        if (!_.isEmpty(spaRenderDataUrls)) {
-          _.merge(spaRenderOptions, spaRenderDataUrls);
-        }
-      }
+  //     /*Data and Params*/
+  //     if (oTagRouteOptions['dataUrl'] || oTagRouteOptions['dataurl']) {
+  //       var tagDataUrl = oTagRouteOptions['dataurl'] || oTagRouteOptions['dataUrl'];
+  //       var spaRenderDataUrls = spa.toRenderDataStructure(tagDataUrl, routeParams, spa.findSafe(routeOptions, "urlhash.urlParams.params", {}) );
+  //       if (!_.isEmpty(spaRenderDataUrls)) {
+  //         _.merge(spaRenderOptions, spaRenderDataUrls);
+  //       }
+  //     }
 
-      /*Callback*/
-      var overrideDefaultCallback = (
-      oTagRouteOptions.hasOwnProperty('after')
-      || oTagRouteOptions.hasOwnProperty('callback')
-      || oTagRouteOptions.hasOwnProperty('callBack'));
-      if (overrideDefaultCallback || oTagRouteOptions['after'] || oTagRouteOptions['callback'] || oTagRouteOptions['callBack']) {
-        spaRenderOptions['dataRenderCallback'] = oTagRouteOptions['after'] || oTagRouteOptions['callback'] || oTagRouteOptions['callBack'] || "";
-      }
+  //     /*Callback*/
+  //     var overrideDefaultCallback = (
+  //     oTagRouteOptions.hasOwnProperty('after')
+  //     || oTagRouteOptions.hasOwnProperty('callback')
+  //     || oTagRouteOptions.hasOwnProperty('callBack'));
+  //     if (overrideDefaultCallback || oTagRouteOptions['after'] || oTagRouteOptions['callback'] || oTagRouteOptions['callBack']) {
+  //       spaRenderOptions['dataRenderCallback'] = oTagRouteOptions['after'] || oTagRouteOptions['callback'] || oTagRouteOptions['callBack'] || "";
+  //     }
 
-      //NO SCRIPTS
-      if ( oTagRouteOptions.hasOwnProperty("scripts")
-        && spa.isBlank(oTagRouteOptions["scripts"])
-      ) {
-        //NO CALLBACK or CALLBACK="."
-        if (!overrideDefaultCallback) {
-          spaRenderOptions['dataRenderCallback'] = "";
-        } else if ( _.isString((spaRenderOptions['dataRenderCallback']))
-                && (spaRenderOptions['dataRenderCallback']).equalsIgnoreCase(".")) {
-          spaRenderOptions['dataRenderCallback'] = defaultRenderCallback;
-        }
-      }
+  //     //NO SCRIPTS
+  //     if ( oTagRouteOptions.hasOwnProperty("scripts")
+  //       && spa.isBlank(oTagRouteOptions["scripts"])
+  //     ) {
+  //       //NO CALLBACK or CALLBACK="."
+  //       if (!overrideDefaultCallback) {
+  //         spaRenderOptions['dataRenderCallback'] = "";
+  //       } else if ( _.isString((spaRenderOptions['dataRenderCallback']))
+  //               && (spaRenderOptions['dataRenderCallback']).equalsIgnoreCase(".")) {
+  //         spaRenderOptions['dataRenderCallback'] = defaultRenderCallback;
+  //       }
+  //     }
 
-      /*owerride Options with Target elements property if any*/
-      if (useTargetOptions && foundRenderTarget){
-        //Read spaRender options from target element and override(ie. delete) above options
-        var $elTarget = $(renderTarget);
-        if ($elTarget.data('url')) {
-          delete spaRenderOptions['dataUrl'];
-        }
-        if ($elTarget.data('template') || $elTarget.data('templates')) {
-          delete spaRenderOptions['dataTemplates'];
-        }
-        if ($elTarget.data('scripts')) {
-          delete spaRenderOptions['dataScripts'];
-        }
-        if ($elTarget.data('renderCallback')) {
-          delete spaRenderOptions['dataRenderCallback'];
-        }
-      }
-      /*before Render function to modify options*/
+  //     /*owerride Options with Target elements property if any*/
+  //     if (useTargetOptions && foundRenderTarget){
+  //       //Read spaRender options from target element and override(ie. delete) above options
+  //       var $elTarget = $(renderTarget);
+  //       if ($elTarget.data('url')) {
+  //         delete spaRenderOptions['dataUrl'];
+  //       }
+  //       if ($elTarget.data('template') || $elTarget.data('templates')) {
+  //         delete spaRenderOptions['dataTemplates'];
+  //       }
+  //       if ($elTarget.data('scripts')) {
+  //         delete spaRenderOptions['dataScripts'];
+  //       }
+  //       if ($elTarget.data('renderCallback')) {
+  //         delete spaRenderOptions['dataRenderCallback'];
+  //       }
+  //     }
+  //     /*before Render function to modify options*/
 
-      spa.console.info("Route Render Options Before preRenderProcess:");
-      spa.console.info(spaRenderOptions);
-      var beforeRenderOptions = {};
-      var fnToRunBefore = oTagRouteOptions['before'] || oTagRouteOptions['beforeroute'] || oTagRouteOptions['beforeRoute'] || spa.routesOptions["beforeRoute"];
-      spa.console.info("callBeforeRoute: "+fnToRunBefore);
-      if (fnToRunBefore) {
-        if (!_.isFunction(fnToRunBefore) && _.isString(fnToRunBefore)) {
-          if (fnToRunBefore.equals(defaultCallBeforeRoute)) { //TODO: why?
-            //cancel default route-before-function
-            defaultCallBeforeRoute = undefined; //TODO: why?
-          }
-          fnToRunBefore = spa.findSafe(window, fnToRunBefore);
-        }
-        if (_.isFunction(fnToRunBefore)){
-          beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
-          if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
-        } else {
-          spa.console.error("CallBeforeRouteFunction <"+oTagRouteOptions['before']+"> NOT FOUND.");
-        }
-      }
-      if (defaultCallBeforeRoute) {
-        fnToRunBefore = spa.findSafe(window, defaultCallBeforeRoute);
-        if (fnToRunBefore && _.isFunction(fnToRunBefore)) {
-          beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
-          if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
-        }
-      }
+  //     spa.console.info("Route Render Options Before preRenderProcess:");
+  //     spa.console.info(spaRenderOptions);
+  //     var beforeRenderOptions = {};
+  //     var fnToRunBefore = oTagRouteOptions['before'] || oTagRouteOptions['beforeroute'] || oTagRouteOptions['beforeRoute'] || spa.routesOptions["beforeRoute"];
+  //     spa.console.info("callBeforeRoute: "+fnToRunBefore);
+  //     if (fnToRunBefore) {
+  //       if (!_.isFunction(fnToRunBefore) && _.isString(fnToRunBefore)) {
+  //         if (fnToRunBefore.equals(defaultCallBeforeRoute)) { //TODO: why?
+  //           //cancel default route-before-function
+  //           defaultCallBeforeRoute = undefined; //TODO: why?
+  //         }
+  //         fnToRunBefore = spa.findSafe(window, fnToRunBefore);
+  //       }
+  //       if (_.isFunction(fnToRunBefore)){
+  //         beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
+  //         if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
+  //       } else {
+  //         spa.console.error("CallBeforeRouteFunction <"+oTagRouteOptions['before']+"> NOT FOUND.");
+  //       }
+  //     }
+  //     if (defaultCallBeforeRoute) {
+  //       fnToRunBefore = spa.findSafe(window, defaultCallBeforeRoute);
+  //       if (fnToRunBefore && _.isFunction(fnToRunBefore)) {
+  //         beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
+  //         if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
+  //       }
+  //     }
 
-      spa.console.info("Route Render Options After preRenderProcess:");
-      spa.console.info(spaRenderOptions);
-      /*Ready to spaRender*/
-      if ((!spaRenderOptions.hasOwnProperty("render") || (spaRenderOptions['render'])) &&
-        (!oTagRouteOptions.hasOwnProperty("render") || (oTagRouteOptions['render']))) {
-        spa.render(renderTarget, spaRenderOptions);
-      }
-    }//End of Route
+  //     spa.console.info("Route Render Options After preRenderProcess:");
+  //     spa.console.info(spaRenderOptions);
+  //     /*Ready to spaRender*/
+  //     if ((!spaRenderOptions.hasOwnProperty("render") || (spaRenderOptions['render'])) &&
+  //       (!oTagRouteOptions.hasOwnProperty("render") || (oTagRouteOptions['render']))) {
+  //       spa.render(renderTarget, spaRenderOptions);
+  //     }
+  //   }//End of Route
 
-    return true;
-  };
+  //   return true;
+  // };
 
   /*
     spa.route(el); //el = HTML element with href=#RoutePath?key=value&key=value
@@ -7516,106 +7525,108 @@ window['app']['api'] = window['app']['api'] || {};
       [before | beforeroute | beforeRoute]      : '' or function(){} or functionName //Optional: default: spa.routesOptions.beforeRoute
     }
   */
-  spa.route = function(elRouteBase, routeOptions){
+  //ToBeRemoved
+  // spa.route = function(elRouteBase, routeOptions){
 
-    if (_.isString(elRouteBase) && spa.isBlank((""+elRouteBase).trimStr("#")) ) {
-      return false; //BlankHash
-    }
+  //   if (_.isString(elRouteBase) && spa.isBlank((""+elRouteBase).trimStr("#")) ) {
+  //     return false; //BlankHash
+  //   }
 
-    var foundRouteElBase = !_.isString(elRouteBase);
-    routeOptions = routeOptions || {};
+  //   var foundRouteElBase = !_.isString(elRouteBase);
+  //   routeOptions = routeOptions || {};
 
-    if (!foundRouteElBase) { //Find element with given route or create one with same route
-      var elWithRoute = $("[data-sparoute][href='"+elRouteBase+"']");
-      foundRouteElBase = !_.isEmpty(elWithRoute);
-      if (!foundRouteElBase) {
-        spa.console.warn("Route source element NOT FOUND for route <"+elRouteBase+">");
-        if (spa.routesOptions.usePatterns) {
-          spa.console.info("Searching RoutePattern.");
-          var rPatternRouteOptions;
-          var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
-            var matchFound=false;
-            var _routeMatch = spa.routeMatch(opt.pattern, elRouteBase);
-            if (_routeMatch) {
-              matchFound = true;
-              rPatternRouteOptions = _.merge({}, opt['routeoptions'] || {});
-              rPatternRouteOptions['urlhash'] = {pattern:(opt.pattern).replace(/\\\?/g, '?') , url:elRouteBase, urlParams:_routeMatch};
-            }
-            return matchFound;
-          });
+  //   if (!foundRouteElBase) { //Find element with given route or create one with same route
+  //     var elWithRoute = $("[data-sparoute][href='"+elRouteBase+"']");
+  //     foundRouteElBase = !_.isEmpty(elWithRoute);
+  //     if (!foundRouteElBase) {
+  //       spa.console.warn("Route source element NOT FOUND for route <"+elRouteBase+">");
+  //       if (spa.routesOptions.usePatterns) {
+  //         spa.console.info("Searching RoutePattern.");
+  //         var rPatternRouteOptions;
+  //         var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
+  //           var matchFound=false;
+  //           var _routeMatch = spa.routeMatch(opt.pattern, elRouteBase);
+  //           if (_routeMatch) {
+  //             matchFound = true;
+  //             rPatternRouteOptions = _.merge({}, opt['routeoptions'] || {});
+  //             rPatternRouteOptions['urlhash'] = {pattern:(opt.pattern).replace(/\\\?/g, '?') , url:elRouteBase, urlParams:_routeMatch};
+  //           }
+  //           return matchFound;
+  //         });
 
-          if (indexOfNameOrPattern<0) {
-            spa.console.warn("Pattern not found.");
-            spa.console.info(spa.routePatterns.routes);
-          } else {
-            spa.console.info(rPatternRouteOptions);
-            spa.routeRender(undefined, rPatternRouteOptions);
-          }
-        } else {
-          spa.console.warn("Pattern match Disabled.");
-        }
-      } else {
-        elRouteBase = elWithRoute.get(0);
-      }
-    }
+  //         if (indexOfNameOrPattern<0) {
+  //           spa.console.warn("Pattern not found.");
+  //           spa.console.info(spa.routePatterns.routes);
+  //         } else {
+  //           spa.console.info(rPatternRouteOptions);
+  //           spa.routeRender(undefined, rPatternRouteOptions);
+  //         }
+  //       } else {
+  //         spa.console.warn("Pattern match Disabled.");
+  //       }
+  //     } else {
+  //       elRouteBase = elWithRoute.get(0);
+  //     }
+  //   }
 
-    if (!foundRouteElBase) {
-      if (routeOptions['forceroute'] || routeOptions['forceRoute']) {
-        spa.console.warn("Attempt dynamic route.");
-        foundRouteElBase = true;
-        elRouteBase = $("<a href='"+elRouteBase+"'></a>").get(0);
-      } else {
-        spa.console.warn("Exit Route.");
-        return false; //exit;
-      }
-    }
+  //   if (!foundRouteElBase) {
+  //     if (routeOptions['forceroute'] || routeOptions['forceRoute']) {
+  //       spa.console.warn("Attempt dynamic route.");
+  //       foundRouteElBase = true;
+  //       elRouteBase = $("<a href='"+elRouteBase+"'></a>").get(0);
+  //     } else {
+  //       spa.console.warn("Exit Route.");
+  //       return false; //exit;
+  //     }
+  //   }
 
-    if (foundRouteElBase){
-      return spa.routeRender(elRouteBase, routeOptions);
-    }// if foundRouteElBase
-  };
+  //   if (foundRouteElBase){
+  //     return spa.routeRender(elRouteBase, routeOptions);
+  //   }// if foundRouteElBase
+  // };
 
-  spa.initRoutesX = function(routeInitScope, routeInitOptions) {
-    if (typeof routeInitScope == "object") {
-      routeInitOptions = routeInitScope;
-      routeInitScope = routeInitOptions["context"] || routeInitOptions["scope"] || "";
-    }
-    if (routeInitOptions) {
-      spa.console.info("Init routesOptions");
-      _.merge(spa.routesOptions, routeInitOptions);
+  //ToBe removed...
+  // spa.initRoutesX = function(routeInitScope, routeInitOptions) {
+  //   if (typeof routeInitScope == "object") {
+  //     routeInitOptions = routeInitScope;
+  //     routeInitScope = routeInitOptions["context"] || routeInitOptions["scope"] || "";
+  //   }
+  //   if (routeInitOptions) {
+  //     spa.console.info("Init routesOptions");
+  //     _.merge(spa.routesOptions, routeInitOptions);
 
-      if (!isSpaHashRouteOn && spa.routesOptions.useHashRoute) _initWindowOnHashChange();
-      if (isSpaHashRouteOn && !spa.routesOptions.useHashRoute) _stopWindowOnHashChange();
+  //     if (!isSpaHashRouteOn && spa.routesOptions.useHashRoute) _initWindowOnHashChange();
+  //     if (isSpaHashRouteOn && !spa.routesOptions.useHashRoute) _stopWindowOnHashChange();
 
-      //options without (context or scope)
-      if (!(routeInitOptions.hasOwnProperty('context') || routeInitOptions.hasOwnProperty('scope'))) {
-        return;
-      }
-    }
+  //     //options without (context or scope)
+  //     if (!(routeInitOptions.hasOwnProperty('context') || routeInitOptions.hasOwnProperty('scope'))) {
+  //       return;
+  //     }
+  //   }
 
-    spa.console.info("Init spaRoutes. Scan for [data-sparoute] in context: <"+(routeInitScope||"body")+">");
-    $(routeInitScope||"body").find("[data-sparoute]").each(function(index, el){
+  //   spa.console.info("Init spaRoutes. Scan for [data-sparoute] in context: <"+(routeInitScope||"body")+">");
+  //   $(routeInitScope||"body").find("[data-sparoute]").each(function(index, el){
 
-      if (!spa.isBlank((($(el).attr("href") || "")+"#").split("#")[1])) {
-        $(el).off("click");
-        $(el).on("click", function() {
-          if (isSpaHashRouteOn) {
-            var elHash  = "#"+(((($(el).attr("href") || "")+"#").split("#")[1]).trimStr("#"));
-            var winHash = spa.getLocHash();
-            if (elHash.equals(winHash)){
-              spa.route(this);
-            }
-          } else {
-            spa.route(this);
-          }
-        });
+  //     if (!spa.isBlank((($(el).attr("href") || "")+"#").split("#")[1])) {
+  //       $(el).off("click");
+  //       $(el).on("click", function() {
+  //         if (isSpaHashRouteOn) {
+  //           var elHash  = "#"+(((($(el).attr("href") || "")+"#").split("#")[1]).trimStr("#"));
+  //           var winHash = spa.getLocHash();
+  //           if (elHash.equals(winHash)){
+  //             spa.route(this);
+  //           }
+  //         } else {
+  //           spa.route(this);
+  //         }
+  //       });
 
-        if (el.hasAttribute("data-sparoute-default")) {
-          spa.route(el);
-        }
-      }
-    });
-  };
+  //       if (el.hasAttribute("data-sparoute-default")) {
+  //         spa.route(el);
+  //       }
+  //     }
+  //   });
+  // };
 
   //API Section begins
   spa.api = {
@@ -8107,6 +8118,7 @@ window['app']['api'] = window['app']['api'] || {};
     _blockBrowserNav();
   }
   function _onPopStateChange(){
+    //console.log('onPopStateChange...');
     _routeSpaUrlOnHashChange();
     //custom function trigger
     if (spa.onUrlHashChange) {
@@ -8173,7 +8185,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
 
     } else {
-      //_prevUrlHash = urlHash;
+      spa.console.log('Triggering next hash...');
       _triggerNextHash( _onAutoRoute || !_routeOnClick );
     }
   }
@@ -8223,7 +8235,8 @@ window['app']['api'] = window['app']['api'] || {};
         spa.console.log( newAddress );
         newAddress = (newAddress.trimLeftStr('/'));
         if (newAddress[0] != '#') {
-          newAddress = '//'+window.location.host+'/'+((_urlHashBase+newAddress).trimLeftStr('/'));
+          newAddress = '//' + window.location.host + _getAboluteUrl('/', newAddress);
+          spa.console.log('updating the address bar with >>>>>', newAddress);
         }
         spa.console.log('>>>>>>>>>>>>>>>>> '+ newAddress );
         history.pushState(null, null, newAddress);
@@ -8236,6 +8249,7 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute) {
+    spa.console.log('Updating url with:', newHashUrl, 'delay:', delayUpdate, 'autoRoute:',continueAutoRoute);
     _onAutoRoute = continueAutoRoute;
     _isDelayed   = delayUpdate;
     _isDelayedOnUrl = delayUpdate? _prevUrlHash : '';
@@ -8336,7 +8350,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
 
     if (!usePrevHash) {
-      newHashUrl = _urlHashBase+('/'+(spaRoutePath.join('/').trimLeftStr('/')));
+      newHashUrl = _getAboluteUrl(_urlHashBase, spaRoutePath.join('/'));
     }
 
     if (_blockNav) {
@@ -8346,7 +8360,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
     }
 
-    //console.log('Routing to...', newHashUrl, 'delay:', delayUpdate, 'prev:', _prevUrlHash);
+    spa.console.log('Routing to...', newHashUrl, 'delay:', delayUpdate, 'prev:', _prevUrlHash);
 
     _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute);
   }
@@ -8364,9 +8378,76 @@ window['app']['api'] = window['app']['api'] || {};
     _triggerNextHash();
     _blockNav = spa.isNavBlocked();
   }
-  spa.initRoutes = _initRouteHash;
-  /* ***************  SPA Route Solution Ends ************************ */
 
+  function _routeToUrl(route) {
+    route      = (route||'').trim();
+    if (route) {
+      var routeDir          = route[0]
+        , routePathBeginsAt = 1
+        , routePath
+        , routes;
+
+      if ('#/-<>'.indexOf(routeDir)<0) {
+        routeDir = '?';
+        routePathBeginsAt = 0;
+      }
+      routePath = route.substr(routePathBeginsAt);
+
+      switch (routeDir) {
+        case '-':
+          routes = spa.urlHash([], _urlHashBase);
+          var revCount = spa.toInt(route.replace(/[^0-9]/g,'')) || 1;
+          if (routes.length) {
+            routes.length = routes.length-revCount;
+          }
+          break;
+        case '?':
+          routes = spa.urlHash([], _urlHashBase);
+          var resetFrom = routes.indexOf( routePath.split('/')[0] );
+          if (resetFrom>=0) routes.length = resetFrom;
+          routes.push(routePath);
+          break;
+        default:
+          routes = [routePath];
+          break;
+      }
+      return _getAboluteUrl(_urlHashBase, routes.join('/'));
+    }
+  }
+
+  function _$routeElement(routeUrl) {
+    return $('['+((_attrSpaRoute).trim())+'$="'+(routeUrl.trim())+'"].ROUTE:first');
+  }
+  function _$routeElements(routeUrl) {
+    return $('['+((_attrSpaRoute).trim())+'$="'+(routeUrl.trim())+'"].ROUTE');
+  }
+  function _routeNewUrl(routePath){
+    var newHashUrl = _routeToUrl(routePath);
+    spa.console.log('Route:',routePath, 'URL:', newHashUrl);
+    if (newHashUrl) {
+      if (_blockNav) {
+        _handleNavAwayEvent(newHashUrl);
+      } else {
+        var $routeElement = _$routeElement(routePath);
+        if ($routeElement.length) {
+          $routeElement.click();
+        } else {
+          _updateBrowserAddress(newHashUrl);
+          if (routePath.trim() == '/') {
+            window.location.reload();
+          } else {
+            _onPopStateChange();
+          }
+        }
+      }
+    }
+  };
+
+  spa.initRoutes = _initRouteHash;
+  spa.route      = _routeNewUrl;
+  spa.routeUrl   = _routeToUrl;
+  spa.routeEl    = _$routeElements;
+  /* ***************  SPA Route Solution Ends ************************ */
 
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
@@ -8378,10 +8459,10 @@ window['app']['api'] = window['app']['api'] || {};
     /*Reflow Foundation*/
     spa.reflowFoundation();
 
-    var sparouteInitOptions = $("body").data("sparouteInit");
-    if (sparouteInitOptions) {
-      spa.initRoutesX(spa.toJSON(sparouteInitOptions));
-    };
+    // var sparouteInitOptions = $("body").data("sparouteInit");
+    // if (sparouteInitOptions) {
+    //   spa.initRoutesX(spa.toJSON(sparouteInitOptions));
+    // };
 
     /*init SPA routes; a simple routing solution */
     var spaRoutesDefaults = $('body').attr('data-spa-routes');
@@ -8393,21 +8474,22 @@ window['app']['api'] = window['app']['api'] || {};
     _initRoutesDefaults();
 
     /*Init spaRoutes old: to be discontinued ... */
-    spa.initRoutesX("body");
+    //spa.initRoutesX("body");
 
-    if ('onhashchange' in window) {
-      if (spa.isBlank(sparouteInitOptions)) {
-        spa.console.info("Registering HashRouting Listener");
-        window.addEventListener("hashchange", function(){
-          // moved to onpopstate
-          // _routeSpaUrlOnHashChange();
-          // //custom function trigger
-          // if (spa.onUrlHashChange) {
-          //   spa.onUrlHashChange(spa.urlHash([], _urlHashBase));
-          // }
-        });
-      }
-    }
+    //ToBeRemoved
+    // if ('onhashchange' in window) {
+    //   if (spa.isBlank(sparouteInitOptions)) {
+    //     spa.console.info("Registering HashRouting Listener");
+    //     window.addEventListener("hashchange", function(){
+    //       // moved to onpopstate
+    //       // _routeSpaUrlOnHashChange();
+    //       // //custom function trigger
+    //       // if (spa.onUrlHashChange) {
+    //       //   spa.onUrlHashChange(spa.urlHash([], _urlHashBase));
+    //       // }
+    //     });
+    //   }
+    // }
 
     /*Key Tracking*/
     spa.initKeyTracking();
@@ -8428,16 +8510,17 @@ window['app']['api'] = window['app']['api'] || {};
     _initRouteHash();
 
     /*Auto Render*/
-    var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
-    var autoRenderCount = $autoRenderElList.length;
-    spa.console.info("Find and Render [rel='spaRender'] or [data-render] or [data-sparender] or [data-spa-render]. Found:"+autoRenderCount);
-    if (autoRenderCount) {
-      $autoRenderElList.spaRender();
-    } else {
-      spa.console.info("Init SPA Render.");
-      $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off' style='display:none'>&nbsp;</div>");
-      $("#initSpaRender0").spaRender();
-    }
+    // ToBeRemoved - Old default render using attr [data-render] (from K-Lib) before data-spa-component
+    // var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
+    // var autoRenderCount = $autoRenderElList.length;
+    // spa.console.info("Find and Render [rel='spaRender'] or [data-render] or [data-sparender] or [data-spa-render]. Found:"+autoRenderCount);
+    // if (autoRenderCount) {
+    //   $autoRenderElList.spaRender();
+    // } else {
+    //   spa.console.info("Init SPA Render.");
+    //   $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off' style='display:none'>&nbsp;</div>");
+    //   $("#initSpaRender0").spaRender();
+    // }
     spa.renderComponentsInHtml();
 
     /*APP Init*/

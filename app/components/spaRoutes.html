@@ -1,8 +1,8 @@
 <div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
   <h1>SPA Routes</h1>
-  <h6>(from v2.51.0+)</h6>
+  <h6>(from v2.52.0+)</h6>
   <p>&nbsp;</p>
-  <p>SPAjs bundle comes with built-in declarative (HTML attribute) SEO friendly routing feature with an option to control browser navigation.</p>
+  <p>SPAjs bundle comes with built-in declarative (HTML attribute) routing feature with an option to control browser navigation.</p>
 
   <!-- <section>
     <h2>Examples</h2>
@@ -39,17 +39,17 @@
 
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-        <button data-spa-route="#/home" onclick="{$}authenticateUser();">Login</button>
+        <button data-spa-route="/home" onclick="{$}authenticateUser();">Login</button>
 
         ... ...
 
-        <a data-spa-route="#/home/view-profile" onclick=" ... " class=" ... ">View Profile</a>
+        <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... ">View Profile</a>
 
-        <a data-spa-route="#/home/edit-profile" onclick=" ... " class=" ... ">Edit Profile</a>
+        <a data-spa-route="/home/edit-profile" onclick=" ... " class=" ... ">Edit Profile</a>
 
         ... ...
 
-        <span data-spa-route="#/home/settings" onclick=" ... " class=" ... ">
+        <span data-spa-route="/home/settings" onclick=" ... " class=" ... ">
 
           ... ...
 
@@ -59,14 +59,14 @@
 
     <p><mark>Route-Path</mark> spcification.
       <ul>
-        <li>If begins with <mark>#</mark>, Replaces the complete route path.</li>
+        <!-- <li>If begins with <mark>#</mark>, Replaces the complete route path.</li> -->
         <li>If begins with <mark>/</mark>, Replaces the complete route path.</li>
         <li>If begins with <mark>-</mark>, Reduces the path by a number (default: 1) followed by <mark>-</mark>.</li>
       </ul>
 
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-        <a data-spa-route="#/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
         <!-- replaces the prvious route url
 
           if exisiting path: //127.0.0.1/index.html#/home/settings/network
@@ -115,7 +115,7 @@
 
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-        <button data-spa-route="^#/home" onclick="{$}authenticateUser();">Login</button>
+        <button data-spa-route="^/home" onclick="{$}authenticateUser();">Login</button>
         <!-- When the bookmarked url is loaded and stopped by a login screen
           and then the Login-click event retains the path (bookmarked-url) to navigate after login. -->
 
