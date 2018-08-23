@@ -1,6 +1,6 @@
 <div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
   <h1>SPA Routes</h1>
-  <h6>(from v2.52.0+)</h6>
+  <h6>(from v2.53.0+)</h6>
   <p>&nbsp;</p>
   <p>SPAjs bundle comes with built-in declarative (HTML attribute) routing feature with an option to control browser navigation.</p>
 
@@ -22,7 +22,9 @@
     <blockquote>
       <p>
         <ul>
-          <li>1. DO NOT use <mark>a[href]</mark> attribute for spa-routes as [href] is not a valid attribute for span,div,button,i, etc., which can be used for routes.</li>
+          <li>1. It's not recommended to use <mark>a[href]</mark> attribute for spa-routes as [href] is not an valid attribute
+            for span,div,button,i, etc., which can be used for routes. However, if it's really important and necessity
+            to use a[href], refer the below section on Routes by a[href].</li>
           <li>2. Route name - Keep It Simple. Only Alpha-numeric characters ( a-z A-Z 0-9 ) with dash ( - ) and/or underscore ( _ ).</li>
         </ul>
       </p>
@@ -240,7 +242,7 @@
 
   <section>
     <h2>Routes without hash (#)</h2>
-    <h6>(from v2.52.0+)</h6>
+    <h6>(from v2.53.0+)</h6>
     <p>If needed, the routes can be done without hash ( <mark>#</mark> ).
       Instead, the slash ( <mark>/</mark> ) will be used. After the SPA ( <mark>index.html</mark> ) is loaded, all routes will be handled at the browser side.
       However, when the page re-loads or loaded by a bookmark, the web server needs to be configured to load the SPA (index.html)
@@ -281,6 +283,97 @@
       <blockquote>
         <mark>Caution: The non-hash routing is an experimental feature and requires a server-side configuration.</mark>
       </blockquote>
+    </p>
+  </section>
+
+  <section>
+    <h2>Routes by a[href]</h2>
+    <h6>(from v2.53.0+)</h6>
+    <p>If needed, the routes can be done using <mark>[href]</mark> or any other <mark>[data-]</mark> (preferred) attribut by indicating the attribute in configuration.
+      <p><i>index.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="index.html" data-lines="20">
+      <!DOCTYPE html>
+      <html>
+
+      <_head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta http-equiv="cache-control" content="no-cache">
+        <meta http-equiv="expires" content="0">
+        <meta http-equiv="pragma" content="no-cache">
+
+        <title>Stealth(identity)</title>
+        <link rel="shortcut icon" href="brand/favicon.png" type="image/vnd.microsoft.icon" />
+        <link rel="stylesheet" href="xlib/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="xlib/bootstrap/css/bootstrap-slider.min.css">
+        <link rel="stylesheet" href="app/styles/styles.css" />
+      </_head>
+
+      <_body data-spa-routes="attr:{route:'href'}">
+
+        ...
+
+        <a href="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+
+        ... ...
+
+        <a href="/home/edit-profile" onclick=" ... " class=" ... "> Edit Profile </a>
+
+        ... ...
+
+        <button href="-" onclick=" ... " class=" ... "> Cancel </button>
+
+        ... ...
+
+        <a href="/external/page/url" class="no-spa-route"> Visit our partner site </a>
+        <!-- adding class "no-spa-route" will ignore internal SPA routing for this href url -->
+
+      </_body>
+
+      </script>
+    </p>
+    <p>
+      <blockquote>
+        <mark>NOTE:</mark> 
+        <ul>
+          <li>Need to use class (<mark>no-spa-route</mark>) for external links to avoid routing. See above example.</li>
+          <li>The [href] attribute routing can be combined with non-hash routing by combining the configuration in the body tag.</li>
+        </ul>
+      </blockquote>
+      <p><i>index.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="index.html" data-lines="13,22">
+      <!DOCTYPE html>
+      <html>
+
+      <_head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta http-equiv="cache-control" content="no-cache">
+        <meta http-equiv="expires" content="0">
+        <meta http-equiv="pragma" content="no-cache">
+
+        <base href="/"> <!-- or  href="/my-app-context/" -->
+
+        <title>Stealth(identity)</title>
+        <link rel="shortcut icon" href="brand/favicon.png" type="image/vnd.microsoft.icon" />
+        <link rel="stylesheet" href="xlib/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="xlib/bootstrap/css/bootstrap-slider.min.css">
+        <link rel="stylesheet" href="app/styles/styles.css" />
+      </_head>
+
+      <_body data-spa-routes="base:'/', attr:{route:'href'}">
+        <!-- or data-spa-routes="base:'/my-app-context/', attr:{route:'href'}" -->
+
+        ...
+
+      </_body>
+
+      </script>
+
     </p>
   </section>
 
