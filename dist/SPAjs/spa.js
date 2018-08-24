@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.54.0';
+  spa.VERSION = '2.54.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5492,30 +5492,48 @@ window['app']['api'] = window['app']['api'] || {};
     return spa.findSafe(window, 'app.'+componentName+'.__renderCount__', 0);
   };
 
-  spa.removeComponent = function (componentName) {
+  spa.removeComponent = function (componentName, byComp) {
     var ok2Remove;
     componentName = (componentName || '').trim();
+    if (byComp) {
+      byComp = (componentName==byComp)? '_self_' : byComp;
+    }
+
+    function isOk2Remove$(cName){
+      cName = cName.trim();
+      var ok2Remove$ = spa.isBlank(cName), _fnOnRemoveCompRes;
+      if (!ok2Remove$) {
+        _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(('app.'+cName+'.onRemove'), (byComp || '_script_'), app[cName]);
+        ok2Remove$ = (spa.is(_fnOnRemoveCompRes, 'undefined') || (spa.is(_fnOnRemoveCompRes, 'boolean') && _fnOnRemoveCompRes));
+        if (!ok2Remove$) {
+          spa.console.warn('Remove $'+cName+' request denied onRemove()');
+        }
+      }
+      return ok2Remove$;
+    }
+
     if (componentName) {
       var $componentContainer = $('[data-rendered-component="'+(componentName)+'"]');
       if ($componentContainer.length) {
-        var _fnOnRemoveComp = 'app.'+componentName+'.onRemove', _fnOnRemoveCompRes;
-        _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(_fnOnRemoveComp, '_script_', app[componentName]);
-        ok2Remove = (spa.is(_fnOnRemoveCompRes, 'undefined') || (spa.is(_fnOnRemoveCompRes, 'boolean') && _fnOnRemoveCompRes));
-        if (ok2Remove) {
-          $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
-        } else {
-          spa.console.warn('on(Remove) denied.');
+        var childComponents = $componentContainer.find('[data-rendered-component]').map(function(){ return $(this).attr('data-rendered-component'); })
+          , isChildRemoved = ((childComponents.length==0) || _.every(childComponents, function(cName){return isOk2Remove$(cName); }));
+        if (isChildRemoved){
+          if ( isOk2Remove$(componentName) ) {
+            $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
+            ok2Remove = true;
+          }
         }
-      }
+      } else {
+        ok2Remove = true;
+      };
     }
-    return ok2Remove;
+    return (spa.is(ok2Remove, 'boolean') && ok2Remove);
   };
   spa.destroyComponent = function (componentName) {
     var isDestroyed;
     componentName = (componentName || '').trim();
     if (componentName) {
-      var isRemoved = spa.removeComponent(componentName);
-      if (spa.is(isRemoved, 'boolean') && isRemoved) {
+      if ( spa.removeComponent(componentName) ) {
         delete app[componentName];
         if (spa.components[componentName]) {
           var tmplScriptId = spa.findSafe(spa.components[componentName], 'template', '');
@@ -6057,24 +6075,6 @@ window['app']['api'] = window['app']['api'] || {};
     spa.console.log(spaRVOptions);
 
     var $viewContainerId = $(viewContainerId);
-
-    //Check with any previous component rendered on this target
-    var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
-    if (prevRenderedComponent) {
-      var _fnOnRemoveComp, _fnOnRemoveCompRes, ok2Remove, removeBy = (prevRenderedComponent==rCompName)? '' : rCompName;
-      if (spaRVOptions.dataRemoveCallback) {
-        _fnOnRemoveComp = spaRVOptions.dataRemoveCallback;
-      } else {
-        _fnOnRemoveComp = 'app.'+prevRenderedComponent+'.onRemove';
-      }
-      _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(_fnOnRemoveComp, removeBy, app[prevRenderedComponent]);
-      ok2Remove = (spa.is(_fnOnRemoveCompRes, 'undefined') || (spa.is(_fnOnRemoveCompRes, 'boolean') && _fnOnRemoveCompRes));
-      if (!ok2Remove) {
-        console.warn('Render denied by (onRemove) component: '+prevRenderedComponent);
-        return;
-      }
-    }
-
     var _renderOptionInAttr = function(dataAttrKey) {
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
     };
@@ -6094,7 +6094,7 @@ window['app']['api'] = window['app']['api'] || {};
 //    if (!spa.isBlank(spaRVOptions.dataRenderMode)) {
 //      targetRenderMode = spaRVOptions.dataRenderMode;
 //    }
-    var targetRenderMode = _renderOption('dataRenderMode', 'renderMode');
+    var targetRenderMode = _renderOption('dataRenderMode', 'renderMode') || 'replace';
     spa.console.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
@@ -6621,9 +6621,6 @@ window['app']['api'] = window['app']['api'] || {};
 
             spa.console.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
             spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
-            if (spa.isBlank(targetRenderMode)) {
-              $(viewContainerId).html("");
-            }
 
             try {
               var isValidData = !_renderOption('dataValidate', 'validate');
@@ -6754,6 +6751,17 @@ window['app']['api'] = window['app']['api'] || {};
                   }
                 };
 
+                if (abortRender) {
+                  retValue = {};
+                  spa.console.warn('Render aborted onRender()');
+                } else {
+                  var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
+                  if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
+                    abortRender = true; retValue = {};
+                    spa.console.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
+                  }
+                }
+
                 if (!abortRender) {
                   /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
                     if (!spa.isBlank(spaRVOptions.dataRenderType)) {
@@ -6770,18 +6778,14 @@ window['app']['api'] = window['app']['api'] || {};
 
                     default:
                       doDeepRender = true;
-                      if (spa.isBlank(targetRenderMode)) {
-                        $(viewContainerId).html(retValue.view);
-                      } else {
-                        switch (true) {
-                          case (targetRenderMode.equalsIgnoreCase("append")):
-                            $(viewContainerId).append(retValue.view);
-                            break;
-                          case (targetRenderMode.equalsIgnoreCase("prepend")):
-                            $(viewContainerId).prepend(retValue.view);
-                            break;
-                          default: $(viewContainerId).html(retValue.view); break;
-                        }
+                      switch (true) {
+                        case (targetRenderMode.equalsIgnoreCase("append")):
+                          $(viewContainerId).append(retValue.view);
+                          break;
+                        case (targetRenderMode.equalsIgnoreCase("prepend")):
+                          $(viewContainerId).prepend(retValue.view);
+                          break;
+                        default: $(viewContainerId).html(retValue.view); break;
                       }
                       break;
                   };
