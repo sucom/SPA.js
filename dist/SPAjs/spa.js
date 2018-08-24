@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.53.0';
+  spa.VERSION = '2.54.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2479,10 +2479,16 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* event handler for window.onhashchange */
+  spa.ajaxPreProcess;
+  spa.onInit;
+  spa.onInitComplete;
+  spa.onReady;
+  spa.onUrlChange;
   spa.onUrlHashChange;
+  spa.onReload;
 
   //ToBeRemoved
-  /* spa rounte management internal functions */
+  /* spa route management internal functions */
   // function _initWindowOnHashChange(){
   //   if ('onhashchange' in window) {
   //     isSpaHashRouteOn = true;
@@ -4479,8 +4485,20 @@ window['app']['api'] = window['app']['api'] || {};
       });
     }
   };
+
+  function _setLang(uLang, options, isAuto) {
+    if (uLang) {
+      if (spa.i18n.onLangChange) {
+        var fnOnLangChange = spa.i18n.onLangChange,
+            nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
+        uLang = (spa.is(nLang, 'string'))? nLang : uLang;
+      }
+      $('html').attr('lang', uLang.replace('_', '-'));
+      spa.i18n.setLanguage(uLang, _.merge({}, spa.defaults.lang, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
+    }
+  }
   spa.i18n.setLang = function(lang, i18nSettings){
-    spa.i18n.setLanguage(lang, (_.merge({path:'app/language/'}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), i18nSettings||{})));
+    _setLang(lang, i18nSettings);
   };
 
   spa.i18n.value = function(i18nKey) {
@@ -5209,7 +5227,7 @@ window['app']['api'] = window['app']['api'] || {};
   spa.renderHistoryMax = 0;
   spa.components = {};
   spa.defaults = {
-      dataTemplateEngine: "handlebars"
+      templateEngine: "handlebars"
     , components: {
           rootPath: 'app/components/'
         , inFolder: true
@@ -5218,18 +5236,23 @@ window['app']['api'] = window['app']['api'] || {};
         , callback:''
         , extend$data: true
       }
-
     , routes: {
-      base: '#',
-      attr: {
-        route: 'data-spa-route',
-        onNavAway: 'onNavAway'
-      },
-      className: {
-        hide : 'HIDE-SPA-NAV',
-        block: 'BLOCK-SPA-NAV',
-        allow: 'ALLOW-SPA-NAV'
-      }
+        base: '#',
+        attr: {
+          route: 'data-spa-route',
+          onNavAway: 'onNavAway'
+        },
+        className: {
+          hide : 'HIDE-SPA-NAV',
+          block: 'BLOCK-SPA-NAV',
+          allow: 'ALLOW-SPA-NAV'
+        }
+    }
+    , lang: {
+        path: 'app/language/',
+        ext: '.txt',
+        cache: true,
+        async: true
     }
     , set: function(oNewValues, newValue) {
         if (typeof oNewValues == 'object') {
@@ -5304,7 +5327,7 @@ window['app']['api'] = window['app']['api'] || {};
 
           options['componentName'] = componentName;
           if (!options.hasOwnProperty('beforeRender')) {
-            options['beforeRender'] = 'app.'+componentName+'.beforeRender';
+            options['beforeRender'] = 'app.'+componentName+'.onRender';
           }
           if (!options.hasOwnProperty('renderCallback')) {
             options['renderCallback'] = 'app.'+componentName+'.renderCallback';
@@ -5415,7 +5438,7 @@ window['app']['api'] = window['app']['api'] || {};
           options = options.call(spa.components[componentName] || {});
         }
         options = spa.is(options, 'object')? options : {};
-        if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.beforeRender', renderCallback: 'app.'+componentName+'.renderCallback'};
+        if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.onRender', renderCallback: 'app.'+componentName+'.renderCallback'};
         if (spa.components[componentName]) {
           if (options['__prop__']) {
             _.merge(spa.components[componentName], $.extend({},options['__prop__']));
@@ -5470,28 +5493,42 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   spa.removeComponent = function (componentName) {
+    var ok2Remove;
     componentName = (componentName || '').trim();
     if (componentName) {
       var $componentContainer = $('[data-rendered-component="'+(componentName)+'"]');
       if ($componentContainer.length) {
-        $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
+        var _fnOnRemoveComp = 'app.'+componentName+'.onRemove', _fnOnRemoveCompRes;
+        _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(_fnOnRemoveComp, '_script_', app[componentName]);
+        ok2Remove = (spa.is(_fnOnRemoveCompRes, 'undefined') || (spa.is(_fnOnRemoveCompRes, 'boolean') && _fnOnRemoveCompRes));
+        if (ok2Remove) {
+          $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
+        } else {
+          spa.console.warn('on(Remove) denied.');
+        }
       }
     }
+    return ok2Remove;
   };
   spa.destroyComponent = function (componentName) {
+    var isDestroyed;
     componentName = (componentName || '').trim();
     if (componentName) {
-      spa.removeComponent(componentName);
-      delete app[componentName];
-      if (spa.components[componentName]) {
-        var tmplScriptId = spa.findSafe(spa.components[componentName], 'template', '');
-        if (tmplScriptId && !tmplScriptId.beginsWithStr('#')) {
-          tmplScriptId = "#__tmpl_" + ((''+tmplScriptId).replace(/[^a-z0-9]/gi,'_'));
+      var isRemoved = spa.removeComponent(componentName);
+      if (spa.is(isRemoved, 'boolean') && isRemoved) {
+        delete app[componentName];
+        if (spa.components[componentName]) {
+          var tmplScriptId = spa.findSafe(spa.components[componentName], 'template', '');
+          if (tmplScriptId && !tmplScriptId.beginsWithStr('#')) {
+            tmplScriptId = "#__tmpl_" + ((''+tmplScriptId).replace(/[^a-z0-9]/gi,'_'));
+          }
+          $('script'+tmplScriptId).remove();
+          delete spa.components[componentName];
+          isDestroyed = true;
         }
-        $('script'+tmplScriptId).remove();
-        delete spa.components[componentName];
       }
     }
+    return isDestroyed;
   };
   spa.showComponent = function (componentName) {
     componentName = (componentName || '').trim();
@@ -5570,7 +5607,7 @@ window['app']['api'] = window['app']['api'] || {};
     options = options || {};
     if (!spa.is(options, 'object')) return;
     if (!options.hasOwnProperty('beforeRender')) {
-      options['beforeRender'] = options['beforeRefresh'] || ('app.'+componentName+'.beforeRefresh');
+      options['beforeRender'] = options['beforeRefresh'] || ('app.'+componentName+'.onRefresh');
     }
     if (!options.hasOwnProperty('renderCallback')) {
       options['renderCallback'] = options['refreshCallback'] || ('app.'+componentName+'.refreshCallback');
@@ -5795,7 +5832,7 @@ window['app']['api'] = window['app']['api'] || {};
         if (_fn2Call) {
           if (_.isFunction(_fn2Call)) {
             spa.console.info("calling callback: " + fn2Call);
-            _fn2Call.call(fnContext, fnArg);
+            return _fn2Call.call(fnContext, fnArg);
           } else {
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
@@ -5932,6 +5969,7 @@ window['app']['api'] = window['app']['api'] || {};
                       , renderCallBack        : "dataRenderCallback"
                       , callback              : "dataRenderCallback"
                       , callBack              : "dataRenderCallback"
+                      , onRemove              : "dataRemoveCallback"
                       , dataRenderMode        : "dataRenderMode"
                       , renderMode            : "dataRenderMode"
                       , renderId              : "dataRenderId"
@@ -5991,6 +6029,7 @@ window['app']['api'] = window['app']['api'] || {};
 
       , dataBeforeRender: ''
       , dataRenderCallback: ""
+      , dataRemoveCallback: ''
       , dataRenderMode: ""
       , skipDataBind:false
 
@@ -6018,6 +6057,24 @@ window['app']['api'] = window['app']['api'] || {};
     spa.console.log(spaRVOptions);
 
     var $viewContainerId = $(viewContainerId);
+
+    //Check with any previous component rendered on this target
+    var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
+    if (prevRenderedComponent) {
+      var _fnOnRemoveComp, _fnOnRemoveCompRes, ok2Remove, removeBy = (prevRenderedComponent==rCompName)? '' : rCompName;
+      if (spaRVOptions.dataRemoveCallback) {
+        _fnOnRemoveComp = spaRVOptions.dataRemoveCallback;
+      } else {
+        _fnOnRemoveComp = 'app.'+prevRenderedComponent+'.onRemove';
+      }
+      _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(_fnOnRemoveComp, removeBy, app[prevRenderedComponent]);
+      ok2Remove = (spa.is(_fnOnRemoveCompRes, 'undefined') || (spa.is(_fnOnRemoveCompRes, 'boolean') && _fnOnRemoveCompRes));
+      if (!ok2Remove) {
+        console.warn('Render denied by (onRemove) component: '+prevRenderedComponent);
+        return;
+      }
+    }
+
     var _renderOptionInAttr = function(dataAttrKey) {
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
     };
@@ -6041,7 +6098,7 @@ window['app']['api'] = window['app']['api'] || {};
     spa.console.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
-    var spaTemplateEngine = (spa.defaults.dataTemplateEngine || "handlebars");
+    var spaTemplateEngine = (spa.defaults.templateEngine || "handlebars");
 
     /* Load Scripts Begins */
     spa.console.group("spaLoadingViewScripts");
@@ -6595,8 +6652,9 @@ window['app']['api'] = window['app']['api'] || {};
                 retValue['model'] = spaTemplateModelData[viewDataModelName];
                 if (fnDataProcess && _.isFunction(fnDataProcess)) {
                   var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
-                      compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']);
-                  retValue['model'] = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
+                      compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']),
+                      dataProcessRes = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
+                  retValue['model'] = (spa.is(dataProcessRes, 'undefined'))? spaTemplateModelData[viewDataModelName] : dataProcessRes;
                   if (!_.isObject(retValue['model'])) {
                     retValue['model'] = retValue['modelOriginal'];
                   }
@@ -6680,138 +6738,150 @@ window['app']['api'] = window['app']['api'] || {};
                 }
 
                 //beforeRender
-                var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender');
+                var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender;
                 if (fnBeforeRender){
-                  var fnBeforeRenderParam = { view: retValue.view, data: retValue['model'] };
-                  spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
-                };
-
-                /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
-                  if (!spa.isBlank(spaRVOptions.dataRenderType)) {
-                    targetRenderContainerType = spaRVOptions.dataRenderType;
-                  };*/
-                var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
-
-                switch(targetRenderContainerType) {
-                  case "value" :
-                    $(viewContainerId).val(retValue.view);
-                    break;
-                  case "text" :
-                    $(viewContainerId).text(retValue.view);
-                    break;
-
-                  default:
-                    doDeepRender = true;
-                    if (spa.isBlank(targetRenderMode)) {
-                      $(viewContainerId).html(retValue.view);
-                    } else {
-                      switch (true) {
-                        case (targetRenderMode.equalsIgnoreCase("append")):
-                          $(viewContainerId).append(retValue.view);
-                          break;
-                        case (targetRenderMode.equalsIgnoreCase("prepend")):
-                          $(viewContainerId).prepend(retValue.view);
-                          break;
-                        default: $(viewContainerId).html(retValue.view); break;
-                      }
+                  var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
+                  fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
+                  if (!spa.is(fnBeforeRenderRes, 'undefined')) {
+                    switch (spa.of(fnBeforeRenderRes)) {
+                      case 'string' :
+                        retValue.view = fnBeforeRenderRes;
+                        break;
+                      case 'boolean':
+                        abortRender = !fnBeforeRenderRes;
+                        break;
                     }
-                    break;
-                };
-
-                $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
-                _$renderCountUpdate(rCompName);
-                spa.console.info("Render: SUCCESS");
-                var rhKeys = _.keys(spa.renderHistory);
-                var rhLen = rhKeys.length;
-                if (rhLen > spa.renderHistoryMax) {
-                  $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
-                    delete spa.renderHistory[key];
-                  });
-                }
-                retValue.cron = "" + spa.now();
-                if (spa.renderHistoryMax>0) {
-                  spa.renderHistory[retValue.id] = retValue;
-                };
-
-                if (doDeepRender) {
-                  /*Reflow Foundation*/
-                  spa.reflowFoundation(viewContainerId);
-
-                  /*init KeyTracking*/
-                  spa.initKeyTracking();
-
-                  /*init KeyPauseEvent*/
-                  initKeyPauseEvent(viewContainerId);
-
-                  /*display selected i18n lang*/
-                  if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
-                    spa.i18n.displayLang();
                   }
-
-                  /*apply i18n*/
-                  spa.i18n.apply(viewContainerId);
-
-                  /* Init Forms/Elements inside components */
-                  _initSpaElements(viewContainerId);
-
-                  /* Init Track Form Element's changes */
-                  spa.initTrackFormElChanges(viewContainerId);
-
-                  /*apply data-validation*/
-                  _initFormValidationInScope(viewContainerId);
-
-                  /*init SPA routes; a simple routing solution */
-                  _initRouteHash(viewContainerId);
-
-                  /*
-                   * Init togglePassword (eye icon)
-                   */
-                  spa.initTogglePassword(viewContainerId);
-
-                  /*init spaRoute*/
-                  //spa.initRoutesX(viewContainerId);
                 };
 
-                spa.console.log(retValue);
+                if (!abortRender) {
+                  /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
+                    if (!spa.isBlank(spaRVOptions.dataRenderType)) {
+                      targetRenderContainerType = spaRVOptions.dataRenderType;
+                    };*/
+                  var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
+                  switch(targetRenderContainerType) {
+                    case "value" :
+                      $(viewContainerId).val(retValue.view);
+                      break;
+                    case "text" :
+                      $(viewContainerId).text(retValue.view);
+                      break;
 
-                /*Register Events in Components*/
-                spa.renderUtils.registerComponentEvents(rCompName);
-
-                /*run callback if any*/
-                /*
-                 * Default component's callback
-                 */
-                spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
-
-                var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
-                if (spaRVOptions.dataRenderCallback) {
-                  _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
-                }
-                var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
-                spa.console.info("Processing callback: " + _fnCallbackAfterRender);
-
-                if (!isCallbackDisabled) {
-                  // ToBeRemoved
-                  // if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
-                  //   spa.console.info("calling default callback: spa.routes._renderCallback");
-                  //   spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
-                  // }
-                  spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
-                }
-
-                /*Deep/Child Render*/
-                if (doDeepRender) {
-                  //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
-                  $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
-
-                  if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                    spa.console.info('mounting defered component', spaRVOptions.mountComponent);
-                    $(viewContainerId).removeAttr('data-spa-component');
-                    spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                    default:
+                      doDeepRender = true;
+                      if (spa.isBlank(targetRenderMode)) {
+                        $(viewContainerId).html(retValue.view);
+                      } else {
+                        switch (true) {
+                          case (targetRenderMode.equalsIgnoreCase("append")):
+                            $(viewContainerId).append(retValue.view);
+                            break;
+                          case (targetRenderMode.equalsIgnoreCase("prepend")):
+                            $(viewContainerId).prepend(retValue.view);
+                            break;
+                          default: $(viewContainerId).html(retValue.view); break;
+                        }
+                      }
+                      break;
                   };
 
-                  spa.renderComponentsInHtml(viewContainerId);
-                };
+                  $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
+                  _$renderCountUpdate(rCompName);
+                  spa.console.info("Render: SUCCESS");
+                  var rhKeys = _.keys(spa.renderHistory);
+                  var rhLen = rhKeys.length;
+                  if (rhLen > spa.renderHistoryMax) {
+                    $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
+                      delete spa.renderHistory[key];
+                    });
+                  }
+                  retValue.cron = "" + spa.now();
+                  if (spa.renderHistoryMax>0) {
+                    spa.renderHistory[retValue.id] = retValue;
+                  };
+
+                  if (doDeepRender) {
+                    /*Reflow Foundation*/
+                    spa.reflowFoundation(viewContainerId);
+
+                    /*init KeyTracking*/
+                    spa.initKeyTracking();
+
+                    /*init KeyPauseEvent*/
+                    initKeyPauseEvent(viewContainerId);
+
+                    /*display selected i18n lang*/
+                    if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
+                      spa.i18n.displayLang();
+                    }
+
+                    /*apply i18n*/
+                    spa.i18n.apply(viewContainerId);
+
+                    /* Init Forms/Elements inside components */
+                    _initSpaElements(viewContainerId);
+
+                    /* Init Track Form Element's changes */
+                    spa.initTrackFormElChanges(viewContainerId);
+
+                    /*apply data-validation*/
+                    _initFormValidationInScope(viewContainerId);
+
+                    /*init SPA routes; a simple routing solution */
+                    _initRouteHash(viewContainerId);
+
+                    /*
+                     * Init togglePassword (eye icon)
+                     */
+                    spa.initTogglePassword(viewContainerId);
+
+                    /*init spaRoute*/
+                    //spa.initRoutesX(viewContainerId);
+
+                    /*Register Events in Components*/
+                    spa.renderUtils.registerComponentEvents(rCompName);
+                  };
+
+                  spa.console.log(retValue);
+
+                  /*run callback if any*/
+                  /*
+                   * Default component's callback
+                   */
+                  spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+
+                  var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
+                  if (spaRVOptions.dataRenderCallback) {
+                    _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
+                  }
+                  var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
+                  spa.console.info("Processing callback: " + _fnCallbackAfterRender);
+
+                  if (!isCallbackDisabled) {
+                    // ToBeRemoved
+                    // if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
+                    //   spa.console.info("calling default callback: spa.routes._renderCallback");
+                    //   spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
+                    // }
+                    spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                  }
+
+                  /*Deep/Child Render*/
+                  if (doDeepRender) {
+                    //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
+                    $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+
+                    if (spaRVOptions.hasOwnProperty('mountComponent')) {
+                      spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                      $(viewContainerId).removeAttr('data-spa-component');
+                      spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                    };
+
+                    spa.renderComponentsInHtml(viewContainerId);
+                  };
+
+                }//if !abortRender
 
                 //End of Valid Data
               } else { //NOT a valid Data
@@ -7794,23 +7864,23 @@ window['app']['api'] = window['app']['api'] || {};
     return selectedLang;
   };
   function init_i18n_Lang() {
-    function setLang(uLang, options, isAuto) {
-      if (uLang) {
-        if (spa.i18n.onLangChange) {
-          var fnOnLangChange = spa.i18n.onLangChange,
-              nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
-          uLang = (spa.is(nLang, 'string'))? nLang : uLang;
-        }
-        $('html').attr('lang', uLang.replace('_', '-'));
-        spa.i18n.setLanguage(uLang, _.merge({path: 'app/language/', ext: '.txt', cache: true, async: true}, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
-      }
-    }
+    // function setLang(uLang, options, isAuto) {
+    //   if (uLang) {
+    //     if (spa.i18n.onLangChange) {
+    //       var fnOnLangChange = spa.i18n.onLangChange,
+    //           nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
+    //       uLang = (spa.is(nLang, 'string'))? nLang : uLang;
+    //     }
+    //     $('html').attr('lang', uLang.replace('_', '-'));
+    //     spa.i18n.setLanguage(uLang, _.merge({}, spa.defaults.lang, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
+    //   }
+    // }
     $(document).on("click", "[data-i18n-lang]", function() {
       var elData = $(this).data(),
           selLangCode  = (elData['i18nLang']||''),
           selLangCode_ = (elData['i18nLang']||'').replace('-', '_'),
           i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_;
-      setLang(selLangCode_, { callback: function(){
+      _setLang(selLangCode_, { callback: function(){
         var langClassType = '-', $langSelElement = $('[data-i18n-lang]:first');
         if ($langSelElement.length) {
           langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
@@ -7842,16 +7912,13 @@ window['app']['api'] = window['app']['api'] || {};
       }
 
       if (initialLang) {
-        setLang(initialLang, {}, true);
+        _setLang(initialLang, {}, true);
         setTimeout(function(){
           spa.i18n.displayLang();
         }, 500);
       }
     }
   }
-
-  spa.ajaxPreProcess;
-  spa.onReady;
 
   function _isLiveApiUrl(apiUrl, liveApiUrls){
     var retValue = '',
@@ -8061,6 +8128,7 @@ window['app']['api'] = window['app']['api'] || {};
     , _maxAutoRoute       = 100
     , _routeOnClick       = false
     , _prevUrlHash        = ''
+    , _curBlockedUrlHash  = ''
     , _isDelayed          = false
     , _isDelayedOnUrl     = ''
     , _lastBlockedUrl     = ''
@@ -8083,7 +8151,7 @@ window['app']['api'] = window['app']['api'] || {};
     _hideNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.hide', '')  || 'HIDE-SPA-NAV').trim();
     _hideNavClass       = ('.'+_hideNavClassName);
     _attrSpaRoute       = (spa.findSafe(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route').trim();
-    _routeByHref        = (_attrSpaRoute.equalsIgnoreCase('href'))
+    _routeByHref        = (_attrSpaRoute.equalsIgnoreCase('href'));
     _attrOnNavAway      = (spa.findSafe(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway').trim();
   }
 
@@ -8120,17 +8188,54 @@ window['app']['api'] = window['app']['api'] || {};
     //if (e.persisted)
     _blockBrowserNav();
   }
-  function _onPopStateChange(){
+
+  var _skipUrlChangeOn = 'x'+spa.now();
+  function _onPopStateChange(e){
     //console.log('onPopStateChange...');
     _routeSpaUrlOnHashChange();
-    //custom function trigger
-    if (spa.onUrlHashChange) {
-      spa.onUrlHashChange(spa.urlHash([], _urlHashBase));
+
+    if (_curBlockedUrlHash && _curBlockedUrlHash != _skipUrlChangeOn) {
+      spa.console.warn('Blocked:', _curBlockedUrlHash);
+      _curBlockedUrlHash = _skipUrlChangeOn;
+    } else {
+      if (_curBlockedUrlHash != _skipUrlChangeOn) {
+        //custom function trigger
+        if (spa.onUrlHashChange) {
+          spa.onUrlHashChange(spa.urlHash([], _urlHashBase), e);
+        } else if (spa.onUrlChange) {
+          spa.onUrlChange(spa.urlHash([], _urlHashBase), e);
+        }
+      }
+      _curBlockedUrlHash = '';
     }
   }
   function _onWindowReload(){
-    var i18nMsgKey = 'spa.message.on.window.reload';
-    if (_blockNav) return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+    var fnRes, i18nMsgKey, retValue;
+    if (spa.onReload) {
+      fnRes = spa.onReload();
+    }
+    switch(spa.of(fnRes)) {
+      case 'boolean':
+        if (!fnRes) {
+          i18nMsgKey = 'spa.message.on.window.reload';
+          retValue = spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+        }
+        break;
+      case 'string':
+        fnRes = fnRes.trim();
+        if (fnRes) {
+          i18nMsgKey = fnRes.beginsWithIgnoreCase('i18n')? fnRes.replace(/i18n(:)*/i,'') : '';
+          retValue = i18nMsgKey? spa.i18n.text(i18nMsgKey).replace(i18nMsgKey) : fnRes;
+        } else {
+          retValue = fnRes;
+        }
+        break;
+      default:
+        i18nMsgKey = 'spa.message.on.window.reload';
+        if (_blockNav) retValue = spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+        break;
+    }
+    return retValue;
   }
   function _handleNavAwayEvent(toUrl, $byEl){
     _lastBlockedUrl = toUrl;
@@ -8248,8 +8353,11 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
   function _replaceUrlHash(newHashUrl, insteadOf) {
-    spa.console.log('replacing URL', newHashUrl, 'with', insteadOf);
-    _updateBrowserAddress(newHashUrl);
+    if (newHashUrl != insteadOf) {
+      spa.console.log('attempt to set URL:', newHashUrl, 'insteadOf', insteadOf);
+      _curBlockedUrlHash = insteadOf;
+      _updateBrowserAddress(newHashUrl);
+    }
   }
 
   function _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute) {
@@ -8388,9 +8496,9 @@ window['app']['api'] = window['app']['api'] || {};
       .on('click', _onRouteElClick);
 
     if (_routeByHref && $routeElements.length){
-      var $a, href;
+      var $a, href, rDir;
       $routeElements.each(function(){
-        $a = $(this), href=($a.attr('href')).replace(/\s*/g,'').trim(), rDir='';
+        $a = $(this); href=($a.attr('href')).replace(/\s*/g,'').trim(); rDir='';
         if (href[0] == '#') {
           if (('^><-').indexOf(href[1]) >=0) {
             rDir = href[1];
@@ -8491,78 +8599,64 @@ window['app']['api'] = window['app']['api'] || {};
     /* ajaxPrefilter */
     $.ajaxPrefilter(_ajaxPrefilter);
 
-    /*Reflow Foundation*/
-    spa.reflowFoundation();
+    function initSpaModules(){
 
-    // var sparouteInitOptions = $("body").data("sparouteInit");
-    // if (sparouteInitOptions) {
-    //   spa.initRoutesX(spa.toJSON(sparouteInitOptions));
-    // };
+      /*Reflow Foundation*/
+      spa.reflowFoundation();
 
-    /*init SPA routes; a simple routing solution */
-    var spaRoutesDefaults = $('body').attr('data-spa-routes');
-    if (!spa.isBlank(spaRoutesDefaults)) {
-      spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
-      _.merge(spa.defaults.routes, spaRoutesDefaults);
+      /*init SPA routes; a simple routing solution */
+      var spaRoutesDefaults = $('body').attr('data-spa-routes');
+      if (!spa.isBlank(spaRoutesDefaults)) {
+        spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
+        _.merge(spa.defaults.routes, spaRoutesDefaults);
+      }
+      _prevUrlHash = spa.urlHashFull( _urlHashBase );
+      _initRoutesDefaults();
+
+      /*Key Tracking*/
+      spa.initKeyTracking();
+
+      /*init KeyPauseEvent*/
+      initKeyPauseEvent();
+
+      /*init i18nLang*/
+      init_i18n_Lang();
+
+      /*init Form/Elements/Tracking/Validation*/
+      _initSpaElements();
+      spa.initTrackFormElChanges();
+      _initFormValidationInScope();
+
+      /*init SPA routes; a simple routing solution */
+      _ctrlBrwowserNav();
+      _initRouteHash();
+
+      /*SPA Init Complete*/
+      if (spa.onInitComplete) {
+        spa.onInitComplete();
+      }
+
+      /*SPA onReady*/
+      if (spa.onReady) {
+        $.when( spa.onReady() )
+         .done( function(){
+            spa.renderComponentsInHtml();
+          });
+      } else {
+        spa.renderComponentsInHtml();
+      }
+
     }
-    _prevUrlHash = spa.urlHashFull( _urlHashBase );
-    _initRoutesDefaults();
 
-    /*Init spaRoutes old: to be discontinued ... */
-    //spa.initRoutesX("body");
-
-    //ToBeRemoved
-    // if ('onhashchange' in window) {
-    //   if (spa.isBlank(sparouteInitOptions)) {
-    //     spa.console.info("Registering HashRouting Listener");
-    //     window.addEventListener("hashchange", function(){
-    //       // moved to onpopstate
-    //       // _routeSpaUrlOnHashChange();
-    //       // //custom function trigger
-    //       // if (spa.onUrlHashChange) {
-    //       //   spa.onUrlHashChange(spa.urlHash([], _urlHashBase));
-    //       // }
-    //     });
-    //   }
-    // }
-
-    /*Key Tracking*/
-    spa.initKeyTracking();
-
-    /*init KeyPauseEvent*/
-    initKeyPauseEvent();
-
-    /*init i18nLang*/
-    init_i18n_Lang();
-
-    /*init Form/Elements/Tracking/Validation*/
-    _initSpaElements();
-    spa.initTrackFormElChanges();
-    _initFormValidationInScope();
-
-    /*init SPA routes; a simple routing solution */
-    _ctrlBrwowserNav();
-    _initRouteHash();
-
-    /*Auto Render*/
-    // ToBeRemoved - Old default render using attr [data-render] (from K-Lib) before data-spa-component
-    // var $autoRenderElList = $("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]");
-    // var autoRenderCount = $autoRenderElList.length;
-    // spa.console.info("Find and Render [rel='spaRender'] or [data-render] or [data-sparender] or [data-spa-render]. Found:"+autoRenderCount);
-    // if (autoRenderCount) {
-    //   $autoRenderElList.spaRender();
-    // } else {
-    //   spa.console.info("Init SPA Render.");
-    //   $("body").append("<div id='initSpaRender0' data-template-engine='none' data-render-type='text' data-render-callback='off' style='display:none'>&nbsp;</div>");
-    //   $("#initSpaRender0").spaRender();
-    // }
-    spa.renderComponentsInHtml();
-
-    /*APP Init*/
-
-    if (spa.onReady) {
-      spa.onReady();
+    if (spa.onInit) {
+      $.when( spa.onInit() )
+       .done( function(){
+          initSpaModules();
+        });
+    } else {
+      initSpaModules();
     }
+
   });
 
 })(this);
