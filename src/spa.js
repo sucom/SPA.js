@@ -8631,15 +8631,21 @@ window['app']['api'] = window['app']['api'] || {};
       _ctrlBrwowserNav();
       _initRouteHash();
 
-      /*APP Init Complete*/
+      /*SPA Init Complete*/
       if (spa.onInitComplete) {
         spa.onInitComplete();
       }
 
+      /*SPA onReady*/
       if (spa.onReady) {
-        spa.onReady();
+        $.when( spa.onReady() )
+         .done( function(){
+            spa.renderComponentsInHtml();
+          });
+      } else {
+        spa.renderComponentsInHtml();
       }
-      spa.renderComponentsInHtml();
+
     }
 
     if (spa.onInit) {
