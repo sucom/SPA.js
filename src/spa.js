@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.54.1';
+  spa.VERSION = '2.55.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3048,18 +3048,20 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
-  spa.initKeyTracking = function () {
-    var elementsToTrackKeys = (arguments.length) ? arguments[0] : "[data-disable-keys],[data-focus-next],[data-focus-back]";
+  function _initKeyTracking() {
+    var elementsToTrackKeys = (arguments.length && arguments[0]) ? arguments[0] : "[data-disable-keys],[data-focus-next],[data-focus-back]"
+      , $elementsToTrackKeys = $( ((arguments.length==2 && arguments[1])? arguments[1] : 'body') ).find(elementsToTrackKeys);
     spa.console.info("Finding Key-Tracking for element(s): " + elementsToTrackKeys);
-    $(elementsToTrackKeys).each(function (index, element) {
+    $elementsToTrackKeys.each(function (index, element) {
       $(element).keydown(spa._trackAndControlKey);
       spa.console.info("SPA is tracking keys on element:");
       spa.console.info(element);
     });
   };
+  spa.initKeyTracking = _initKeyTracking;
 
   var keyPauseTimer;
-  function initKeyPauseEvent(scope){
+  function _initKeyPauseEvent(scope){
     $(scope || 'body').find('[onKeyPause]:not([onKeyPauseReg])').each(function(i, el){
       $(el).attr('onKeyPauseReg', '').on('input propertychange paste', function(){
         var targetEl = this,
@@ -3080,6 +3082,36 @@ window['app']['api'] = window['app']['api'] || {};
   spa.getDocObjs = function (objId) {
     var jqSelector = (objId.beginsWithStr("#") ? "" : "#") + objId;
     return ( $(jqSelector).get() );
+  };
+
+  spa.hasCssRule = function(cssSelectors){
+    var foundClass = false;
+    if (cssSelectors) {
+      cssSelectors = cssSelectors.split(',');
+      for(var i = 0; i < document.styleSheets.length; i++) {
+        var rules = document.styleSheets[i].rules || document.styleSheets[i].cssRules;
+        if (foundClass) break;
+        for (var style in rules) {
+          foundClass = (foundClass || ((typeof rules[style].selectorText == 'string') && (cssSelectors.indexOf(rules[style].selectorText) >=0)));
+          if (foundClass) break;
+        }
+      }
+    }
+    return foundClass;
+  };
+  spa.getCssRule = function(cssSelector){
+    var foundClass, retStyle;
+    if (cssSelector) {
+      for(var i = 0; i < document.styleSheets.length; i++) {
+        var rules = document.styleSheets[i].rules || document.styleSheets[i].cssRules;
+        if (foundClass) break;
+        for (var style in rules) {
+          foundClass = (foundClass || ((typeof rules[style].selectorText == 'string') && (cssSelector == rules[style].selectorText)));
+          if (foundClass) { retStyle = rules[style]; break; }
+        }
+      }
+    }
+    return retStyle;
   };
 
   /* setFocus: */
@@ -3513,8 +3545,87 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
+  function _$qrySelector(selector) {
+    if (spa.is(selector, 'string')) {
+      var selectors = (selector.trim()).split(' ')
+        , rootSelector = selectors[0]
+        , compName, compIndex;
+      if ((/app\.(.+)\./).test(rootSelector)){
+        compName = (rootSelector.split('.')[1]);
+        selectors[0] = (selectors[0]).replace('app.'+compName+'.', '[data-rendered-component="'+(rootSelector.split('.')[1])+'"] ');
+        selector = selectors.join(' ');
+      } else if (rootSelector.beginsWithStr('\\$')) {
+        compName  = rootSelector.substr(1);
+        if (compName.indexOf(':')>0) {
+          compIndex = spa.toInt(compName.getRightStr(':').trim());
+          compName = compName.getLeftStr(':');
+          selectors[0] = ('[data-rendered-component="'+compName+'"]:eq('+compIndex+')');
+        } else {
+          selectors[0] = ('[data-rendered-component="'+compName+'"]');
+        }
+        selector = selectors.join(' ');
+      }
+    }
+    return selector;
+  }
+  //spa.$qrySelector = _$qrySelector;
+
+  spa.setElValue = function (el, elValue) {
+    var $el = $(_$qrySelector(el)); el = $el.get(0);
+    switch ((el.tagName).toUpperCase()) {
+      case "INPUT":
+        switch ((el.type).toLowerCase()) {
+          case "text":
+          case "password":
+          case "hidden":
+          case "color":
+          case "date":
+          case "datetime":
+          case "datetime-local":
+          case "email":
+          case "month":
+          case "number":
+          case "search":
+          case "tel":
+          case "time":
+          case "url":
+          case "range":
+          case "button":
+          case "submit":
+          case "reset":
+            $el.val(elValue);
+            if ($el.isEnabled()) $el.trigger('keyup');
+            break;
+
+          case "checkbox":
+          case "radio":
+            el.checked = (el.value).equalsIgnoreCase(elValue);
+            if (el.checked && $el.isEnabled()) $el.trigger('click');
+            break;
+        }
+        break;
+
+      case "SELECT":
+        spa.selectOptionForValue(el, elValue);
+        if ($el.isEnabled()) $el.trigger('change');
+        break;
+
+      case "TEXTAREA":
+        $el.val(elValue);
+        if ($el.isEnabled()) $el.trigger('keyup');
+        break;
+
+      default:
+        $el.html(elValue);
+        $el.val(elValue);
+        if ($el.isEnabled()) $el.trigger('keyup');;
+        break;
+    }
+
+  };
+
   spa.getElValue = function (el, escHTML) {
-    el = $(el).get(0);
+    el = $(_$qrySelector(el)).get(0);
     if (!el) return;
     var elValue, unchkvalue;
     switch ((el.tagName).toUpperCase()) {
@@ -3958,8 +4069,48 @@ window['app']['api'] = window['app']['api'] || {};
       },
       enumerable : false,
       configurable: false
-    }
+    },
 
+    '__has': {
+      value: function(value, options) { //options = 'i' | 'b/^' | 'e/$' | 'c/*' | '==' | '<' | '<=' | '>' | '>='
+        var retValue; options = (options || '').trim();
+
+        function optionsHas(opt) {
+          return (options.indexOf(opt)>=0);
+        }
+
+        if (options) {
+          if (options.indexOf('i') && spa.is(value, 'string')) value = value.toLowerCase();
+          for(var i=0; i<this.length; i++){
+            var item = this[i];
+            if (options.indexOf('i') && spa.is(item, 'string')) item = item.toLowerCase();
+            switch(true){
+              case optionsHas('b'): //beginsWith
+              case optionsHas('^'): retValue = optionsHas('~')? value.beginsWithStr( item ) : item.beginsWithStr( value ); break;
+              case optionsHas('e'): //beginsWith
+              case optionsHas('$'): retValue = optionsHas('~')? value.endsWithStr( item ) : item.endsWithStr( value ); break;
+              case optionsHas('c'): //contains
+              case optionsHas('*'): retValue = optionsHas('~')? (value.indexOf( item )>=0) : (item.indexOf( value )>=0); break;
+
+              case optionsHas('<') : retValue = (item < value); break;
+              case optionsHas('<='): retValue = (item <= value); break;
+              case optionsHas('>') : retValue = (item > value); break;
+              case optionsHas('>='): retValue = (item >= value); break;
+
+              default:
+                retValue = (item == value);
+              break;
+            }
+            if (retValue) break;
+          }
+        } else {
+          retValue = (this.indexOf(value)>=0);
+        }
+        return retValue;
+      },
+      enumerable : false,
+      configurable: false
+    }
 
   });
 
@@ -4525,6 +4676,20 @@ window['app']['api'] = window['app']['api'] || {};
         return Str.substring(1, Str.length-1);
       }
     }
+  };
+
+  spa.strBindData = function(xMsg, data, bStr, eStr){
+    xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
+    var varList = spa.extractStrBetweenEx(xMsg, bStr, eStr, true);
+    if (xMsg && !spa.isBlank(varList) && spa.is(data, 'object')) {
+      _.each(varList, function(key){
+        xMsg = xMsg.replace((new RegExp(bStr+'\\s*('+(key.trim())+')\\s*'+eStr, 'g')), spa.findSafe(data, key, ''));
+      });
+    }
+    return xMsg;
+  };
+  String.prototype.bindData = function (data) {
+    return spa.strBindData(''+this, data);
   };
 
   spa.i18n.text = function (i18nKey, data) {
@@ -5233,6 +5398,7 @@ window['app']['api'] = window['app']['api'] || {};
         , inFolder: true
         , templateExt: '.html'
         , scriptExt: '.js'
+        , render:''
         , callback:''
         , extend$data: true
       }
@@ -5240,6 +5406,7 @@ window['app']['api'] = window['app']['api'] || {};
         base: '#',
         attr: {
           route: 'data-spa-route',
+          params: 'data-spa-route-params',
           onNavAway: 'onNavAway'
         },
         className: {
@@ -5707,7 +5874,8 @@ window['app']['api'] = window['app']['api'] || {};
           spa.console.info('In Source> spa.components['+componentName+']');
           spa.console.info(spa.components[componentName]);
           if (!spa.components.hasOwnProperty(componentName)) {
-            spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Defining *NEW*');
+            spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Creating *NEW*');
+            if (spa.isBlank(options)) options = {};
             if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
             spa.components[componentName] = options;
             spa.console.info('NEW> spa.components['+componentName+']');
@@ -6050,7 +6218,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataRemoveCallback: ''
       , dataRenderMode: ""
       , skipDataBind:false
-
+      , render: ''
       , dataRenderId: ""
     };
 
@@ -6072,9 +6240,31 @@ window['app']['api'] = window['app']['api'] || {};
     }
 
     spa.console.log('spa.render with options:');
-    spa.console.log(spaRVOptions);
+    spa.console.log(rCompName, spaRVOptions);
 
     var $viewContainerId = $(viewContainerId);
+    var pCompName  = $viewContainerId.attr('data-rendered-component') || '';
+    var is$refresh = (pCompName == rCompName);
+
+    function _fixRefreshCalls(propName, renderMethod, refreshMethod){
+      if (spa.is(spaRVOptions[propName], 'string')
+            && (spaRVOptions[propName] == ('app.'+rCompName+renderMethod))) {
+        if (app[rCompName].hasOwnProperty(refreshMethod)) {
+          spaRVOptions[propName] = 'app.'+rCompName+'.'+refreshMethod;
+        }
+      }
+    }
+
+    if (is$refresh) {
+      //Fix Callback Functions
+      spa.console.log('$refresh - Auto-Detected', rCompName, spaRVOptions);
+      if ('auto'.equalsIgnoreCase( (''+spaRVOptions.render) )) {
+        spa.console.log('Finding for refresh events.');
+        _fixRefreshCalls('dataBeforeRender', '.onRender', 'onRefresh');
+        _fixRefreshCalls('dataRenderCallback', '.renderCallback', 'refreshCallback');
+      }
+    }
+
     var _renderOptionInAttr = function(dataAttrKey) {
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
     };
@@ -6734,8 +6924,11 @@ window['app']['api'] = window['app']['api'] || {};
                   delete retValue['model']['_this'];
                 }
 
+                /* Default Global components before-render */
+                spa.renderUtils.runCallbackFn(spa.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
+
                 //beforeRender
-                var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender;
+                var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
                 if (fnBeforeRender){
                   var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
                   fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
@@ -6751,10 +6944,11 @@ window['app']['api'] = window['app']['api'] || {};
                   }
                 };
 
+                abortView = (retValue.view).beginsWithStr( '<!---->' );
                 if (abortRender) {
                   retValue = {};
-                  spa.console.warn('Render aborted onRender()');
-                } else {
+                  spa.console.warn('Render aborted by '+fnBeforeRender);
+                } else if (!abortView) {
                   var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
                   if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
                     abortRender = true; retValue = {};
@@ -6763,32 +6957,32 @@ window['app']['api'] = window['app']['api'] || {};
                 }
 
                 if (!abortRender) {
-                  /*var targetRenderContainerType = ((""+ $(viewContainerId).data("renderType")).replace(/undefined/, "")).toLowerCase();
-                    if (!spa.isBlank(spaRVOptions.dataRenderType)) {
-                      targetRenderContainerType = spaRVOptions.dataRenderType;
-                    };*/
-                  var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
-                  switch(targetRenderContainerType) {
-                    case "value" :
-                      $(viewContainerId).val(retValue.view);
-                      break;
-                    case "text" :
-                      $(viewContainerId).text(retValue.view);
-                      break;
+                  if (abortView) {
+                    spa.console.log('Rendering component [',rCompName,'] view aborted.');
+                  } else {
+                    var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
+                    switch(targetRenderContainerType) {
+                      case "value" :
+                        $(viewContainerId).val(retValue.view);
+                        break;
+                      case "text" :
+                        $(viewContainerId).text(retValue.view);
+                        break;
 
-                    default:
-                      doDeepRender = true;
-                      switch (true) {
-                        case (targetRenderMode.equalsIgnoreCase("append")):
-                          $(viewContainerId).append(retValue.view);
-                          break;
-                        case (targetRenderMode.equalsIgnoreCase("prepend")):
-                          $(viewContainerId).prepend(retValue.view);
-                          break;
-                        default: $(viewContainerId).html(retValue.view); break;
-                      }
-                      break;
-                  };
+                      default:
+                        doDeepRender = true;
+                        switch (true) {
+                          case (targetRenderMode.equalsIgnoreCase("append")):
+                            $(viewContainerId).append(retValue.view);
+                            break;
+                          case (targetRenderMode.equalsIgnoreCase("prepend")):
+                            $(viewContainerId).prepend(retValue.view);
+                            break;
+                          default: $(viewContainerId).html(retValue.view); break;
+                        }
+                        break;
+                    };
+                  }
 
                   $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
                   _$renderCountUpdate(rCompName);
@@ -6805,43 +6999,15 @@ window['app']['api'] = window['app']['api'] || {};
                     spa.renderHistory[retValue.id] = retValue;
                   };
 
-                  if (doDeepRender) {
-                    /*Reflow Foundation*/
-                    spa.reflowFoundation(viewContainerId);
-
-                    /*init KeyTracking*/
-                    spa.initKeyTracking();
-
-                    /*init KeyPauseEvent*/
-                    initKeyPauseEvent(viewContainerId);
-
+                  if (doDeepRender && !abortView) {
                     /*display selected i18n lang*/
                     if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
                       spa.i18n.displayLang();
                     }
-
                     /*apply i18n*/
                     spa.i18n.apply(viewContainerId);
 
-                    /* Init Forms/Elements inside components */
-                    _initSpaElements(viewContainerId);
-
-                    /* Init Track Form Element's changes */
-                    spa.initTrackFormElChanges(viewContainerId);
-
-                    /*apply data-validation*/
-                    _initFormValidationInScope(viewContainerId);
-
-                    /*init SPA routes; a simple routing solution */
-                    _initRouteHash(viewContainerId);
-
-                    /*
-                     * Init togglePassword (eye icon)
-                     */
-                    spa.initTogglePassword(viewContainerId);
-
-                    /*init spaRoute*/
-                    //spa.initRoutesX(viewContainerId);
+                    _init_SPA_DOM_(viewContainerId);
 
                     /*Register Events in Components*/
                     spa.renderUtils.registerComponentEvents(rCompName);
@@ -6849,13 +7015,8 @@ window['app']['api'] = window['app']['api'] || {};
 
                   spa.console.log(retValue);
 
-                  /*run callback if any*/
-                  /*
-                   * Default component's callback
-                   */
-                  spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
-
-                  var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback"); //("" + $(viewContainerId).data("renderCallback")).replace(/undefined/, "");
+                  /* component's specific callback */
+                  var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback");
                   if (spaRVOptions.dataRenderCallback) {
                     _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
                   }
@@ -6863,22 +7024,20 @@ window['app']['api'] = window['app']['api'] || {};
                   spa.console.info("Processing callback: " + _fnCallbackAfterRender);
 
                   if (!isCallbackDisabled) {
-                    // ToBeRemoved
-                    // if (isSpaHashRouteOn && spa.routes && spa.routes.hasOwnProperty("_renderCallback") && _.isFunction(spa.routes['_renderCallback'])) {
-                    //   spa.console.info("calling default callback: spa.routes._renderCallback");
-                    //   spa.routes['_renderCallback'].call(renderCallbackContext, retValue);
-                    // }
                     spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
                   }
 
+                  /*run callback if any*/
+                  /* Default Global components callback */
+                  spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+
                   /*Deep/Child Render*/
-                  if (doDeepRender) {
-                    //$("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]", viewContainerId).spaRender();
+                  if (doDeepRender && !abortView) {
                     $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
 
                     if (spaRVOptions.hasOwnProperty('mountComponent')) {
                       spa.console.info('mounting defered component', spaRVOptions.mountComponent);
-                      $(viewContainerId).removeAttr('data-spa-component');
+                      $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
                       spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
                     };
 
@@ -7113,9 +7272,6 @@ window['app']['api'] = window['app']['api'] || {};
 
   //Extend jQuery for Util Functions
   $.fn.extend({
-    spa$: function(){
-      return this.map(function(){ return $(this).closest('[data-rendered-component]'); });
-    },
     renameAttr: function(oldName, newName){
       this.each(function(){
         this.setAttribute(newName, this.getAttribute(oldName));
@@ -7123,9 +7279,15 @@ window['app']['api'] = window['app']['api'] || {};
       });
       return this;
     },
+    spa$: function(){
+      return this.map(function(){ return $(this).closest('[data-rendered-component]'); });
+    },
     spa$name: function(){
       var retValue = this.map(function(){ return $(this).closest('[data-rendered-component]').attr('data-rendered-component'); });
       return (retValue.length == 1)? retValue[0] : retValue;
+    },
+    spaBindData: function(data, elFilter){
+      spa.bindData(this, data, elFilter);
     },
     inBlockedSpaNavContainer:function(){
       return !!(this.closest(_blockNavClass).length);
@@ -7143,6 +7305,16 @@ window['app']['api'] = window['app']['api'] || {};
       } else {
         return this.disable(true);
       }
+    },
+    isDisabled: function(fnCall){
+      var isDisabled = (this.hasClass('disabled') || this.is('[disabled]'));
+      if (isDisabled && fnCall) { fnCall.call(this, this); };
+      return isDisabled;
+    },
+    isEnabled: function(fnCall){
+      var isEnabled = !this.isDisabled();
+      if (isEnabled && fnCall) { fnCall.call(this, this); }
+      return isEnabled;
     },
     trackChanges: function(){
       spa.trackFormElChange(this);
@@ -8140,6 +8312,7 @@ window['app']['api'] = window['app']['api'] || {};
     , _blockNavClass      = ''
     , _allowNavClassName  = ''
     , _attrSpaRoute       = ''
+    , _attrSpaRouteParams = ''
     , _routeByHref        = false
     , _attrOnNavAway      = '';
 
@@ -8148,6 +8321,13 @@ window['app']['api'] = window['app']['api'] || {};
     _maxAutoRoute = 100;
   }
   function _initRoutesDefaults(){
+    var spaRoutesDefaults = $('body').attr('data-spa-routes');
+    if (!spa.isBlank(spaRoutesDefaults)) {
+      spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
+      _.merge(spa.defaults.routes, spaRoutesDefaults);
+    }
+    _prevUrlHash = spa.urlHashFull( _urlHashBase );
+
     _urlHashBase        = (spa.findSafe(spa, 'defaults.routes.base', '')            || '#').trim();
     _blockNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV').trim();
     _blockNavClass      = ('.'+_blockNavClassName);
@@ -8155,6 +8335,7 @@ window['app']['api'] = window['app']['api'] || {};
     _hideNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.hide', '')  || 'HIDE-SPA-NAV').trim();
     _hideNavClass       = ('.'+_hideNavClassName);
     _attrSpaRoute       = (spa.findSafe(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route').trim();
+    _attrSpaRouteParams = (spa.findSafe(spa, 'defaults.routes.attr.params', '')     || 'data-spa-route-params').trim();
     _routeByHref        = (_attrSpaRoute.equalsIgnoreCase('href'));
     _attrOnNavAway      = (spa.findSafe(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway').trim();
   }
@@ -8280,6 +8461,10 @@ window['app']['api'] = window['app']['api'] || {};
     window.onpopstate = _onPopStateChange;
     window.onbeforeunload = _onWindowReload;
   }
+  window.onerror = function(eMsg, source, line){
+    if (eMsg.indexOf('SyntaxError')>0)
+      console.warn('Invalid Content: Check the network/path/content.', eMsg, source, line);
+  };
 
   function _routeSpaUrlOnHashChange(){
     var urlHash = spa.urlHashFull(_urlHashBase);
@@ -8302,27 +8487,113 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
 
+  var _dynHashProcessed = [];
+  function _processDynHash(dynRouteHash, eventAfterProcess){
+    var isDynamicHash = (dynRouteHash.indexOf(':')>=0)
+      , e2Trigger = eventAfterProcess;
+    if (spa.is(eventAfterProcess, 'boolean')) { e2Trigger = eventAfterProcess? 'click' : ''; };
+
+    if (isDynamicHash) {
+      //console.log('In _processDynHash', arguments, JSON.stringify(_dynHashProcessed));
+      var dynamicHashKey = isDynamicHash? (dynRouteHash.split(':')[0]) : '';
+      var routeStoreData = {}, pKey, pVal;
+      var dynParamsArr = (dynRouteHash.indexOf('&')>0)? dynRouteHash.split('&') : ((dynRouteHash.indexOf(',')>0)? dynRouteHash.split(',') : [dynRouteHash]);
+      _.each(dynParamsArr, function(keyValue){
+        pKey = (keyValue).split(':')[0];
+        pVal = keyValue.getRightStr(':');
+        routeStoreData[ pKey ] = decodeURIComponent( pVal );
+      });
+      //console.log('paramsobj:',routeStoreData);
+      var $routeStoreEl = $('['+(_attrSpaRoute)+'*="/'+dynamicHashKey+':"]['+_attrSpaRouteParams+']');
+      var routeStoreSpec = ($routeStoreEl.attr(_attrSpaRouteParams) || '').trim();
+      //console.log($routeStoreEl, routeStoreSpec);
+      isDynamicHash = !spa.isBlank(routeStoreSpec);
+      if (isDynamicHash) {
+        _dynHashProcessed.push(dynRouteHash);
+        var routeStoreSpecObj = spa.toJSON(routeStoreSpec);
+        //console.log('specObj:', routeStoreSpecObj);
+        _.each(routeStoreSpecObj, function(elSelector, key){
+          elSelector = elSelector.trim();
+          if ((/(^app\.(.)+\.)|(^\$)|(^\#)/).test(elSelector)) {
+            spa.setElValue(elSelector, routeStoreData[key]);
+
+          } else if (( /^fn:/i ).test(elSelector)) {
+            var fn2Exec = ((elSelector.split(' ')[0]).getRightStr(':').trim()).split('(')[0];
+            fn2Exec = (fn2Exec)? spa.findSafe(window, fn2Exec) : '';
+            if (fn2Exec && spa.is(fn2Exec, 'function')) {
+              fn2Exec( key, routeStoreData[key] );
+            } else {
+              console.warn('Not a function', elSelector);
+            }
+          }
+        });
+
+        if (e2Trigger && $routeStoreEl.isEnabled() && !$routeStoreEl.hasClass('AUTO-ROUTING')) {
+          $routeStoreEl.trigger(e2Trigger);
+        }
+
+      }
+    }
+    return isDynamicHash;
+  }
+
+  function _processDynHashInUrl(){
+    var hashList = spa.urlHash([], _urlHashBase), routeHash='', pIndex;
+    for(var i=0; i< hashList.length; i++) {
+      routeHash = hashList[i];
+      pIndex = _dynHashProcessed.indexOf(routeHash);
+      if (pIndex>=0) {
+        _dynHashProcessed.splice(pIndex, 1);
+      } else {
+        _processDynHash(routeHash, (i == hashList.length-1));
+      }
+    }
+  }
+  //spa.processDynHashInUrl = _processDynHashInUrl;
+
   function _triggerNextHash( reset ){
     //console.log('Finding next hash ...', reset);
     if (reset) _initAutoRoute();
     _onAutoRoute = spa.is(reset, 'undefined')? _onAutoRoute : reset;
-    var hashList = spa.urlHash([], _urlHashBase), lastHashIndex = hashList.length-1, curHashName, isLastHash;
+    var hashList = spa.urlHash([], _urlHashBase), lastHashIndex = hashList.length-1, curHashName, isLastHash, prevHash;
 
     if (_maxAutoRoute<0) _onAutoRoute = false;
     if (_onAutoRoute) {
       _maxAutoRoute--;
       for (var i = lastHashIndex; i>=0; i--) {
+
+        prevHash = (hashList[i-1]||'');
+        if (_onAutoRoute && prevHash.indexOf(':')>0 && !(_autoRoutesFound.__has(prevHash))) { i--; }; //GoBack if to prevHash is dynamic
+
+        //console.log('pHash>', prevHash);
+
         curHashName = hashList[i]; isLastHash = (i == lastHashIndex);
         //console.log('... '+curHashName);
-        if (!_onAutoRoute || (_autoRoutesFound.indexOf(curHashName)>=0)) break;
+        if (!_onAutoRoute || (_autoRoutesFound.__has(curHashName))) break;
         if (curHashName) {
-          //console.log('... ... '+curHashName);
-          var $hashTriggerEl = $('['+(_attrSpaRoute)+'$="/'+curHashName+'"]:not(:disabled):not(.disabled):not(.AUTO-ROUTING):first');
+          var isDynamicHash = (curHashName.indexOf(':')>=0);
+          var dynamicHashKey = isDynamicHash? (curHashName.split(':')[0]) : '';
+          //console.log('... ... '+curHashName, 'isDynamic:', isDynamicHash);
+
+          var routeElSelector = '['+(_attrSpaRoute)+'$="/'+curHashName+'"]:not(:disabled):not(.disabled):not(.AUTO-ROUTING):first';
+          if (isDynamicHash) {
+            routeElSelector = '['+(_attrSpaRoute)+'*="/'+dynamicHashKey+':"]['+_attrSpaRouteParams+']';
+          }
+          var $hashTriggerEl  = $(routeElSelector);
+          //console.log(curHashName, ':routeElSelector>', routeElSelector);
+
           if ($hashTriggerEl.length) {
-            //console.log('... ... ... Found:', curHashName);
+            //console.log('... ... ... Found:', curHashName, $hashTriggerEl);
+            if (isDynamicHash) {
+              //console.log('Processing dynHash.');
+              isDynamicHash = _processDynHash(curHashName);
+            }
             _autoRoutesFound.push(curHashName);
             _onAutoRoute = !isLastHash;
-            $hashTriggerEl.addClass('AUTO-ROUTING').trigger($hashTriggerEl.data('routeEvent') || 'click');
+
+            if ($hashTriggerEl.isEnabled() && !$hashTriggerEl.hasClass('AUTO-ROUTING'))
+              $hashTriggerEl.addClass('AUTO-ROUTING').trigger($hashTriggerEl.data('routeEvent') || 'click');
+            if (isLastHash) { break; } else { i=i+2; }
           }
         }
       }
@@ -8381,6 +8652,52 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
 
+  function _getNewMatchingRoutes(reqUrl){
+    var oldRoutes = spa.urlHash([], _urlHashBase);
+    var reqRoutes = reqUrl.trimStr('/').split('/');
+    var newRoutes = [];
+    var reqRootRoute = reqRoutes[0];
+
+    function getMatchHash(srcArr, value){
+      var retValue = value
+        , matchValue = value.getLeftStr('~');
+      if (matchValue) {
+        for(var i=0; i<srcArr.length; i++){
+          if (srcArr[i].beginsWithStr( matchValue )) {
+            retValue = srcArr[i];
+            break;
+          }
+        }
+      }
+      return retValue;
+    }
+
+    var idxInSrc = oldRoutes.indexOf( reqRootRoute );
+    if (reqRootRoute.indexOf('~')>0) {
+      reqRootRoute = reqRootRoute.getLeftStr('~');
+      for(var i=0; i<oldRoutes.length; i++){
+        if (oldRoutes[i].beginsWithStr( reqRootRoute )) {
+          idxInSrc = i;
+          break;
+        }
+      }
+    }
+    if (idxInSrc>=0) {
+      var matchRoutes = oldRoutes.splice(idxInSrc)
+        , xIdx;
+      for(var i=0; i<reqRoutes.length;i++){
+        xIdx = reqRoutes[i].indexOf('~');
+        newRoutes[i] = (xIdx<0)? reqRoutes[i] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[i]) : matchRoutes[i]) ;
+      }
+      newRoutes = oldRoutes.concat(newRoutes);
+    } else {
+      newRoutes = oldRoutes.concat(reqRoutes);
+    }
+
+    return newRoutes;
+  }
+  spa.parseRoutes = _getNewMatchingRoutes;
+
   function _onRouteElClick(e){
     var spaRoutePath = spa.urlHash([], _urlHashBase);
     //console.clear();
@@ -8417,6 +8734,29 @@ window['app']['api'] = window['app']['api'] || {};
     }
     update($routeEl.attr( _attrSpaRoute ), $routeEl.attr('data-route-dir'));
 
+    var routeStoreSpec = ($routeEl.attr(_attrSpaRouteParams) || '').trim();
+    if (routeStoreSpec) {
+      var routeStoreSpecObj = spa.toJSON(routeStoreSpec), paramValue;
+      _.each(routeStoreSpecObj, function(elSelector, key){
+        paramValue = elSelector;
+        if ((/(^app\.(.)+\.)|(^\$)|(^\#)/).test(elSelector.trim())) {
+          paramValue = spa.getElValue(elSelector);
+
+        } else if (( /^fn:/i ).test(elSelector.trim())) {
+          var fn2Exec = ((elSelector.split(' ')[0]).getRightStr(':').trim()).split('(')[0];
+          fn2Exec = (fn2Exec)? spa.findSafe(window, fn2Exec) : '';
+          if (fn2Exec && spa.is(fn2Exec, 'function')) {
+            paramValue = fn2Exec( key );
+          } else {
+            console.warn('Not a function', elSelector);
+          }
+        }
+
+        routeName = routeName.replace(new RegExp(key+':', 'g'), (key+':'+encodeURIComponent( paramValue )));
+      });
+      //console.log('Dynamic Route URL', routeName);
+    }
+
     if (elClick) eval( elClick );
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
@@ -8441,24 +8781,13 @@ window['app']['api'] = window['app']['api'] || {};
       routeDir = '?';
     }
 
-    function insertOrAppendToPath(){
-      var resetFrom = spaRoutePath.indexOf( routeName.split('/')[0] );
-      if (resetFrom>=0) spaRoutePath.length = resetFrom;
-      spaRoutePath.push(routeName);
-    }
-
     //console.log('>>>>Route:', routeName, 'Dir:', routeDir);
     switch (routeDir) {
       case '#': //spaRoutePath = [routeName]; break;
       //console.log('############:', routeName);
       case '/':
-        spaRoutePath = [routeName]; break;
-        // if (_urlHashBase[0] != '#') {
-        //   spaRoutePath = [routeName];
-        // } else {
-        //   insertOrAppendToPath();
-        // }
-        // break;
+        spaRoutePath = _getNewMatchingRoutes(routeName);
+        break;
       case '-':
         var revCount = spa.toInt(routeName.replace(/[^0-9]/g,'')) || 1;
         if (spaRoutePath.length) {
@@ -8469,8 +8798,8 @@ window['app']['api'] = window['app']['api'] || {};
         newHashUrl = _prevUrlHash;
         break;
       case '?':
-        insertOrAppendToPath();
-      break;
+        spaRoutePath = _getNewMatchingRoutes(routeName);
+        break;
     }
 
     if (!usePrevHash) {
@@ -8489,9 +8818,17 @@ window['app']['api'] = window['app']['api'] || {};
     _updateUrlHash(newHashUrl, delayUpdate, continueAutoRoute);
   }
 
+  function _onRouteAutoReg(){
+    spa.route(this.getAttribute(_attrSpaRoute+'-AUTO').substr(1));
+  }
   function _initRouteHash(scope){
     // var addClassMatch = ''//_routeByHref? '.spa-route' : ''
     //   , $routeElements = $(scope||'body').find('['+(_attrSpaRoute)+']:not(.ROUTE)'+addClassMatch)
+
+    $(scope||'body').find('['+(_attrSpaRoute)+'^="*"]:not(.ROUTE):not(.ROUTE-AUTO)')
+      .renameAttr(_attrSpaRoute, _attrSpaRoute+'-AUTO')
+      .addClass('ROUTE-AUTO')
+      .on('click', _onRouteAutoReg);
 
     var $routeElements = $(scope||'body').find('['+(_attrSpaRoute)+']:not(.ROUTE)')
       .renameAttr('onclick', 'onRouteClick')
@@ -8537,6 +8874,9 @@ window['app']['api'] = window['app']['api'] || {};
       routePath = route.substr(routePathBeginsAt);
 
       switch (routeDir) {
+        case '/':
+          routes = _getNewMatchingRoutes(routePath);
+          break;
         case '-':
           routes = spa.urlHash([], _urlHashBase);
           var revCount = spa.toInt(route.replace(/[^0-9]/g,'')) || 1;
@@ -8596,71 +8936,65 @@ window['app']['api'] = window['app']['api'] || {};
   spa.routeEl    = _$routeElements;
   /* ***************  SPA Route Solution Ends ************************ */
 
+  function _init_SPA_DOM_(scope) {
+    /*Reflow Foundation*/
+    spa.reflowFoundation(scope);
+
+    /*init KeyTracking*/
+    _initKeyTracking('', scope);
+
+    /*init KeyPauseEvent*/
+    _initKeyPauseEvent(scope);
+
+    /* Init Forms/Elements inside components */
+    _initSpaElements(scope);
+
+    /* Init Track Form Element's changes */
+    spa.initTrackFormElChanges(scope);
+    /*apply data-validation*/
+    _initFormValidationInScope(scope);
+
+    /*init SPA routes; a simple routing solution */
+    _initRouteHash(scope);
+
+    /* Init togglePassword (eye icon) */
+    spa.initTogglePassword(scope);
+
+    /* Process dynUrl Params with click */
+    _processDynHashInUrl();
+  }
+
+  function _init_SPA_() {
+    /*init SPA routes; a simple routing solution */
+    _initRoutesDefaults();//run_once
+    _ctrlBrwowserNav(); //run_once
+
+    /*init i18nLang - run_once*/
+    init_i18n_Lang();
+
+    _init_SPA_DOM_('body');
+  }
+
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
-
     /* ajaxPrefilter */
     $.ajaxPrefilter(_ajaxPrefilter);
 
+    function runSpaEvent(eName){
+      if (spa[eName]) return spa[eName]();
+    }
     function initSpaModules(){
-
-      /*Reflow Foundation*/
-      spa.reflowFoundation();
-
-      /*init SPA routes; a simple routing solution */
-      var spaRoutesDefaults = $('body').attr('data-spa-routes');
-      if (!spa.isBlank(spaRoutesDefaults)) {
-        spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
-        _.merge(spa.defaults.routes, spaRoutesDefaults);
-      }
-      _prevUrlHash = spa.urlHashFull( _urlHashBase );
-      _initRoutesDefaults();
-
-      /*Key Tracking*/
-      spa.initKeyTracking();
-
-      /*init KeyPauseEvent*/
-      initKeyPauseEvent();
-
-      /*init i18nLang*/
-      init_i18n_Lang();
-
-      /*init Form/Elements/Tracking/Validation*/
-      _initSpaElements();
-      spa.initTrackFormElChanges();
-      _initFormValidationInScope();
-
-      /*init SPA routes; a simple routing solution */
-      _ctrlBrwowserNav();
-      _initRouteHash();
-
-      /*SPA Init Complete*/
-      if (spa.onInitComplete) {
-        spa.onInitComplete();
-      }
-
-      /*SPA onReady*/
-      if (spa.onReady) {
-        $.when( spa.onReady() )
-         .done( function(){
-            spa.renderComponentsInHtml();
-          });
-      } else {
-        spa.renderComponentsInHtml();
-      }
-
-    }
-
-    if (spa.onInit) {
-      $.when( spa.onInit() )
-       .done( function(){
-          initSpaModules();
+      $.when( _init_SPA_() ).done(function(){
+        /*SPA Init Complete - run_once*/
+        $.when( runSpaEvent('onInitComplete') ).done(function(){
+          /*SPA onReady - run_once*/
+          $.when( runSpaEvent('onReady') ).done( spa.renderComponentsInHtml );
         });
-    } else {
-      initSpaModules();
+      });
     }
 
+    $.when( runSpaEvent('onInit') ).done( initSpaModules );
   });
 
 })(this);
