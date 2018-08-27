@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.55.0';
+  spa.VERSION = '2.56.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4189,8 +4189,23 @@ window['app']['api'] = window['app']['api'] || {};
     }
   });
 
+  function _getFullPath4Component(url, defaultCompName) {
+    var newUrl = url;
+
+    if ('.{$'.indexOf(url[0])>=0) {
+      var urlPath = url.split('/');
+      var urlRoot = urlPath[0].replace(/[\{\}]/g,'');
+      var cName   = (urlRoot == '$' || urlRoot == '.')? defaultCompName : urlRoot.replace(/[\{\$\}]/,'');
+      urlPath[0]  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (cName+"/"): '');
+      newUrl = urlPath.join('/');
+    }
+
+    return newUrl;
+  }
   $.cachedScript = function (url, options) {
+    spa.console.log('Ajax for script:',url, 'options:',options);
     /* allow user to set any option except for dataType, cache, and url */
+    url = _getFullPath4Component(url, (options? options['spaComponent'] : '') );
     options = $.extend(options || {}, {
       dataType: "script",
       cache: true,
@@ -4258,7 +4273,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* Loading script */
-  spa.loadScript = function (scriptId, scriptPath, useScriptTag, tAjaxRequests) {
+  spa.loadScript = function (scriptId, scriptPath, useScriptTag, tAjaxRequests, xOptions) {
     scriptId = scriptId.replace(/#/, "");
     useScriptTag = useScriptTag || false;
     tAjaxRequests = tAjaxRequests || [];
@@ -4272,7 +4287,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
       else { /* load script script-URL */
         tAjaxRequests.push(
-          $.cachedScript(scriptPath).done(function (script, textStatus) {
+          $.cachedScript(scriptPath, xOptions).done(function (script, textStatus) {
             spa.console.info("Loaded script [" + scriptId + "] from [" + scriptPath + "]. STATUS: " + textStatus);
           })
         );
@@ -4381,7 +4396,7 @@ window['app']['api'] = window['app']['api'] || {};
       $('body').append("<div id='spaViewTemplateContainer' style='display:none' rel='Template Container'></div>");
     }
     spa.console.info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
-    tmplBody = tmplBody.replace(/<( )*script/gi,'<_SCRIPTTAGINTEMPLATE_').replace(/<( )*(\/)( )*script/gi,'</_SCRIPTTAGINTEMPLATE_')
+    tmplBody = tmplBody.replace(/<( )*script/gi,'<_BlockedScriptInTemplate_').replace(/<( )*(\/)( )*script/gi,'</_BlockedScriptInTemplate_')
             .replace(/<( )*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<( )*(\/)( )*link/gi,'</_LINKTAGINTEMPLATE_');
     $("#spaViewTemplateContainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
   };
@@ -4934,9 +4949,9 @@ window['app']['api'] = window['app']['api'] || {};
     var $el = $(elSelector), el;
     if ($el.length) {
       el = $el[0];
-      if ('~checkbox,radio'.indexOf(el.type)>0) {
+      if (',checkbox,radio'.indexOf(el.type)>0) {
         el.defaultChecked = el.checked;
-      } else if ('~INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
+      } else if (',INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
         el.defaultValue = el.value;
       } else if ('SELECT' == el.tagName) {
         var oIndex, oLength, opt;
@@ -4990,7 +5005,7 @@ window['app']['api'] = window['app']['api'] || {};
     });
 
     function eTrackChange(e){
-      if ((e['type'] == 'change') || (e['key'] && (e.key.length == 1 || '~BackspaceDelete'.indexOf(e.key)>0))) {
+      if ((e['type'] == 'change') || (e['key'] && (e.key.length == 1 || 'BackspaceDelete'.indexOf(e.key)>=0))) {
         var isChanged = false, $thisForm = $(this).closest('form'), prvChgCount = $thisForm.find('.tracking-change.changed').length, newChgCount, triggerFormChange;
         if ('checkbox' == this.type) {
           isChanged = (this.checked != this.defaultChecked);
@@ -5019,9 +5034,9 @@ window['app']['api'] = window['app']['api'] || {};
 
     function elTrackChange(el){
       var trackEvents = 'change', $el = $(el);
-      if ('~checkbox,radio'.indexOf(el.type)>0) {
+      if (',checkbox,radio'.indexOf(el.type)>0) {
         el.defaultChecked = el.checked;
-      } else if ('~INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
+      } else if (',INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
         el.defaultValue = el.value;
         trackEvents = 'keyup change';
       } else if ('SELECT' == el.tagName) {
@@ -6195,7 +6210,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataExtra:{}
       , data_    :{}
       , dataDefaults:{}
-      , dataModel: ""
+      , dataModel: ''
       , dataValidate: false
       , dataProcess: ''
       , dataCache: false
@@ -6204,8 +6219,9 @@ window['app']['api'] = window['app']['api'] || {};
       , dataCollection: {}
 
       , dataTemplates: {}
-      , dataTemplate: ""
+      , dataTemplate: ''
       , dataTemplatesCache: true
+      , templateScript: false
 
       , dataScripts: {}
       , dataScriptsCache: true
@@ -6214,7 +6230,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataStylesCache: true
 
       , dataBeforeRender: ''
-      , dataRenderCallback: ""
+      , dataRenderCallback: ''
       , dataRemoveCallback: ''
       , dataRenderMode: ""
       , skipDataBind:false
@@ -6348,6 +6364,8 @@ window['app']['api'] = window['app']['api'] || {};
 
       spa.console.group("kLoadingScripts");
       _.each(vScriptsNames, function (scriptId) {
+        spa.console.log('Loding Component Script:', vScripts[scriptId], 'cache:', spaRVOptions.dataScriptsCache);
+        vScripts[scriptId] = _getFullPath4Component(vScripts[scriptId], rCompName);
         spaAjaxRequestsQue = spa.loadScript(scriptId, vScripts[scriptId], spaRVOptions.dataScriptsCache, spaAjaxRequestsQue);
       });
       spa.console.info("External Scripts Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
@@ -6866,7 +6884,11 @@ window['app']['api'] = window['app']['api'] || {};
                 var spaViewModel = retValue.model, compiledTemplate;
                 //spa.viewModels[retValue.id] = retValue.model;
 
-                var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_SCRIPTTAGINTEMPLATE_/g, "script").replace(/_LINKTAGINTEMPLATE_/g,"link");
+                var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
+                var allowScriptsInTemplates = spaRVOptions.templateScript;
+                if (allowScriptsInTemplates) {
+                  templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScriptInTemplate_/g, "script");
+                }
 
                 /* {$}                  ==> app.thisComponentName.
                  * {$someComponentName} ==> app.someComponentName.
@@ -8653,48 +8675,52 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _getNewMatchingRoutes(reqUrl){
-    var oldRoutes = spa.urlHash([], _urlHashBase);
-    var reqRoutes = reqUrl.trimStr('/').split('/');
-    var newRoutes = [];
-    var reqRootRoute = reqRoutes[0];
+    reqUrl = (reqUrl||'').trim();
+    //console.log('Process reqUrl:', reqUrl);
+    if (reqUrl) {
+      var oldRoutes = spa.urlHash([], _urlHashBase);
+      var reqRoutes = reqUrl.trimStr('/').split('/');
+      var newRoutes = [];
+      var reqRootRoute = reqRoutes[0];
 
-    function getMatchHash(srcArr, value){
-      var retValue = value
-        , matchValue = value.getLeftStr('~');
-      if (matchValue) {
-        for(var i=0; i<srcArr.length; i++){
-          if (srcArr[i].beginsWithStr( matchValue )) {
-            retValue = srcArr[i];
+      function getMatchHash(srcArr, value){
+        var retValue = value
+          , matchValue = value.getLeftStr('*');
+        if (matchValue) {
+          for(var i=0; i<srcArr.length; i++){
+            if (srcArr[i].beginsWithStr( matchValue )) {
+              retValue = srcArr[i];
+              break;
+            }
+          }
+        }
+        return retValue;
+      }
+
+      var idxInSrc = oldRoutes.indexOf( reqRootRoute );
+      if (reqRootRoute.indexOf('*')>0) {
+        reqRootRoute = reqRootRoute.getLeftStr('*');
+        for(var i=0; i<oldRoutes.length; i++){
+          if (oldRoutes[i].beginsWithStr( reqRootRoute )) {
+            idxInSrc = i;
             break;
           }
         }
       }
-      return retValue;
-    }
-
-    var idxInSrc = oldRoutes.indexOf( reqRootRoute );
-    if (reqRootRoute.indexOf('~')>0) {
-      reqRootRoute = reqRootRoute.getLeftStr('~');
-      for(var i=0; i<oldRoutes.length; i++){
-        if (oldRoutes[i].beginsWithStr( reqRootRoute )) {
-          idxInSrc = i;
-          break;
+      if (idxInSrc>=0) {
+        var matchRoutes = oldRoutes.splice(idxInSrc)
+          , xIdx;
+        for(var i=0; i<reqRoutes.length;i++){
+          xIdx = reqRoutes[i].indexOf('*');
+          newRoutes[i] = (xIdx<0)? reqRoutes[i] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[i]) : matchRoutes[i]) ;
         }
+        newRoutes = oldRoutes.concat(newRoutes);
+      } else {
+        newRoutes = (reqUrl[0] == '/')? reqRoutes : oldRoutes.concat(reqRoutes);
       }
-    }
-    if (idxInSrc>=0) {
-      var matchRoutes = oldRoutes.splice(idxInSrc)
-        , xIdx;
-      for(var i=0; i<reqRoutes.length;i++){
-        xIdx = reqRoutes[i].indexOf('~');
-        newRoutes[i] = (xIdx<0)? reqRoutes[i] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[i]) : matchRoutes[i]) ;
-      }
-      newRoutes = oldRoutes.concat(newRoutes);
-    } else {
-      newRoutes = oldRoutes.concat(reqRoutes);
-    }
 
-    return newRoutes;
+      return newRoutes;
+    }
   }
   spa.parseRoutes = _getNewMatchingRoutes;
 
@@ -8885,10 +8911,11 @@ window['app']['api'] = window['app']['api'] || {};
           }
           break;
         case '?':
-          routes = spa.urlHash([], _urlHashBase);
-          var resetFrom = routes.indexOf( routePath.split('/')[0] );
-          if (resetFrom>=0) routes.length = resetFrom;
-          routes.push(routePath);
+          // routes = spa.urlHash([], _urlHashBase);
+          // var resetFrom = routes.indexOf( routePath.split('/')[0] );
+          // if (resetFrom>=0) routes.length = resetFrom;
+          // routes.push(routePath);
+          routes = _getNewMatchingRoutes(routePath);
           break;
         default:
           routes = [routePath];
