@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.56.0';
+  spa.VERSION = '2.56.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5413,6 +5413,7 @@ window['app']['api'] = window['app']['api'] || {};
         , inFolder: true
         , templateExt: '.html'
         , scriptExt: '.js'
+        , templateScript: false
         , render:''
         , callback:''
         , extend$data: true
@@ -6885,7 +6886,7 @@ window['app']['api'] = window['app']['api'] || {};
                 //spa.viewModels[retValue.id] = retValue.model;
 
                 var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
-                var allowScriptsInTemplates = spaRVOptions.templateScript;
+                var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
                 if (allowScriptsInTemplates) {
                   templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScriptInTemplate_/g, "script");
                 }
