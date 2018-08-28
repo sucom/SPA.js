@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.56.1';
+  spa.VERSION = '2.57.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4396,7 +4396,7 @@ window['app']['api'] = window['app']['api'] || {};
       $('body').append("<div id='spaViewTemplateContainer' style='display:none' rel='Template Container'></div>");
     }
     spa.console.info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
-    tmplBody = tmplBody.replace(/<( )*script/gi,'<_BlockedScriptInTemplate_').replace(/<( )*(\/)( )*script/gi,'</_BlockedScriptInTemplate_')
+    tmplBody = tmplBody.replace(/<( )*script/gi,'<_BlockedScrptInTemplate_').replace(/<( )*(\/)( )*script/gi,'</_BlockedScrptInTemplate_')
             .replace(/<( )*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<( )*(\/)( )*link/gi,'</_LINKTAGINTEMPLATE_');
     $("#spaViewTemplateContainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
   };
@@ -4847,9 +4847,20 @@ window['app']['api'] = window['app']['api'] || {};
   spa.dataBind = spa.bindData = function (contextRoot, data, elFilter) {
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
+    var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot));
+    if (onVirtualDOM) {
+      var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<_BlockedScrptInTemplate_').replace(/<\s*(\/)\s*script/gi,'</_BlockedScrptInTemplate_');
+      $contextRoot = $('<div style="display:none">'+bindTmplHtml+'</div>');
+    } else {
+      $contextRoot = $(contextRoot);
+    }
 
-    var $dataBindEls = $(contextRoot).find(elFilter + '[data-bind]');
-    if (!$dataBindEls.length) $dataBindEls = $(contextRoot).filter(elFilter + '[data-bind]');
+    if (spa.isBlank(data)) {
+      return $contextRoot;
+    };
+
+    var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
+    if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
     var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormatData, bindValue, dataAttrKey, bindCallback;
 
@@ -4897,6 +4908,8 @@ window['app']['api'] = window['app']['api'] || {};
 
       }
     });
+
+    return onVirtualDOM? ($contextRoot.html().replace(/_BlockedScrptInTemplate_/g, "script")) : $contextRoot;
   };
 
   spa.togglePassword = function(elPwd){
@@ -5407,9 +5420,9 @@ window['app']['api'] = window['app']['api'] || {};
   spa.renderHistoryMax = 0;
   spa.components = {};
   spa.defaults = {
-      templateEngine: "handlebars"
-    , components: {
-          rootPath: 'app/components/'
+      components: {
+          templateEngine: "handlebars"
+        , rootPath: 'app/components/'
         , inFolder: true
         , templateExt: '.html'
         , scriptExt: '.js'
@@ -5664,6 +5677,45 @@ window['app']['api'] = window['app']['api'] || {};
         });
       }
     }
+  };
+
+  spa.$data = function(cName, newData, mode){
+    var retData;
+    cName = (cName || '').trim();
+    mode = mode || 'update';
+
+    function update$data(data){
+      if (spa.is(data, 'object')) {
+        if (['update', 'merge'].__has(mode, 'i')) {
+          _.merge(app[cName].$data, data);
+        } else if (['replace', 'overwrite'].__has(mode, 'i')) {
+          app[cName].$data = data;
+        }
+      }
+      spa.components[cName]['is$DataUpdated'] = true;
+      return app[cName].$data;
+    }
+
+    if (cName) {
+      if (app.hasOwnProperty(cName)) {
+        retData = spa.findSafe(app, cName+'.$data');
+        if (newData) {
+          retData = update$data( (spa.is(newData, 'function'))? newData.call(app[cName], app[cName].$data) : newData );
+
+          var $component = spa.$(cName);
+          if ($component.is(':visible')) {
+            spa.console.log('Refreshing component on $data update ...');
+            spa.$refresh(cName, {data: retData, dataProcess:false});
+          } else {
+            spa.console.log('Component is not visible!');
+          }
+        }
+      } else {
+        spa.console.warn('SPA Component[',cName,'] is not loaded.');
+      }
+    }
+
+    return retData;
   };
 
   function _$renderCountUpdate(componentName){
@@ -6223,6 +6275,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataTemplate: ''
       , dataTemplatesCache: true
       , templateScript: false
+      , templateEngine: ''
 
       , dataScripts: {}
       , dataScriptsCache: true
@@ -6305,7 +6358,7 @@ window['app']['api'] = window['app']['api'] || {};
     spa.console.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
-    var spaTemplateEngine = (spa.defaults.templateEngine || "handlebars");
+    var spaTemplateEngine = (spaRVOptions.templateEngine || spa.defaults.components.templateEngine || "handlebars").toLowerCase();
 
     /* Load Scripts Begins */
     spa.console.group("spaLoadingViewScripts");
@@ -6888,7 +6941,7 @@ window['app']['api'] = window['app']['api'] || {};
                 var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
                 var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
                 if (allowScriptsInTemplates) {
-                  templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScriptInTemplate_/g, "script");
+                  templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScrptInTemplate_/g, "script");
                 }
 
                 /* {$}                  ==> app.thisComponentName.
@@ -6919,20 +6972,30 @@ window['app']['api'] = window['app']['api'] || {};
                 spa.console.log("Template Source:", templateContentToBindAndRender);
                 spa.console.log("DATA for Template:", spaViewModel);
                 if (!spa.isBlank(spaViewModel)) {
-                  if ((typeof Handlebars != "undefined") && Handlebars && !spaRVOptions.skipDataBind) {
-                    var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
-                    var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                    if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                    compiledTemplate = preCompiledTemplate(data4Template);
+                  if (spaRVOptions.skipDataBind) {
+                    spa.console.log('Skipped Data Binding.');
                   } else {
-                    spa.console.error("handlebars.js is not loaded.");
+                    if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
+                      if ((typeof Handlebars != "undefined") && Handlebars) {
+                        var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
+                        var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                        if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
+                        compiledTemplate = preCompiledTemplate(data4Template);
+                      } else {
+                        spa.console.error("handlebars.js is not loaded.");
+                      }
+                    }
+
+                    if ((/ data-bind\s*=/i).test(compiledTemplate)) {
+                      spa.console.log('SPA built-in binding ...');
+                      compiledTemplate = spa.bindData(compiledTemplate, data4Template);
+                    }
                   }
                 }
                 spa.console.log("Template Compiled:", compiledTemplate);
 
                 doDeepRender = false;
                 retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
-
 
                 //Callback Function's context
                 var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
@@ -7310,7 +7373,7 @@ window['app']['api'] = window['app']['api'] || {};
       return (retValue.length == 1)? retValue[0] : retValue;
     },
     spaBindData: function(data, elFilter){
-      spa.bindData(this, data, elFilter);
+      return spa.bindData(this, data, elFilter);
     },
     inBlockedSpaNavContainer:function(){
       return !!(this.closest(_blockNavClass).length);
@@ -8678,50 +8741,50 @@ window['app']['api'] = window['app']['api'] || {};
   function _getNewMatchingRoutes(reqUrl){
     reqUrl = (reqUrl||'').trim();
     //console.log('Process reqUrl:', reqUrl);
-    if (reqUrl) {
-      var oldRoutes = spa.urlHash([], _urlHashBase);
-      var reqRoutes = reqUrl.trimStr('/').split('/');
-      var newRoutes = [];
-      var reqRootRoute = reqRoutes[0];
+    if (!reqUrl) return [];
 
-      function getMatchHash(srcArr, value){
-        var retValue = value
-          , matchValue = value.getLeftStr('*');
-        if (matchValue) {
-          for(var i=0; i<srcArr.length; i++){
-            if (srcArr[i].beginsWithStr( matchValue )) {
-              retValue = srcArr[i];
-              break;
-            }
-          }
-        }
-        return retValue;
-      }
+    var oldRoutes = spa.urlHash([], _urlHashBase);
+    var reqRoutes = reqUrl.trimStr('/').split('/');
+    var newRoutes = [];
+    var reqRootRoute = reqRoutes[0];
 
-      var idxInSrc = oldRoutes.indexOf( reqRootRoute );
-      if (reqRootRoute.indexOf('*')>0) {
-        reqRootRoute = reqRootRoute.getLeftStr('*');
-        for(var i=0; i<oldRoutes.length; i++){
-          if (oldRoutes[i].beginsWithStr( reqRootRoute )) {
-            idxInSrc = i;
+    function getMatchHash(srcArr, value){
+      var retValue = value
+        , matchValue = value.getLeftStr('*');
+      if (matchValue) {
+        for(var i=0; i<srcArr.length; i++){
+          if (srcArr[i].beginsWithStr( matchValue )) {
+            retValue = srcArr[i];
             break;
           }
         }
       }
-      if (idxInSrc>=0) {
-        var matchRoutes = oldRoutes.splice(idxInSrc)
-          , xIdx;
-        for(var i=0; i<reqRoutes.length;i++){
-          xIdx = reqRoutes[i].indexOf('*');
-          newRoutes[i] = (xIdx<0)? reqRoutes[i] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[i]) : matchRoutes[i]) ;
-        }
-        newRoutes = oldRoutes.concat(newRoutes);
-      } else {
-        newRoutes = (reqUrl[0] == '/')? reqRoutes : oldRoutes.concat(reqRoutes);
-      }
-
-      return newRoutes;
+      return retValue;
     }
+
+    var idxInSrc = oldRoutes.indexOf( reqRootRoute );
+    if (reqRootRoute.indexOf('*')>0) {
+      reqRootRoute = reqRootRoute.getLeftStr('*');
+      for(var i=0; i<oldRoutes.length; i++){
+        if (oldRoutes[i].beginsWithStr( reqRootRoute )) {
+          idxInSrc = i;
+          break;
+        }
+      }
+    }
+    if (idxInSrc>=0) {
+      var matchRoutes = oldRoutes.splice(idxInSrc)
+        , xIdx;
+      for(var i=0; i<reqRoutes.length;i++){
+        xIdx = reqRoutes[i].indexOf('*');
+        newRoutes[i] = (xIdx<0)? reqRoutes[i] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[i]) : matchRoutes[i]) ;
+      }
+      newRoutes = oldRoutes.concat(newRoutes);
+    } else {
+      newRoutes = (reqUrl[0] == '/')? reqRoutes : oldRoutes.concat(reqRoutes);
+    }
+
+    return newRoutes;
   }
   spa.parseRoutes = _getNewMatchingRoutes;
 
