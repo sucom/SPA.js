@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.58.0-RC1';
+  spa.VERSION = '2.58.0-RC2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2696,36 +2696,6 @@ window['app']['api'] = window['app']['api'] || {};
       });
     if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
     return retArr;
-  };
-
-  window.str = {
-    trim: function(str) {
-      return (''+str).trim();
-    },
-    trimLeft: function(str) {
-      return (''+str).trimLeftStr();
-    },
-    trimRight: function(str) {
-      return (''+str).trimRightStr();
-    },
-    normalize: function(str) {
-      return (''+str).normalizeStr();
-    },
-    toLowerCase: function(str) {
-      return (''+str).toLowerCase();
-    },
-    toUpperCase: function(str) {
-      return (''+str).toUpperCase();
-    },
-    toTitleCase: function(str) {
-      return (''+str).toTitleCase();
-    },
-    capitalize: function(str) {
-      return (''+str).capitalize();
-    },
-    unCapitalize: function(str) {
-      return (''+str).unCapitalize();
-    }
   };
 
   spa.strToNative = function(srcStr){
@@ -4895,6 +4865,36 @@ window['app']['api'] = window['app']['api'] || {};
     }
   });
 
+  spa.pipes = {
+    trim: function(str) {
+      return (''+str).trim();
+    },
+    trimLeft: function(str) {
+      return (''+str).trimLeftStr();
+    },
+    trimRight: function(str) {
+      return (''+str).trimRightStr();
+    },
+    normalize: function(str) {
+      return (''+str).normalizeStr();
+    },
+    toLowerCase: function(str) {
+      return (''+str).toLowerCase();
+    },
+    toUpperCase: function(str) {
+      return (''+str).toUpperCase();
+    },
+    toTitleCase: function(str) {
+      return (''+str).toTitleCase();
+    },
+    capitalize: function(str) {
+      return (''+str).capitalize();
+    },
+    unCapitalize: function(str) {
+      return (''+str).unCapitalize();
+    }
+  };
+
   function _defaultAttr(el){
     var elAttr = 'html';
     switch((el.tagName).toUpperCase()){
@@ -4958,6 +4958,7 @@ window['app']['api'] = window['app']['api'] || {};
           for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
             fnFormat = bindKeyFn[fIdx].trim();
             if (fnFormat) {
+              if (fnFormat[0]=='.') fnFormat = 'spa.pipes'+fnFormat;
               bindValue = spa.renderUtils.runCallbackFn(fnFormat, bindValue, el);
             }
           }
