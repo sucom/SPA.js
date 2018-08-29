@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.57.0';
+  spa.VERSION = '2.58.0-RC1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2646,6 +2646,12 @@ window['app']['api'] = window['app']['api'] || {};
     }));
   };
 
+  String.prototype.toTitleCase = function (normalizeSrc) {
+    return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
+      return $1.toUpperCase();
+    }));
+  };
+
   String.prototype.capitalize = function () {
     return ((''+this).charAt(0).toUpperCase()) + ((''+this).slice(1));
   };
@@ -2690,6 +2696,36 @@ window['app']['api'] = window['app']['api'] || {};
       });
     if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
     return retArr;
+  };
+
+  window.str = {
+    trim: function(str) {
+      return (''+str).trim();
+    },
+    trimLeft: function(str) {
+      return (''+str).trimLeftStr();
+    },
+    trimRight: function(str) {
+      return (''+str).trimRightStr();
+    },
+    normalize: function(str) {
+      return (''+str).normalizeStr();
+    },
+    toLowerCase: function(str) {
+      return (''+str).toLowerCase();
+    },
+    toUpperCase: function(str) {
+      return (''+str).toUpperCase();
+    },
+    toTitleCase: function(str) {
+      return (''+str).toTitleCase();
+    },
+    capitalize: function(str) {
+      return (''+str).capitalize();
+    },
+    unCapitalize: function(str) {
+      return (''+str).unCapitalize();
+    }
   };
 
   spa.strToNative = function(srcStr){
@@ -3633,7 +3669,8 @@ window['app']['api'] = window['app']['api'] || {};
         switch ((el.type).toLowerCase()) {
           case "checkbox":
             unchkvalue = $(el).data("unchecked");
-            elValue = el.checked ? (el.value) : ((typeof unchkvalue === 'undefined') ? '' : unchkvalue);
+            chkedValue = (el.value == 'true')? true : ((el.value == 'false')? false : el.value);
+            elValue = el.checked ? chkedValue : ((typeof unchkvalue === 'undefined') ? '' : unchkvalue);
             break;
           case "radio":
             elValue = el.checked ? (el.value) : "";
@@ -4024,6 +4061,13 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   Object.defineProperties(Array.prototype, {
+    '__now' : {
+      value : function(){
+        return JSON.parse(JSON.stringify(this));
+      },
+      enumerable : false,
+      configurable: false
+    },
     '__toObject': {
       value : function(valAsKey){
         var retObj = {};
@@ -4115,6 +4159,13 @@ window['app']['api'] = window['app']['api'] || {};
   });
 
   Object.defineProperties(Object.prototype, {
+    '__now' : {
+      value : function(){
+        return JSON.parse(JSON.stringify(this));
+      },
+      enumerable : false,
+      configurable: false
+    },
     '__keys': {
       value: function _obj_keys(deep){
         return (deep)? spa.keysDotted(this) : Object.keys(this);
@@ -4844,7 +4895,32 @@ window['app']['api'] = window['app']['api'] || {};
     }
   });
 
-  spa.dataBind = spa.bindData = function (contextRoot, data, elFilter) {
+  function _defaultAttr(el){
+    var elAttr = 'html';
+    switch((el.tagName).toUpperCase()){
+      case 'INPUT':
+        switch ((el.type).toLowerCase()) {
+          case "checkbox":
+          case "radio":
+            elAttr = '$';
+            break;
+          default:
+            elAttr = 'value';
+            break;
+        }
+        break;
+      case 'TEXTAREA':
+        elAttr = 'value';
+        break;
+      case "SELECT":
+        elAttr = '$';
+        break;
+    }
+    return elAttr;
+  }
+
+  spa.dataBind = spa.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
+    //console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
     var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot));
@@ -4862,25 +4938,28 @@ window['app']['api'] = window['app']['api'] || {};
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
-    var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormatData, bindValue, dataAttrKey, bindCallback;
+    var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormat, bindValue, dataAttrKey, bindCallback;
 
     _.each($dataBindEls, function(el) {
       $el = $(el);
       bindSpecStr = $el.data('bind') || '';
-      if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = "html:'"+bindSpecStr+"'";
+
+      if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
       bindSpec = spa.toJSON(bindSpecStr || '{}');
-      bindCallback = spa.renderUtils.getFn($el.data('bindCallback') || '');
+      bindCallback = spa.renderUtils.getFn($el.attr('data-bind-callback') || '');
 
       if (bindSpec && !$.isEmptyObject(bindSpec)) {
 
         _.each(_.keys(bindSpec), function (attrSpec) {
           bindKeyFn = (bindSpec[attrSpec]+'|').split('|');
-          bindKey      = bindKeyFn[0].trimStr();
-          fnFormatData = spa.renderUtils.getFn(bindKeyFn[1].trimStr());
-
+          bindKey   = bindKeyFn.shift().trim();
           bindValue = spa.findSafe(data, bindKey);
-          if (fnFormatData) {
-            bindValue = fnFormatData(bindValue, el);
+
+          for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
+            fnFormat = bindKeyFn[fIdx].trim();
+            if (fnFormat) {
+              bindValue = spa.renderUtils.runCallbackFn(fnFormat, bindValue, el);
+            }
           }
 
           _.each(attrSpec.split("_"), function (attribute) {
@@ -4891,6 +4970,27 @@ window['app']['api'] = window['app']['api'] || {};
               case 'text':
                 $el.text(bindValue);
                 break;
+              case '$':
+                if ((/checkbox|radio/i).test(el.type)) {
+                  switch (spa.of(bindValue)){
+                    case 'boolean':
+                      el.checked = bindValue;
+                      break;
+                    default:
+                      el.checked = (el.value).equalsIgnoreCase(''+bindValue);
+                      break;
+                  }
+                  if (el.checked) {
+                    el.setAttribute('checked', '');
+                  } else {
+                    el.removeAttribute('checked');
+                  }
+
+                } else if ((/select/i).test(el.tagName)) {
+                  console.warn('TODO: data-bind:select');
+                }
+                break;
+
               default:
                 $el.attr(attribute, bindValue);
                 if (attribute.beginsWithStr('data-')) {
@@ -4902,12 +5002,20 @@ window['app']['api'] = window['app']['api'] || {};
           });
 
           if (bindCallback) {
-            bindCallback(el);
+            bindCallback.call(el, el);
           }
         });
 
       }
     });
+
+    if (!skipBindCallback && !onVirtualDOM && $contextRoot.is('[data-rendered-component]')) {
+      var componentName = $contextRoot.attr('data-rendered-component');
+      if (!spa.isBlank(componentName)) {
+        var onBindCallback = 'app.'+componentName+'.bindCallback';
+        spa.renderUtils.runCallbackFn(onBindCallback, data, app[componentName]);
+      }
+    }
 
     return onVirtualDOM? ($contextRoot.html().replace(/_BlockedScrptInTemplate_/g, "script")) : $contextRoot;
   };
@@ -5465,7 +5573,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
   };
 
-  function adjustComponentOptions(componentName, options){
+  function _adjustComponentOptions(componentName, options){
     var tmplId = '_rtt_'+componentName, tmplBody = '';
     if (options && _.isObject(options)  && spa.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
       if (options.hasOwnProperty('template')) {
@@ -5488,6 +5596,7 @@ window['app']['api'] = window['app']['api'] || {};
       options['dataUrl'] = '@$'+componentName;
     }
 
+    spa.console.log('$ Adj.Options>>>>',componentName, options? options.__now() : options);
     return options;
   }
 
@@ -5536,7 +5645,7 @@ window['app']['api'] = window['app']['api'] || {};
             });
           }
 
-          options = adjustComponentOptions(componentName, options);
+          options = _adjustComponentOptions(componentName, options);
 
           spa.components[componentName] = options;
           spa.extendComponent(componentName);
@@ -5679,6 +5788,13 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
+  spa.$bind = function(cName, newData) {
+    if (spa.isBlank(newData)) {
+      newData = spa.findSafe(app, cName+'.$data', {});
+    }
+    spa.$(cName).spaBindData(newData);
+  };
+
   spa.$data = function(cName, newData, mode){
     var retData;
     cName = (cName || '').trim();
@@ -5688,11 +5804,11 @@ window['app']['api'] = window['app']['api'] || {};
       if (spa.is(data, 'object')) {
         if (['update', 'merge'].__has(mode, 'i')) {
           _.merge(app[cName].$data, data);
-        } else if (['replace', 'overwrite'].__has(mode, 'i')) {
+        } else if (['*','reset','replace','overwrite'].__has(mode, 'i')) {
           app[cName].$data = data;
         }
       }
-      spa.components[cName]['is$DataUpdated'] = true;
+      app[cName]['is$DataUpdated'] = spa.components[cName]['is$DataUpdated'] = true;
       return app[cName].$data;
     }
 
@@ -5704,10 +5820,16 @@ window['app']['api'] = window['app']['api'] || {};
 
           var $component = spa.$(cName);
           if ($component.is(':visible')) {
-            spa.console.log('Refreshing component on $data update ...');
-            spa.$refresh(cName, {data: retData, dataProcess:false});
+            var _$prop = spa.components[cName]
+              , _$dataCache = _$prop['dataCache']
+              , _on$dataChange = (_$prop['on$dataChange']||'').trim().toLowerCase();
+            if (_$dataCache && _on$dataChange && (['render','refresh','bind'].__has(_on$dataChange))) {
+              spa.console.log(cName+'$'+_on$dataChange+' on $data update ...');
+              spa['$'+_on$dataChange](cName);
+            }
+            spa.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
           } else {
-            spa.console.log('Component is not visible!');
+            console.log('Component is not visible! Skipped $on$dataChange.');
           }
         }
       } else {
@@ -5886,12 +6008,11 @@ window['app']['api'] = window['app']['api'] || {};
       options['componentName'] = componentName;
     }
 
-    spa.console.info('Called renderComponent: '+componentName+' with below options');
-    spa.console.info(options);
+    spa.console.info('Called renderComponent: '+componentName+' with options', options);
 
     var tmplId = '_rtt_'+componentName, tmplBody = '';
 
-    options = adjustComponentOptions(componentName, options);
+    options = _adjustComponentOptions(componentName, options);
 
     var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (componentName+"/"): '') +componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
@@ -5929,6 +6050,18 @@ window['app']['api'] = window['app']['api'] || {};
             delete renderOptions['style'];
             spa.console.info('Using component style for ['+componentName+']');
             spa.console.info(renderOptions);
+          }
+
+          if (renderOptions && _.isObject(renderOptions) && renderOptions['dataCache']) {
+            var $data = spa.findSafe(app, componentName+'.$data', {});
+            if (spa.isBlank($data)) {
+              renderOptions['dataCache'] = false;
+              spa.console.log('dataCache:false; Using/Ajaxing new data ...');
+            } else {
+              renderOptions['data'] = $data;
+              renderOptions['dataProcess'] = false;
+              spa.console.log('dataCache:true; Using $data and ingored data + dataProcess ...');
+            }
           }
 
           spa.render(renderOptions);
@@ -6190,7 +6323,12 @@ window['app']['api'] = window['app']['api'] || {};
         viewContainerId = uOptions['target'];
         delete uOptions['target'];
       } else {
-        viewContainerId = "dynRender_"+spa.now()+"_"+(spa.rand(1000, 9999));
+        var oldTarget = $('[data-rendered-component="'+uOptions['componentName']+'"]').attr('id');
+        viewContainerId = (oldTarget? '#' : '')+oldTarget;
+        if (!viewContainerId) {
+          spa.console.warn('Render target is missing.');
+          viewContainerId = "dynRender_"+spa.now()+"_"+(spa.rand(1000, 9999));
+        };
       };
       spa.render(viewContainerId, uOptions);
       return;
@@ -6309,8 +6447,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
     }
 
-    spa.console.log('spa.render with options:');
-    spa.console.log(rCompName, spaRVOptions);
+    spa.console.log(rCompName+'$'+(spaRVOptions['isRefreshCall']?'refresh':'render')+' with options:', spaRVOptions, '$data', spa.findSafe(app, rCompName+'.$data'));
 
     var $viewContainerId = $(viewContainerId);
     var pCompName  = $viewContainerId.attr('data-rendered-component') || '';
@@ -6977,18 +7114,21 @@ window['app']['api'] = window['app']['api'] || {};
                   } else {
                     if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
                       if ((typeof Handlebars != "undefined") && Handlebars) {
+                        spa.console.log("Data bind using handlebars.js.");
                         var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
                         var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                         if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
                         compiledTemplate = preCompiledTemplate(data4Template);
+                        spa.console.log(compiledTemplate);
                       } else {
                         spa.console.error("handlebars.js is not loaded.");
                       }
                     }
 
                     if ((/ data-bind\s*=/i).test(compiledTemplate)) {
-                      spa.console.log('SPA built-in binding ...');
+                      spa.console.log('SPA built-in binding ... ...', data4Template);
                       compiledTemplate = spa.bindData(compiledTemplate, data4Template);
+                      spa.console.log(compiledTemplate);
                     }
                   }
                 }
@@ -7047,6 +7187,7 @@ window['app']['api'] = window['app']['api'] || {};
                     spa.console.log('Rendering component [',rCompName,'] view aborted.');
                   } else {
                     var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
+                    spa.console.log('Injecting component in DOM (',viewContainerId,').'+(targetRenderContainerType||'html'));
                     switch(targetRenderContainerType) {
                       case "value" :
                         $(viewContainerId).val(retValue.view);
@@ -8548,7 +8689,7 @@ window['app']['api'] = window['app']['api'] || {};
     window.onbeforeunload = _onWindowReload;
   }
   window.onerror = function(eMsg, source, line){
-    if (eMsg.indexOf('SyntaxError')>0)
+    //if (eMsg.indexOf('SyntaxError')>0)
       console.warn('Invalid Content: Check the network/path/content.', eMsg, source, line);
   };
 
@@ -9027,6 +9168,48 @@ window['app']['api'] = window['app']['api'] || {};
   spa.routeEl    = _$routeElements;
   /* ***************  SPA Route Solution Ends ************************ */
 
+  /* 2way Data-Bind */
+  function _getBindKeyOf(el, keyOf){
+    var bindSpecStr = el.getAttribute('data-bind'), bindSpec, bindKeyFn, bindKey = '';
+    if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
+    bindSpec = spa.toJSON(bindSpecStr || '{}');
+    if (bindSpec && !$.isEmptyObject(bindSpec)) {
+      _.some(_.keys(bindSpec), function (attrSpec) {
+        if ((!bindKey) && (new RegExp(keyOf, 'i')).test(attrSpec)) {
+          bindKeyFn = bindSpec[attrSpec].split('|');
+          bindKey   = bindKeyFn.shift().trim();
+        }
+        return !!bindKey;
+      });
+    }
+    return bindKey;
+  }
+
+  function _onViewDataChange() {
+    var el = this, $el = $(el)
+      , elValue = spa.getElValue(el), bindData={}
+      , $component = $el.spa$()[0], cName=$el.spa$name()
+      , is2WayBind = ('2way'.equalsIgnoreCase(spa.components[cName]['dataBindType']));
+    el.classList.add('DATA-MODEL-CHANGE-SRC');
+
+    bindKey=_getBindKeyOf(el, 'value|$');
+    spa.setSimpleObjProperty(bindData, bindKey, elValue);
+    if (is2WayBind) {
+      _.merge(spa.$data(cName), bindData);
+      app[cName]['is$DataUpdated'] = spa.components[cName]['is$DataUpdated'] = true;
+    }
+    spa.bindData($component, bindData, '[data-bind*="'+bindKey+'"]:not(.DATA-MODEL-CHANGE-SRC)', true);
+    el.classList.remove('DATA-MODEL-CHANGE-SRC');
+    if (is2WayBind) spa.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
+  }
+
+  function _initDataBind(scope){
+    //console.log('Init [data-bind]', scope);
+    var $dataBindElements = $(scope||'body').find('[data-bind]:not(.SPA-DATA-BOUND)');
+    $dataBindElements.filter('textarea,input:not([type=radio]):not([type=checkbox])').addClass('SPA-DATA-BOUND').on('keyup', _onViewDataChange);
+    $dataBindElements.filter('select,input[type=radio],input[type=checkbox]').addClass('SPA-DATA-BOUND').on('change', _onViewDataChange);
+  }
+
   function _init_SPA_DOM_(scope) {
     /*Reflow Foundation*/
     spa.reflowFoundation(scope);
@@ -9050,6 +9233,9 @@ window['app']['api'] = window['app']['api'] || {};
 
     /* Init togglePassword (eye icon) */
     spa.initTogglePassword(scope);
+
+    /* Init data-bind */
+    _initDataBind(scope);
 
     /* Process dynUrl Params with click */
     _processDynHashInUrl();
