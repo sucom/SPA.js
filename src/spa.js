@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.58.0-RC2';
+  spa.VERSION = '2.58.0-RC3';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -9204,12 +9204,28 @@ window['app']['api'] = window['app']['api'] || {};
     if (is2WayBind) spa.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
   }
 
-  function _initDataBind(scope){
+  function _initDataBind(scope, elFilter){
+    function _bindEvent(el, eName){
+      $(el).on((el.getAttribute('data-bind-event') || eName).toLowerCase(), _onViewDataChange);
+    }
+
     //console.log('Init [data-bind]', scope);
-    var $dataBindElements = $(scope||'body').find('[data-bind]:not(.SPA-DATA-BOUND)');
-    $dataBindElements.filter('textarea,input:not([type=radio]):not([type=checkbox])').addClass('SPA-DATA-BOUND').on('keyup', _onViewDataChange);
-    $dataBindElements.filter('select,input[type=radio],input[type=checkbox]').addClass('SPA-DATA-BOUND').on('change', _onViewDataChange);
+    var elSelector = '[data-bind]:not(.SPA-DATA-BOUND)';
+    var $dataBindElements = $(scope||'body').find((elFilter||'')+' '+elSelector);
+    if (!$dataBindElements.length && !elFilter){
+      $dataBindElements = $(scope+elSelector);
+    }
+
+    if ($dataBindElements.length) {
+      var $textElements = $dataBindElements.filter('textarea,input:not([type=radio]):not([type=checkbox])').addClass('SPA-DATA-BOUND');
+      $textElements.each(function(){ _bindEvent(this, 'keyup'); });
+
+      var $selChkRadElements = $dataBindElements.filter('select,input[type=radio],input[type=checkbox]').addClass('SPA-DATA-BOUND');
+      $selChkRadElements.each(function(){ _bindEvent(this, 'change'); });
+    }
+
   }
+  spa.initDataBind = _initDataBind;
 
   function _init_SPA_DOM_(scope) {
     /*Reflow Foundation*/
