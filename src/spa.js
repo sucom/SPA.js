@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.58.0-RC3';
+  spa.VERSION = '2.58.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4892,6 +4892,9 @@ window['app']['api'] = window['app']['api'] || {};
     },
     unCapitalize: function(str) {
       return (''+str).unCapitalize();
+    },
+    not: function(inVal) {
+      return !inVal;
     }
   };
 
@@ -4938,7 +4941,7 @@ window['app']['api'] = window['app']['api'] || {};
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
-    var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormat, bindValue, dataAttrKey, bindCallback;
+    var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormat, bindValue, dataAttrKey, bindCallback, negate;
 
     _.each($dataBindEls, function(el) {
       $el = $(el);
@@ -4953,17 +4956,35 @@ window['app']['api'] = window['app']['api'] || {};
         _.each(_.keys(bindSpec), function (attrSpec) {
           bindKeyFn = (bindSpec[attrSpec]+'|').split('|');
           bindKey   = bindKeyFn.shift().trim();
-          bindValue = spa.findSafe(data, bindKey);
+          negate    = (bindKey[0]=='!');
+          if (negate) {
+            bindValue = !spa.findSafe(data, (bindKey.substr(0).trim()));
+          } else {
+            bindValue = spa.findSafe(data, bindKey);
+          }
+
+          if (spa.is(bindValue, 'undefined|null')) bindValue = '';
 
           for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
             fnFormat = bindKeyFn[fIdx].trim();
             if (fnFormat) {
               if (fnFormat[0]=='.') fnFormat = 'spa.pipes'+fnFormat;
-              bindValue = spa.renderUtils.runCallbackFn(fnFormat, bindValue, el);
+              if (fnFormat[0]=='!') {
+                if (fnFormat == '!') {
+                  bindValue = !bindValue;
+                } else {
+                  fnFormat = fnFormat.substr(1).trim();
+                  if (fnFormat[0]=='.') fnFormat = 'spa.pipes'+fnFormat;
+                  bindValue = !spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, data, el], el);
+                }
+              } else {
+                bindValue = spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, data, el], el);
+              }
             }
           }
 
           _.each(attrSpec.split("_"), function (attribute) {
+            attribute = attribute.trim();
             switch (attribute.toLowerCase()) {
               case 'html':
                 $el.html(bindValue);
@@ -4993,10 +5014,19 @@ window['app']['api'] = window['app']['api'] || {};
                 break;
 
               default:
-                $el.attr(attribute, bindValue);
-                if (attribute.beginsWithStr('data-')) {
-                  dataAttrKey = spa.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
-                  if (dataAttrKey) $el.data(dataAttrKey, bindValue);
+                switch(true){
+                  case (/^\./.test(attribute)): //Class
+                  var classNames = attribute.replace(/[\.\,]/g, ' ').normalizeStr();
+                  $el[!!bindValue? 'addClass':'removeClass'](classNames);
+                  break;
+
+                  default:
+                    $el.attr(attribute, bindValue);
+                    if (attribute.beginsWithStr('data-')) {
+                      dataAttrKey = spa.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
+                      if (dataAttrKey) $el.data(dataAttrKey, bindValue);
+                    }
+                  break;
                 }
                 break;
             }
@@ -5523,6 +5553,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* each spaRender's view and model will be stored in renderHistory */
+  spa.env = '';
   spa.compiledTemplates={};
   spa.viewModels = {};
   spa.renderHistory = {};
@@ -5536,6 +5567,7 @@ window['app']['api'] = window['app']['api'] || {};
         , templateExt: '.html'
         , scriptExt: '.js'
         , templateScript: false
+        , templatesCache: true
         , render:''
         , callback:''
         , extend$data: true
@@ -5560,7 +5592,7 @@ window['app']['api'] = window['app']['api'] || {};
         async: true
     }
     , set: function(oNewValues, newValue) {
-        if (typeof oNewValues == 'object') {
+        if (spa.is(oNewValues,'object')) {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
           _.merge(this, oNewValues);
         } else if (typeof oNewValues == 'string') {
@@ -6147,36 +6179,71 @@ window['app']['api'] = window['app']['api'] || {};
     _spaRenderRefreshComponents.apply({action: 'refreshComponent'}, arguments);
   };
 
-  spa.renderComponentsInHtml = function (scope, componentName, noDefer) {
+  //TOBE Removed
+  // spa.renderComponentsInHtmlX = function (scope, componentName, noDefer) {
+  //   scope = scope||'body';
+
+  //   var $spaCompList = $(scope).find('[data-spa-component'+(componentName?('='+componentName):(''))+']')
+  //     , renderList = {}, deferRender = !noDefer;
+  //   if ($spaCompList.length){
+  //     $spaCompList.each(function( index, el ) {
+  //       var $el = $(el), spaCompName, spaCompOptions, newElId, $elData = $el.data();
+  //       spaCompName = $elData['spaComponent'];
+  //       if (!el.id) {
+  //         newElId = 'spaCompContainer_'+spaCompName+'_'
+  //                     + ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
+  //         el.id = newElId;
+  //         el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
+  //       }
+
+  //       spaCompOptions = _.merge( {target: "#"+el.id }, $elData, spa.toJSON($elData['spaComponentOptions'] || '{}'));
+
+  //       if (deferRender) {
+  //         if (!renderList.hasOwnProperty(spaCompName)) {
+  //           var $sameCompRenderList = $(scope).find('[data-spa-component='+spaCompName+']');
+  //           spa.console.log("component: "+spaCompName+" to render : "+$sameCompRenderList.length);
+  //           if ($sameCompRenderList.length>1) {
+  //             spaCompOptions['mountComponent'] = {scope: scope, name: spaCompName};
+  //           }
+  //           renderList[spaCompName] = spa.renderComponent(spaCompName, spaCompOptions);
+  //         }
+  //       } else {
+  //         spa.renderComponent(spaCompName, spaCompOptions);
+  //       }
+
+  //     });
+  //   }
+  // };
+
+  spa.renderComponentsInHtml = function (scope, pComponentName) {
     scope = scope||'body';
 
-    var $spaCompList = $(scope).find('[data-spa-component'+(componentName?('='+componentName):(''))+']')
-      , renderList = {}, deferRender = !noDefer;
+    var $spaCompList = $(scope).find('[data-spa-component]');
     if ($spaCompList.length){
+      var $el, spaCompNameWithOpt, spaCompName, spaCompOpt, spaCompOptions, newElId, $elData;
       $spaCompList.each(function( index, el ) {
-        var $el = $(el), spaCompName, spaCompOptions, newElId, $elData = $el.data();
-        spaCompName = $elData['spaComponent'];
-        if (!el.id) {
-          newElId = 'spaCompContainer_'+spaCompName+'_'
-                      + ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
-          el.id = newElId;
-          el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
-        }
-        spaCompOptions = _.merge( {target: "#"+el.id }, $elData, spa.toJSON($elData['spaComponentOptions'] || '{}'));
-
-        if (deferRender) {
-          if (!renderList.hasOwnProperty(spaCompName)) {
-            var $sameCompRenderList = $(scope).find('[data-spa-component='+spaCompName+']');
-            spa.console.log("component: "+spaCompName+" to render : "+$sameCompRenderList.length);
-            if ($sameCompRenderList.length>1) {
-              spaCompOptions['mountComponent'] = {scope: scope, name: spaCompName};
-            }
-            renderList[spaCompName] = spa.renderComponent(spaCompName, spaCompOptions);
+        $el = $(el); $elData = $el.data();
+        spaCompNameWithOpt = ($el.attr('data-spa-component') || '').split('|');
+        spaCompName = (spaCompNameWithOpt[0]).trim();
+        spaCompOpt  = spa.toJSON((spaCompNameWithOpt[1]||'{}'));
+        if (spaCompName) {
+          if (!el.id) {
+            newElId = 'spaCompContainer_'+spaCompName+'_'+ ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
+            el.id = newElId;
+            el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
           }
-        } else {
+          spaCompOptions = _.merge( {target: "#"+el.id }, spaCompOpt, $elData, spa.toJSON($elData['spaComponentOptions'] || '{}'));
+
+          if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
+            var dataPath = spaCompOptions.data.trim();
+            if (/^\$data/.test(dataPath)) {
+              dataPath = 'app.'+(pComponentName.trim())+'.'+dataPath;
+            }
+            spaCompOptions.data = _.merge({}, spa.findSafe(window, dataPath, {}));
+          }
+          spa.console.log('inner-component', spaCompName, 'options:', spaCompOptions);
           spa.renderComponent(spaCompName, spaCompOptions);
         }
-
       });
     }
   };
@@ -6220,7 +6287,12 @@ window['app']['api'] = window['app']['api'] || {};
         if (_fn2Call) {
           if (_.isFunction(_fn2Call)) {
             spa.console.info("calling callback: " + fn2Call);
-            return _fn2Call.call(fnContext, fnArg);
+            if (spa.is(fnArg, 'array') && fnArg[0]=='(...)') {
+              fnArg.shift();
+              return _fn2Call.apply(fnContext, fnArg);
+            } else {
+              return _fn2Call.call(fnContext, fnArg);
+            }
           } else {
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
@@ -6439,6 +6511,11 @@ window['app']['api'] = window['app']['api'] || {};
     }
     if (useOptions) { /* for each user option set/override internal spaRVOptions */
       /* store options in container data properties if saveOptions == true */
+      var _globalCompOptions = {
+        dataTemplatesCache : spa.defaults.components.templatesCache
+      };
+      uOptions = _.merge({}, _globalCompOptions, uOptions);
+
       var saveOptions = (uOptions.hasOwnProperty("saveOptions") && uOptions["saveOptions"]);
       for (var key in uOptions) {
         spaRVOptions[key] = uOptions[key];
@@ -7263,13 +7340,15 @@ window['app']['api'] = window['app']['api'] || {};
                   if (doDeepRender && !abortView) {
                     $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
 
-                    if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                      spa.console.info('mounting defered component', spaRVOptions.mountComponent);
-                      $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
-                      spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
-                    };
+                    // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
+                    // if (spaRVOptions.hasOwnProperty('mountComponent')) {
+                    //   spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                    //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
+                    //   spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                    // };
+                    // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
 
-                    spa.renderComponentsInHtml(viewContainerId);
+                    spa.renderComponentsInHtml(viewContainerId, rCompName);
                   };
 
                 }//if !abortRender
@@ -9279,6 +9358,18 @@ window['app']['api'] = window['app']['api'] || {};
       if (spa[eName]) return spa[eName]();
     }
     function initSpaModules(){
+      if (spa.env && 'dev'.equalsIgnoreCase(spa.env)){
+        spa.api.mock = true;
+        var compDefaults = {
+          components: {
+            templatesCache: false,
+            callback: function(){
+              console.log('spa$>', this.__prop__.componentName);
+            }
+          }};
+        spa.defaults.set(compDefaults);
+      }
+
       $.when( _init_SPA_() ).done(function(){
         /*SPA Init Complete - run_once*/
         $.when( runSpaEvent('onInitComplete') ).done(function(){
