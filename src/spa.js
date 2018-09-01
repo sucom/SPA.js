@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.58.0';
+  spa.VERSION = '2.59.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6217,6 +6217,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.renderComponentsInHtml = function (scope, pComponentName) {
     scope = scope||'body';
+    pComponentName = (pComponentName || '').trim();
 
     var $spaCompList = $(scope).find('[data-spa-component]');
     if ($spaCompList.length){
@@ -6225,22 +6226,49 @@ window['app']['api'] = window['app']['api'] || {};
         $el = $(el); $elData = $el.data();
         spaCompNameWithOpt = ($el.attr('data-spa-component') || '').split('|');
         spaCompName = (spaCompNameWithOpt[0]).trim();
-        spaCompOpt  = spa.toJSON((spaCompNameWithOpt[1]||'{}'));
+        spaCompOpt  = (spaCompNameWithOpt[1]||'').trim();
+
+        if (spaCompOpt) {
+          if (/\:\s*\$data/.test(spaCompOpt)) {
+            spaCompOpt = spaCompOpt.replace(/\:\s*\$data/g, ':app.'+pComponentName+'.$data');
+          }
+          spaCompOpt = spa.toJSON(spaCompOpt);
+        }
+
         if (spaCompName) {
           if (!el.id) {
             newElId = 'spaCompContainer_'+spaCompName+'_'+ ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
             el.id = newElId;
             el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
           }
-          spaCompOptions = _.merge( {target: "#"+el.id }, spaCompOpt, $elData, spa.toJSON($elData['spaComponentOptions'] || '{}'));
+          var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
+          spaCompOptions = _.merge( {target: "#"+el.id, spaComponent:spaCompName}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
 
           if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
             var dataPath = spaCompOptions.data.trim();
             if (/^\$data/.test(dataPath)) {
-              dataPath = 'app.'+(pComponentName.trim())+'.'+dataPath;
+              dataPath = 'app.'+pComponentName+'.'+dataPath;
             }
             spaCompOptions.data = _.merge({}, spa.findSafe(window, dataPath, {}));
           }
+
+          var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
+          if ($dataInAttr) {
+            if (/\:\s*\$data/.test($dataInAttr)) {
+              $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':app.'+pComponentName+'.$data');
+            }
+            if (spa.isBlank(spaCompOptions.data)) {
+              spaCompOptions['data'] = spa.toJSON($dataInAttr);
+            } else {
+              _.merge(spaCompOptions.data, spa.toJSON($dataInAttr));
+            }
+          }
+          if (!spa.isBlank(spaCompOptions['data']) && spaCompOptions['data'].hasOwnProperty('$data')) {
+            var rootData = _.merge({},spaCompOptions.data.$data);
+            delete spaCompOptions.data.$data;
+            _.merge(spaCompOptions.data, rootData);
+          }
+
           spa.console.log('inner-component', spaCompName, 'options:', spaCompOptions);
           spa.renderComponent(spaCompName, spaCompOptions);
         }
@@ -7115,248 +7143,277 @@ window['app']['api'] = window['app']['api'] || {};
                 }
               }
 
-              if (isValidData) {
+              function _dataPreProcess(){
+                var fnDataProcess = _renderOption('dataPreProcess', 'preProcess')
+                  , fnDataPreProcessResponse;
 
-                //dataProcess
-                var fnDataProcess = _renderOption('dataProcess', 'process');
-                if (fnDataProcess && (_.isString(fnDataProcess))) {
-                  fnDataProcess = spa.findSafe(window, fnDataProcess);
-                }
+                if (fnDataProcess && (_.isString(fnDataProcess))) { fnDataProcess = spa.findSafe(window, fnDataProcess); }
                 retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
                 retValue['model'] = spaTemplateModelData[viewDataModelName];
                 if (fnDataProcess && _.isFunction(fnDataProcess)) {
                   var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
                       compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']),
-                      dataProcessRes = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
-                  retValue['model'] = (spa.is(dataProcessRes, 'undefined'))? spaTemplateModelData[viewDataModelName] : dataProcessRes;
+                      fnDataPreProcessResponse = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
+                }
+                return fnDataPreProcessResponse;
+              }
+
+              if (isValidData) {
+                $.when( _dataPreProcess() ).done(function(dataPreProcessRes){
+                  //console.log('dataProcess Response:', dataPreProcessRes);
+                  if (spa.is(dataPreProcessRes, 'string') && dataPreProcessRes[0]=='{'){
+                    dataPreProcessRes = spa.toJSON(dataPreProcessRes);
+                  }
+
+                  var fnDataProcess = _renderOption('dataProcess', 'process'), fnDataProcessResponse;
+                  if (fnDataProcess && (_.isString(fnDataProcess))) {
+                    fnDataProcess = spa.findSafe(window, fnDataProcess);
+                  }
+                  retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
+                  retValue['model'] = spaTemplateModelData[viewDataModelName];
+                  if (fnDataProcess && _.isFunction(fnDataProcess)) {
+                    var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
+                        compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']),
+                        isPreProcessed = spa.is(dataPreProcessRes,'object');
+                    if (isPreProcessed) {
+                      fnDataProcessResponse = fnDataProcess.call(dataProcessContext, dataPreProcessRes, _.merge({},spaTemplateModelData[viewDataModelName]), compDataProps);
+                    } else {
+                      fnDataProcessResponse = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
+                    }
+                  }
+
+                  retValue['model'] = (spa.is(fnDataProcessResponse, 'undefined'))? spaTemplateModelData[viewDataModelName] : fnDataProcessResponse;
                   if (!_.isObject(retValue['model'])) {
                     retValue['model'] = retValue['modelOriginal'];
                   }
-                }
+                  //console.log('final Template Data:', retValue['model']);
 
-                if (rCompName) {
-                  if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
-                    var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
-                    if (compLocOrApiData.hasOwnProperty('spaComponent')) {
-                      app[rCompName]['$data'] = {};
-                    } else {
-                      app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData) : {};
+                  { if (rCompName) {
+                      if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
+                        var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
+                        if (compLocOrApiData.hasOwnProperty('spaComponent')) {
+                          app[rCompName]['$data'] = {};
+                        } else {
+                          app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData) : {};
+                        }
+                        app[rCompName]['__global__']= window || {};
+                      }
+
+                      retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
+                      retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
+                    };
+                    retValue['model']['_global_'] = window || {};
+
+                    var spaViewModel = retValue.model, compiledTemplate;
+                    //spa.viewModels[retValue.id] = retValue.model;
+
+                    var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
+                    var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
+                    if (allowScriptsInTemplates) {
+                      templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScrptInTemplate_/g, "script");
                     }
-                    app[rCompName]['__global__']= window || {};
-                  }
 
-                  retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
-                  retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
-                };
-                retValue['model']['_global_'] = window || {};
+                    /* {$}                  ==> app.thisComponentName.
+                     * {$someComponentName} ==> app.someComponentName.
+                     *
+                     * {@$}                  ==> _global_.app.thisComponentName.
+                     * {@$someComponentName} ==> _global_.app.someComponentName.
+                     */
+                    //for values
+                    var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
+                    if (!spaRVOptions.skipDataBind && componentRefsV) {
+                      _.forEach(componentRefsV, function(cRef){
+                        templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                          cRef.replace(/{\s*\$this|{\s*\@\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                      });
+                    }
 
-                var spaViewModel = retValue.model, compiledTemplate;
-                //spa.viewModels[retValue.id] = retValue.model;
+                    //for reference
+                    var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
+                    if (!spaRVOptions.skipDataBind && componentRefs) {
+                      _.forEach(componentRefs, function(cRef){
+                        templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                          cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                      });
+                    }
 
-                var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
-                var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
-                if (allowScriptsInTemplates) {
-                  templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScrptInTemplate_/g, "script");
-                }
-
-                /* {$}                  ==> app.thisComponentName.
-                 * {$someComponentName} ==> app.someComponentName.
-                 *
-                 * {@$}                  ==> _global_.app.thisComponentName.
-                 * {@$someComponentName} ==> _global_.app.someComponentName.
-                 */
-                //for values
-                var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
-                if (!spaRVOptions.skipDataBind && componentRefsV) {
-                  _.forEach(componentRefsV, function(cRef){
-                    templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
-                      cRef.replace(/{\s*\$this|{\s*\@\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
-                  });
-                }
-
-                //for reference
-                var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
-                if (!spaRVOptions.skipDataBind && componentRefs) {
-                  _.forEach(componentRefs, function(cRef){
-                    templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
-                      cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
-                  });
-                }
-
-                compiledTemplate = templateContentToBindAndRender;
-                spa.console.log("Template Source:", templateContentToBindAndRender);
-                spa.console.log("DATA for Template:", spaViewModel);
-                if (!spa.isBlank(spaViewModel)) {
-                  if (spaRVOptions.skipDataBind) {
-                    spa.console.log('Skipped Data Binding.');
-                  } else {
-                    if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
-                      if ((typeof Handlebars != "undefined") && Handlebars) {
-                        spa.console.log("Data bind using handlebars.js.");
-                        var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
-                        var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                        if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
-                        compiledTemplate = preCompiledTemplate(data4Template);
-                        spa.console.log(compiledTemplate);
+                    compiledTemplate = templateContentToBindAndRender;
+                    spa.console.log("Template Source:", templateContentToBindAndRender);
+                    spa.console.log("DATA for Template:", spaViewModel);
+                    if (!spa.isBlank(spaViewModel)) {
+                      if (spaRVOptions.skipDataBind) {
+                        spa.console.log('Skipped Data Binding.');
                       } else {
-                        spa.console.error("handlebars.js is not loaded.");
+                        if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
+                          if ((typeof Handlebars != "undefined") && Handlebars) {
+                            spa.console.log("Data bind using handlebars.js.");
+                            var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
+                            var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                            if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
+                            compiledTemplate = preCompiledTemplate(data4Template);
+                            spa.console.log(compiledTemplate);
+                          } else {
+                            spa.console.error("handlebars.js is not loaded.");
+                          }
+                        }
+
+                        if ((/ data-bind\s*=/i).test(compiledTemplate)) {
+                          spa.console.log('SPA built-in binding ... ...', data4Template);
+                          compiledTemplate = spa.bindData(compiledTemplate, data4Template);
+                          spa.console.log(compiledTemplate);
+                        }
+                      }
+                    }
+                    spa.console.log("Template Compiled:", compiledTemplate);
+
+                    doDeepRender = false;
+                    retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
+
+                    //Callback Function's context
+                    var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
+                    if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
+                      delete renderCallbackContext['__prop__']['data']['_global_'];
+                      delete renderCallbackContext['__prop__']['data']['_this_'];
+                      delete renderCallbackContext['__prop__']['data']['_this'];
+                    }
+                    if (retValue['model']) {
+                      delete retValue['model']['_global_'];
+                      delete retValue['model']['_this_'];
+                      delete retValue['model']['_this'];
+                    }
+
+                    /* Default Global components before-render */
+                    spa.renderUtils.runCallbackFn(spa.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
+
+                    //beforeRender
+                    var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
+                    if (fnBeforeRender){
+                      var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
+                      fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
+                      if (!spa.is(fnBeforeRenderRes, 'undefined')) {
+                        switch (spa.of(fnBeforeRenderRes)) {
+                          case 'string' :
+                            retValue.view = fnBeforeRenderRes;
+                            break;
+                          case 'boolean':
+                            abortRender = !fnBeforeRenderRes;
+                            break;
+                        }
+                      }
+                    };
+
+                    abortView = (retValue.view).beginsWithStr( '<!---->' );
+                    if (abortRender) {
+                      retValue = {};
+                      spa.console.warn('Render aborted by '+fnBeforeRender);
+                    } else if (!abortView) {
+                      var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
+                      if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
+                        abortRender = true; retValue = {};
+                        spa.console.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
                       }
                     }
 
-                    if ((/ data-bind\s*=/i).test(compiledTemplate)) {
-                      spa.console.log('SPA built-in binding ... ...', data4Template);
-                      compiledTemplate = spa.bindData(compiledTemplate, data4Template);
-                      spa.console.log(compiledTemplate);
-                    }
-                  }
-                }
-                spa.console.log("Template Compiled:", compiledTemplate);
-
-                doDeepRender = false;
-                retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
-
-                //Callback Function's context
-                var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
-                if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
-                  delete renderCallbackContext['__prop__']['data']['_global_'];
-                  delete renderCallbackContext['__prop__']['data']['_this_'];
-                  delete renderCallbackContext['__prop__']['data']['_this'];
-                }
-                if (retValue['model']) {
-                  delete retValue['model']['_global_'];
-                  delete retValue['model']['_this_'];
-                  delete retValue['model']['_this'];
-                }
-
-                /* Default Global components before-render */
-                spa.renderUtils.runCallbackFn(spa.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
-
-                //beforeRender
-                var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
-                if (fnBeforeRender){
-                  var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
-                  fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
-                  if (!spa.is(fnBeforeRenderRes, 'undefined')) {
-                    switch (spa.of(fnBeforeRenderRes)) {
-                      case 'string' :
-                        retValue.view = fnBeforeRenderRes;
-                        break;
-                      case 'boolean':
-                        abortRender = !fnBeforeRenderRes;
-                        break;
-                    }
-                  }
-                };
-
-                abortView = (retValue.view).beginsWithStr( '<!---->' );
-                if (abortRender) {
-                  retValue = {};
-                  spa.console.warn('Render aborted by '+fnBeforeRender);
-                } else if (!abortView) {
-                  var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
-                  if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
-                    abortRender = true; retValue = {};
-                    spa.console.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
-                  }
-                }
-
-                if (!abortRender) {
-                  if (abortView) {
-                    spa.console.log('Rendering component [',rCompName,'] view aborted.');
-                  } else {
-                    var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
-                    spa.console.log('Injecting component in DOM (',viewContainerId,').'+(targetRenderContainerType||'html'));
-                    switch(targetRenderContainerType) {
-                      case "value" :
-                        $(viewContainerId).val(retValue.view);
-                        break;
-                      case "text" :
-                        $(viewContainerId).text(retValue.view);
-                        break;
-
-                      default:
-                        doDeepRender = true;
-                        switch (true) {
-                          case (targetRenderMode.equalsIgnoreCase("append")):
-                            $(viewContainerId).append(retValue.view);
+                    if (!abortRender) {
+                      if (abortView) {
+                        spa.console.log('Rendering component [',rCompName,'] view aborted.');
+                      } else {
+                        var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
+                        spa.console.log('Injecting component in DOM (',viewContainerId,').'+(targetRenderContainerType||'html'));
+                        switch(targetRenderContainerType) {
+                          case "value" :
+                            $(viewContainerId).val(retValue.view);
                             break;
-                          case (targetRenderMode.equalsIgnoreCase("prepend")):
-                            $(viewContainerId).prepend(retValue.view);
+                          case "text" :
+                            $(viewContainerId).text(retValue.view);
                             break;
-                          default: $(viewContainerId).html(retValue.view); break;
+
+                          default:
+                            doDeepRender = true;
+                            switch (true) {
+                              case (targetRenderMode.equalsIgnoreCase("append")):
+                                $(viewContainerId).append(retValue.view);
+                                break;
+                              case (targetRenderMode.equalsIgnoreCase("prepend")):
+                                $(viewContainerId).prepend(retValue.view);
+                                break;
+                              default: $(viewContainerId).html(retValue.view); break;
+                            }
+                            break;
+                        };
+                      }
+
+                      $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
+                      _$renderCountUpdate(rCompName);
+                      spa.console.info("Render: SUCCESS");
+                      var rhKeys = _.keys(spa.renderHistory);
+                      var rhLen = rhKeys.length;
+                      if (rhLen > spa.renderHistoryMax) {
+                        $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
+                          delete spa.renderHistory[key];
+                        });
+                      }
+                      retValue.cron = "" + spa.now();
+                      if (spa.renderHistoryMax>0) {
+                        spa.renderHistory[retValue.id] = retValue;
+                      };
+
+                      if (doDeepRender && !abortView) {
+                        /*display selected i18n lang*/
+                        if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
+                          spa.i18n.displayLang();
                         }
-                        break;
-                    };
+                        /*apply i18n*/
+                        spa.i18n.apply(viewContainerId);
+
+                        _init_SPA_DOM_(viewContainerId);
+
+                        /*Register Events in Components*/
+                        spa.renderUtils.registerComponentEvents(rCompName);
+                      };
+
+                      spa.console.log(retValue);
+
+                      /* component's specific callback */
+                      var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback");
+                      if (spaRVOptions.dataRenderCallback) {
+                        _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
+                      }
+                      var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
+                      spa.console.info("Processing callback: " + _fnCallbackAfterRender);
+
+                      if (!isCallbackDisabled) {
+                        spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                      }
+
+                      /*run callback if any*/
+                      /* Default Global components callback */
+                      spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+
+                      /*Deep/Child Render*/
+                      if (doDeepRender && !abortView) {
+                        $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+
+                        // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
+                        // if (spaRVOptions.hasOwnProperty('mountComponent')) {
+                        //   spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                        //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
+                        //   spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                        // };
+                        // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
+
+                        spa.renderComponentsInHtml(viewContainerId, rCompName);
+                      };
+
+                    }//if !abortRender
+
+                    //End of Valid Data
                   }
-
-                  $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
-                  _$renderCountUpdate(rCompName);
-                  spa.console.info("Render: SUCCESS");
-                  var rhKeys = _.keys(spa.renderHistory);
-                  var rhLen = rhKeys.length;
-                  if (rhLen > spa.renderHistoryMax) {
-                    $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
-                      delete spa.renderHistory[key];
-                    });
-                  }
-                  retValue.cron = "" + spa.now();
-                  if (spa.renderHistoryMax>0) {
-                    spa.renderHistory[retValue.id] = retValue;
-                  };
-
-                  if (doDeepRender && !abortView) {
-                    /*display selected i18n lang*/
-                    if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
-                      spa.i18n.displayLang();
-                    }
-                    /*apply i18n*/
-                    spa.i18n.apply(viewContainerId);
-
-                    _init_SPA_DOM_(viewContainerId);
-
-                    /*Register Events in Components*/
-                    spa.renderUtils.registerComponentEvents(rCompName);
-                  };
-
-                  spa.console.log(retValue);
-
-                  /* component's specific callback */
-                  var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback");
-                  if (spaRVOptions.dataRenderCallback) {
-                    _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
-                  }
-                  var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
-                  spa.console.info("Processing callback: " + _fnCallbackAfterRender);
-
-                  if (!isCallbackDisabled) {
-                    spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
-                  }
-
-                  /*run callback if any*/
-                  /* Default Global components callback */
-                  spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
-
-                  /*Deep/Child Render*/
-                  if (doDeepRender && !abortView) {
-                    $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
-
-                    // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
-                    // if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                    //   spa.console.info('mounting defered component', spaRVOptions.mountComponent);
-                    //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
-                    //   spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
-                    // };
-                    // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
-
-                    spa.renderComponentsInHtml(viewContainerId, rCompName);
-                  };
-
-                }//if !abortRender
-
-                //End of Valid Data
-              } else { //NOT a valid Data
+                });
+              }  else { //NOT a valid Data
                 spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
               }
+
             }
             catch(e) {
               spa.console.error("Error Rendering.\n" + e.stack);
@@ -9347,6 +9404,23 @@ window['app']['api'] = window['app']['api'] || {};
 
     _init_SPA_DOM_('body');
   }
+
+  /*
+   * spa.async(fn)
+   * spa.async(fn, callbackFn)
+   * spa.async(fn, param1, param2, param3)
+   * spa.async(fn, param1, param2, param3, callbackFn)
+   */
+  spa.async = function(fn){
+    var fnArg = Array.prototype.slice.call(arguments, 1);
+    function fnAsyc(){
+      var fnRes = fn.apply(undefined, fnArg)
+        , argLen = fnArg.length
+        , nextFn = (argLen)? fnArg[argLen-1] : '';
+      if (nextFn && spa.is(nextFn, 'function')) nextFn(fnRes);
+    }
+    setTimeout(fnAsyc, 0);
+  };
 
   $(document).ready(function(){
     /*onLoad Set spa.debugger on|off using URL param*/
