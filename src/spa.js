@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.59.0';
+  spa.VERSION = '2.60.0-RC1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4865,6 +4865,29 @@ window['app']['api'] = window['app']['api'] || {};
     }
   });
 
+  function _pipeSort(inVal, reverse) {
+    var retValue = inVal;
+    if (spa.is(inVal, 'array')) {
+      retValue = inVal.sort();
+      if (reverse) retValue = retValue.reverse();
+    } else if (spa.is(inVal, 'string')) {
+      var splitBy;
+      switch(true) {
+        case (inVal.indexOf(',')>=0):
+          splitBy = ',';
+        break;
+        case (inVal.indexOf(' ')>=0):
+          splitBy = ' ';
+        break;
+      }
+      if (splitBy) {
+        retValue = inVal.split(splitBy).sort().join(splitBy);
+        if (reverse) retValue = retValue.reverse();
+      }
+    }
+    return retValue;
+  }
+
   spa.pipes = {
     trim: function(str) {
       return (''+str).trim();
@@ -4895,6 +4918,33 @@ window['app']['api'] = window['app']['api'] || {};
     },
     not: function(inVal) {
       return !inVal;
+    },
+    sort: function(inVal){
+      return _pipeSort(inVal);
+    },
+    sortAsc: function(inVal){
+      return _pipeSort(inVal);
+    },
+    sortDesc: function(inVal){
+      return _pipeSort(inVal, true);
+    },
+    reverse: function(inVal) {
+      var retValue = inVal;
+      if (spa.is(inVal, 'array')) {
+        retValue = inVal.reverse();
+      } else if (spa.is(inVal, 'string')) {
+        var splitBy;
+        switch(true) {
+          case (inVal.indexOf(',')>=0):
+            splitBy = ',';
+          break;
+          case (inVal.indexOf(' ')>=0):
+            splitBy = ' ';
+          break;
+        }
+        if (splitBy) retValue = inVal.split(splitBy).reverse().join(splitBy);
+      }
+      return retValue;
     }
   };
 
@@ -4926,9 +4976,17 @@ window['app']['api'] = window['app']['api'] || {};
     //console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
+
+    var compName = ''; //pre-render-time
+    if (elFilter[0]=='$') { compName = elFilter.substr(1); elFilter = ''; }
+    var tmplStoreName = compName || '_unknown_';
+
     var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot));
     if (onVirtualDOM) {
-      var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<_BlockedScrptInTemplate_').replace(/<\s*(\/)\s*script/gi,'</_BlockedScrptInTemplate_');
+      var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<_BlockedScrptInTemplate_')
+                                    .replace(/<\s*(\/)\s*script/gi,'</_BlockedScrptInTemplate_')
+                                    .replace(/<\s*spa-template/gi,'<script type="text/x-spa-template"')
+                                    .replace(/<\s*(\/)\s*spa-template/gi,'</script');
       $contextRoot = $('<div style="display:none">'+bindTmplHtml+'</div>');
     } else {
       $contextRoot = $(contextRoot);
@@ -4938,10 +4996,27 @@ window['app']['api'] = window['app']['api'] || {};
       return $contextRoot;
     };
 
+    var templateData = _.merge({__computed__:{}}, data);
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
     var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormat, bindValue, dataAttrKey, bindCallback, negate;
+
+    function _getValue(key) {
+      key = (key || '').trim();
+      return (key[0] == '#')? key : spa.findSafe(templateData, key);
+    }
+
+    function _templateDynId(type, key) {
+      return ['_runTimeTemplate',type,compName,(key.replace(/[^a-z0-9]/gi,'_')),(spa.now())].join('_');
+    }
+    function _inlineTemplate(templateId, template) {
+      if (!spa.compiledTemplates4DataBind.hasOwnProperty(tmplStoreName)) {
+        spa.compiledTemplates4DataBind[tmplStoreName] = {};
+      }
+      return spa.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile(template));
+    }
+
 
     _.each($dataBindEls, function(el) {
       $el = $(el);
@@ -4958,9 +5033,10 @@ window['app']['api'] = window['app']['api'] || {};
           bindKey   = bindKeyFn.shift().trim();
           negate    = (bindKey[0]=='!');
           if (negate) {
-            bindValue = !spa.findSafe(data, (bindKey.substr(0).trim()));
+            bindKey   = (bindKey.substr(1).trim());
+            bindValue = !_getValue(bindKey);
           } else {
-            bindValue = spa.findSafe(data, bindKey);
+            bindValue = _getValue(bindKey);
           }
 
           if (spa.is(bindValue, 'undefined|null')) bindValue = '';
@@ -4975,61 +5051,98 @@ window['app']['api'] = window['app']['api'] || {};
                 } else {
                   fnFormat = fnFormat.substr(1).trim();
                   if (fnFormat[0]=='.') fnFormat = 'spa.pipes'+fnFormat;
-                  bindValue = !spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, data, el], el);
+                  bindValue = !spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
                 }
               } else {
-                bindValue = spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, data, el], el);
+                bindValue = spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
               }
             }
           }
 
           _.each(attrSpec.split("_"), function (attribute) {
             attribute = attribute.trim();
-            switch (attribute.toLowerCase()) {
-              case 'html':
-                $el.html(bindValue);
-                break;
-              case 'text':
-                $el.text(bindValue);
-                break;
-              case '$':
-                if ((/checkbox|radio/i).test(el.type)) {
-                  switch (spa.of(bindValue)){
-                    case 'boolean':
-                      el.checked = bindValue;
-                      break;
-                    default:
-                      el.checked = (el.value).equalsIgnoreCase(''+bindValue);
-                      break;
-                  }
-                  if (el.checked) {
-                    el.setAttribute('checked', '');
-                  } else {
-                    el.removeAttribute('checked');
-                  }
-
-                } else if ((/select/i).test(el.tagName)) {
-                  console.warn('TODO: data-bind:select');
-                }
-                break;
-
-              default:
-                switch(true){
-                  case (/^\./.test(attribute)): //Class
-                  var classNames = attribute.replace(/[\.\,]/g, ' ').normalizeStr();
-                  $el[!!bindValue? 'addClass':'removeClass'](classNames);
+            //console.log('[',attribute,']',bindKey,'=',bindValue);
+            if (!spa.is(bindValue, 'undefined')) {
+              switch (attribute.toLowerCase()) {
+                case 'html':
+                  $el.html(bindValue);
                   break;
-
-                  default:
-                    $el.attr(attribute, bindValue);
-                    if (attribute.beginsWithStr('data-')) {
-                      dataAttrKey = spa.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
-                      if (dataAttrKey) $el.data(dataAttrKey, bindValue);
+                case 'text':
+                  $el.text(bindValue);
+                  break;
+                case '$':
+                  if ((/checkbox|radio/i).test(el.type)) {
+                    switch (spa.of(bindValue)){
+                      case 'boolean':
+                        el.checked = bindValue;
+                        break;
+                      default:
+                        el.checked = (el.value).equalsIgnoreCase(''+bindValue);
+                        break;
                     }
+                    if (el.checked) {
+                      el.setAttribute('checked', '');
+                    } else {
+                      el.removeAttribute('checked');
+                    }
+
+                  } else if ((/select/i).test(el.tagName)) {
+                    console.warn('TODO: data-bind:select');
+                  }
                   break;
-                }
-                break;
+
+                case 'if':
+                  var computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
+                  templateData.__computed__[computedKey] = bindValue;
+                  var ifTemplateId = $el.attr('data-bind-template'), ifTemplate;
+                  if (!ifTemplateId) { //create new if template
+                    var ifTemplateBody = '{{#if __computed__.'+ computedKey + ' }}' + ($el.html().trim()) + '{{/if}}';
+                    ifTemplateId = _templateDynId('if', bindKey);
+                    ifTemplate   = _inlineTemplate(ifTemplateId, ifTemplateBody);
+                    $el.attr('data-bind-template', ifTemplateId);
+                  } else {
+                    ifTemplate = spa.compiledTemplates4DataBind[tmplStoreName][ifTemplateId];
+                  }
+                  $el.html(ifTemplate(templateData));
+                  break;
+
+                case 'repeat':
+                  var computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
+                  templateData.__computed__[computedKey] = bindValue;
+                  var repeatTemplateId = $el.attr('data-bind-template'), repeatTemplate;
+                  if (!repeatTemplateId) { //create new repeat template
+                    var repeatAs = (bindSpec['repeatAs'] || '').replace(/[,|:]/g,' ').normalizeStr()
+                      , repeatTemplateBody = '{{#each __computed__.'+ computedKey + (repeatAs? (' as |'+repeatAs+'|') : '') +' }}'
+                                            + ($el.html().trim()) + '{{/each}}';
+                    repeatTemplateId = _templateDynId('repeat', bindKey);
+                    repeatTemplate   = _inlineTemplate(repeatTemplateId, repeatTemplateBody);
+                    $el.attr('data-bind-template', repeatTemplateId);
+                  } else {
+                    repeatTemplate = spa.compiledTemplates4DataBind[tmplStoreName][repeatTemplateId];
+                  }
+                  $el.html(repeatTemplate(templateData));
+                  break;
+                case 'repeatAs':break;
+
+                default:
+                  switch(true){
+                    case (/^\./.test(attribute)): //Class
+                    var classNames = attribute.replace(/[\.\,]/g, ' ').normalizeStr();
+                    $el[!!bindValue? 'addClass':'removeClass'](classNames);
+                    break;
+
+                    default:
+                      $el.attr(attribute, bindValue);
+                      if (attribute.beginsWithStr('data-')) {
+                        dataAttrKey = spa.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
+                        if (dataAttrKey) $el.data(dataAttrKey, bindValue);
+                      }
+                    break;
+                  }
+                  break;
+              }
             }
+
           });
 
           if (bindCallback) {
@@ -5044,10 +5157,11 @@ window['app']['api'] = window['app']['api'] || {};
       var componentName = $contextRoot.attr('data-rendered-component');
       if (!spa.isBlank(componentName)) {
         var onBindCallback = 'app.'+componentName+'.bindCallback';
-        spa.renderUtils.runCallbackFn(onBindCallback, data, app[componentName]);
+        spa.renderUtils.runCallbackFn(onBindCallback, templateData, app[componentName]);
       }
     }
 
+    templateData = null;
     return onVirtualDOM? ($contextRoot.html().replace(/_BlockedScrptInTemplate_/g, "script")) : $contextRoot;
   };
 
@@ -5554,6 +5668,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   /* each spaRender's view and model will be stored in renderHistory */
   spa.env = '';
+  spa.compiledTemplates4DataBind={};
   spa.compiledTemplates={};
   spa.viewModels = {};
   spa.renderHistory = {};
@@ -5567,7 +5682,7 @@ window['app']['api'] = window['app']['api'] || {};
         , templateExt: '.html'
         , scriptExt: '.js'
         , templateScript: false
-        , templatesCache: true
+        , templateCache: true
         , render:''
         , callback:''
         , extend$data: true
@@ -5873,6 +5988,13 @@ window['app']['api'] = window['app']['api'] || {};
     return retData;
   };
 
+//  spa.$dataWatch = function(cName, watchName, fnCallback){
+//  };
+//  spa.$dataUnwatch = function(cName, watchName){
+//  };
+//  spa.$dataNotify = function(cName, watchName){
+//  };
+
   function _$renderCountUpdate(componentName){
     if (app[componentName]) {
       app[componentName]['__renderCount__'] = spa.toInt(spa.$renderCount(componentName)) + 1;
@@ -5932,6 +6054,8 @@ window['app']['api'] = window['app']['api'] || {};
           }
           $('script'+tmplScriptId).remove();
           delete spa.components[componentName];
+          delete spa.compiledTemplates4DataBind[componentName];
+          delete spa.compiledTemplates[componentName];
           isDestroyed = true;
         }
       }
@@ -6540,7 +6664,7 @@ window['app']['api'] = window['app']['api'] || {};
     if (useOptions) { /* for each user option set/override internal spaRVOptions */
       /* store options in container data properties if saveOptions == true */
       var _globalCompOptions = {
-        dataTemplatesCache : spa.defaults.components.templatesCache
+        dataTemplatesCache : spa.defaults.components.templateCache
       };
       uOptions = _.merge({}, _globalCompOptions, uOptions);
 
@@ -7244,12 +7368,33 @@ window['app']['api'] = window['app']['api'] || {};
                       if (spaRVOptions.skipDataBind) {
                         spa.console.log('Skipped Data Binding.');
                       } else {
+
+                        if (!spaRVOptions.dataTemplatesCache) {
+                          delete spa.compiledTemplates4DataBind[rCompName];
+                          delete spa.compiledTemplates[rCompName];
+                        }
+
+                        if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
+                          if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
+                            var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                            if (is(data4SpaTemplate, 'object')) {
+                              delete data4SpaTemplate['_global_'];
+                              delete data4SpaTemplate['_this_'];
+                              delete data4SpaTemplate['_this'];
+                            }
+                            spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
+                            templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
+                            spa.console.log(templateContentToBindAndRender);
+                            if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) spa.compiledTemplates4DataBind[rCompName] = {};
+                          }
+                        }
+
                         if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
                           if ((typeof Handlebars != "undefined") && Handlebars) {
                             spa.console.log("Data bind using handlebars.js.");
-                            var preCompiledTemplate = spa.compiledTemplates[vTemplate2RenderID] || (Handlebars.compile(templateContentToBindAndRender));
+                            var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
                             var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                            if (!spa.compiledTemplates.hasOwnProperty(vTemplate2RenderID)) spa.compiledTemplates[vTemplate2RenderID] = preCompiledTemplate;
+                            if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
                             compiledTemplate = preCompiledTemplate(data4Template);
                             spa.console.log(compiledTemplate);
                           } else {
@@ -7257,11 +7402,6 @@ window['app']['api'] = window['app']['api'] || {};
                           }
                         }
 
-                        if ((/ data-bind\s*=/i).test(compiledTemplate)) {
-                          spa.console.log('SPA built-in binding ... ...', data4Template);
-                          compiledTemplate = spa.bindData(compiledTemplate, data4Template);
-                          spa.console.log(compiledTemplate);
-                        }
                       }
                     }
                     spa.console.log("Template Compiled:", compiledTemplate);
@@ -9436,7 +9576,7 @@ window['app']['api'] = window['app']['api'] || {};
         spa.api.mock = true;
         var compDefaults = {
           components: {
-            templatesCache: false,
+            templateCache: false,
             callback: function(){
               console.log('spa$>', this.__prop__.componentName);
             }
