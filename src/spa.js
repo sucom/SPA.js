@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.60.0-RC2';
+  spa.VERSION = '2.60.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5694,6 +5694,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* each spaRender's view and model will be stored in renderHistory */
+  var _$dataWatchList = {};
   spa.env = '';
   spa.compiledTemplates4DataBind={};
   spa.compiledTemplates={};
@@ -5701,6 +5702,7 @@ window['app']['api'] = window['app']['api'] || {};
   spa.renderHistory = {};
   spa.renderHistoryMax = 0;
   spa.components = {};
+  spa.tempBind$data = {};
   spa.defaults = {
       components: {
           templateEngine: "handlebars"
@@ -6006,6 +6008,8 @@ window['app']['api'] = window['app']['api'] || {};
           } else {
             console.log('Component is not visible! Skipped $on$dataChange.');
           }
+
+          spa.$dataNotify(cName);
         }
       } else {
         spa.console.warn('SPA Component[',cName,'] is not loaded.');
@@ -6015,12 +6019,54 @@ window['app']['api'] = window['app']['api'] || {};
     return retData;
   };
 
-//  spa.$dataWatch = function(cName, watchName, fnCallback){
-//  };
-//  spa.$dataUnwatch = function(cName, watchName){
-//  };
-//  spa.$dataNotify = function(cName, watchName){
-//  };
+  spa.$dataWatch = function(cName, watchName, fnCallback){
+    if (!cName || !watchName || !spa.is(fnCallback, 'function')) return;
+
+    if (!_$dataWatchList.hasOwnProperty(cName)) {
+      _$dataWatchList[cName] = {};
+    }
+
+    if (_$dataWatchList[cName].hasOwnProperty(watchName)) {
+      console.warn('$dataWatch [',watchName,'] already exists in spa$[',cName,']');
+      return;
+    } else {
+      _$dataWatchList[cName][watchName] = fnCallback;
+      return true;
+    }
+  };
+  spa.$dataUnwatch = function(cName, watchName){
+    var retVal;
+    if (cName && watchName && _$dataWatchList.hasOwnProperty(cName)) {
+      if (watchName == '*') {
+        delete _$dataWatchList[cName];
+        retVal = true;
+      }
+      if (_$dataWatchList[cName].hasOwnProperty(watchName)) {
+        delete _$dataWatchList[cName][watchName];
+        retVal = true;
+      }
+    }
+    if (!retVal){
+      console.warn('$dataWatch [',watchName,'] does not exist in spa$[',cName,']');
+    }
+    return retVal;
+  };
+  spa.$dataNotify = function(cName, watchName){
+    if (!cName) return;
+
+    if (_$dataWatchList.hasOwnProperty(cName)) {
+      var notifyList = Object.keys(_$dataWatchList[cName]);
+      if (watchName) {
+        notifyList = watchName.split(',');
+      }
+      _.each(notifyList, function(xWatchName){
+        xWatchName = (xWatchName||'').trim();
+        if (_$dataWatchList[cName].hasOwnProperty(xWatchName)) {
+          _$dataWatchList[cName][xWatchName].call(undefined, app[cName]['$data'], cName, xWatchName);
+        }
+      });
+    }
+  };
 
   function _$renderCountUpdate(componentName){
     if (app[componentName]) {
@@ -6083,6 +6129,7 @@ window['app']['api'] = window['app']['api'] || {};
           delete spa.components[componentName];
           delete spa.compiledTemplates4DataBind[componentName];
           delete spa.compiledTemplates[componentName];
+          delete _$dataWatchList[componentName];
           isDestroyed = true;
         }
       }
@@ -6366,8 +6413,6 @@ window['app']['api'] = window['app']['api'] || {};
   //   }
   // };
 
-
-  spa.tempBind$data = {};
   function _get$dataInAttr(el, pComponentName, newData) {
 
     var pCompRef = 'app.'+pComponentName+'.';
