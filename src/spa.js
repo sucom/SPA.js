@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.60.0-RC1';
+  spa.VERSION = '2.60.0-RC2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -4977,16 +4977,10 @@ window['app']['api'] = window['app']['api'] || {};
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
 
-    var compName = ''; //pre-render-time
-    if (elFilter[0]=='$') { compName = elFilter.substr(1); elFilter = ''; }
-    var tmplStoreName = compName || '_unknown_';
-
     var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot));
     if (onVirtualDOM) {
       var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<_BlockedScrptInTemplate_')
-                                    .replace(/<\s*(\/)\s*script/gi,'</_BlockedScrptInTemplate_')
-                                    .replace(/<\s*spa-template/gi,'<script type="text/x-spa-template"')
-                                    .replace(/<\s*(\/)\s*spa-template/gi,'</script');
+                                    .replace(/<\s*(\/)\s*script/gi,'</_BlockedScrptInTemplate_');
       $contextRoot = $('<div style="display:none">'+bindTmplHtml+'</div>');
     } else {
       $contextRoot = $(contextRoot);
@@ -4996,9 +4990,23 @@ window['app']['api'] = window['app']['api'] || {};
       return $contextRoot;
     };
 
+    var compName = ''; //pre-render-time
+    if (elFilter[0]=='$') { compName = elFilter.substr(1).trim(); elFilter = ''; }
+    compName = compName || $contextRoot.attr('data-rendered-component');
+    var tmplStoreName = compName || '_unknown_';
+    //console.log('compName>', tmplStoreName);
+
     var templateData = _.merge({__computed__:{}}, data);
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
+
+    if ($dataBindEls.length && !onVirtualDOM) {
+      //Exclude elements which are part of inner components
+      //Include elements which are part of this component only
+      $dataBindEls = $dataBindEls.filter(function(){
+        return ($(this).closest('[data-rendered-component]').attr('data-rendered-component') == compName);
+      });
+    }
 
     var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormat, bindValue, dataAttrKey, bindCallback, negate;
 
@@ -5158,6 +5166,25 @@ window['app']['api'] = window['app']['api'] || {};
       if (!spa.isBlank(componentName)) {
         var onBindCallback = 'app.'+componentName+'.bindCallback';
         spa.renderUtils.runCallbackFn(onBindCallback, templateData, app[componentName]);
+      }
+    }
+
+    if (!onVirtualDOM) {
+      //innerComponents
+      $innerComponents = $contextRoot.find('[data-rendered-component]')
+                          .filter(function(){
+                            return (this.hasAttribute('data-spa-component-$data') ||
+                                    this.hasAttribute('data-spa-$data') ||
+                                    this.hasAttribute('spa-$data'));
+                          });
+      if ($innerComponents.length) {
+        //console.log('found inner components to bind with this data ref', $innerComponents);
+        var data4InnerCompBind;
+        $innerComponents.each(function(){
+          data4InnerCompBind = _get$dataInAttr(this, compName, data);
+          //console.log('data4InnerCompBind>', data4InnerCompBind);
+          spa.bindData(this, data4InnerCompBind);
+        });
       }
     }
 
@@ -6339,12 +6366,71 @@ window['app']['api'] = window['app']['api'] || {};
   //   }
   // };
 
+
+  spa.tempBind$data = {};
+  function _get$dataInAttr(el, pComponentName, newData) {
+
+    var pCompRef = 'app.'+pComponentName+'.';
+    if (spa.is(newData, 'object')) {
+      if (!spa.tempBind$data.hasOwnProperty(pComponentName)) spa.tempBind$data[pComponentName] = {};
+      spa.tempBind$data[pComponentName]['$data'] = _.merge({}, spa.findSafe(app, pComponentName+'.$data', {}), newData);
+      pCompRef = 'spa.tempBind$data.'+pComponentName+'.';
+    }
+
+    var $el, $elData, spaCompNameWithOpt, spaCompOpt, spaCompOptions;
+
+    $el = $(el); $elData = $el.data();
+    spaCompNameWithOpt = ($el.attr('data-spa-component') || '').split('|');
+    spaCompName = (spaCompNameWithOpt[0]).trim();
+    spaCompOpt  = (spaCompNameWithOpt[1]||'').trim();
+
+    if (spaCompOpt) {
+      if (/\:\s*\$data/.test(spaCompOpt)) {
+        spaCompOpt = spaCompOpt.replace(/\:\s*\$data/g, ':'+pCompRef+'$data');
+      }
+      spaCompOpt = spa.toJSON(spaCompOpt);
+    }
+
+    var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
+    spaCompOptions = _.merge( {}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
+
+    if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
+      var dataPath = spaCompOptions.data.trim();
+      if (/^\$data/.test(dataPath)) {
+        dataPath = pCompRef+dataPath;
+      }
+      spaCompOptions.data = _.merge({}, spa.findSafe(window, dataPath, {}));
+    }
+
+    var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
+    if ($dataInAttr) {
+      if (/\:\s*\$data/.test($dataInAttr)) {
+        $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':'+pCompRef+'$data');
+      }
+      if (spa.isBlank(spaCompOptions.data)) {
+        spaCompOptions['data'] = spa.toJSON($dataInAttr);
+      } else {
+        _.merge(spaCompOptions.data, spa.toJSON($dataInAttr));
+      }
+    }
+    if (!spa.isBlank(spaCompOptions['data']) && spaCompOptions['data'].hasOwnProperty('$data')) {
+      var rootData = _.merge({},spaCompOptions.data.$data);
+      delete spaCompOptions.data.$data;
+      _.merge(spaCompOptions.data, rootData);
+    }
+
+    //console.log(spaCompOptions);
+
+    return spaCompOptions.hasOwnProperty('data')? spaCompOptions.data : {};
+  }
+
   spa.renderComponentsInHtml = function (scope, pComponentName) {
     scope = scope||'body';
     pComponentName = (pComponentName || '').trim();
 
     var $spaCompList = $(scope).find('[data-spa-component]');
     if ($spaCompList.length){
+
       var $el, spaCompNameWithOpt, spaCompName, spaCompOpt, spaCompOptions, newElId, $elData;
       $spaCompList.each(function( index, el ) {
         $el = $(el); $elData = $el.data();
@@ -6365,9 +6451,11 @@ window['app']['api'] = window['app']['api'] || {};
             el.id = newElId;
             el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
           }
+
           var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
           spaCompOptions = _.merge( {target: "#"+el.id, spaComponent:spaCompName}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
 
+          //GET Data for render begins
           if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
             var dataPath = spaCompOptions.data.trim();
             if (/^\$data/.test(dataPath)) {
@@ -6375,7 +6463,6 @@ window['app']['api'] = window['app']['api'] || {};
             }
             spaCompOptions.data = _.merge({}, spa.findSafe(window, dataPath, {}));
           }
-
           var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
           if ($dataInAttr) {
             if (/\:\s*\$data/.test($dataInAttr)) {
@@ -6392,6 +6479,7 @@ window['app']['api'] = window['app']['api'] || {};
             delete spaCompOptions.data.$data;
             _.merge(spaCompOptions.data, rootData);
           }
+          //GET Data for render ends
 
           spa.console.log('inner-component', spaCompName, 'options:', spaCompOptions);
           spa.renderComponent(spaCompName, spaCompOptions);
@@ -7364,6 +7452,7 @@ window['app']['api'] = window['app']['api'] || {};
                     compiledTemplate = templateContentToBindAndRender;
                     spa.console.log("Template Source:", templateContentToBindAndRender);
                     spa.console.log("DATA for Template:", spaViewModel);
+                    var skipSpaBind, spaBindData;
                     if (!spa.isBlank(spaViewModel)) {
                       if (spaRVOptions.skipDataBind) {
                         spa.console.log('Skipped Data Binding.');
@@ -7377,15 +7466,11 @@ window['app']['api'] = window['app']['api'] || {};
                         if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
                           if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
                             var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                            if (is(data4SpaTemplate, 'object')) {
-                              delete data4SpaTemplate['_global_'];
-                              delete data4SpaTemplate['_this_'];
-                              delete data4SpaTemplate['_this'];
-                            }
                             spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
                             templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
                             spa.console.log(templateContentToBindAndRender);
                             if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) spa.compiledTemplates4DataBind[rCompName] = {};
+                            skipSpaBind=true;
                           }
                         }
 
@@ -7394,6 +7479,7 @@ window['app']['api'] = window['app']['api'] || {};
                             spa.console.log("Data bind using handlebars.js.");
                             var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
                             var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                            spaBindData = data4Template;
                             if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
                             compiledTemplate = preCompiledTemplate(data4Template);
                             spa.console.log(compiledTemplate);
@@ -7507,6 +7593,9 @@ window['app']['api'] = window['app']['api'] || {};
                         spa.i18n.apply(viewContainerId);
 
                         _init_SPA_DOM_(viewContainerId);
+                        if (!skipSpaBind) {
+                          spa.dataBind(viewContainerId, spaBindData, '', true);
+                        }
 
                         /*Register Events in Components*/
                         spa.renderUtils.registerComponentEvents(rCompName);
