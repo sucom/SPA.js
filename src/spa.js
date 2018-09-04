@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.60.1';
+  spa.VERSION = '2.61.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7392,6 +7392,7 @@ window['app']['api'] = window['app']['api'] || {};
             spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
 
             try {
+              var isPreProcessed = false, isSinlgeAsyncPreProcess;
               var isValidData = !_renderOption('dataValidate', 'validate');
               if (!isValidData) {
                 //Get Validated using SPA.API
@@ -7407,50 +7408,73 @@ window['app']['api'] = window['app']['api'] || {};
                 }
               }
 
-              function _dataPreProcess(){
-                var fnDataProcess = _renderOption('dataPreProcess', 'preProcess')
-                  , fnDataPreProcessResponse;
+              var initialTemplateData = spaTemplateModelData[viewDataModelName];
 
-                if (fnDataProcess && (_.isString(fnDataProcess))) { fnDataProcess = spa.findSafe(window, fnDataProcess); }
-                retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
-                retValue['model'] = spaTemplateModelData[viewDataModelName];
-                if (fnDataProcess && _.isFunction(fnDataProcess)) {
+              function _dataPreProcessAsync(){
+                var fnDataPreProcessAsync = _renderOption('dataPreProcessAsync', 'preProcessAsync')
+                  , fnDataPreProcessAsyncResponse;
+
+                if (fnDataPreProcessAsync && (_.isString(fnDataPreProcessAsync))) { fnDataPreProcessAsync = spa.findSafe(window, fnDataPreProcessAsync); }
+                retValue['modelOriginal'] = $.extend({}, initialTemplateData);
+                retValue['model'] = initialTemplateData;
+                if (fnDataPreProcessAsync && _.isFunction(fnDataPreProcessAsync)) {
+                  isPreProcessed = true;
                   var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
-                      compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']),
-                      fnDataPreProcessResponse = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
+                      fnDataPreProcessAsyncResponse = fnDataPreProcessAsync.call(dataProcessContext, initialTemplateData);
+
+                  isPreProcessed = (!spa.is(fnDataPreProcessAsyncResponse, 'undefined'));
+                  if (!isPreProcessed) fnDataPreProcessAsyncResponse = [];
+                  if (isPreProcessed && !spa.is(fnDataPreProcessAsyncResponse, 'array')) {
+                    isSinlgeAsyncPreProcess = true;
+                    fnDataPreProcessAsyncResponse = [fnDataPreProcessAsyncResponse];
+                  }
                 }
-                return fnDataPreProcessResponse;
+                return fnDataPreProcessAsyncResponse;
               }
 
               if (isValidData) {
-                $.when( _dataPreProcess() ).done(function(dataPreProcessRes){
-                  //console.log('dataProcess Response:', dataPreProcessRes);
-                  if (spa.is(dataPreProcessRes, 'string') && dataPreProcessRes[0]=='{'){
-                    dataPreProcessRes = spa.toJSON(dataPreProcessRes);
+                $.when.apply($, _dataPreProcessAsync() ).done(function(){
+
+                  var dataPreProcessAsyncRes = Array.prototype.slice.call(arguments);
+                  if (isPreProcessed) {
+                    spa.console.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
+                    if (isSinlgeAsyncPreProcess && (dataPreProcessAsyncRes.length > 1) && (dataPreProcessAsyncRes[1] == 'success') ){
+                      //&& (spa.is(dataPreProcessAsyncRes[0], 'string')) && ((/\s*\{/).test(dataPreProcessAsyncRes[0])) ){
+                      //if only 1 ajax request with JSON String as response
+                      dataPreProcessAsyncRes[0] = spa.toJSON(dataPreProcessAsyncRes[0]);
+                      dataPreProcessAsyncRes.splice(1);
+                    } else {
+                      //multiple ajax in preProcess
+                      _.each(dataPreProcessAsyncRes, function(apiRes, idx) {
+                        if ( (apiRes.length > 1) && (apiRes[1] == 'success') ) {
+                          dataPreProcessAsyncRes[idx] = spa.toJSON(apiRes[0]);
+                        }
+                      });
+                    }
+                    spa.console.log(dataPreProcessAsyncRes.__now());
                   }
 
-                  var fnDataProcess = _renderOption('dataProcess', 'process'), fnDataProcessResponse;
+                  var fnDataProcess = _renderOption('dataProcess', 'process'), finalTemplateData;
                   if (fnDataProcess && (_.isString(fnDataProcess))) {
                     fnDataProcess = spa.findSafe(window, fnDataProcess);
                   }
-                  retValue['modelOriginal'] = $.extend({}, spaTemplateModelData[viewDataModelName]);
-                  retValue['model'] = spaTemplateModelData[viewDataModelName];
+                  retValue['modelOriginal'] = $.extend({}, initialTemplateData);
+                  retValue['model'] = initialTemplateData;
                   if (fnDataProcess && _.isFunction(fnDataProcess)) {
-                    var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
-                        compDataProps = _.pick(dataProcessContext, ['data','dataUrl','dataUrlParams','dataParams','dataExtra','dataXtra','dataDefaults','data_']),
-                        isPreProcessed = spa.is(dataPreProcessRes,'object');
-                    if (isPreProcessed) {
-                      fnDataProcessResponse = fnDataProcess.call(dataProcessContext, dataPreProcessRes, _.merge({},spaTemplateModelData[viewDataModelName]), compDataProps);
-                    } else {
-                      fnDataProcessResponse = fnDataProcess.call(dataProcessContext, spaTemplateModelData[viewDataModelName], compDataProps);
-                    }
+                    var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
+                    dataPreProcessAsyncRes.unshift(initialTemplateData);
+                    finalTemplateData = fnDataProcess.apply(dataProcessContext, dataPreProcessAsyncRes);
+                  } else if (isPreProcessed) {
+                    spa.console.warn(rCompName,'.dataPreProcessAsync without dataProcess. Merging responses.');
+                    dataPreProcessAsyncRes.unshift(initialTemplateData);
+                    _.merge.apply(_, dataPreProcessAsyncRes);
                   }
 
-                  retValue['model'] = (spa.is(fnDataProcessResponse, 'undefined'))? spaTemplateModelData[viewDataModelName] : fnDataProcessResponse;
+                  retValue['model'] = (spa.is(finalTemplateData, 'undefined'))? initialTemplateData : finalTemplateData;
                   if (!_.isObject(retValue['model'])) {
                     retValue['model'] = retValue['modelOriginal'];
                   }
-                  //console.log('final Template Data:', retValue['model']);
+                  spa.console.log(rCompName, 'Final Template Data:', retValue['model']);
 
                   { if (rCompName) {
                       if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
