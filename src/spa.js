@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.60.0';
+  spa.VERSION = '2.60.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2517,9 +2517,9 @@ window['app']['api'] = window['app']['api'] || {};
   /* **********************Date prototypes*********************** */
   /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
    *
-   * now.yymmdd()    => '20100301'
-   * now.yymmdd('/') => '2010/03/01'
-   * now.yymmdd('-') => '2010-03-01'
+   * now.yyyymmdd()    => '20100301'
+   * now.yyyymmdd('/') => '2010/03/01'
+   * now.yyyymmdd('-') => '2010-03-01'
    */
   Date.prototype.yyyymmdd = function(sep) {
     var mm = this.getMonth() + 1, dd = this.getDate();
@@ -6062,7 +6062,7 @@ window['app']['api'] = window['app']['api'] || {};
       _.each(notifyList, function(xWatchName){
         xWatchName = (xWatchName||'').trim();
         if (_$dataWatchList[cName].hasOwnProperty(xWatchName)) {
-          _$dataWatchList[cName][xWatchName].call(undefined, app[cName]['$data'], cName, xWatchName);
+          _$dataWatchList[cName][xWatchName].call(undefined, app[cName]['$data'], app[cName], xWatchName);
         }
       });
     }
@@ -6526,6 +6526,11 @@ window['app']['api'] = window['app']['api'] || {};
           }
           //GET Data for render ends
 
+          if (spaCompOptions.hasOwnProperty('data')){
+            spaCompOptions['data_'] = _.merge({}, spaCompOptions.data);
+            delete spaCompOptions['data'];
+          }
+
           spa.console.log('inner-component', spaCompName, 'options:', spaCompOptions);
           spa.renderComponent(spaCompName, spaCompOptions);
         }
@@ -6757,6 +6762,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataParams: {}
       , dataType: ""
       , dataExtra:{}
+      , dataXtra:{}
       , data_    :{}
       , dataDefaults:{}
       , dataModel: ''
@@ -6977,6 +6983,7 @@ window['app']['api'] = window['app']['api'] || {};
       else {
         spa.console.info("Override [data-cache] with user option [dataCache]: " + spaRVOptions.dataCache);
       }
+
       if (spa.isBlank(dataModelUrl)) { /*dataFound = false;*/
         spaTemplateModelData[viewDataModelName] = {};
 
@@ -6992,7 +6999,7 @@ window['app']['api'] = window['app']['api'] || {};
 
         if (spa.isBlank(dataModelUrls)) {
           spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
-          spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions);
+          spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra);
         }
         else { //Processing data-collection
           if (!_.isArray(dataModelUrls)) {
@@ -7451,7 +7458,7 @@ window['app']['api'] = window['app']['api'] || {};
                         if (compLocOrApiData.hasOwnProperty('spaComponent')) {
                           app[rCompName]['$data'] = {};
                         } else {
-                          app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, compLocOrApiData) : {};
+                          app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, compLocOrApiData) : {};
                         }
                         app[rCompName]['__global__']= window || {};
                       }
@@ -7510,7 +7517,7 @@ window['app']['api'] = window['app']['api'] || {};
 
                         if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
                           if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
-                            var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                            var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                             spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
                             templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
                             spa.console.log(templateContentToBindAndRender);
@@ -7523,7 +7530,7 @@ window['app']['api'] = window['app']['api'] || {};
                           if ((typeof Handlebars != "undefined") && Handlebars) {
                             spa.console.log("Data bind using handlebars.js.");
                             var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
-                            var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                            var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                             spaBindData = data4Template;
                             if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
                             compiledTemplate = preCompiledTemplate(data4Template);
