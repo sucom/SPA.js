@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.61.1';
+  spa.VERSION = '2.61.2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7971,6 +7971,16 @@ window['app']['api'] = window['app']['api'] || {};
         return this.css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
       } else {
         return this.disable(true);
+      }
+    },
+    value:function(newValue, eventAfterUpdate){
+      if (spa.is(newValue, 'undefined')) {
+        return this.val();
+      } else {
+        this.each(function(){
+          $(this).val(newValue).trigger(eventAfterUpdate || 'change');
+        });
+        return this;
       }
     },
     isDisabled: function(fnCall){
