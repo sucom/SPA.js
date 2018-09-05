@@ -181,7 +181,7 @@ window['app']['api'] = window['app']['api'] || {};
           var func = Object.defineProperty;
           func({}, '', {});
           return func;
-        } catch (e) {}
+        } catch(e){}
       }()),
 
     baseCreate     : (function() {
@@ -1506,7 +1506,7 @@ window['app']['api'] = window['app']['api'] || {};
       try {
         value[__LD.symToStringTag] = undefined;
         var unmasked = true;
-      } catch (e) {}
+      } catch(e){}
 
       var result = _nativeObjectToString.call(value);
       if (unmasked) {
@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.61.0';
+  spa.VERSION = '2.61.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2796,8 +2796,7 @@ window['app']['api'] = window['app']['api'] || {};
     try {
       jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
     } catch(e){
-      console.warn('Error JSON Parse: Invalid String >> "'+str+'"');
-      console.error(e);
+      console.error('Error JSON Parse: Invalid String >> "'+str+'"' + e.stack);
     }
     return jsonObj;
   };
@@ -3881,8 +3880,8 @@ window['app']['api'] = window['app']['api'] || {};
     var tObj = obj, retValue = false;
     try {
       retValue = (typeof eval("tObj." + path) != "undefined");
-    } catch(e) {
-      spa.console.error("Key["+path+"] error in object.\n" + e.stack);
+    } catch(e){
+      console.warn("Key["+path+"] error in object.\n" + e.stack);
     };
     return retValue;
   };
@@ -4704,7 +4703,7 @@ window['app']['api'] = window['app']['api'] || {};
           retStr = _stripEnds(retStr);
         }
       } catch(e){
-        spa.console.error(e);
+        console.warn('i18n lookup error:' + e.stack);
       }
       return retStr;
 
@@ -7048,8 +7047,8 @@ window['app']['api'] = window['app']['api'] || {};
                       else {
                         try {
                           targetApiData = oResult.hasOwnProperty(targetDataModelName) ? oResult[targetDataModelName] : oResult;
-                        } catch(e) {
-                          spa.console.error("Error in Data Model ["+targetDataModelName+"] in URL ["+apiDataUrl+"].\n" + e.stack);
+                        } catch(e){
+                          console.warn("Error in Data Model ["+targetDataModelName+"] in URL ["+apiDataUrl+"].\n" + e.stack);
                         }
                       }
                       if (spaTemplateModelData[viewDataModelName][apiDataModelName]) {
@@ -7131,8 +7130,8 @@ window['app']['api'] = window['app']['api'] || {};
           } else {
             try {
               spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
-            } catch(e) {
-              spa.console.error("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
+            } catch(e){
+              console.warn("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
             }
           }
 
@@ -7167,8 +7166,8 @@ window['app']['api'] = window['app']['api'] || {};
                       viewDataModelName = 'Data';
                     };
                     spaTemplateModelData[viewDataModelName] = (!validateData && oResult.hasOwnProperty(dataModelName)) ? oResult[dataModelName] : oResult;
-                  } catch(e) {
-                    spa.console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
+                  } catch(e){
+                    console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
                   }
                 }
                 spa.console.info("Loaded data model [" + dataModelName + "] from [" + dataModelUrl + "]");
@@ -7718,15 +7717,14 @@ window['app']['api'] = window['app']['api'] || {};
               }  else { //NOT a valid Data
                 spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
               }
-
             }
-            catch(e) {
-              spa.console.error("Error Rendering.\n" + e.stack);
+            catch(e){
+              console.error(e);
             }
             spa.console.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
           })
           .fail(function () {
-            spa.console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
+            console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
           });//.done(spa.runOnceOnRender);
       }
       else {
@@ -8847,7 +8845,7 @@ window['app']['api'] = window['app']['api'] || {};
             try {
               var urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
               actualUrl = spa.api.url(actualUrl.replace(/{{/g,'{').replace(/}}/g,'}'), urlParamsData);
-            } catch (e){};
+            } catch(e){};
             spa.console.log('Updated URL>>', actualUrl);
           };
 
@@ -8873,7 +8871,7 @@ window['app']['api'] = window['app']['api'] || {};
       try {
         var urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
         options.url = spa.api.url((options.url).replace(/{</g,'{').replace(/>}/g,'}'), urlParamsData);
-      } catch (e){};
+      } catch(e){};
     }
     //Final Ajax URL
     spa.console.log('Final Ajax URL>', options.url);
@@ -8920,9 +8918,9 @@ window['app']['api'] = window['app']['api'] || {};
           if (!isFailed && spa.is(fnResponse, 'boolean')){
             isFailed = !fnResponse;
           }
-        } catch(e) {
+        } catch(e){
           console.warn('Execution error in subscribed function:'+sub.name+' on-'+eventName);
-          console.error(e);
+          console.error(e.stack);
         }
       });
       if (isFailed) {
