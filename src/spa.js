@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.61.2';
+  spa.VERSION = '2.62.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3550,6 +3550,87 @@ window['app']['api'] = window['app']['api'] || {};
     }
   };
 
+  /*
+   * spa.extract(destObj, mapKeys, srcObj1, srcObj2, srcObj3)
+   * spa.extract(mapKeys, srcObj1, srcObj2, srcObj3)
+   *
+   * mapKeys = [ 'mapKeySpec1', 'mapKeySpec2', 'mapKeySpec3', ... ]
+   * mapKeys = 'mapKeySpec1, mapKeySpec2, mapKeySpec3, ...'
+   *
+   * # = 0 .. N; 0 for window (global); 1 .. N refers to srcObj1, srcObj2 ... srcObjN
+   * mapKeySpec = '@#'
+   * mapKeySpec = '@#.src.key.path'
+   * mapKeySpec = 'dst.key.path@#'
+   * mapKeySpec = 'dst.key.path@#.src.key.path'
+   *
+   */
+  function _extract(){
+    var args = Array.prototype.slice.call(arguments);
+    try {
+      if (!spa.is(args[0], 'object')) args.unshift({});
+      if (spa.is(args[1], 'string')) args[1] = args[1].split(',');
+    } catch (e) {
+      console.error('Invalid arguments', e);
+    }
+
+    if (!(spa.is(args[0], 'object') && (spa.is(args[1], 'array')))) {
+      console.error('Invalid arguments.');
+      return;
+    }
+
+    var dstObj  = args[0]
+      , spec    = args[1]
+      , srcObjs = args.slice(2);
+    srcObjs.unshift(window); //load window @0
+    var mapSpecArr, dstKey, srcIdx, srcKey, skipExtract, dstVal;
+    _.each(spec, function(mapSpec){
+      mapSpec = (mapSpec || '').trim();
+      skipExtract = !(mapSpec && mapSpec != '@0');
+      if (!skipExtract) {
+        if (/^\@([0-9])+/.test(mapSpec)){ //begins with @#
+          srcKey = dstKey =  ((mapSpec).getRightStr('.') || '').trim();
+          if (srcKey) {
+            mapSpec = srcKey+':'+mapSpec;
+          } else {
+            _.merge(dstObj, srcObjs[ spa.toInt(mapSpec) ]);
+            skipExtract = true;
+          }
+        };
+
+        if (!skipExtract) {
+          mapSpecArr = mapSpec.split(':');
+          dstKey = (mapSpecArr[0]||'').trim();
+          srcIdx = spa.toInt((mapSpecArr[1]||'').split('.')[0]);
+          srcKey =  ((mapSpecArr[1]||'').getRightStr('.') || '').trim();
+          if (!dstKey) dstKey = srcKey;
+          dstVal = srcKey? spa.findSafe(srcObjs[srcIdx], srcKey) : (srcIdx? srcObjs[srcIdx] : {});
+          if (dstKey.endsWithStr('\\+')) {
+            dstKey = dstKey.trimRightStr('+');
+            var preVal = spa.findSafe(dstObj, dstKey);
+            switch(spa.of(preVal)) {
+              case 'object':
+                if (spa.is(dstVal, 'object')) {
+                  dstVal = _.merge({}, preVal, dstVal);
+                }
+                break;
+              case 'array':
+                if (spa.is(dstVal, 'array')) {
+                  dstVal = preVal.concat(dstVal);
+                } else {
+                  dstVal = preVal.push(dstVal);
+                }
+                break;
+            }
+          }
+          spa.setSimpleObjProperty(dstObj, dstKey, dstVal);
+        }
+      }
+    });
+
+    return dstObj;
+  }
+  spa.extract = _extract;
+
   function _$qrySelector(selector) {
     if (spa.is(selector, 'string')) {
       var selectors = (selector.trim()).split(' ')
@@ -4203,6 +4284,14 @@ window['app']['api'] = window['app']['api'] || {};
     '__toQueryString': {
       value: function(){
         return spa.toQueryString(this);
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__extract': {
+      value: function(){
+        Array.prototype.unshift.call(arguments, this);
+        return spa.extract.apply(this, arguments);
       },
       enumerable : false,
       configurable: false
@@ -7423,9 +7512,12 @@ window['app']['api'] = window['app']['api'] || {};
 
                   isPreProcessed = (!spa.is(fnDataPreProcessAsyncResponse, 'undefined'));
                   if (!isPreProcessed) fnDataPreProcessAsyncResponse = [];
-                  if (isPreProcessed && !spa.is(fnDataPreProcessAsyncResponse, 'array')) {
-                    isSinlgeAsyncPreProcess = true;
-                    fnDataPreProcessAsyncResponse = [fnDataPreProcessAsyncResponse];
+                  if (isPreProcessed) {
+                    isSinlgeAsyncPreProcess = (!spa.is(fnDataPreProcessAsyncResponse, 'array'))
+                                              || (spa.is(fnDataPreProcessAsyncResponse, 'array') && fnDataPreProcessAsyncResponse.length==1);
+                    if (!spa.is(fnDataPreProcessAsyncResponse, 'array')) {
+                      fnDataPreProcessAsyncResponse = [fnDataPreProcessAsyncResponse];
+                    }
                   }
                 }
                 return fnDataPreProcessAsyncResponse;
@@ -7445,7 +7537,7 @@ window['app']['api'] = window['app']['api'] || {};
                     } else {
                       //multiple ajax in preProcess
                       _.each(dataPreProcessAsyncRes, function(apiRes, idx) {
-                        if ( (apiRes.length > 1) && (apiRes[1] == 'success') ) {
+                        if ( apiRes && spa.is(apiRes, 'array')  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
                           dataPreProcessAsyncRes[idx] = spa.toJSON(apiRes[0]);
                         }
                       });
@@ -8581,6 +8673,9 @@ window['app']['api'] = window['app']['api'] || {};
         });
       }
       return apiUrl;
+    },
+    success: function(resData){
+      return [resData, 'success'];
     },
     isCallSuccess : function() {
       return true;
