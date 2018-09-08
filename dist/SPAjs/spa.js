@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.62.1';
+  spa.VERSION = '2.62.2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5062,16 +5062,15 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _maskHandlebars(inTmpl){
     return inTmpl
-      .replace(/{{/g  , '><!--_HBT_')
-      .replace(/}}/g  , ' _HBT_-->')
+      .replace(/{{/g  , '><!--_XHBTINSPA_{{')
+      .replace(/}}/g  , '}} _XHBTINSPA_-->')
       ;
   }
   function _unmaskHandlebars(inTmpl){
     return inTmpl
-      .replace(/\/&gt;/g, '>')
-      .replace(/ _HBT_--(>|&gt;)/gi, '}}')
-      .replace(/&gt;(&lt;|<)!--_HBT_/gi, '{{')
-      .replace(/><!--_HBT_/gi, '{{')
+      .replace(/(\/)*&gt;/g, '>')
+      .replace(/ _XHBTINSPA_--(>|&gt;)/gi, '')
+      .replace(/(>|&gt;)(<|&lt;)!--_XHBTINSPA_/gi, '')
       ;
   }
 
