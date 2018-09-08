@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.62.0';
+  spa.VERSION = '2.62.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5060,6 +5060,21 @@ window['app']['api'] = window['app']['api'] || {};
     return elAttr;
   }
 
+  function _maskHandlebars(inTmpl){
+    return inTmpl
+      .replace(/{{/g  , '><!--_HBT_')
+      .replace(/}}/g  , ' _HBT_-->')
+      ;
+  }
+  function _unmaskHandlebars(inTmpl){
+    return inTmpl
+      .replace(/\/&gt;/g, '>')
+      .replace(/ _HBT_--(>|&gt;)/gi, '}}')
+      .replace(/&gt;(&lt;|<)!--_HBT_/gi, '{{')
+      .replace(/><!--_HBT_/gi, '{{')
+      ;
+  }
+
   spa.dataBind = spa.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
     //console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
@@ -5088,7 +5103,7 @@ window['app']['api'] = window['app']['api'] || {};
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
-    if ($dataBindEls.length && !onVirtualDOM) {
+    if ($dataBindEls.length && !onVirtualDOM && compName) {
       //Exclude elements which are part of inner components
       //Include elements which are part of this component only
       $dataBindEls = $dataBindEls.filter(function(){
@@ -5110,9 +5125,8 @@ window['app']['api'] = window['app']['api'] || {};
       if (!spa.compiledTemplates4DataBind.hasOwnProperty(tmplStoreName)) {
         spa.compiledTemplates4DataBind[tmplStoreName] = {};
       }
-      return spa.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile(template));
+      return spa.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile( _unmaskHandlebars(template) ));
     }
-
 
     _.each($dataBindEls, function(el) {
       $el = $(el);
@@ -7632,10 +7646,13 @@ window['app']['api'] = window['app']['api'] || {};
 
                         if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
                           if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
+                            templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
+                            spa.console.log('TemplateBeforeBind', templateContentToBindAndRender);
                             var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                             spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
                             templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
-                            spa.console.log(templateContentToBindAndRender);
+                            templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
+                            spa.console.log('TemplateAfterBind', templateContentToBindAndRender);
                             if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) spa.compiledTemplates4DataBind[rCompName] = {};
                             skipSpaBind=true;
                           }
@@ -7643,13 +7660,17 @@ window['app']['api'] = window['app']['api'] || {};
 
                         if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
                           if ((typeof Handlebars != "undefined") && Handlebars) {
-                            spa.console.log("Data bind using handlebars.js.");
-                            var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
-                            var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                            spaBindData = data4Template;
-                            if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
-                            compiledTemplate = preCompiledTemplate(data4Template);
-                            spa.console.log(compiledTemplate);
+                            spa.console.log("Data bind using handlebars.js.", templateContentToBindAndRender);
+                            try{
+                              var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
+                              var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                              spaBindData = data4Template;
+                              if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
+                              compiledTemplate = preCompiledTemplate(data4Template);
+                              spa.console.log(compiledTemplate);
+                            }catch(e){
+                              console.error('Template', e);
+                            }
                           } else {
                             spa.console.error("handlebars.js is not loaded.");
                           }
@@ -9167,7 +9188,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
   function _onWindowReload(){
-    var fnRes, i18nMsgKey, retValue;
+    var fnRes, i18nMsgKey, retValue = null;
     if (spa.onReload) {
       fnRes = spa.onReload();
     }
