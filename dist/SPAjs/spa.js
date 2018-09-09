@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.62.2';
+  spa.VERSION = '2.63.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -8670,6 +8670,7 @@ window['app']['api'] = window['app']['api'] || {};
     liveUrlSuffix:'',
     urls:{},
     mock:false,
+    defaultPayload:false,
     forceParamValuesInMockUrls:false,
     urlKeyIndicator:'@',
     url: function(apiKey, urlReplaceKeyValues){
@@ -8738,6 +8739,24 @@ window['app']['api'] = window['app']['api'] || {};
       if (ajaxOptions['data'] && spa.is(ajaxOptions['data'], 'object') && ajaxOptions['stringifyPayload']) {
         delete ajaxOptions['stringifyPayload'];
         ajaxOptions['data'] = JSON.stringify(ajaxOptions['data']);
+      }
+
+      if (ajaxOptions['defaultPayload']) {
+        var reqPayloadType = spa.of(ajaxOptions['data'])
+          , defaultPayload = ajaxOptions['defaultPayload']
+          , reqPayload = (reqPayloadType == 'string')? spa.toJSON(ajaxOptions['data']) : ajaxOptions['data'];
+
+        if (spa.is(defaultPayload, 'function')) {
+          defaultPayload = defaultPayload(reqPayload);
+        }
+
+        if (spa.is(defaultPayload, 'object')) {
+          var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge(defaultPayload, reqPayload) : defaultPayload;
+          if (reqPayloadType == 'string') {
+            finalReqPayload = JSON.stringify(finalReqPayload);
+          }
+          ajaxOptions['data'] = finalReqPayload;
+        };
       }
 
       if ((ajaxOptions.url).beginsWithStr(spa.api.urlKeyIndicator)){
@@ -9004,6 +9023,26 @@ window['app']['api'] = window['app']['api'] || {};
     if ( regExUrlParams.test(options.url) || (/<([^>])*>/).test(options.url) ) {
       console.warn('URL has undefined params >>', options.url, options.data);
       options.url = options.url.replace(/[{<>}]/g, '_');
+    }
+
+
+    //Global defaultPayload
+    if (spa.api['defaultPayload']) {
+      var reqPayloadType = spa.of(options['data'])
+        , defaultPayload = spa.api['defaultPayload']
+        , reqPayload = (reqPayloadType == 'string')? spa.toJSON(options['data']) : options['data'];
+
+      if (spa.is(defaultPayload, 'function')) {
+        defaultPayload = defaultPayload(reqPayload);
+      }
+
+      if (spa.is(defaultPayload, 'object')) {
+        var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge(defaultPayload, reqPayload) : defaultPayload;
+        if (reqPayloadType == 'string') {
+          finalReqPayload = JSON.stringify(finalReqPayload);
+        }
+        options['data'] = finalReqPayload;
+      };
     }
 
     if (spa.ajaxPreProcess) {
