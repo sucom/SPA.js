@@ -201,6 +201,47 @@
   </section>
 
   <section>
+    <h2>Initializing Routes.</h2>
+    <p>By default, the routes are initalized on render of the component.
+      However, if the <mark>data-spa-route</mark> elements are added to DOM after component render (like building table using 3rd party library)
+      and need to initialize routes for those elements use <mark>spa.initRoutes</mark>.
+      <p><i>componentX.html</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <div class="datatable-container" id="userListTblContainer">
+          <table id="userList">
+          </table>
+        </div>
+      </script>
+
+      <p><i>componentX.js</i></p>
+      <script type="text/code" class="code trim no-num-tool" data-lang="javascript" data-title="componentX.js">
+        spa.$extend('componentX', {
+
+          renderCallback: function(){
+
+            $('#userList').DataTable({
+              ...
+
+              dt-options (https://datatables.net/reference/option/)
+
+              ...
+
+              initComplete: function(){
+
+                spa.initRoutes( '#userListTblContainer' );
+
+              }
+
+            });
+
+          }
+        });
+      </script>
+
+    </p>
+  </section>
+
+  <section>
     <h2>Block browser's navigation.</h2>
     <p>It's easy to block browser's navigation within SPA using a class <mark>BLOCK-SPA-NAV</mark>.
       If any component's HTML element contains the class <mark>BLOCK-SPA-NAV</mark>, then the browser's navigation BACK and RLOAD will be blocked.
