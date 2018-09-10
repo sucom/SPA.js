@@ -26,6 +26,31 @@
   </div>
   </script>
 
+  <h3>Data access from component's data, component's extended property, global variable</h3>
+  <p><i>componentX.html</i></p>
+  <script type="text/code" class="code trim no-toolbar" data-lang="html">
+    <div>
+      <span><b>member.name in componentX data</b></span>:
+      <p>{{ member.name }}</p>
+    </div>
+
+    <div>
+      <span><b>member.name componentX's extended property</b></span>:
+      <p>{{ {@$}member.name }}</p>
+    </div>
+
+    <div>
+      <span><b>member.name in Another ComponentY's extended property
+        (Note: need require in spa.$('componentX', { ... require : 'componentY' ... }) )</b></span>:
+      <p> {{ {@$componentY}member.name }} </p>
+    </div>
+
+    <div>
+      <span><b>accessing variable in Global(window) Scope</b></span>:
+      <p> {{ _global_.appData.member.name }} </p>
+    </div>
+  </script>
+
   <blockquote>
     <p>Now, jump to Component's Base Properties section to learn to send data
       to bind with template and come back to learn more advanced topics in Component's UI.</p>
@@ -34,7 +59,7 @@
   </blockquote>
 
   <h3>Example</h3>
-  <p>For a quick start,
+  <p>Highly recommeded to download below example to see data binding (component data, extended property and global data) in template.
     <ol>
       <li>1. download this <a href="spa-examples_cdn/ex002-spa-basic-template+data-scope.zip" download="" target="_blank">example code</a>.</li>
       <li>2. unzip to your workspace.</li>

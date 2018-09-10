@@ -46,7 +46,7 @@
 
 /* live-api url prefix to identify Live-Api calls */
 app['api'] = {
-  liveApiPrefix: 'api/',
+  liveApiPrefix: 'api/, api-gateway-2/, api-gateway-3',
 
   ajaxOptions: {            //set default ajaxOptions for spa.api['get' | 'post' | 'put' | 'del'] methods;
                             //supported from SPA.js version:2.35.0+
@@ -54,10 +54,18 @@ app['api'] = {
 
     dataType: 'json',       //set dataType to 'json' and contentType to 'application/json'
     stringifyPayload: true, //converts data Object to JSON.stringify(data)
-    headers: {              //Set request headers
-      Accept: 'application/json',
-      locale: 'en_US',
-      authToken: 'ALBL-DJDUE8-93939-0099KKDKD-03939K-KSKSJDMDKIUFHSLS-38373DJ847DHKBLBJJ'
+
+    headers: {              //Set request headers with static values; use app.api.reqHeaders = function(){ return { 'header-key-1': 'dynamic-value', 'header-key-2': 'dynamic-value' } };
+      'authToken': 'ALBL-DJDUE8-93939-0099KKDKD-03939K-KSKSJDMDKIUFHSLS-38373DJ847DHKBLBJJ',
+      'Accept-Language', 'en-US;q=1',
+      'Accept': 'application/json',
+      'locale': 'en-US'
+    },
+
+    defaultPayload: function(){
+      return {
+        'stationId' : '10001'
+      }
     }
   }
 };

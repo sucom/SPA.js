@@ -8,12 +8,14 @@
       SPA comes with default settings for it's components and the same can be changed using <mark>spa.defaults.set()</mark> function.
       <script type="text/code" class="code no-toolbar" data-lang="JavaScript">
 components: {
-    rootPath    : 'app/components/'
-  , inFolder    : true
-  , templateExt : '.html'
-  , scriptExt   : '.js'
-  , callback    : ''
-  , extend$data : true
+    rootPath       : 'app/components/'         // default components collection folder
+  , inFolder       : true                      // .html, .css, .js inside component folder
+  , templateExt    : '.html'                   // template extension ( could be .jsp | .php )
+  , scriptExt      : '.js'                     // script extension ( could be .min.js )
+  , callback       : ''                        // function to be executed after each component's render
+  , extend$data    : true                      // enable/disable $data for each component
+  , templateScript : false                     // allow/deny scripts inside template
+  , templateCache  : true                      // enable/disable cache of templates. Recommended to disable during development.
 }
       </script>
 
@@ -52,15 +54,18 @@ spa.defaults.set( { components: {
           <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
 
           <_script>
-            //to change single default property
-            spa.defaults.set( 'components.templateExt', '.jsp' );
+            spa.onInit = function() {
 
-            //to change multiple default properties
-            spa.defaults.set( { components: {
-                                  templateExt:'.jsp',
-                                  rootPath:'Components/',
-                                  inFolder:false}
-                              } );
+              //to change single default property
+              spa.defaults.set( 'components.templateExt', '.jsp' );
+
+              //to change multiple default properties
+              spa.defaults.set( { components: {
+                                    templateExt:'.jsp',
+                                    rootPath:'Components/',
+                                    inFolder:false}
+                                } );
+            }
           </_script>
 
           </_body>

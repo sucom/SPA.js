@@ -1,0 +1,73 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>SPA Defaults</h1>
+
+  <section>
+    <h3>i18n Defaults</h3>
+
+    <p>
+      SPA comes with default settings for it's i18n feature and the same can be changed using <mark>spa.defaults.set()</mark> function.
+      <script type="text/code" class="code no-toolbar" data-lang="JavaScript">
+lang: {
+    path  : 'app/language/'       // default language files folder
+  , ext   : '.txt'                // language file extension
+  , cache : true                  // enable/disable cache
+}
+      </script>
+
+      <script type="text/code" class="code no-num-tool" data-lang="JavaScript">
+
+//to change single default property
+spa.defaults.set( 'lang.path', 'app/lang/' );
+
+//to change multiple default properties
+spa.defaults.set( { lang: {
+                      path  : 'app/lang/',
+                      cache : false }
+                  } );
+
+      </script>
+
+    </p>
+
+    <blockquote>
+      <p>NOTE: Initialize global default settings immediately after spa.js bundle load.</p>
+
+      <script type="text/code" class="code trim" data-lang="html" data-title="index.html">
+        <!DOCTYPE html>
+        <html>
+          <_head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>MyApp</title>
+          </_head>
+          <_body>
+
+          <div data-spa-component="main"></div>
+
+          <_script src="xlib/jquery/jquery.min.js"        ></_script>
+          <_script src="xlib/handlebars/handlebars.min.js"></_script>
+          <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
+
+          <_script>
+            spa.onInit = function() {
+
+              //to change single default property
+              spa.defaults.set( 'lang.path', 'app/lang/' );
+
+              //to change multiple default properties
+              spa.defaults.set( { lang: {
+                                    path  : 'app/lang/',
+                                    cache : false }
+                                } );
+            }
+          </_script>
+
+          </_body>
+        </html>
+        </script>
+
+    </blockquote>
+
+
+  </section>
+
+</div>

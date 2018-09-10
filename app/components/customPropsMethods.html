@@ -6,15 +6,23 @@
     <mark>app.componentX.$data</mark> the data, which has been used in template.
   </p>
   <p>
+    <mark>app.componentX.onRender</mark> function, which will be called just before rendering (spa.$render). (<i>from v2.54.1</i>)
+  </p>
+  <p>
     <mark>app.componentX.renderCallback</mark> function, which will be called after rendering (spa.$render).
+  </p>
+  <p>
+    <mark>app.componentX.onRefresh</mark> function, which will be called just before rendering (spa.$refresh). (<i>from v2.54.1</i>)
   </p>
   <p>
     <mark>app.componentX.refreshCallback</mark> function, which will be called after refresh (spa.$refresh).
   </p>
   <p>
+    <mark>app.componentX.onRemove</mark> function, which will be called just before getting removed from the DOM. can be stopped by return false; (<i>from v2.54.1</i>)
+  </p>
+  <p>
     <mark>app.componentX.events</mark> the collection of events, which will be registered on component's DOM elements after render or refresh.
   </p>
-
 
   <h3>Custom Properties/Methods</h3>
 

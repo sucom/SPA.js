@@ -2,7 +2,7 @@
   <h1>SPA Events</h1>
 
   <section>
-    <h3>spa.onReady()</h3>
+    <h3>spa.onInitComplete()</h3>
 
     <p>
       <script type="text/code" class="code no-num-tool" data-lang="html" data-title="index.html">
@@ -16,8 +16,10 @@
 
     <_script>
 
-      spa.onReady = function() {
-        //doSomething...
+      spa.onInitComplete = function() {
+
+        //doSomething after SPA initialization and before spa.onReady
+
       }
 
     </_script>
