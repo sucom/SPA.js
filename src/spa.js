@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.63.0';
+  spa.VERSION = '2.63.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6699,9 +6699,12 @@ window['app']['api'] = window['app']['api'] || {};
     },
     registerComponentEvents: function (compName) {
       if (compName && app[compName] && app[compName].hasOwnProperty('events')) {
+        var elTargetSelector;
         _.each(Object.keys(app[compName].events), function(eventId){
           if (app[compName].events[eventId].hasOwnProperty('target') && (!spa.isBlank(app[compName].events[eventId].target))) {
-            $('body').find(app[compName].events[eventId].target).filter(':not([spa-events-'+eventId+'="'+compName+'"])')
+            elTargetSelector = app[compName].events[eventId].target;
+            $elTarget = spa.$(compName+' '+elTargetSelector); //$('body').find(elTargetSelector)
+            $elTarget.filter(':not([spa-events-'+eventId+'="'+compName+'"])')
             .attr('spa-events-'+eventId, compName)
             .each(function(index, el){
               _.each(Object.keys(app[compName].events[eventId]), function(eventNames){
@@ -8129,6 +8132,9 @@ window['app']['api'] = window['app']['api'] || {};
       }
 
       return isChanged;
+    },
+    initSpaRoutes: function(){
+      _initRouteHash(this);
     },
     initFormValidation: function(){
       var $forms = this.filter('form');
