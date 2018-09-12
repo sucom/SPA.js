@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.63.1';
+  spa.VERSION = '2.64.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -8822,7 +8822,7 @@ window['app']['api'] = window['app']['api'] || {};
     get : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
       return spa.api._call(spa.api._params2AxOptions.apply(undefined, arguments));
     },
-    post : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
+    post: function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
       return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
     },
     put : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
@@ -8830,8 +8830,38 @@ window['app']['api'] = window['app']['api'] || {};
     },
     del : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
       return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
-    }
+    },
+    mix : function(){
+      var apiQue=[], fnWhenDone = arguments[arguments.length-1];
+      for(var i=0; i<arguments.length; i++){
+        if (spa.is(arguments[i], 'array')) {
+          apiQue = apiQue.concat(arguments[i]);
+        } else if (!spa.is(arguments[i], 'function')) {
+          apiQue.push(arguments[i]);
+        }
+      }
 
+      return $.when.apply($, apiQue).done(function(){
+        var apiResponses = Array.prototype.slice.call( arguments );
+
+        if ((apiQue.length==1) && (apiResponses.length > 1) && (apiResponses[1] == 'success') ){
+          //if only 1 ajax request with success response
+          apiResponses[0] = spa.toJSON(apiResponses[0]);
+          apiResponses.splice(1); //remove 2nd and 3d arguments 'success' and jqXHR
+        } else {
+          //multiple ajax requests
+          _.each(apiResponses, function(apiRes, idx) {
+            if ( apiRes && spa.is(apiRes, 'array')  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
+              apiResponses[idx] = spa.toJSON(apiRes[0]);
+            }
+          });
+        }
+
+        if (fnWhenDone && spa.is(fnWhenDone, 'function')) {
+          fnWhenDone.apply(undefined, apiResponses);
+        }
+      });
+    }
   };//End of spa.api{}
   //API Section Ends
 
