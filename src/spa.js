@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.64.0';
+  spa.VERSION = '2.64.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
