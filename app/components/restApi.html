@@ -116,7 +116,61 @@ spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function
     <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="apiUrl with dynamic params">
 
 var apiUrl = spa.api.url( '@saveFormA', {id: '12345'} )
+
     </script>
 
   </section>
+
+  <section>
+    <h2>Multiple REST API calls using <mark>spa.api.mix</mark></h2>
+
+    <p>It's easy to make multiple API calls and do something when all done.</p>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript">
+      var api1 = spa.api.post('@api1UrlKey', payLoadObj),
+          api2 = spa.api.get('@api2UrlKey', payLoadObj),
+          api3 = spa.api.get('@api3UrlKey', payLoadObj);
+
+      spa.api.mix( [api1, api2, api3], function _whenAllDone( api1resData, api2resData, api3resData ){
+
+        //doSomething here with api1resData, api2resData, api3resData
+
+      }).fail(function(){
+
+        //something gone wrong!
+
+      });
+
+    </script>
+  </section>
+
+  <section>
+    <mark>NOTE:</mark>
+    <blockquote>
+      SPA APIs, spa.api['get' | 'post' | 'put' | 'del' | 'mix'] are short-hand wrapper for jQuery ajax.
+      Hence, it's possible to chain using then, fail, done methods on them.
+    </blockquote>
+    <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript">
+      var apiX = spa.api.get('@apiXUrlKey', payLoadObj);
+
+      apiX
+        .then(function(apiResponse, strTextStatus, jqXHRobj){
+
+        //doSomething on success
+
+      }).fail(function( jqXHRobj, strTextStatus, strErrorThrown ){
+
+        //something gone wrong. check arguments.
+
+      }).done(function( apiResponse, strTextStatus, jqXHRobj ){
+
+        //doSomething when done.
+
+      }).always(function( data|jqXHR, strTextStatus, jqXHRobj|strErrorThrown ) {
+
+        //doSomething always
+
+      });
+    </script>
+  </section>
+
 </div>
