@@ -1,0 +1,32 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataPreProcessAsync</mark></h3>
+
+  <p>Get more External (API) Data before render.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataPreProcessAsync: function(initialData){
+        //initialData == the data or response of dataUrl of this component;
+
+        var api1 = spa.api.post('@api1UrlKey', payLoadObj),
+            api2 = spa.api.get('@api2UrlKey', payLoadObj),
+            api3 = spa.api.get('@api3UrlKey', payLoadObj);
+
+        return [api1, api2, api3];
+      },
+
+      dataProcess: function( initialData, api1ResData, api2ResData, api3ResData ) {
+
+        var finalTemplateData = {};
+
+        //construct finalTemplateData from initialData, api1ResData, api2ResData, api3ResData
+
+        return finalTemplateData; //send to template for rendering
+      }
+
+    });
+  </script>
+
+</div>
