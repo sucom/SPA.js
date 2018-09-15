@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.64.1';
+  spa.VERSION = '2.64.2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -5866,7 +5866,17 @@ window['app']['api'] = window['app']['api'] || {};
         spa.updateTemplateScript(tmplId, tmplBody);
         options['template'] = '#'+tmplId;
       } else if (spa.hasPrimaryKeys(options, 'templateUrl')) {
-        options['template'] = options['templateUrl'];
+        var xTmplUrlPath = (options['templateUrl'] || '').trim();
+        if (xTmplUrlPath) {
+          if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
+            var _cFldrPath   = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (componentName+"/"): '');
+            xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
+          }
+          if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
+            xTmplUrlPath += spa.defaults.components.templateExt;
+          }
+        }
+        options['template'] = xTmplUrlPath;
       }
     }
 
@@ -6346,7 +6356,8 @@ window['app']['api'] = window['app']['api'] || {};
 
     options = _adjustComponentOptions(componentName, options);
 
-    var _cFilesPath  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (componentName+"/"): '') +componentName
+    var _cFldrPath   = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (componentName+"/"): '')
+      , _cFilesPath  = _cFldrPath+componentName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
       , _cScriptExt  = spa.defaults.components.scriptExt
       , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
@@ -6359,7 +6370,16 @@ window['app']['api'] = window['app']['api'] || {};
               spa.updateTemplateScript(tmplId, tmplBody);
               spa.components[componentName]['template'] = '#'+tmplId;
             } else  if (spa.hasPrimaryKeys(spa.components[componentName], 'templateUrl')) {
-              spa.components[componentName]['template'] = spa.components[componentName]['templateUrl'];
+              var xTmplUrlPath = (spa.components[componentName]['templateUrl'] || '').trim();
+              if (xTmplUrlPath) {
+                if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
+                  xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
+                }
+                if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
+                  xTmplUrlPath += spa.defaults.components.templateExt;
+                }
+              }
+              spa.components[componentName]['template'] = xTmplUrlPath;
             } else {
               spa.components[componentName]['template'] = _cTmplFile;
             }
@@ -6721,6 +6741,15 @@ window['app']['api'] = window['app']['api'] || {};
       }
     }
   };
+
+  function _appApiDefaultPayload(){
+    var defaultPayload = spa.findSafe(app, 'api.ajaxOptions.defaultPayload', {});
+    if (spa.is(defaultPayload, 'function')) {
+      defaultPayload = defaultPayload();
+    }
+    return defaultPayload;
+  }
+
   /*
    * spa.render("#containerID")
    *
@@ -7066,7 +7095,8 @@ window['app']['api'] = window['app']['api'] || {};
       , dataModelUrl  = _renderOption('dataUrl', 'url')
       , viewDataModelName
       , isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")))
-      , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data";
+      , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data"
+      , defPayLaod = _appApiDefaultPayload(), dataUrlPayLoad, _stringifyPayload = spa.findSafe(app, 'api.ajaxOptions.stringifyPayload');
     dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
     viewDataModelName = dataModelName.replace(/\./g, "_");
 
@@ -7133,12 +7163,21 @@ window['app']['api'] = window['app']['api'] || {};
                 if (spa.isBlank(dataAjaxReqHeaders)) {
                   dataAjaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
                 }
+
+                dataUrlPayLoad = _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {});
+                if (!spa.isBlank(defPayLaod)) {
+                  dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
+                }
+                if (_stringifyPayload) {
+                  dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
+                }
+
                 spaAjaxRequestsQue.push(
                   $.ajax({
                     url: apiDataUrl,
                     method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
                     headers: dataAjaxReqHeaders,
-                    data: _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {}),
+                    data: dataUrlPayLoad,
                     cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
                     dataType: _.has(dataApi, 'type') ? dataApi.type : (spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text')),
                     success: function (result, textStatus, jqXHR) {
@@ -7250,12 +7289,20 @@ window['app']['api'] = window['app']['api'] || {};
           if (spa.isBlank(ajaxReqHeaders)) {
             ajaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
           }
+
+          dataUrlPayLoad = spaRVOptions.dataParams;
+          if (!spa.isBlank(defPayLaod)) {
+            dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
+          }
+          if (_stringifyPayload) {
+            dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
+          }
           spaAjaxRequestsQue.push(
             $.ajax({
               url: dataModelUrl,
               method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
               headers: ajaxReqHeaders,
-              data: spaRVOptions.dataParams,
+              data: dataUrlPayLoad,
               cache: spaRVOptions.dataCache,
               dataType: spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text'),
               success: function (result) {
@@ -9925,12 +9972,7 @@ window['app']['api'] = window['app']['api'] || {};
     setTimeout(fnAsyc, 0);
   };
 
-  $(document).ready(function(){
-    /*onLoad Set spa.debugger on|off using URL param*/
-    spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
-    /* ajaxPrefilter */
-    $.ajaxPrefilter(_ajaxPrefilter);
-
+  function _initSpaApp(){
     function runSpaEvent(eName){
       if (spa[eName]) return spa[eName]();
     }
@@ -9957,6 +9999,18 @@ window['app']['api'] = window['app']['api'] || {};
     }
 
     $.when( runSpaEvent('onInit') ).done( initSpaModules );
+
+  }
+  spa.start = _initSpaApp;
+
+  $(document).ready(function(){
+    /*onLoad Set spa.debugger on|off using URL param*/
+    spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
+    /* ajaxPrefilter */
+    $.ajaxPrefilter(_ajaxPrefilter);
+
+    _initSpaApp();
+
   });
 
 })(this);
