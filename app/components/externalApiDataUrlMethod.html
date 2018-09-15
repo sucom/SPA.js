@@ -1,0 +1,27 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataUrlMethod</mark></h3>
+
+  <p>API request method: GET (default) | POST | PUT | DELETE</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataUrl: 'api/path/to/data',
+      dataUrlMethod: 'POST'
+
+    });
+  </script>
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      dataUrlMethod: 'POST'
+
+    });
+  </script>
+
+</div>
