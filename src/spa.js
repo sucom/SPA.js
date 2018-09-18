@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.64.2';
+  spa.VERSION = '2.64.3';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -8121,6 +8121,12 @@ window['app']['api'] = window['app']['api'] || {};
     inBlockedSpaNavContainer:function(){
       return !!(this.closest(_blockNavClass).length);
     },
+    blockNav: function(){
+      _blockSpaNavigation(this);
+    },
+    allowNav: function(){
+      _allowSpaNavigation(this);
+    },
     disable: function(disable){
       if ((!!disable) || spa.is(disable, 'undefined')) {
         return this.css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
@@ -9255,12 +9261,16 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _blockSpaNavigation(scope){
-    $(scope || 'body :first').addClass( _blockNavClassName );
+    var $scope = $(scope || 'body :first');
+    $scope.addClass( _blockNavClassName );
     _blockNav = _isSpaNavBlocked() || true; //safe!!!
+    return $scope;
   }
   function _allowSpaNavigation(scope){
-    $( scope || _blockNavClass ).removeClass( _blockNavClassName );
+    var $scope = $( scope || _blockNavClass );
+    $scope.removeClass( _blockNavClassName );
     _blockNav = _isSpaNavBlocked();
+    return $scope;
   }
   function _showSpaNavigation(){
     $('body').removeClass( _hideNavClassName );
@@ -9309,7 +9319,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
   function _onWindowReload(){
-    var fnRes, i18nMsgKey, retValue = null;
+    var fnRes, i18nMsgKey, retValue;
     if (spa.onReload) {
       fnRes = spa.onReload();
     }
@@ -9317,7 +9327,7 @@ window['app']['api'] = window['app']['api'] || {};
       case 'boolean':
         if (!fnRes) {
           i18nMsgKey = 'spa.message.on.window.reload';
-          retValue = spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+          return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
         }
         break;
       case 'string':
@@ -9328,13 +9338,15 @@ window['app']['api'] = window['app']['api'] || {};
         } else {
           retValue = fnRes;
         }
-        break;
+        return retValue;
+
       default:
         i18nMsgKey = 'spa.message.on.window.reload';
-        if (_blockNav) retValue = spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+        if (_blockNav) {
+          return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, ''); //shows message only in IE and Firefox. NOT in Chrome!
+        }
         break;
     }
-    return retValue;
   }
   function _handleNavAwayEvent(toUrl, $byEl){
     _lastBlockedUrl = toUrl;
