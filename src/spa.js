@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.64.3';
+  spa.VERSION = '2.64.4';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -6744,10 +6744,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _appApiDefaultPayload(){
     var defaultPayload = spa.findSafe(app, 'api.ajaxOptions.defaultPayload', {});
-    if (spa.is(defaultPayload, 'function')) {
-      defaultPayload = defaultPayload();
-    }
-    return defaultPayload;
+    return (spa.is(defaultPayload, 'function')? defaultPayload() : (spa.is(defaultPayload, 'object')? _.merge({}, defaultPayload) : defaultPayload) );
   }
 
   /*
@@ -7165,10 +7162,10 @@ window['app']['api'] = window['app']['api'] || {};
                 }
 
                 dataUrlPayLoad = _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {});
-                if (!spa.isBlank(defPayLaod)) {
+                if ((! _.has(dataApi, 'defaultPayload')) && (!spa.isBlank(defPayLaod))) {
                   dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
                 }
-                if (_stringifyPayload) {
+                if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
                   dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
                 }
 
@@ -7291,14 +7288,14 @@ window['app']['api'] = window['app']['api'] || {};
           }
 
           dataUrlPayLoad = spaRVOptions.dataParams;
-          if (!spa.isBlank(defPayLaod)) {
+          if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!spa.isBlank(defPayLaod))) {
             dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
           }
-          if (_stringifyPayload) {
+          if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
             dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
           }
-          spaAjaxRequestsQue.push(
-            $.ajax({
+
+          var axOptions = {
               url: dataModelUrl,
               method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
               headers: ajaxReqHeaders,
@@ -7342,8 +7339,8 @@ window['app']['api'] = window['app']['api'] || {};
                   }
                 }
               }
-            })
-          );
+            };
+          spaAjaxRequestsQue.push( $.ajax(axOptions) );
         }
       }
     }
@@ -8123,9 +8120,17 @@ window['app']['api'] = window['app']['api'] || {};
     },
     blockNav: function(){
       _blockSpaNavigation(this);
+      return this;
     },
     allowNav: function(){
       _allowSpaNavigation(this);
+      return this;
+    },
+    isNavBlocked: function(){
+      return _isSpaNavBlocked(this);
+    },
+    isNavAllowed: function(){
+      return _isSpaNavAllowed(this);
     },
     disable: function(disable){
       if ((!!disable) || spa.is(disable, 'undefined')) {
@@ -8803,15 +8808,12 @@ window['app']['api'] = window['app']['api'] || {};
       if (ajaxOptions['defaultPayload']) {
         var reqPayloadType = spa.of(ajaxOptions['data'])
           , defaultPayload = ajaxOptions['defaultPayload']
+          , defaultPayloadX = (spa.is(defaultPayload, 'function')? defaultPayload(reqPayload) : (spa.is(defaultPayload, 'object')? _.merge({}, defaultPayload) : defaultPayload))
           , reqPayload = (reqPayloadType == 'string')? spa.toJSON(ajaxOptions['data']) : ajaxOptions['data'];
 
-        if (spa.is(defaultPayload, 'function')) {
-          defaultPayload = defaultPayload(reqPayload);
-        }
-
-        if (spa.is(defaultPayload, 'object')) {
-          var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge(defaultPayload, reqPayload) : defaultPayload;
-          if (reqPayloadType == 'string') {
+        if (spa.is(defaultPayloadX, 'object')) {
+          var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge({}, defaultPayloadX, reqPayload) : defaultPayloadX;
+          if (!spa.isBlank(finalReqPayload) && (reqPayloadType == 'string')) {
             finalReqPayload = JSON.stringify(finalReqPayload);
           }
           ajaxOptions['data'] = finalReqPayload;
@@ -9119,15 +9121,12 @@ window['app']['api'] = window['app']['api'] || {};
     if (spa.api['defaultPayload']) {
       var reqPayloadType = spa.of(options['data'])
         , defaultPayload = spa.api['defaultPayload']
+        , defaultPayloadX = (spa.is(defaultPayload, 'function')? defaultPayload(reqPayload) : (spa.is(defaultPayload, 'object')? _.merge({}, defaultPayload) : defaultPayload))
         , reqPayload = (reqPayloadType == 'string')? spa.toJSON(options['data']) : options['data'];
 
-      if (spa.is(defaultPayload, 'function')) {
-        defaultPayload = defaultPayload(reqPayload);
-      }
-
-      if (spa.is(defaultPayload, 'object')) {
-        var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge(defaultPayload, reqPayload) : defaultPayload;
-        if (reqPayloadType == 'string') {
+      if (spa.is(defaultPayloadX, 'object')) {
+        var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge({}, defaultPayloadX, reqPayload) : defaultPayloadX;
+        if (!spa.isBlank(finalReqPayload) && (reqPayloadType == 'string')) {
           finalReqPayload = JSON.stringify(finalReqPayload);
         }
         options['data'] = finalReqPayload;
@@ -9138,8 +9137,14 @@ window['app']['api'] = window['app']['api'] || {};
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
     }
 
+    if (spa.isBlank( spa.toJSON(options['data']) )) {
+      delete options['data'];
+    }
     if (isMockReq) {
-      options['headers'] = _.merge({}, options['headers'], {'Z-Live-URL':actualUrl, 'Z-Payload': spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data']) });
+      options['headers'] = _.merge({}, options['headers'], {
+            'Z-Live-URL':actualUrl
+          , 'Z-Payload': spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data'])
+        });
       delete options['data'];
     };
 
@@ -9269,6 +9274,7 @@ window['app']['api'] = window['app']['api'] || {};
   function _allowSpaNavigation(scope){
     var $scope = $( scope || _blockNavClass );
     $scope.removeClass( _blockNavClassName );
+    $scope.find( _blockNavClass ).removeClass( _blockNavClassName );
     _blockNav = _isSpaNavBlocked();
     return $scope;
   }
@@ -9281,11 +9287,16 @@ window['app']['api'] = window['app']['api'] || {};
   function _isToShowSpaNav(){
     return (!$('body').hasClass( _hideNavClassName ));
   }
-  function _isSpaNavBlocked(){
-    return !!$( _blockNavClass ).length;
+  function _isSpaNavBlocked( scope ){
+    if (scope) {
+      var $scope = $(scope);
+      return ($scope.hasClass( _blockNavClassName ) || ($scope.find( _blockNavClass ).length>0));
+    } else {
+      return !!$( _blockNavClass ).length;
+    }
   }
-  function _isSpaNavAllowed(){
-    return !$( _blockNavClass ).length;
+  function _isSpaNavAllowed( scope ){
+    return !_isSpaNavBlocked( scope );
   }
   function _inBlockedSpaNavContainer(el){
     return !!($(el).closest(_blockNavClass).length);

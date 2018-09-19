@@ -288,7 +288,21 @@
         ifResult = check[ifCondition](lSideValue, rSideValue);
 
       if (isBlock) {
-        return ifResult ? options.fn(lSideValue) : options.inverse(rSideValue);
+        var thenContext = lSideValue, elseContext = rSideValue, contextData;
+        if (hasHash(options)) {
+          contextData = getHashRaw(options);
+          if (contextData) {
+            if (contextData.hasOwnProperty('thenContext') || contextData.hasOwnProperty('context')
+                || contextData.hasOwnProperty('thenData') ||  contextData.hasOwnProperty('data')) {
+              thenContext = contextData['thenContext'] || contextData['context'] || contextData['thenData'] || contextData['data'];
+            }
+            if (contextData.hasOwnProperty('elseContext') || contextData.hasOwnProperty('context')
+                || contextData.hasOwnProperty('elseData') || contextData.hasOwnProperty('data')) {
+              elseContext = contextData['elseContext'] || contextData['context'] || contextData['elseData'] || contextData['data'];
+            }
+          }
+        }
+        return ifResult ? options.fn(thenContext) : options.inverse(elseContext);
       } else {
         return ifResult;
       }
