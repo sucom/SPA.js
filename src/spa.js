@@ -2423,7 +2423,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.64.4';
+  spa.VERSION = '2.64.5';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -9137,7 +9137,7 @@ window['app']['api'] = window['app']['api'] || {};
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
     }
 
-    if (spa.isBlank( spa.toJSON(options['data']) )) {
+    if (spa.isBlank( options['data'] ) || (spa.is(options['data'], 'string') && (/{\s*}/.test(options['data']))) ) {
       delete options['data'];
     }
     if (isMockReq) {
