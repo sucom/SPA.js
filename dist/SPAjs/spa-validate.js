@@ -1,4 +1,4 @@
-/** @license SPA.js Validation Extension | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js Validation Extension | (c) Kumararaja | License (MIT) */
 /*
 * SPA.js Validation Extension
 * version: 2.0.0
@@ -29,6 +29,8 @@ spa['_validateDefaults'] = {
   , wordsize    : 'WordSize'
   , compare     : 'Compare'
   , promise     : 'Promise'
+  , xss         : 'CheckXSS'
+  , noop        : 'Noop'
 };
 
 spa['_validate'] = {
@@ -37,7 +39,12 @@ spa['_validate'] = {
   _validateAlertTemplate : '<div class="errortxt error-txt break-txt" data-i18n=""></div>',
   _offlineValidationRules : {},
   _fn : {
-      Promise     : function _fnPromise(forObj){
+      Noop        : function _fnNoop(){ return true; }
+    , CheckXSS    : function _fnCheckXSS(obj) {
+                      var elValue = spa.getElValue(obj);
+                      return !( (/<\s*\/?\s*(\bscript\b)/gi).test(elValue) || (/<(.)+\s+on([a-z])+\s*=|javascript:/gi).test(elValue) );
+                    }
+    , Promise     : function _fnPromise(forObj){
                       if (!spa['_validate']._isOnOfflineValidation) {
                         var $forObj = $(forObj), vRules = $forObj.data('validate')||'';
                         if (/(promise)(\s)*:(\s)*(\'|\")/.test(vRules)) {
@@ -46,42 +53,42 @@ spa['_validate'] = {
                       }
                       return true;
                     }
-    , Required    : function _fnRequired(obj, msg) {
+    , Required    : function _fnRequired(obj) {
                       var elValue = spa.getElValue(obj);
                       return !(spa.isBlank(elValue));
                       //return spa['_validate']._showValidateMsg(obj, msg, !(spa.isBlank(elValue)));
                     }
-    , Digits      : function _fnValidDigits(obj, msg) {
+    , Digits      : function _fnValidDigits(obj) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || (/^\d+$/.test(elValue)) );
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Numbers     : function _fnValidNumbers(obj, msg) {
+    , Numbers     : function _fnValidNumbers(obj) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || (/^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test(elValue)) );
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Integer     : function _fnValidInteger(obj, msg) {
+    , Integer     : function _fnValidInteger(obj) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || (/^-?\d+$/.test(elValue)) );
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Alpha       : function _fnValidAlpha(obj, msg) {
+    , Alpha       : function _fnValidAlpha(obj) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || !(/[^a-z]/gi.test(elValue)) );
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , AlphaNumeric: function _fnValidAlphaNumeric(obj, msg) {
+    , AlphaNumeric: function _fnValidAlphaNumeric(obj) {
                       var elValue = $(obj).val();
                       var isValid = ( (elValue.length===0) || !(/[^a-z0-9]/gi.test(elValue)) );
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , PatternMatch: function _fnValidPatternMatch(obj, msg) {
+    , PatternMatch: function _fnValidPatternMatch(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid)
@@ -92,7 +99,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , ValueRange  : function _fnValidValueRange(obj, msg) {
+    , ValueRange  : function _fnValidValueRange(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid)
@@ -118,21 +125,21 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , LengthMin   : function _fnValidLengthMin(obj, msg) {
+    , LengthMin   : function _fnValidLengthMin(obj) {
                       var elValue = $(obj).val();
                       var minLen  = spa.toInt($(obj).data("minlength") || $(obj).attr("minlength"));
                       var isValid = (elValue.length >= minLen);
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , LengthMax   : function _fnValidLengthMax(obj, msg) {
+    , LengthMax   : function _fnValidLengthMax(obj) {
                       var elValue = $(obj).val();
                       var maxLen  = spa.toInt($(obj).data("maxlength"));
                       var isValid = (elValue.length <= maxLen);
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Lengths     : function _fnValidLengths(obj, msg){
+    , Lengths     : function _fnValidLengths(obj){
                       var elValue = $(obj).val();
                       var eLength = elValue.length;
                       var minLen  = spa.toInt($(obj).data("minlength") || $(obj).attr("minlength"));
@@ -141,7 +148,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , WordSize    : function _fnValidWordSize(obj, msg) {
+    , WordSize    : function _fnValidWordSize(obj) {
                       var elValue = $(obj).val();
                       var maxWordSize = _.max(_.map((''+elValue).replace(/[-\n]/g,' ').split(' '), function(w) { return w.length; }));
                       var validWordSize = spa.toInt($(obj).data("validWordSize")) || 20;
@@ -149,7 +156,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Email       : function _fnValidEmail(obj, msg) {
+    , Email       : function _fnValidEmail(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid) {
@@ -162,7 +169,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Url         : function _fnValidUrl(obj, msg) {
+    , Url         : function _fnValidUrl(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid) {
@@ -171,7 +178,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Date        : function _isValidDate(obj, msg) {
+    , Date        : function _isValidDate(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid)
@@ -220,7 +227,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , CardNo      : function _fnValidCardNo(obj, msg){
+    , CardNo      : function _fnValidCardNo(obj){
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid)
@@ -246,7 +253,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , IPv4        : function _fnValidIpv4(obj, msg){
+    , IPv4        : function _fnValidIpv4(obj){
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid){
@@ -256,7 +263,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , IPv6        : function _fnValidIpv6(obj, msg){
+    , IPv6        : function _fnValidIpv6(obj){
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid){
@@ -292,7 +299,7 @@ spa['_validate'] = {
 
                       return isValid;
                     }
-    , Subnet      : function _fnValidSubnet(obj, msg) {
+    , Subnet      : function _fnValidSubnet(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid) {
@@ -302,7 +309,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , PhoneUS     : function _fnValidPhoneUS(obj, msg) {
+    , PhoneUS     : function _fnValidPhoneUS(obj) {
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid) {
@@ -311,8 +318,7 @@ spa['_validate'] = {
                       return isValid;
                       //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                     }
-    , Compare     : function _fnValidCompare(obj, msg){
-                      var isValid = true;
+    , Compare     : function _fnValidCompare(obj){
                       var elValue = $(obj).val();
                       var isValid = (elValue.length===0);
                       if (!isValid) {
@@ -329,7 +335,7 @@ spa['_validate'] = {
                             || (compareRule.indexOf('<') >=0) || (compareRule.indexOf('>') >=0)  ) {
                             thisElValue = spa.toFloat(thisElValue);
                             compElValue = spa.toFloat(compElValue);
-                          };
+                          }
                           if ('date'.equalsIgnoreCase(compareSpec['type'])) {
                             //TODO
                             //thisElValue = spa.toDate(thisElValue, compareSpec['format']||'YYYY-MM-DD');
@@ -639,7 +645,7 @@ spa['initValidation'] = spa['initDataValidation'] = function(context){
                 vFnResponse = ((spa.is(vFn, 'function'))? (vFn.call(el, el, errMsg)) : false);
                 if (spa.is(vFnResponse, 'boolean')) {
                   spa['_validate']._showValidateMsg(el, errMsg, vFnResponse);
-                };
+                }
                 return vFnResponse;
               });
             }
@@ -686,7 +692,7 @@ spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(conte
   var rulesScopeID     = (context.replace(/[^a-zA-Z0-9]/g,''))
     , validationScope  = "#"+(context.replace(/#/g, ""))
     , $validationScope = $(validationScope)
-    , failedInfo=[], isAllOk;
+    , failedInfo=[];
 
   if (spa['_validate']._offlineValidationRules[rulesScopeID])
   { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
@@ -738,7 +744,7 @@ spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(conte
         });
       }
       spa['_validate']._isOnOfflineValidation = !showMsg;
-      isAllOk = _.every(rules2Validate, function(elID){
+      _.every(rules2Validate, function(elID){
         return elID? (applyRules(elID) || validateAll) : true;
       });
       spa['_validate']._isOnOfflineValidation = false;

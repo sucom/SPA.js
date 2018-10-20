@@ -1,4 +1,4 @@
-/** @license SPA.js | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA.js | (c) Kumararaja | License (MIT) */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -9,7 +9,7 @@
  *
  * THIS CODE LICENSE: The MIT License (MIT)
 
- Copyright (c) 2003 <Kumararaja: sucom.kumar@gmail.com>
+ Copyright (c) 2003 <Kumararaja>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -1988,9 +1988,6 @@ window['app']['api'] = window['app']['api'] || {};
       }
       return true;
     }
-  function _baseIsNaN(value) {
-      return value !== value;
-    }
   function _baseIsArguments(value) {
       return _isObjectLike(value) && _baseGetTag(value) == __LD.argsTag;
     }
@@ -2423,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.64.5';
+  spa.VERSION = '2.65.0-RC14';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2441,6 +2438,7 @@ window['app']['api'] = window['app']['api'] || {};
   spa.noop = function(){};
 
   /* *************** SPA begins *************** */
+  var _appApiInitialized;
   spa.debug = false;
   spa['debugger'] = {
       on:function(){ spa.debug = true; }
@@ -2591,7 +2589,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   String.prototype.isNumberStr = function () {
-    var inStr = (''+this).trim(); nonNumStr = ((inStr.replace(/[0-9]/g, "").replace('.','')).trimStr()), sign = inStr[0];
+    var inStr = (''+this).trim(), nonNumStr = ((inStr.replace(/[0-9]/g, "").replace('.','')).trimStr()), sign = inStr[0];
     return (inStr && ((nonNumStr.length == 0) || ((nonNumStr.length == 1) && ((sign=='+') || (sign=='-')))));
   };
 
@@ -2660,6 +2658,33 @@ window['app']['api'] = window['app']['api'] || {};
     return ((''+this).charAt(0).toLowerCase()) + ((''+this).slice(1));
   };
 
+  function _sanitizeHTML(str) {
+    var sBoxEl = document.createElement('div');
+    sBoxEl.textContent = str;
+    return sBoxEl.innerHTML;
+  }
+  String.prototype.sanitizeHTML = function(){
+    return _sanitizeHTML(''+this);
+  };
+  spa.sanitizeHTML = _sanitizeHTML;
+
+  function _sanitizeScript(str) {
+    return (''+str).replace(/<\s*\/+\s*(\bscript\b)/gi, '&lt;/script&gt;</pre')
+              .replace(/<\s*(\bscript\b)/gi, '<pre>&lt;script');
+  }
+  String.prototype.sanitizeScript = function(){
+    return _sanitizeScript(''+this);
+  };
+  spa.sanitizeScript = _sanitizeScript;
+
+  function _sanitizeXSS(str) {
+    return _sanitizeScript(str).replace(/\s+on([a-z])\s*=/gi, ' on=').replace(/javascript:/gi,'js:');
+  }
+  String.prototype.sanitizeXSS = function(){
+    return _sanitizeXSS(''+this);
+  };
+  spa.sanitizeXSS = _sanitizeXSS;
+
   String.prototype.splitToArray = String.prototype.toArray = function (splitBy) {
     return spa.isBlank((''+this)) ? [] : ((''+this).split(splitBy));
   };
@@ -2677,7 +2702,7 @@ window['app']['api'] = window['app']['api'] || {};
     if (!bS) {
       bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
       bS = (bS)? bS[0] : '';
-    };
+    }
     eS = eS || getMatchStr(bS);
     var retArr = (''+this).match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
     if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
@@ -2688,7 +2713,7 @@ window['app']['api'] = window['app']['api'] || {};
     if (!bS) {
       bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
       bS = (bS)? bS[0] : '';
-    };
+    }
     eS = eS || getMatchStr(bS);
     var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
     var retArr = ((''+this).match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
@@ -2758,10 +2783,21 @@ window['app']['api'] = window['app']['api'] || {};
     return srcStr;
   };
 
+  function _isValidEvalStr(str){
+    var idxOfB = str.indexOf('(');
+    if ( (idxOfB>=0) && (str.indexOf(')', idxOfB)>idxOfB) ){
+      console.warn('Insecured String:', str);
+      return false;
+    }
+    return true;
+  }
+
   spa.toJSON = function (str, key4PrimaryDataTypes) {
     var thisStr;
     if (_.isString(str)) {
       thisStr = str.trimStr();
+
+      if (!_isValidEvalStr(thisStr)) return str;
 
       if (!(thisStr.containsStr("{") || thisStr.containsStr(":") || thisStr.containsStr("\\[") || thisStr.containsStr("'") || thisStr.containsStr('\"') ))
       { if (thisStr.containsStr(",") || thisStr.containsStr(";")) {
@@ -2943,7 +2979,7 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   spa.toDottedPath = function(srcStr){
-    return ((srcStr||"").replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.').trimStr("\\."));
+    return ((srcStr||"").trim().replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.').trimStr("\\."));
   };
 
   spa.ifBlank = spa.ifEmpty = spa.ifNull = function (src, replaceWithIfBlank, replaceWithIfNotBlank) {
@@ -2989,14 +3025,14 @@ window['app']['api'] = window['app']['api'] || {};
         }
       }
       return bytes;
-    };
+    }
 
     function formatByteSize(bytes) {
         if (bytes < 1024) { return bytes + " B"; }
         else if (bytes < 1048576) { return (bytes / 1024).toFixed(3) + " KB"; }
         else if (bytes < 1073741824) { return (bytes / 1048576).toFixed(3) + " MB"; }
         else { return (bytes / 1073741824).toFixed(3) + " GB"; }
-    };
+    }
 
     return (spa.is(format, 'undefined') || format)? formatByteSize(sizeOf(obj)) : sizeOf(obj);
   };
@@ -3062,7 +3098,7 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.info("SPA is tracking keys on element:");
       spa.console.info(element);
     });
-  };
+  }
   spa.initKeyTracking = _initKeyTracking;
 
   var keyPauseTimer;
@@ -3471,11 +3507,11 @@ window['app']['api'] = window['app']['api'] || {};
       xObj[oKey].push(oValue);
     } else {
       xObj[oKey] = oValue;
-    };
+    }
   };
 
   spa.parseKeyStr = function (keyName, changeToLowerCase) {
-    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\$\[\]\?\*-]/g, ""));
+    return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\$\[\]\?\*\-]/g, ""));
   };
 
   var arrayIndexPointsToMap = {};
@@ -3595,7 +3631,7 @@ window['app']['api'] = window['app']['api'] || {};
             _.merge(dstObj, srcObjs[ spa.toInt(mapSpec) ]);
             skipExtract = true;
           }
-        };
+        }
 
         if (!skipExtract) {
           mapSpecArr = mapSpec.split(':');
@@ -3702,9 +3738,9 @@ window['app']['api'] = window['app']['api'] || {};
         break;
 
       default:
-        $el.html(elValue);
+        $el.html( spa.sanitizeXSS(elValue) );
         $el.val(elValue);
-        if ($el.isEnabled()) $el.trigger('keyup');;
+        if ($el.isEnabled()) $el.trigger('keyup');
         break;
     }
 
@@ -3713,7 +3749,7 @@ window['app']['api'] = window['app']['api'] || {};
   spa.getElValue = function (el, escHTML) {
     el = $(_$qrySelector(el)).get(0);
     if (!el) return;
-    var elValue, unchkvalue;
+    var elValue, unchkvalue, chkedValue;
     switch ((el.tagName).toUpperCase()) {
       case "INPUT":
         switch ((el.type).toLowerCase()) {
@@ -3775,8 +3811,8 @@ window['app']['api'] = window['app']['api'] || {};
           retObj[keyName].push(elValue);
         } else {
           retObj[keyName] = [retObj[keyName], elValue];
-        };
-      };
+        }
+      }
     });
     return retObj;
   };
@@ -3942,28 +3978,46 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* find(jsonObject, 'key1.key2.key3[0].key4'); */
-  spa.find = spa.locate = function (obj, path) {
-    var tObj = obj, retValue;
-    if (typeof eval("tObj." + path) != "undefined") retValue = eval("tObj." + path);
-    return retValue;
-  };
+  spa.findSafe = spa.findInObj = spa.findInObject = spa.locateSafe = spa.valueOfPath = spa.find = spa.locate = function (objSrc, pathStr, forUndefined) {
+    if (is(objSrc, 'window|array|object|function') && pathStr) {
+      var pathList = _.map(pathStr.split('|'), function(path){ return path.trim(); } );
+      pathStr = pathList.shift();
+      var nxtPath = pathList.join('|');
 
-  spa.findSafe = spa.findInObj = spa.findInObject = spa.locateSafe = spa.valueOfPath = function (obj, pathStr, def) {
-    for (var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
-      if (!obj || typeof obj == "undefined") return def;
-      obj = obj[path[i]];
+      var unDef, retValue = objSrc;
+      for (var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
+        if (is(retValue, 'object|window|function')) {
+          retValue = retValue[ path[i].trim() ];
+        } else if (is(retValue, 'array')) {
+          retValue = retValue[ spa.toInt(path[i]) ];
+        } else {
+          retValue = unDef;
+          break;
+        }
+      }
+
+      if (is(retValue, 'undefined')) {
+        if (nxtPath) {
+          return spa.findSafe(objSrc, nxtPath, forUndefined);
+        } else {
+          return forUndefined;
+        }
+      } else {
+        return retValue;
+      }
+
+    } else {
+      return spa.isBlank(pathStr)? objSrc : forUndefined;
     }
-    if (typeof obj == "undefined") return def;
-    return obj;
   };
 
   spa.has = spa.hasKey = function (obj, path) {
     var tObj = obj, retValue = false;
     try {
-      retValue = (typeof eval("tObj." + path) != "undefined");
+      retValue = _isValidEvalStr(path)? (typeof eval("tObj." + path) != "undefined") : false;
     } catch(e){
       console.warn("Key["+path+"] error in object.\n" + e.stack);
-    };
+    }
     return retValue;
   };
 
@@ -4024,7 +4078,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
 
     return retValue;
-  };
+  }
 
   spa.hasPrimaryKeys = function _spa_hasPrimaryKeys(obj, propNames){
     return _isObjHasKeys(obj, propNames);
@@ -4033,41 +4087,43 @@ window['app']['api'] = window['app']['api'] || {};
     return _isObjHasKeys(obj, propNames, true);
   };
 
-  spa.hasIgnoreCase = spa.hasKeyIgnoreCase = function (obj, pathStr) {
-    var retValue = "", tObj = obj || {}, lookupPath = ""+spa.toDottedPath((pathStr));
-    var objKeys = spa.keysDottedAll(tObj); //get AllKeys with dotted notation
-    if (objKeys && !_.isEmpty(objKeys)) {
-      spa.console.debug(objKeys);
-      _.some(objKeys, function(oKey){
-        var isMatch = oKey.equalsIgnoreCase(lookupPath);
-        if (!isMatch) {
-          isMatch = oKey.beginsWithStrIgnoreCase(lookupPath+".");
-          if (isMatch) {
-            oKey = oKey.slice(0, oKey.lastIndexOf("."));
-          }
-        }
-        if (isMatch) retValue = oKey;
-        return (isMatch);
-      });
-    }
-    return retValue;
-  };
+  //NOT used anymore ToBeRemoved
+  // spa.hasIgnoreCase = spa.hasKeyIgnoreCase = function (obj, pathStr) {
+  //   var retValue = "", tObj = obj || {}, lookupPath = ""+spa.toDottedPath((pathStr));
+  //   var objKeys = spa.keysDottedAll(tObj); //get AllKeys with dotted notation
+  //   if (objKeys && !_.isEmpty(objKeys)) {
+  //     spa.console.debug(objKeys);
+  //     _.some(objKeys, function(oKey){
+  //       var isMatch = oKey.equalsIgnoreCase(lookupPath);
+  //       if (!isMatch) {
+  //         isMatch = oKey.beginsWithStrIgnoreCase(lookupPath+".");
+  //         if (isMatch) {
+  //           oKey = oKey.slice(0, oKey.lastIndexOf("."));
+  //         }
+  //       }
+  //       if (isMatch) retValue = oKey;
+  //       return (isMatch);
+  //     });
+  //   }
+  //   return retValue;
+  // };
 
-  spa.findIgnoreCase = function(obj, path, ifNot){
-    var retValue = ifNot;
-    var keyInObj = spa.hasIgnoreCase(obj, path);
-    if (keyInObj){
-      retValue = spa.findSafe(obj, keyInObj, ifNot);
-    };
-    return retValue;
-  };
+  //NOT used anymore ToBeRemoved
+  // spa.findIgnoreCase = function(obj, path, ifNot){
+  //   var retValue = ifNot;
+  //   var keyInObj = spa.hasIgnoreCase(obj, path);
+  //   if (keyInObj){
+  //     retValue = spa.findSafe(obj, keyInObj, ifNot);
+  //   };
+  //   return retValue;
+  // };
 
   /*Get All keys like X-Path with dot and [] notations */
   spa.keysDottedAll = function (a) {
     var objKeys = spa.keysDotted(a);
     if (objKeys && !_.isEmpty(objKeys)) {
       objKeys = spa.toDottedPath(objKeys.join(",")).split(",");
-    };
+    }
     return objKeys;
   };
   spa.keysDotted = function (a) {
@@ -4118,6 +4174,14 @@ window['app']['api'] = window['app']['api'] || {};
       enumerable : false,
       configurable: false
     },
+    '__clone': {
+      value : function(){
+        return JSON.parse(JSON.stringify(this));
+      },
+      enumerable : false,
+      configurable: false
+    },
+
     '__toObject': {
       value : function(valAsKey){
         var retObj = {};
@@ -4134,6 +4198,19 @@ window['app']['api'] = window['app']['api'] || {};
         return this.filter(function (value, index, self) {
           return self.indexOf(value) === index;
         });
+      },
+      enumerable : false,
+      configurable: false
+    },
+    '__rotate': {
+      value: function(times) {
+        times = times || 1;
+        if (times>0) {
+          while (times--) this.push( this.shift() );
+        } else if (times<0) {
+          while (times++) this.unshift( this.pop() );
+        }
+        return this;
       },
       enumerable : false,
       configurable: false
@@ -4216,6 +4293,13 @@ window['app']['api'] = window['app']['api'] || {};
       enumerable : false,
       configurable: false
     },
+    '__clone': {
+      value: function _obj_clone(){
+        return JSON.parse(JSON.stringify(this));
+      },
+      enumerable : false,
+      configurable: false
+    },
     '__keys': {
       value: function _obj_keys(deep){
         return (deep)? spa.keysDotted(this) : Object.keys(this);
@@ -4258,14 +4342,6 @@ window['app']['api'] = window['app']['api'] || {};
       enumerable : false,
       configurable: false
     },
-    '__clone': {
-      value: function _obj_clone(){
-        Array.prototype.unshift.call(arguments, {}, this);
-        return _.merge.apply(undefined, arguments);
-      },
-      enumerable : false,
-      configurable: false
-    },
     '__merge': {
       value: function _obj_merge(){
         Array.prototype.unshift.call(arguments, this);
@@ -4300,21 +4376,23 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _getFullPath4Component(url, defaultCompName) {
     var newUrl = url;
-
     if ('.{$'.indexOf(url[0])>=0) {
-      var urlPath = url.split('/');
-      var urlRoot = urlPath[0].replace(/[\{\}]/g,'');
-      var cName   = (urlRoot == '$' || urlRoot == '.')? defaultCompName : urlRoot.replace(/[\{\$\}]/,'');
-      urlPath[0]  = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (cName+"/"): '');
+      var urlPath = url.split('/')
+        , urlRoot = urlPath[0].replace(/[\{\}]/g,'')
+        , cName   = (urlRoot == '$' || urlRoot == '.')? defaultCompName : urlRoot.replace(/[\{\$\}]/,'')
+        , cPath   = ((spa.defaults.components.inFolder)? (cName+"/"): '');
+      urlPath[0]  = (spa.defaults.components.rootPath + cPath).trimRightStr('/');
       newUrl = urlPath.join('/');
     }
-
     return newUrl;
   }
   $.cachedScript = function (url, options) {
     spa.console.log('Ajax for script:',url, 'options:',options);
     /* allow user to set any option except for dataType, cache, and url */
     url = _getFullPath4Component(url, (options? options['spaComponent'] : '') );
+    if (!(url.endsWithStrIgnoreCase( '.js' ))) {
+      url += spa.defaults.components.scriptExt;
+    }
     options = $.extend(options || {}, {
       dataType: "script",
       cache: true,
@@ -4408,7 +4486,7 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.getComponentsFullPath = function(compNameLst){
     compNameLst = spa.strToArray(spa.toJSON(compNameLst));
-    return _.map(compNameLst, function(compName){ return (spa.defaults.components.rootPath)+ ((spa.defaults.components.inFolder)? compName: '') +'/'+compName+'.js'; });
+    return _.map(compNameLst, function(compName){ return (spa.defaults.components.rootPath)+ ((spa.defaults.components.inFolder)? compName: '') +'/'+compName+ (spa.defaults.components.scriptExt); });
   };
 
   spa.loadComponents = function(compNameLst, onDone, onFail) {
@@ -4420,12 +4498,6 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.loadScripts = function(scriptsLst, onDone, onFail) {
     scriptsLst = spa.strToArray(spa.toJSON(scriptsLst));
-//    if (typeof scriptsLst === 'string'){
-//      scriptsLst = spa.toJSON(scriptsLst);
-//      if (typeof scriptsLst === 'string') {
-//        scriptsLst = [scriptsLst];
-//      }
-//    }
 
     if (!spa.isBlank(scriptsLst)) {
       var ajaxQ = [];
@@ -4451,23 +4523,26 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.loadScriptsSync = function(scriptsLst, onDone, onFail) {
     scriptsLst = spa.strToArray(spa.toJSON(scriptsLst));
-//    if (typeof scriptsLst === 'string'){
-//      scriptsLst = spa.toJSON(scriptsLst);
-//      if (typeof scriptsLst === 'string') {
-//        scriptsLst = [scriptsLst];
-//      }
-//    }
     if (spa.isBlank(scriptsLst)) {
       spa.renderUtils.runCallbackFn(onDone);
     } else {
-      var scriptPath = scriptsLst.shift();
-      $.cachedScript(scriptPath).done(function (script, textStatus) {
-            spa.console.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
-            spa.loadScriptsSync(scriptsLst, onDone);
-          }).fail(function(){
-            spa.console.info("Failed Loading script from [" + scriptPath + "].");
-            spa.renderUtils.runCallbackFn(onFail);
-          });
+      var scriptCache = true, scriptPath = scriptsLst.shift();
+      if (scriptPath) {
+        if (/^~/.test(scriptPath)) {
+          scriptCache = false;
+          scriptPath = scriptPath.substr(1);
+        }
+        spa.console.info("Load script from   [" + scriptPath + "], cache:",scriptCache);
+        $.cachedScript(scriptPath, {cache: scriptCache}).done(function() {
+          spa.console.info("Loaded script from [" + scriptPath + "]");
+          spa.loadScriptsSync(scriptsLst, onDone, onFail);
+        }).fail(function(){
+          console.error("Failed Loading script from [" + scriptPath + "].", arguments);
+          spa.renderUtils.runCallbackFn(onFail);
+        });
+      } else {
+        spa.loadScriptsSync(scriptsLst, onDone, onFail);
+      }
     }
   };
 
@@ -4505,8 +4580,9 @@ window['app']['api'] = window['app']['api'] || {};
       $('body').append("<div id='spaViewTemplateContainer' style='display:none' rel='Template Container'></div>");
     }
     spa.console.info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
-    tmplBody = tmplBody.replace(/<( )*script/gi,'<_BlockedScrptInTemplate_').replace(/<( )*(\/)( )*script/gi,'</_BlockedScrptInTemplate_')
-            .replace(/<( )*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<( )*(\/)( )*link/gi,'</_LINKTAGINTEMPLATE_');
+
+    tmplBody = tmplBody.replace(/<(\s)*script/gi,'<_BlockedScrptInTemplate_').replace(/<(\s)*(\/)(\s)*script/gi,'</_BlockedScrptInTemplate_')
+            .replace(/<(\s)*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<(\s)*(\/)(\s)*link/gi,'</_LINKTAGINTEMPLATE_');
     $("#spaViewTemplateContainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
   };
   spa.updateTemplateScript = function (tmplId, tmplBody, tmplType){
@@ -4627,12 +4703,13 @@ window['app']['api'] = window['app']['api'] || {};
     return (spa.urlParams(queryString)[name]);
   };
 
+  var _winLocHash_='';
   /*Get URL Hash value
    * current window location = http://xyz.com/page#/hash0/hash1/hash2
    * spa.getLocHash()   => "#/hash0/hash1/hash2"
    * */
   spa.getLocHash = function(urlHashBase){
-    var urlHash = (window.location.hash).replace('#','');
+    var urlHash = (_winLocHash_ || window.location.hash).replace('#','');
     //if (!urlHash && !spa.is(urlHashBase, 'undefined') && (urlHashBase!='#')) {
     if (!(urlHash || spa.is(urlHashBase, 'undefined') || urlHashBase=='#')) {
       urlHash = (window.location.pathname)
@@ -4745,7 +4822,7 @@ window['app']['api'] = window['app']['api'] || {};
         callback: function () {
           if (!spa.isElementExist('#i18nSpaRunTime')) {
             $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
-          };
+          }
           $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!$.isEmptyObject($.i18n.map)) : $.i18n.loaded;
           spa.i18n.loaded = spa.i18n.loaded || $.i18n.loaded;
           if ((lang.length > 1) && (!$.i18n.loaded)) {
@@ -4893,9 +4970,9 @@ window['app']['api'] = window['app']['api'] || {};
       elSelector = elSelector || "";
       var isTag = contextRoot.beginsWithStr("<");
       if (isTag) {
-        $('#i18nSpaRunTime').html(contextRoot);
+        $('#i18nSpaRunTime').html( contextRoot );
         contextRoot = '#i18nSpaRunTime';
-      };
+      }
 
       var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
       if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
@@ -4918,7 +4995,7 @@ window['app']['api'] = window['app']['api'] || {};
             _.each(attrSpec.split("_"), function (attribute) {
               switch (attribute.toLowerCase()) {
                 case "html":
-                  $el.html(i18nValue);
+                  $el.html( spa.sanitizeXSS(i18nValue) );
                   break;
                 case "text":
                   $el.text(i18nValue);
@@ -4931,7 +5008,7 @@ window['app']['api'] = window['app']['api'] || {};
           });
         }
       });
-    };
+    }
 
     if (isTag) {
       return $('#i18nSpaRunTime').html();
@@ -5062,16 +5139,20 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _maskHandlebars(inTmpl){
     return inTmpl
+      .replace(/<img /gi, '<IMG-X-TMP ')
+      .replace(/<iframe /gi, '<IFRAME-X-TMP ')
+      .replace(/<\/iframe/gi, '</IFRAME-X-TMP')
       .replace(/{{/g  , '><!--_XHBTINSPA_{{')
-      .replace(/}}/g  , '}} _XHBTINSPA_-->')
-      ;
+      .replace(/}}/g  , '}} _XHBTINSPA_-->');
   }
   function _unmaskHandlebars(inTmpl){
     return inTmpl
       .replace(/(\/)*&gt;/g, '>')
       .replace(/ _XHBTINSPA_--(>|&gt;)/gi, '')
       .replace(/(>|&gt;)(<|&lt;)!--_XHBTINSPA_/gi, '')
-      ;
+      .replace(/<IMG-X-TMP /gi, '<img ')
+      .replace(/<IFRAME-X-TMP /gi, '<iframe ')
+      .replace(/<\/IFRAME-X-TMP/gi, '</iframe');
   }
 
   spa.dataBind = spa.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
@@ -5090,7 +5171,7 @@ window['app']['api'] = window['app']['api'] || {};
 
     if (spa.isBlank(data)) {
       return $contextRoot;
-    };
+    }
 
     var compName = ''; //pre-render-time
     if (elFilter[0]=='$') { compName = elFilter.substr(1).trim(); elFilter = ''; }
@@ -5169,12 +5250,13 @@ window['app']['api'] = window['app']['api'] || {};
           }
 
           _.each(attrSpec.split("_"), function (attribute) {
+            var computedKey='';
             attribute = attribute.trim();
             //console.log('[',attribute,']',bindKey,'=',bindValue);
             if (!spa.is(bindValue, 'undefined')) {
               switch (attribute.toLowerCase()) {
                 case 'html':
-                  $el.html(bindValue);
+                  $el.html( spa.sanitizeXSS(bindValue) );
                   break;
                 case 'text':
                   $el.text(bindValue);
@@ -5201,7 +5283,7 @@ window['app']['api'] = window['app']['api'] || {};
                   break;
 
                 case 'if':
-                  var computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
+                  computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
                   templateData.__computed__[computedKey] = bindValue;
                   var ifTemplateId = $el.attr('data-bind-template'), ifTemplate;
                   if (!ifTemplateId) { //create new if template
@@ -5212,11 +5294,11 @@ window['app']['api'] = window['app']['api'] || {};
                   } else {
                     ifTemplate = spa.compiledTemplates4DataBind[tmplStoreName][ifTemplateId];
                   }
-                  $el.html(ifTemplate(templateData));
+                  $el.html( ifTemplate(templateData) );
                   break;
 
                 case 'repeat':
-                  var computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
+                  computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
                   templateData.__computed__[computedKey] = bindValue;
                   var repeatTemplateId = $el.attr('data-bind-template'), repeatTemplate;
                   if (!repeatTemplateId) { //create new repeat template
@@ -5229,7 +5311,7 @@ window['app']['api'] = window['app']['api'] || {};
                   } else {
                     repeatTemplate = spa.compiledTemplates4DataBind[tmplStoreName][repeatTemplateId];
                   }
-                  $el.html(repeatTemplate(templateData));
+                  $el.html( repeatTemplate(templateData) );
                   break;
                 case 'repeatAs':break;
 
@@ -5272,12 +5354,12 @@ window['app']['api'] = window['app']['api'] || {};
 
     if (!onVirtualDOM) {
       //innerComponents
-      $innerComponents = $contextRoot.find('[data-rendered-component]')
-                          .filter(function(){
-                            return (this.hasAttribute('data-spa-component-$data') ||
-                                    this.hasAttribute('data-spa-$data') ||
-                                    this.hasAttribute('spa-$data'));
-                          });
+      var $innerComponents = $contextRoot.find('[data-rendered-component]')
+                              .filter(function(){
+                                return (this.hasAttribute('data-spa-component-$data') ||
+                                        this.hasAttribute('data-spa-$data') ||
+                                        this.hasAttribute('spa-$data'));
+                              });
       if ($innerComponents.length) {
         //console.log('found inner components to bind with this data ref', $innerComponents);
         var data4InnerCompBind;
@@ -5296,11 +5378,14 @@ window['app']['api'] = window['app']['api'] || {};
   spa.togglePassword = function(elPwd){
     if (!$(elPwd).next('.icon.eye').length){
       var $eyeEl = $('<i class="icon eye"></i>');
-      $eyeEl.on('click', function(){
+      $eyeEl.on('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         var $eyeIcon = $(this),
             $pwdEl   = $eyeIcon.prevAll('.toggle-password'),
             newState = ($pwdEl.attr('type') == 'text')? 'password' : 'text';
-        $pwdEl.attr('type', newState).toggleClass('text').focus();
+        $pwdEl.attr('type', newState).toggleClass('text');
       });
       $($eyeEl).insertAfter(elPwd);
     }
@@ -5450,7 +5535,7 @@ window['app']['api'] = window['app']['api'] || {};
         $el.addClass('tracking-change').on(trackEvents, eTrackChange);
       }
       return true;
-    };
+    }
   };
 
   spa.initTrackFormElChanges = function(scope){
@@ -5562,7 +5647,11 @@ window['app']['api'] = window['app']['api'] || {};
         },
         error: function (jqXHR, textStatus, errorThrown) {
           spa.console.error("Failed loading data from [" + data + "]. [" + textStatus + ":" + errorThrown + "]");
-          spa.api.onReqError(jqXHR, textStatus, errorThrown);
+          if ( spa.is(app.api['onError'], 'function') ) {
+            app.api.onError.call(this, jqXHR, textStatus, errorThrown);
+          } else {
+            spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
+          }
         }
       });
     }
@@ -5683,7 +5772,7 @@ window['app']['api'] = window['app']['api'] || {};
               break;
 
             default:
-              $(el).html(dataValue);
+              $(el).html( spa.sanitizeXSS(dataValue) );
               break;
           }
         });
@@ -5836,6 +5925,13 @@ window['app']['api'] = window['app']['api'] || {};
         cache: true,
         async: true
     }
+    , validation: {
+        xss: {
+          on: 'input_onBlur',
+          fn: '_check.xss',
+          msg: 'i18n:invalid.input'
+        }
+    }
     , set: function(oNewValues, newValue) {
         if (spa.is(oNewValues,'object')) {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
@@ -5893,7 +5989,7 @@ window['app']['api'] = window['app']['api'] || {};
     if (reservedCompNames.indexOf(componentName)>=0) {
       console.error('Invalid component name '+componentName+'. Reserved component names: api,debug,lang');
       return;
-    };
+    }
 
     var req2Create = !!options;
     options = options || {};
@@ -5910,7 +6006,7 @@ window['app']['api'] = window['app']['api'] || {};
           if (componentName.replace(/[a-z0-9]/gi,'')) {
             console.error('Invalid component name '+componentName+'. Component name has invalid character.');
             return;
-          };
+          }
 
           if (spa.components[componentName]) {
             //already registered
@@ -6023,7 +6119,7 @@ window['app']['api'] = window['app']['api'] || {};
         if (reservedCompNames.indexOf(componentName)>=0) {
           console.error('Invalid component name '+componentName+'. Reserved component names: '+(reservedCompNames.join()));
           return;
-        };
+        }
 
         window['app'] = window['app'] || {};
         window.app[componentName] = window.app[componentName] || {};
@@ -6221,7 +6317,7 @@ window['app']['api'] = window['app']['api'] || {};
         }
       } else {
         ok2Remove = true;
-      };
+      }
     }
     return (spa.is(ok2Remove, 'boolean') && ok2Remove);
   };
@@ -6342,7 +6438,7 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.info('Component ['+componentName+'] has been rendered already. Refreshing instead of re-render.');
       spa.refreshComponent(componentName, options);
       return;
-    };
+    }
 
     if (is(componentName, 'object')) {
       options = _.merge({}, componentName);
@@ -6423,7 +6519,7 @@ window['app']['api'] = window['app']['api'] || {};
             spa.console.info('Loaded component ['+componentName+'] source from ['+_cScriptFile+']');
           } else {
             spa.console.info('Skipped Loading component ['+componentName+'] source from script file.');
-          };
+          }
           spa.console.info('In Source> spa.components['+componentName+']');
           spa.console.info(spa.components[componentName]);
           if (!spa.components.hasOwnProperty(componentName)) {
@@ -6446,8 +6542,7 @@ window['app']['api'] = window['app']['api'] || {};
         spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
         $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
           .fail(function(){
-            spa.console.error('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']');
-            spa.console.warn('Continue Loading component ['+componentName+'] without script source from ['+_cScriptFile+']');
+            console.warn('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']. Continue Loading component with default properties.');
             _parseComp();
           });
       } else {
@@ -6547,7 +6642,7 @@ window['app']['api'] = window['app']['api'] || {};
 
     $el = $(el); $elData = $el.data();
     spaCompNameWithOpt = ($el.attr('data-spa-component') || '').split('|');
-    spaCompName = (spaCompNameWithOpt[0]).trim();
+    //spaCompName = (spaCompNameWithOpt[0]).trim();
     spaCompOpt  = (spaCompNameWithOpt[1]||'').trim();
 
     if (spaCompOpt) {
@@ -6708,18 +6803,13 @@ window['app']['api'] = window['app']['api'] || {};
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
         } else {
-          //ToBeRemoved
-          // if (("" + fn2Call).beginsWithStr("spa") && (("" + fn2Call).endsWithStr("_renderCallback"))) {
-          //   spa.console.warn("Default Route renderCallback function <" + fn2Call + "> is NOT defined.");
-          // } else {
-            spa.console.error("CallbackFunction <" + fn2Call + "> is NOT defined.");
-          // }
+            spa.console.warn("CallbackFunction <" + fn2Call + "> is NOT defined.");
         }
       }
     },
     registerComponentEvents: function (compName) {
       if (compName && app[compName] && app[compName].hasOwnProperty('events')) {
-        var elTargetSelector;
+        var elTargetSelector, $elTarget;
         _.each(Object.keys(app[compName].events), function(eventId){
           if (app[compName].events[eventId].hasOwnProperty('target') && (!spa.isBlank(app[compName].events[eventId].target))) {
             elTargetSelector = app[compName].events[eventId].target;
@@ -6821,11 +6911,11 @@ window['app']['api'] = window['app']['api'] || {};
         if (!viewContainerId) {
           spa.console.warn('Render target is missing.');
           viewContainerId = "dynRender_"+spa.now()+"_"+(spa.rand(1000, 9999));
-        };
-      };
+        }
+      }
       spa.render(viewContainerId, uOptions);
       return;
-    };
+    }
 
     //transfer NewKeys to OldKeys
     if (uOptions) {
@@ -6863,10 +6953,10 @@ window['app']['api'] = window['app']['api'] || {};
           if (opt.hasOwnProperty(key)) {
             opt[value] = uOptions[key];
             delete opt[key];
-          };
+          }
         });
       })(uOptions);
-    };
+    }
 
     var retValue = {id: "", view: {}, model: {}, cron: "", elDataAttr:{}, target:viewContainerId, iOptions:uOptions};
     var spaAjaxRequestsQue = [];
@@ -6961,6 +7051,39 @@ window['app']['api'] = window['app']['api'] || {};
       }
     }
 
+    if (_isSpaNavBlocked( $viewContainerId )){
+      spa.console.log('Component container [', viewContainerId,'] blocks navigation.');
+      var $navBlockContainer =  $viewContainerId.hasClass( _blockNavClassName )? $viewContainerId : $viewContainerId.find( _blockNavClass );
+      if ($navBlockContainer.length > 1) $navBlockContainer = $( $navBlockContainer[0] );
+      if ($navBlockContainer.length) {
+        var onNavAway = ($navBlockContainer.attr( _attrOnNavAway )||'').trim()
+          , navAwayFn, navAwayFnRes;
+        if (onNavAway) {
+          if (onNavAway[0] == '#' || onNavAway[0] == '>') {
+            var navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substr(1).trim() : onNavAway;
+            var $navAwayTarget = $navBlockContainer.find(navAwayTargetSelector).filter(':not(.disabled):not(:disabled)');
+            if ($navAwayTarget.length) {
+              $navAwayTarget.trigger('click');
+              return;
+            }
+          } else {
+            navAwayFn = spa.findSafe(window, onNavAway.split('(')[0].split(';')[0] );
+            if (navAwayFn && spa.is(navAwayFn, 'function')) {
+              navAwayFnRes = navAwayFn.call(app[pCompName], app[pCompName],  app[rCompName]);
+            }
+            if (navAwayFn && !(spa.is(navAwayFnRes, 'boolean') && navAwayFnRes)) return;
+          }
+        } else {
+          navAwayFn = spa.findSafe(app, pCompName+'.onNavBlock' );
+          if (navAwayFn && spa.is(navAwayFn, 'function')) {
+            navAwayFnRes = navAwayFn.call(app[pCompName], app[pCompName],  app[rCompName]);
+          }
+          if (navAwayFn && !(spa.is(navAwayFnRes, 'boolean') && navAwayFnRes)) return;
+        }
+      }
+      spa.console.log('Render continues.');
+    }
+
     if (is$refresh) {
       //Fix Callback Functions
       spa.console.log('$refresh - Auto-Detected', rCompName, spaRVOptions);
@@ -7021,7 +7144,7 @@ window['app']['api'] = window['app']['api'] || {};
       vScriptsList = (spaRVOptions.dataScripts || "").trimStr();
       if (spa.isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
         vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'";
-      };
+      }
       spaRVOptions.dataScripts = spa.toJSON(vScriptsList);
     }
 
@@ -7032,865 +7155,872 @@ window['app']['api'] = window['app']['api'] || {};
       _.remove(vScripts,function(item){ return !item; });
     }
     spa.console.info(vScripts);
+    var vScriptsNames;
+    vScriptsList=[];
     if (vScripts && (!$.isEmptyObject(vScripts))) {
       if (_.isArray(vScripts)) {
         spa.console.info("Convert array of script(s) without scriptID to object with scriptID(s).");
         var newScriptsObj = spa.renderUtils.array2ObjWithKeyPrefix(vScripts, '__scripts_', viewContainerId);
-//        var dynScriptIDForContainer;
-//        _.each(vScripts, function(scriptUrl, sIndex){
-//          spa.console.log(scriptUrl);
-//          if (scriptUrl) {
-//            dynScriptIDForContainer = "__scripts_" + ((''+scriptUrl).replace(/[^a-z0-9]/gi,'_'));
-//            newScriptsObj[dynScriptIDForContainer] = (""+scriptUrl);
-//          }
-//        });
         spa.console.info("Scripts(s) with scriptID(s).");
         spa.console.log(newScriptsObj);
         vScripts = (_.isEmpty(newScriptsObj))? {} : newScriptsObj;
       }
-
       spa.console.info("External scripts to be loaded [cache:" + (spaRVOptions.dataScriptsCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vScripts));
-      var vScriptsNames = _.keys(vScripts);
-
-      spa.console.group("kLoadingScripts");
-      _.each(vScriptsNames, function (scriptId) {
-        spa.console.log('Loding Component Script:', vScripts[scriptId], 'cache:', spaRVOptions.dataScriptsCache);
-        vScripts[scriptId] = _getFullPath4Component(vScripts[scriptId], rCompName);
-        spaAjaxRequestsQue = spa.loadScript(scriptId, vScripts[scriptId], spaRVOptions.dataScriptsCache, spaAjaxRequestsQue);
-      });
-      spa.console.info("External Scripts Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
-      spa.console.groupEnd("kLoadingScripts");
+      vScriptsNames = _.keys(vScripts);
     }
     else {
       spa.console.info("No scripts defined [data-scripts] in view container [" + viewContainerId + "] to load.");
     }
     spa.console.groupEnd("spaLoadingViewScripts");
 
+    if (vScriptsNames) {
+      var scriptPath;
+      vScriptsList = _.map(vScriptsNames, function (scriptId) {
+        scriptPath = _getFullPath4Component(vScripts[scriptId], rCompName);
+        if (!(scriptPath.endsWithStrIgnoreCase( '.js' ))) {
+          scriptPath += spa.defaults.components.scriptExt;
+        }
+        return ((spaRVOptions.dataScriptsCache? '' : '~') + scriptPath);
+      });
+    }
     /* Load Scripts Ends */
 
-    /*Wait till scripts are loaded before proceed*/
-    $.when.apply($, spaAjaxRequestsQue)
-      .then(function () {
-        spa.console.info("External Scripts Loaded.");
-      })
-      .fail(function () {
-        spa.console.error("External Scripts Loading Failed! Unexpected!? Check the Script Path/Network.");
-      });
+    spa.console.log('component [',rCompName,'] scripts:', vScriptsList);
+    spa.loadScriptsSync(vScriptsList, function _onScriptsLoadComplete(){
+      /*Wait till scripts are loaded before proceed*/
+      spa.console.info("External Scripts Loaded.");
 
-    /* Load Data */
-    spa.console.group("spaDataModel");
+      if (!_appApiInitialized && (Object.keys(app['api']).length)) _initApiUrls();
 
-    //var dataModelName = ("" + $(viewContainerId).data("model")).replace(/undefined/, ""), viewDataModelName;
-    //if (!spa.isBlank(spaRVOptions.dataModel)) {
-    //  dataModelName = spaRVOptions.dataModel;
-    //}
-    //var dataModelUrl = ("" + $(viewContainerId).data("url")).replace(/undefined/, ""); //from HTML
-    //if (!spa.isBlank(spaRVOptions.dataUrl)) {
-    //  dataModelUrl = spaRVOptions.dataUrl;
-    //}
-    var dataModelName = _renderOption('dataModel', 'model')
-      , dataModelUrl  = _renderOption('dataUrl', 'url')
-      , viewDataModelName
-      , isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")))
-      , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data"
-      , defPayLaod = _appApiDefaultPayload(), dataUrlPayLoad, _stringifyPayload = spa.findSafe(app, 'api.ajaxOptions.stringifyPayload');
-    dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
-    viewDataModelName = dataModelName.replace(/\./g, "_");
+      /* Load Data */
+      spa.console.group("spaDataModel");
 
-    var spaTemplateModelData = {};
-    if (useParamData) {
-      spaTemplateModelData[viewDataModelName] = (spa.is(spaRVOptions.data, 'function'))? (spaRVOptions.data()) : (spaRVOptions.data);
-      spa.console.info("Loaded data model [" + dataModelName + "] from argument");
-    }
-    else {
-      if (!(useOptions && uOptions.hasOwnProperty('dataCache'))) /* NOT provided in Render Request */
-      { /* Read from view container [data-cache='{true|false}'] */
-        var dataCacheInTagData = _renderOptionInAttr('cache');//("" + $(viewContainerId).data("cache")).replace(/undefined/, "");
-        if (!spa.isBlank(dataCacheInTagData)) {
-          spaRVOptions.dataCache = dataCacheInTagData.toBoolean();
-          spa.console.info("Override [data-cache] with [data-cache] option in tag-attribute: " + spaRVOptions.dataCache);
-        }
+      var dataModelName = _renderOption('dataModel', 'model')
+        , dataModelUrl  = _renderOption('dataUrl', 'url')
+        , viewDataModelName
+        , isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")))
+        , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data"
+        , defPayLaod = _appApiDefaultPayload(), dataUrlPayLoad, _stringifyPayload = spa.findSafe(app, 'api.ajaxOptions.stringifyPayload');
+      dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
+      viewDataModelName = dataModelName.replace(/\./g, "_");
+
+      var spaTemplateModelData = {};
+      if (useParamData) {
+        spaTemplateModelData[viewDataModelName] = (spa.is(spaRVOptions.data, 'function'))? (spaRVOptions.data()) : (spaRVOptions.data);
+        spa.console.info("Loaded data model [" + dataModelName + "] from argument");
       }
       else {
-        spa.console.info("Override [data-cache] with user option [dataCache]: " + spaRVOptions.dataCache);
-      }
-
-      if (spa.isBlank(dataModelUrl)) { /*dataFound = false;*/
-        spaTemplateModelData[viewDataModelName] = {};
-
-        //Check dataCollection
-        var dataModelCollection = _renderOptionInAttr('collection');//("" + $(viewContainerId).data("collection")).replace(/undefined/, ""); //from HTML
-        if (dataModelCollection) dataModelCollection = spa.toJSON(dataModelCollection); //convert to json if found
-        if (!spa.isBlank(spaRVOptions.dataCollection)) //override with javascript
-        { dataModelCollection = spaRVOptions.dataCollection;
-        }
-        if (_.isArray(dataModelCollection)) dataModelCollection = {urls: dataModelCollection};
-
-        var dataModelUrls = dataModelCollection['urls'];
-
-        if (spa.isBlank(dataModelUrls)) {
-          spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
-          spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra);
-        }
-        else { //Processing data-collection
-          if (!_.isArray(dataModelUrls)) {
-            spa.console.warn("Invalid [data-urls].Check the arguments or html markup. Rendering with empty data {}.");
+        if (!(useOptions && uOptions.hasOwnProperty('dataCache'))) /* NOT provided in Render Request */
+        { /* Read from view container [data-cache='{true|false}'] */
+          var dataCacheInTagData = _renderOptionInAttr('cache');//("" + $(viewContainerId).data("cache")).replace(/undefined/, "");
+          if (!spa.isBlank(dataCacheInTagData)) {
+            spaRVOptions.dataCache = dataCacheInTagData.toBoolean();
+            spa.console.info("Override [data-cache] with [data-cache] option in tag-attribute: " + spaRVOptions.dataCache);
           }
-          else {
-            spa.console.info("Processing data-URLs");
-            var dataIndexApi = 0, defaultAutoDataNamePrefix = dataModelCollection['nameprefix'] || "data";
-            _.each(dataModelUrls, function (dataApi) {
-              var defaultApiDataModelName = (defaultAutoDataNamePrefix + dataIndexApi)
-                , apiDataModelName = _.has(dataApi, 'name') ? (('' + dataApi.name).replace(/[^a-zA-Z0-9]/gi, '')) : (_.has(dataApi, 'target') ? ('' + dataApi.target) : defaultApiDataModelName)
-                , apiDataUrl = _.has(dataApi, 'url') ? dataApi.url : (_.has(dataApi, 'path') ? dataApi.path : '');
+        }
+        else {
+          spa.console.info("Override [data-cache] with user option [dataCache]: " + spaRVOptions.dataCache);
+        }
 
-              if (apiDataModelName.containsStr(".")) {
-                apiDataModelName = _.last(apiDataModelName.split("."), 1);
-              }
-              apiDataModelName = apiDataModelName.ifBlankStr(defaultApiDataModelName);
-              spa.console.info('processing data-api for: ' + apiDataModelName);
-              spa.console.log(dataApi);
+        if (spa.isBlank(dataModelUrl)) { /*dataFound = false;*/
+          spaTemplateModelData[viewDataModelName] = {};
 
-              if (apiDataUrl) {
-                if (_.has(dataApi, 'urlParams')) {
-                  apiDataUrl = spa.api.url(apiDataUrl, dataApi['urlParams']);
-                };
+          //Check dataCollection
+          var dataModelCollection = _renderOptionInAttr('collection');//("" + $(viewContainerId).data("collection")).replace(/undefined/, ""); //from HTML
+          if (dataModelCollection) dataModelCollection = spa.toJSON(dataModelCollection); //convert to json if found
+          if (!spa.isBlank(spaRVOptions.dataCollection)) //override with javascript
+          { dataModelCollection = spaRVOptions.dataCollection;
+          }
+          if (_.isArray(dataModelCollection)) dataModelCollection = {urls: dataModelCollection};
 
-                var dataAjaxReqHeaders = _.has(dataApi, 'headers')? dataApi.headers : spaRVOptions['dataUrlHeaders'];
-                if (spa.isBlank(dataAjaxReqHeaders)) {
-                  dataAjaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+          var dataModelUrls = dataModelCollection['urls'];
+
+          if (spa.isBlank(dataModelUrls)) {
+            spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
+            spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra);
+          }
+          else { //Processing data-collection
+            if (!_.isArray(dataModelUrls)) {
+              spa.console.warn("Invalid [data-urls].Check the arguments or html markup. Rendering with empty data {}.");
+            }
+            else {
+              spa.console.info("Processing data-URLs");
+              var dataIndexApi = 0, defaultAutoDataNamePrefix = dataModelCollection['nameprefix'] || "data";
+              _.each(dataModelUrls, function (dataApi) {
+                var defaultApiDataModelName = (defaultAutoDataNamePrefix + dataIndexApi)
+                  , apiDataModelName = _.has(dataApi, 'name') ? (('' + dataApi.name).replace(/[^a-zA-Z0-9]/gi, '')) : (_.has(dataApi, 'target') ? ('' + dataApi.target) : defaultApiDataModelName)
+                  , apiDataUrl = _.has(dataApi, 'url') ? dataApi.url : (_.has(dataApi, 'path') ? dataApi.path : '');
+
+                if (apiDataModelName.containsStr(".")) {
+                  apiDataModelName = _.last(apiDataModelName.split("."), 1);
                 }
+                apiDataModelName = apiDataModelName.ifBlankStr(defaultApiDataModelName);
+                spa.console.info('processing data-api for: ' + apiDataModelName);
+                spa.console.log(dataApi);
 
-                dataUrlPayLoad = _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {});
-                if ((! _.has(dataApi, 'defaultPayload')) && (!spa.isBlank(defPayLaod))) {
-                  dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
-                }
-                if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
-                  dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
-                }
+                if (apiDataUrl) {
+                  if (_.has(dataApi, 'urlParams')) {
+                    apiDataUrl = spa.api.url(apiDataUrl, dataApi['urlParams']);
+                  }
 
-                spaAjaxRequestsQue.push(
-                  $.ajax({
-                    url: apiDataUrl,
-                    method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
-                    headers: dataAjaxReqHeaders,
-                    data: dataUrlPayLoad,
-                    cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
-                    dataType: _.has(dataApi, 'type') ? dataApi.type : (spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text')),
-                    success: function (result, textStatus, jqXHR) {
-                      var targetApiData
-                        , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
-                        , oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result;
+                  var dataAjaxReqHeaders = _.has(dataApi, 'headers')? dataApi.headers : spaRVOptions['dataUrlHeaders'];
+                  if (spa.isBlank(dataAjaxReqHeaders)) {
+                    dataAjaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+                  }
 
-                      if (targetDataModelName.indexOf(".") > 0) {
-                        targetApiData = spa.hasKey(oResult, targetDataModelName) ? spa.find(oResult, targetDataModelName) : oResult;
-                      }
-                      else {
-                        try {
-                          targetApiData = oResult.hasOwnProperty(targetDataModelName) ? oResult[targetDataModelName] : oResult;
-                        } catch(e){
-                          console.warn("Error in Data Model ["+targetDataModelName+"] in URL ["+apiDataUrl+"].\n" + e.stack);
+                  dataUrlPayLoad = _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {});
+                  if ((! _.has(dataApi, 'defaultPayload')) && (!spa.isBlank(defPayLaod))) {
+                    dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
+                  }
+                  if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
+                    dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
+                  }
+
+                  spaAjaxRequestsQue.push(
+                    $.ajax({
+                      url: apiDataUrl,
+                      method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
+                      headers: ((spa.is(dataAjaxReqHeaders, 'function'))? dataAjaxReqHeaders() : dataAjaxReqHeaders),
+                      data: dataUrlPayLoad,
+                      cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
+                      dataType: _.has(dataApi, 'type') ? dataApi.type : (spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text')),
+                      success: function (result, textStatus, jqXHR) {
+                        var targetApiData
+                          , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
+                          , oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result;
+
+                        if (targetDataModelName.indexOf(".") > 0) {
+                          targetApiData = spa.hasKey(oResult, targetDataModelName) ? spa.find(oResult, targetDataModelName) : oResult;
                         }
-                      }
-                      if (spaTemplateModelData[viewDataModelName][apiDataModelName]) {
-                        spaTemplateModelData[viewDataModelName][apiDataModelName] = [spaTemplateModelData[viewDataModelName][apiDataModelName]];
-                        spaTemplateModelData[viewDataModelName][apiDataModelName].push(targetApiData);
-                      }
-                      else {
-                        spaTemplateModelData[viewDataModelName][apiDataModelName] = targetApiData;
-                      }
-                      spa.console.info("Loaded data model [" + apiDataModelName + "] from [" + apiDataUrl + "]");
-
-                      //Call user defined function on api-data success
-                      var fnApiDataSuccess = dataApi['success'] || dataApi['onsuccess'] || dataApi['onSuccess'];
-                      if (!fnApiDataSuccess) {
-                        fnApiDataSuccess = dataModelCollection['success'] || dataModelCollection['onsuccess'] || dataModelCollection['onSuccess']; //use common success
-                      }
-                      if (fnApiDataSuccess) {
-                        if (_.isFunction(fnApiDataSuccess)) {
-                          fnApiDataSuccess.call(this, oResult, dataApi, textStatus, jqXHR);
+                        else {
+                          try {
+                            targetApiData = oResult.hasOwnProperty(targetDataModelName) ? oResult[targetDataModelName] : oResult;
+                          } catch(e){
+                            console.warn("Error in Data Model ["+targetDataModelName+"] in URL ["+apiDataUrl+"].\n" + e.stack);
+                          }
                         }
-                        else if (_.isString(fnApiDataSuccess)) {
-                          var _xSuccessFn_ = spa.findSafe(window, fnApiDataSuccess);
-                          if (typeof _xSuccessFn_ === "function") {
-                            _xSuccessFn_.call(this, oResult, dataApi, textStatus, jqXHR);
+                        if (spaTemplateModelData[viewDataModelName][apiDataModelName]) {
+                          spaTemplateModelData[viewDataModelName][apiDataModelName] = [spaTemplateModelData[viewDataModelName][apiDataModelName]];
+                          spaTemplateModelData[viewDataModelName][apiDataModelName].push(targetApiData);
+                        }
+                        else {
+                          spaTemplateModelData[viewDataModelName][apiDataModelName] = targetApiData;
+                        }
+                        spa.console.info("Loaded data model [" + apiDataModelName + "] from [" + apiDataUrl + "]");
+
+                        //Call user defined function on api-data success
+                        var fnApiDataSuccess = dataApi['success'] || dataApi['onsuccess'] || dataApi['onSuccess'];
+                        if (!fnApiDataSuccess) {
+                          fnApiDataSuccess = dataModelCollection['success'] || dataModelCollection['onsuccess'] || dataModelCollection['onSuccess']; //use common success
+                        }
+                        if (fnApiDataSuccess) {
+                          if (_.isFunction(fnApiDataSuccess)) {
+                            fnApiDataSuccess.call(this, oResult, dataApi, textStatus, jqXHR);
+                          }
+                          else if (_.isString(fnApiDataSuccess)) {
+                            var _xSuccessFn_ = spa.findSafe(window, fnApiDataSuccess);
+                            if (typeof _xSuccessFn_ === "function") {
+                              _xSuccessFn_.call(this, oResult, dataApi, textStatus, jqXHR);
+                            } else {
+                              spa.console.log('Unknown ajax success handle: '+fnApiDataSuccess);
+                            }
+                          }
+                        }
+                      },
+                      error: function (jqXHR, textStatus, errorThrown) {
+                        spa.console.warn("Error processing data-api [" + apiDataUrl + "]");
+                        //Call user defined function on api-data URL Error
+                        var fnOnApiDataUrlErrorHandle = dataApi['error'] || dataApi['onerror'] || dataApi['onError'];
+                        if (!fnOnApiDataUrlErrorHandle) {
+                          fnOnApiDataUrlErrorHandle = dataModelCollection['error'] || dataModelCollection['onerror'] || dataModelCollection['onError']; //use common error
+                          if ((!fnOnApiDataUrlErrorHandle) && (!spa.isBlank(spaRVOptions.dataUrlErrorHandle))) {
+                            fnOnApiDataUrlErrorHandle = spaRVOptions.dataUrlErrorHandle;
+                          }
+                        }
+                        if (fnOnApiDataUrlErrorHandle) {
+                          if (_.isFunction(fnOnApiDataUrlErrorHandle)) {
+                            fnOnApiDataUrlErrorHandle.call(this, jqXHR, textStatus, errorThrown);
+                          }
+                          else if (_.isString(fnOnApiDataUrlErrorHandle)) {
+                            var _xErrorFn_ = spa.findSafe(window, fnOnApiDataUrlErrorHandle);
+                            if (typeof _xErrorFn_ === "function") {
+                              _xErrorFn_.call(this, oResult, dataApi);
+                            } else {
+                              spa.console.log('Unknown ajax error handle: '+fnOnApiDataUrlErrorHandle);
+                            }
+                          }
+                        } else {
+                          if ( spa.is(app.api['onError'], 'function') ) {
+                            app.api.onError.call(this, jqXHR, textStatus, errorThrown);
                           } else {
-                            spa.console.log('Unknown ajax success handle: '+fnApiDataSuccess);
+                            spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                           }
                         }
                       }
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                      spa.console.warn("Error processing data-api [" + apiDataUrl + "]");
-                      //Call user defined function on api-data URL Error
-                      var fnOnApiDataUrlErrorHandle = dataApi['error'] || dataApi['onerror'] || dataApi['onError'];
-                      if (!fnOnApiDataUrlErrorHandle) {
-                        fnOnApiDataUrlErrorHandle = dataModelCollection['error'] || dataModelCollection['onerror'] || dataModelCollection['onError']; //use common error
-                        if ((!fnOnApiDataUrlErrorHandle) && (!spa.isBlank(spaRVOptions.dataUrlErrorHandle))) {
-                          fnOnApiDataUrlErrorHandle = spaRVOptions.dataUrlErrorHandle;
-                        }
-                      }
-                      if (fnOnApiDataUrlErrorHandle) {
-                        if (_.isFunction(fnOnApiDataUrlErrorHandle)) {
-                          fnOnApiDataUrlErrorHandle.call(this, jqXHR, textStatus, errorThrown);
-                        }
-                        else if (_.isString(fnOnApiDataUrlErrorHandle)) {
-                          var _xErrorFn_ = spa.findSafe(window, fnOnApiDataUrlErrorHandle);
-                          if (typeof _xErrorFn_ === "function") {
-                            _xErrorFn_.call(this, oResult, dataApi);
-                          } else {
-                            spa.console.log('Unknown ajax error handle: '+fnOnApiDataUrlErrorHandle);
-                          }
-                        }
-                      } else {
-                        spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
-                      }
-                    }
-                  })
-                );//End of Ajax Que push
-              }
-              else {
-                spa.console.error("data-api-url not found. Please check the arguments or html markup. Skipped this data-api request");
-              }
-              dataIndexApi++;
-            });
-          }
-        }
-      }
-      else {
-        if (dataModelUrl.beginsWithStrIgnoreCase("local:")) { /*Local DataModel*/
-          var localDataModelName = dataModelUrl.replace(/local:/gi, "");
-          var localDataModelObj = {};
-          if (typeof eval("(" + localDataModelName + ")") != "undefined") { /*localDataModelObj = eval("("+localDataModelName+")");*/
-            eval("(localDataModelObj=" + localDataModelName + ")");
-          }
-          spa.console.info("Using LOCAL Data Model: " + localDataModelName);
-
-          if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
-            spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
-          } else {
-            try {
-              spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
-            } catch(e){
-              console.warn("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
+                    })
+                  );//End of Ajax Que push
+                }
+                else {
+                  spa.console.error("data-api-url not found. Please check the arguments or html markup. Skipped this data-api request");
+                }
+                dataIndexApi++;
+              });
             }
           }
-
         }
-        else { /*External Data Source*/
-          if (!spa.isBlank(spaRVOptions.dataUrlParams)){
-            dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
-          }
-          spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
-          var ajaxReqHeaders = spaRVOptions.dataUrlHeaders;
-          if (spa.isBlank(ajaxReqHeaders)) {
-            ajaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
-          }
+        else {
+          if (dataModelUrl.beginsWithStrIgnoreCase("local:")) { /*Local DataModel*/
+            var localDataModelName = dataModelUrl.replace(/local:/gi, "");
+            var localDataModelObj = {};
 
-          dataUrlPayLoad = spaRVOptions.dataParams;
-          if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!spa.isBlank(defPayLaod))) {
-            dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
-          }
-          if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
-            dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
-          }
-
-          var axOptions = {
-              url: dataModelUrl,
-              method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
-              headers: ajaxReqHeaders,
-              data: dataUrlPayLoad,
-              cache: spaRVOptions.dataCache,
-              dataType: spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text'),
-              success: function (result) {
-                var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
-                    validateData = _renderOption('dataValidate', 'validate');
-
-                if (dataModelName.indexOf(".") > 0) {
-                  spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? spa.find(oResult, dataModelName) : oResult;
-                } else {
-                  try{
-                    if ((dataModelName == 'data') && !oResult.hasOwnProperty(dataModelName)) {
-                      dataModelName = 'Data';
-                      viewDataModelName = 'Data';
-                    };
-                    spaTemplateModelData[viewDataModelName] = (!validateData && oResult.hasOwnProperty(dataModelName)) ? oResult[dataModelName] : oResult;
-                  } catch(e){
-                    console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
-                  }
-                }
-                spa.console.info("Loaded data model [" + dataModelName + "] from [" + dataModelUrl + "]");
-              },
-              error: function (jqXHR, textStatus, errorThrown) {
-                //Call user defined function on Data URL Error
-                //var fnOnDataUrlErrorHandle = ("" + $(viewContainerId).data("urlErrorHandle")).replace(/undefined/, "");
-                //if (!spa.isBlank(spaRVOptions.dataUrlErrorHandle)) {
-                //  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
-                //}
-                var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
-                if (spa.isBlank(fnOnDataUrlErrorHandle)){
-                  spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
-                } else {
-                  var _xErrFn_ = spa.findSafe(window, fnOnDataUrlErrorHandle);
-                  if (typeof _xErrFn_ === 'function') {
-                    _xErrFn_.call(this, jqXHR, textStatus, errorThrown);
-                  } else {
-                    spa.console.log('Unknown ajax error handle: '+fnOnDataUrlErrorHandle);
-                  }
-                }
+            if (_isValidEvalStr(localDataModelName)) {
+              if (typeof eval("(" + localDataModelName + ")") != "undefined") {
+                eval("(localDataModelObj=" + localDataModelName + ")");
               }
-            };
-          spaAjaxRequestsQue.push( $.ajax(axOptions) );
+              spa.console.info("Using LOCAL Data Model: " + localDataModelName);
+            }
+
+            if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
+              spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
+            } else {
+              try {
+                spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
+              } catch(e){
+                console.warn("Error in Data Model ["+dataModelName+"] in Local Object ["+localDataModelName+"].\n" + e.stack);
+              }
+            }
+
+          }
+          else { /*External Data Source*/
+            if (!spa.isBlank(spaRVOptions.dataUrlParams)){
+              dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
+            }
+            spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
+            var ajaxReqHeaders = spaRVOptions.dataUrlHeaders;
+            if (spa.isBlank(ajaxReqHeaders)) {
+              ajaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+            }
+
+            dataUrlPayLoad = spaRVOptions.dataParams;
+            if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!spa.isBlank(defPayLaod))) {
+              dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
+            }
+            if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
+              dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
+            }
+
+            var axOptions = {
+                url: dataModelUrl,
+                method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
+                headers: ((spa.is(ajaxReqHeaders, 'function'))? ajaxReqHeaders() : ajaxReqHeaders),
+                data: dataUrlPayLoad,
+                cache: spaRVOptions.dataCache,
+                dataType: spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text'),
+                success: function (result) {
+                  var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
+                      validateData = _renderOption('dataValidate', 'validate');
+
+                  if (dataModelName.indexOf(".") > 0) {
+                    spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? spa.find(oResult, dataModelName) : oResult;
+                  } else {
+                    try{
+                      if ((dataModelName == 'data') && !oResult.hasOwnProperty(dataModelName)) {
+                        dataModelName = 'Data';
+                        viewDataModelName = 'Data';
+                      }
+                      spaTemplateModelData[viewDataModelName] = (!validateData && oResult.hasOwnProperty(dataModelName)) ? oResult[dataModelName] : oResult;
+                    } catch(e){
+                      console.error("Error in Data Model ["+dataModelName+"] in URL ["+dataModelUrl+"].\n" + e.stack);
+                    }
+                  }
+                  spa.console.info("Loaded data model [" + dataModelName + "] from [" + dataModelUrl + "]");
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                  //Call user defined function on Data URL Error
+                  //var fnOnDataUrlErrorHandle = ("" + $(viewContainerId).data("urlErrorHandle")).replace(/undefined/, "");
+                  //if (!spa.isBlank(spaRVOptions.dataUrlErrorHandle)) {
+                  //  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
+                  //}
+                  var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
+                  if (spa.isBlank(fnOnDataUrlErrorHandle)){
+                    if ( spa.is(app.api['onError'], 'function') ) {
+                      app.api.onError.call(this, jqXHR, textStatus, errorThrown);
+                    } else {
+                      spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
+                    }
+                  } else {
+                    var _xErrFn_ = spa.findSafe(window, fnOnDataUrlErrorHandle);
+                    if (typeof _xErrFn_ === 'function') {
+                      _xErrFn_.call(this, jqXHR, textStatus, errorThrown);
+                    } else {
+                      spa.console.log('Unknown ajax error handle: '+fnOnDataUrlErrorHandle);
+                    }
+                  }
+                }
+              };
+            spaAjaxRequestsQue.push( $.ajax(axOptions) );
+          }
         }
       }
-    }
-    spa.console.info("End of Data Processing");
-    spa.console.log({o: spaTemplateModelData});
-    spa.console.groupEnd("spaDataModel");
+      spa.console.info("End of Data Processing");
+      spa.console.log({o: spaTemplateModelData});
+      spa.console.groupEnd("spaDataModel");
 
-    if (dataFound) { /* Load Templates */
+      if (dataFound) { /* Load Templates */
 
-      //var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "") || ("" + $(viewContainerId).data("html")).replace(/undefined/, "");
-      //var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
-      var vTemplate2RenderInTag = _renderOptionInAttr("template") || _renderOptionInAttr("html");
-      var vTemplatesList = _renderOptionInAttr("templates") || _renderOptionInAttr("htmls");
-      if (vTemplatesList && spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
-        vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
-      }
-      var vTemplates = spa.toJSON(vTemplatesList || "{}");//eval("(" + vTemplatesList + ")");//
-      /* Check the option to override */
-      if ((!(_.isObject(spaRVOptions.dataTemplates))) && (_.isString(spaRVOptions.dataTemplates))) {
-        vTemplatesList = (spaRVOptions.dataTemplates || "").trimStr();
-        if (spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
+        //var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "") || ("" + $(viewContainerId).data("html")).replace(/undefined/, "");
+        //var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
+        var vTemplate2RenderInTag = _renderOptionInAttr("template") || _renderOptionInAttr("html");
+        var vTemplatesList = _renderOptionInAttr("templates") || _renderOptionInAttr("htmls");
+        if (vTemplatesList && spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
           vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
-        };
-        spaRVOptions.dataTemplates = spa.toJSON(vTemplatesList);
-      }
-      if (!$.isEmptyObject(spaRVOptions.dataTemplates)) {
-        vTemplates = spaRVOptions.dataTemplates;
-        vTemplatesList = "" + (JSON.stringify(vTemplates));
-      }
-      if ((_.isEmpty(spa.toJSON((vTemplatesList||"").trimStr())))
-        || (_.isArray(vTemplates) && vTemplates.length==1 && spa.isBlank(vTemplates[0]))) {
-        vTemplates = {};
-        vTemplatesList = "";
-      }
-
-      spa.console.info("Templates:");
-      spa.console.info(vTemplates);
-      //Handle if array without templateID, convert to object with auto templateID
-      if (_.isArray(vTemplates) && !_.isEmpty(vTemplates)) {
-        spa.console.info("Array of template(s) without templateID(s).");
-        var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
-//        var dynTmplIDForContainer;
-//        _.each(vTemplates, function(templateUrl, sIndex){
-//          spa.console.log(templateUrl);
-//          if (templateUrl) {
-//            dynTmplIDForContainer = "__tmpl_" + ((''+templateUrl).replace(/[^a-z0-9]/gi,'_'));
-//            newTemplatesObj[dynTmplIDForContainer] = (""+templateUrl);
-//          }
-//        });
-        spa.console.info("Template(s) with template ID(s).");
-        spa.console.log(newTemplatesObj);
-        if (_.isEmpty(newTemplatesObj)) {
-          vTemplates = {};
-          vTemplatesList = "";
-        } else {
-          vTemplates = newTemplatesObj;
+        }
+        var vTemplates = spa.toJSON(vTemplatesList || "{}");
+        /* Check the option to override */
+        if ((!(_.isObject(spaRVOptions.dataTemplates))) && (_.isString(spaRVOptions.dataTemplates))) {
+          vTemplatesList = (spaRVOptions.dataTemplates || "").trimStr();
+          if (spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
+            vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
+          }
+          spaRVOptions.dataTemplates = spa.toJSON(vTemplatesList);
+        }
+        if (!$.isEmptyObject(spaRVOptions.dataTemplates)) {
+          vTemplates = spaRVOptions.dataTemplates;
           vTemplatesList = "" + (JSON.stringify(vTemplates));
         }
-      }
-
-      /* if Template list not provided in data-templates;
-       * 1: Check options
-       * 2: if not in options check data-template
-       * */
-      if ((!vTemplates) || ($.isEmptyObject(vTemplates))) {
-        vTemplates = {};
-        var _dataTemplate = spaRVOptions.dataTemplate
-          , _tmplKey = ""
-          , _tmplLoc ="";
-        if (spa.isBlank(_dataTemplate)) { //Not-in JS option
-          if (!spa.isBlank(vTemplate2RenderInTag)) { //Found in tag
-            spa.console.info("Template to load from location <"+vTemplate2RenderInTag+">");
-            _dataTemplate = vTemplate2RenderInTag;
-          }
+        if ((_.isEmpty(spa.toJSON((vTemplatesList||"").trimStr())))
+          || (_.isArray(vTemplates) && vTemplates.length==1 && spa.isBlank(vTemplates[0]))) {
+          vTemplates = {};
+          vTemplatesList = "";
         }
 
-        _dataTemplate = (_dataTemplate || "").trimStr();
-        spa.console.info("Primary Template: <"+_dataTemplate+">");
-        if (spa.isBlank(_dataTemplate) || _dataTemplate.equalsIgnoreCase("inline") || _dataTemplate.equals(".")){
-          spa.console.info("Using target container (inline) content as template.");
-          _tmplKey = ("_tmplInline_" +(viewContainerId.trimStr("#")));
-        } else if (_dataTemplate.beginsWithStr("#")) {
-          spa.console.info("Using page container <"+_dataTemplate+"> content as template.");
-          _tmplKey = _dataTemplate.trimStr("#");
-        } else {
-          spa.console.info("External path <"+_dataTemplate+"> content as template.");
-          _tmplKey = "__tmpl_" + ((''+_dataTemplate).replace(/[^a-z0-9]/gi,'_'));
-          _tmplLoc = _dataTemplate;
-        }
-
-        vTemplates[_tmplKey] = _tmplLoc.replace(/['\"]/g,'');
+        spa.console.info("Templates:");
         spa.console.info(vTemplates);
-      }
-
-      spa.console.group("spaView");
-
-      if (vTemplates && (!$.isEmptyObject(vTemplates))) {
-        spa.console.info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
-        var vTemplateNames = _.keys(vTemplates);
-
-        spa.console.group("spaLoadingTemplates");
-
-        /* Template Cache Begins: if false remove old templates */
-        spa.console.group("spaLoadingTemplatesCache");
-        if (!(useOptions && uOptions.hasOwnProperty('dataTemplatesCache'))) /* NOT provided in Render Request */
-        { /* Read from view container [data-templates-cache='{true|false}'] */
-          //var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
-          var templatesCacheInTagData = _renderOptionInAttr("templatesCache") || _renderOptionInAttr("templateCache") || _renderOptionInAttr("htmlsCache") || _renderOptionInAttr("htmlCache");
-          if (!spa.isBlank(templatesCacheInTagData)) {
-            spaRVOptions.dataTemplatesCache = templatesCacheInTagData.toBoolean();
-            spa.console.info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
+        //Handle if array without templateID, convert to object with auto templateID
+        if (_.isArray(vTemplates) && !_.isEmpty(vTemplates)) {
+          spa.console.info("Array of template(s) without templateID(s).");
+          var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
+  //        var dynTmplIDForContainer;
+  //        _.each(vTemplates, function(templateUrl, sIndex){
+  //          spa.console.log(templateUrl);
+  //          if (templateUrl) {
+  //            dynTmplIDForContainer = "__tmpl_" + ((''+templateUrl).replace(/[^a-z0-9]/gi,'_'));
+  //            newTemplatesObj[dynTmplIDForContainer] = (""+templateUrl);
+  //          }
+  //        });
+          spa.console.info("Template(s) with template ID(s).");
+          spa.console.log(newTemplatesObj);
+          if (_.isEmpty(newTemplatesObj)) {
+            vTemplates = {};
+            vTemplatesList = "";
+          } else {
+            vTemplates = newTemplatesObj;
+            vTemplatesList = "" + (JSON.stringify(vTemplates));
           }
         }
-        else {
-          spa.console.info("Override [data-templates-cache] with user option [dataTemplatesCache]: " + spaRVOptions.dataTemplatesCache);
-        }
-        spa.console.groupEnd("spaLoadingTemplatesCache");
 
-        spa.console.info("Load Templates");
-        spa.console.info(vTemplates);
-        _.each(vTemplateNames, function (tmplId, tmplIndex) {
-          spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId]);
-          spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache);
-        });
-
-        var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
-
-        spa.console.info("External Data/Templates Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
-        spa.console.groupEnd("spaLoadingTemplates");
-
-        spa.console.info("Render TemplateID: "+vTemplate2RenderID);
-
-        /* Load Styles Begins */
-        spa.console.group("spaLoadingViewStyles");
-        if (!(useOptions && uOptions.hasOwnProperty('dataStylesCache'))) /* NOT provided in Render Request */
-        { /* Read from view container [data-styles-cache='{true|false}'] */
-          var stylesCacheInTagData = _renderOptionInAttr("stylesCache"); //("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
-          if (!spa.isBlank(stylesCacheInTagData)) {
-            spaRVOptions.dataStylesCache = stylesCacheInTagData.toBoolean();
-            spa.console.info("Override [data-styles-cache] with [data-styles-cache] option in tag-attribute: " + spaRVOptions.dataStylesCache);
-          }
-        }
-        else {
-          spa.console.info("Override [data-styles-cache] with user option [dataStylesCache]: " + spaRVOptions.dataStylesCache);
-        }
-
-        var vStylesList = _renderOptionInAttr("styles"); //(""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
-        if (vStylesList && spa.isBlank((vStylesList || "").replace(/[^:'\"]/g,''))){
-          vStylesList = "'"+ ((vStylesList).split(",").join("','")) + "'";
-        }
-        var vStyles = spa.toJSON(vStylesList || "{}");
-
-        /* Check the option to override */
-        if (!$.isEmptyObject(spaRVOptions.dataStyles)) {
-          vStyles = spaRVOptions.dataStyles;
-        }
-        if (_.isArray(vStyles)) {
-          _.remove(vStyles,function(item){ return !item; });
-        }
-        if (vStyles && (!$.isEmptyObject(vStyles))) {
-          if (_.isArray(vStyles)) {
-            spa.console.info("Convert array of style(s) without styleID to object with styleID(s).");
-            var newStylesObj = spa.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
-//            var dynStyleIDForContainer;
-//            _.each(vStyles, function(styleUrl, sIndex){
-//              spa.console.log(styleUrl);
-//              if (styleUrl) {
-//                dynStyleIDForContainer = "__styles_" + ((''+styleUrl).replace(/[^a-z0-9]/gi,'_'));
-//                newStylesObj[dynStyleIDForContainer] = (""+styleUrl);
-//              }
-//            });
-            spa.console.info("Style(s) with styleID(s).");
-            spa.console.log(newStylesObj);
-            vStyles = (_.isEmpty(newStylesObj))? {} : newStylesObj;
+        /* if Template list not provided in data-templates;
+        * 1: Check options
+        * 2: if not in options check data-template
+        * */
+        if ((!vTemplates) || ($.isEmptyObject(vTemplates))) {
+          vTemplates = {};
+          var _dataTemplate = spaRVOptions.dataTemplate
+            , _tmplKey = ""
+            , _tmplLoc ="";
+          if (spa.isBlank(_dataTemplate)) { //Not-in JS option
+            if (!spa.isBlank(vTemplate2RenderInTag)) { //Found in tag
+              spa.console.info("Template to load from location <"+vTemplate2RenderInTag+">");
+              _dataTemplate = vTemplate2RenderInTag;
+            }
           }
 
-          spa.console.info("External styles to be loaded [cache:" + (spaRVOptions.dataStylesCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vStyles));
-          var vStylesNames = _.keys(vStyles);
+          _dataTemplate = (_dataTemplate || "").trimStr();
+          spa.console.info("Primary Template: <"+_dataTemplate+">");
+          if (spa.isBlank(_dataTemplate) || _dataTemplate.equalsIgnoreCase("inline") || _dataTemplate.equals(".")){
+            spa.console.info("Using target container (inline) content as template.");
+            _tmplKey = ("_tmplInline_" +(viewContainerId.trimStr("#")));
+          } else if (_dataTemplate.beginsWithStr("#")) {
+            spa.console.info("Using page container <"+_dataTemplate+"> content as template.");
+            _tmplKey = _dataTemplate.trimStr("#");
+          } else {
+            spa.console.info("External path <"+_dataTemplate+"> content as template.");
+            _tmplKey = "__tmpl_" + ((''+_dataTemplate).replace(/[^a-z0-9]/gi,'_'));
+            _tmplLoc = _dataTemplate;
+          }
 
-          spa.console.group("spaLoadingStyles");
-          _.each(vStylesNames, function (styleId) {
-            spaAjaxRequestsQue = spa.loadStyle(styleId, vStyles[styleId], spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
+          vTemplates[_tmplKey] = _tmplLoc.replace(/['\"]/g,'');
+          spa.console.info(vTemplates);
+        }
+
+        spa.console.group("spaView");
+
+        if (vTemplates && (!$.isEmptyObject(vTemplates))) {
+          spa.console.info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
+          var vTemplateNames = _.keys(vTemplates);
+
+          spa.console.group("spaLoadingTemplates");
+
+          /* Template Cache Begins: if false remove old templates */
+          spa.console.group("spaLoadingTemplatesCache");
+          if (!(useOptions && uOptions.hasOwnProperty('dataTemplatesCache'))) /* NOT provided in Render Request */
+          { /* Read from view container [data-templates-cache='{true|false}'] */
+            //var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
+            var templatesCacheInTagData = _renderOptionInAttr("templatesCache") || _renderOptionInAttr("templateCache") || _renderOptionInAttr("htmlsCache") || _renderOptionInAttr("htmlCache");
+            if (!spa.isBlank(templatesCacheInTagData)) {
+              spaRVOptions.dataTemplatesCache = templatesCacheInTagData.toBoolean();
+              spa.console.info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
+            }
+          }
+          else {
+            spa.console.info("Override [data-templates-cache] with user option [dataTemplatesCache]: " + spaRVOptions.dataTemplatesCache);
+          }
+          spa.console.groupEnd("spaLoadingTemplatesCache");
+
+          spa.console.info("Load Templates");
+          spa.console.info(vTemplates);
+          _.each(vTemplateNames, function (tmplId, tmplIndex) {
+            spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId]);
+            spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache);
           });
-          spa.console.info("External Styles Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
-          spa.console.groupEnd("spaLoadingStyles");
-        }
-        else {
-          spa.console.info("No styles defined [data-styles] in view container [" + viewContainerId + "] to load.");
-        }
-        spa.console.groupEnd("spaLoadingViewStyles");
-        /* Load Styles Ends */
 
-        $.when.apply($, spaAjaxRequestsQue)
-          .then(function () {
+          var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
 
-            spa.console.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
-            spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
+          spa.console.info("External Data/Templates Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
+          spa.console.groupEnd("spaLoadingTemplates");
 
-            try {
-              var isPreProcessed = false, isSinlgeAsyncPreProcess;
-              var isValidData = !_renderOption('dataValidate', 'validate');
-              if (!isValidData) {
-                //Get Validated using SPA.API
-                spa.console.info('Validating Data');
-                var fnDataValidate = _renderOption('dataValidate', 'validate');
-                if (fnDataValidate && (_.isString(fnDataValidate))) {
-                  fnDataValidate = spa.findSafe(window, fnDataValidate);
-                }
-                if (fnDataValidate && _.isFunction(fnDataValidate)) {
-                  isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
-                } else {
-                  isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
-                }
-              }
+          spa.console.info("Render TemplateID: "+vTemplate2RenderID);
 
-              var initialTemplateData = spaTemplateModelData[viewDataModelName];
+          /* Load Styles Begins */
+          spa.console.group("spaLoadingViewStyles");
+          if (!(useOptions && uOptions.hasOwnProperty('dataStylesCache'))) /* NOT provided in Render Request */
+          { /* Read from view container [data-styles-cache='{true|false}'] */
+            var stylesCacheInTagData = _renderOptionInAttr("stylesCache"); //("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
+            if (!spa.isBlank(stylesCacheInTagData)) {
+              spaRVOptions.dataStylesCache = stylesCacheInTagData.toBoolean();
+              spa.console.info("Override [data-styles-cache] with [data-styles-cache] option in tag-attribute: " + spaRVOptions.dataStylesCache);
+            }
+          }
+          else {
+            spa.console.info("Override [data-styles-cache] with user option [dataStylesCache]: " + spaRVOptions.dataStylesCache);
+          }
 
-              function _dataPreProcessAsync(){
-                var fnDataPreProcessAsync = _renderOption('dataPreProcessAsync', 'preProcessAsync')
-                  , fnDataPreProcessAsyncResponse;
+          var vStylesList = _renderOptionInAttr("styles"); //(""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
+          if (vStylesList && spa.isBlank((vStylesList || "").replace(/[^:'\"]/g,''))){
+            vStylesList = "'"+ ((vStylesList).split(",").join("','")) + "'";
+          }
+          var vStyles = spa.toJSON(vStylesList || "{}");
 
-                if (fnDataPreProcessAsync && (_.isString(fnDataPreProcessAsync))) { fnDataPreProcessAsync = spa.findSafe(window, fnDataPreProcessAsync); }
-                retValue['modelOriginal'] = $.extend({}, initialTemplateData);
-                retValue['model'] = initialTemplateData;
-                if (fnDataPreProcessAsync && _.isFunction(fnDataPreProcessAsync)) {
-                  isPreProcessed = true;
-                  var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {})),
-                      fnDataPreProcessAsyncResponse = fnDataPreProcessAsync.call(dataProcessContext, initialTemplateData);
+          /* Check the option to override */
+          if (!$.isEmptyObject(spaRVOptions.dataStyles)) {
+            vStyles = spaRVOptions.dataStyles;
+          }
+          if (_.isArray(vStyles)) {
+            _.remove(vStyles,function(item){ return !item; });
+          }
+          if (vStyles && (!$.isEmptyObject(vStyles))) {
+            if (_.isArray(vStyles)) {
+              spa.console.info("Convert array of style(s) without styleID to object with styleID(s).");
+              var newStylesObj = spa.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
+  //            var dynStyleIDForContainer;
+  //            _.each(vStyles, function(styleUrl, sIndex){
+  //              spa.console.log(styleUrl);
+  //              if (styleUrl) {
+  //                dynStyleIDForContainer = "__styles_" + ((''+styleUrl).replace(/[^a-z0-9]/gi,'_'));
+  //                newStylesObj[dynStyleIDForContainer] = (""+styleUrl);
+  //              }
+  //            });
+              spa.console.info("Style(s) with styleID(s).");
+              spa.console.log(newStylesObj);
+              vStyles = (_.isEmpty(newStylesObj))? {} : newStylesObj;
+            }
 
-                  isPreProcessed = (!spa.is(fnDataPreProcessAsyncResponse, 'undefined'));
-                  if (!isPreProcessed) fnDataPreProcessAsyncResponse = [];
-                  if (isPreProcessed) {
-                    isSinlgeAsyncPreProcess = (!spa.is(fnDataPreProcessAsyncResponse, 'array'))
-                                              || (spa.is(fnDataPreProcessAsyncResponse, 'array') && fnDataPreProcessAsyncResponse.length==1);
-                    if (!spa.is(fnDataPreProcessAsyncResponse, 'array')) {
-                      fnDataPreProcessAsyncResponse = [fnDataPreProcessAsyncResponse];
-                    }
+            spa.console.info("External styles to be loaded [cache:" + (spaRVOptions.dataStylesCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vStyles));
+            var vStylesNames = _.keys(vStyles);
+
+            spa.console.group("spaLoadingStyles");
+            _.each(vStylesNames, function (styleId) {
+              spaAjaxRequestsQue = spa.loadStyle(styleId, vStyles[styleId], spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
+            });
+            spa.console.info("External Styles Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
+            spa.console.groupEnd("spaLoadingStyles");
+          }
+          else {
+            spa.console.info("No styles defined [data-styles] in view container [" + viewContainerId + "] to load.");
+          }
+          spa.console.groupEnd("spaLoadingViewStyles");
+          /* Load Styles Ends */
+
+          $.when.apply($, spaAjaxRequestsQue)
+            .then(function () {
+
+              spa.console.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+              spa.console.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
+
+              try {
+                var isPreProcessed = false, isSinlgeAsyncPreProcess;
+                var isValidData = !_renderOption('dataValidate', 'validate');
+                if (!isValidData) {
+                  //Get Validated using SPA.API
+                  spa.console.info('Validating Data');
+                  var fnDataValidate = _renderOption('dataValidate', 'validate');
+                  if (fnDataValidate && (_.isString(fnDataValidate))) {
+                    fnDataValidate = spa.findSafe(window, fnDataValidate);
+                  }
+                  if (fnDataValidate && _.isFunction(fnDataValidate)) {
+                    isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
+                  } else {
+                    isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
                   }
                 }
-                return fnDataPreProcessAsyncResponse;
-              }
 
-              if (isValidData) {
-                $.when.apply($, _dataPreProcessAsync() ).done(function(){
+                var initialTemplateData = spaTemplateModelData[viewDataModelName];
 
-                  var dataPreProcessAsyncRes = Array.prototype.slice.call(arguments);
-                  if (isPreProcessed) {
-                    spa.console.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
-                    if (isSinlgeAsyncPreProcess && (dataPreProcessAsyncRes.length > 1) && (dataPreProcessAsyncRes[1] == 'success') ){
-                      //&& (spa.is(dataPreProcessAsyncRes[0], 'string')) && ((/\s*\{/).test(dataPreProcessAsyncRes[0])) ){
-                      //if only 1 ajax request with JSON String as response
-                      dataPreProcessAsyncRes[0] = spa.toJSON(dataPreProcessAsyncRes[0]);
-                      dataPreProcessAsyncRes.splice(1);
-                    } else {
-                      //multiple ajax in preProcess
-                      _.each(dataPreProcessAsyncRes, function(apiRes, idx) {
-                        if ( apiRes && spa.is(apiRes, 'array')  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
-                          dataPreProcessAsyncRes[idx] = spa.toJSON(apiRes[0]);
-                        }
-                      });
-                    }
-                    spa.console.log(dataPreProcessAsyncRes.__now());
-                  }
+                function _dataPreProcessAsync(){
+                  var fnDataPreProcessAsync = _renderOption('dataPreProcessAsync', 'preProcessAsync')
+                    , fnDataPreProcessAsyncResponse;
 
-                  var fnDataProcess = _renderOption('dataProcess', 'process'), finalTemplateData;
-                  if (fnDataProcess && (_.isString(fnDataProcess))) {
-                    fnDataProcess = spa.findSafe(window, fnDataProcess);
-                  }
+                  if (fnDataPreProcessAsync && (_.isString(fnDataPreProcessAsync))) { fnDataPreProcessAsync = spa.findSafe(window, fnDataPreProcessAsync); }
                   retValue['modelOriginal'] = $.extend({}, initialTemplateData);
                   retValue['model'] = initialTemplateData;
-                  if (fnDataProcess && _.isFunction(fnDataProcess)) {
+                  if (fnDataPreProcessAsync && _.isFunction(fnDataPreProcessAsync)) {
+                    isPreProcessed = true;
                     var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
-                    dataPreProcessAsyncRes.unshift(initialTemplateData);
-                    finalTemplateData = fnDataProcess.apply(dataProcessContext, dataPreProcessAsyncRes);
-                  } else if (isPreProcessed) {
-                    spa.console.warn(rCompName,'.dataPreProcessAsync without dataProcess. Merging responses.');
-                    dataPreProcessAsyncRes.unshift(initialTemplateData);
-                    _.merge.apply(_, dataPreProcessAsyncRes);
+
+                    fnDataPreProcessAsyncResponse = fnDataPreProcessAsync.call(dataProcessContext, initialTemplateData);
+                    isPreProcessed = (!spa.is(fnDataPreProcessAsyncResponse, 'undefined'));
+                    if (!isPreProcessed) fnDataPreProcessAsyncResponse = [];
+                    if (isPreProcessed) {
+                      isSinlgeAsyncPreProcess = (!spa.is(fnDataPreProcessAsyncResponse, 'array'))
+                                                || (spa.is(fnDataPreProcessAsyncResponse, 'array') && fnDataPreProcessAsyncResponse.length==1);
+                      if (!spa.is(fnDataPreProcessAsyncResponse, 'array')) {
+                        fnDataPreProcessAsyncResponse = [fnDataPreProcessAsyncResponse];
+                      }
+                    }
                   }
+                  return fnDataPreProcessAsyncResponse;
+                }
 
-                  retValue['model'] = (spa.is(finalTemplateData, 'undefined'))? initialTemplateData : finalTemplateData;
-                  if (!_.isObject(retValue['model'])) {
-                    retValue['model'] = retValue['modelOriginal'];
-                  }
-                  spa.console.log(rCompName, 'Final Template Data:', retValue['model']);
+                if (isValidData) {
+                  $.when.apply($, _dataPreProcessAsync() ).done(function(){
 
-                  { if (rCompName) {
-                      if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
-                        var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
-                        if (compLocOrApiData.hasOwnProperty('spaComponent')) {
-                          app[rCompName]['$data'] = {};
-                        } else {
-                          app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, compLocOrApiData) : {};
-                        }
-                        app[rCompName]['__global__']= window || {};
-                      }
-
-                      retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
-                      retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
-                    };
-                    retValue['model']['_global_'] = window || {};
-
-                    var spaViewModel = retValue.model, compiledTemplate;
-                    //spa.viewModels[retValue.id] = retValue.model;
-
-                    var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
-                    var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
-                    if (allowScriptsInTemplates) {
-                      templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScrptInTemplate_/g, "script");
-                    }
-
-                    /* {$}                  ==> app.thisComponentName.
-                     * {$someComponentName} ==> app.someComponentName.
-                     *
-                     * {@$}                  ==> _global_.app.thisComponentName.
-                     * {@$someComponentName} ==> _global_.app.someComponentName.
-                     */
-                    //for values
-                    var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
-                    if (!spaRVOptions.skipDataBind && componentRefsV) {
-                      _.forEach(componentRefsV, function(cRef){
-                        templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
-                          cRef.replace(/{\s*\$this|{\s*\@\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
-                      });
-                    }
-
-                    //for reference
-                    var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
-                    if (!spaRVOptions.skipDataBind && componentRefs) {
-                      _.forEach(componentRefs, function(cRef){
-                        templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
-                          cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
-                      });
-                    }
-
-                    compiledTemplate = templateContentToBindAndRender;
-                    spa.console.log("Template Source:", templateContentToBindAndRender);
-                    spa.console.log("DATA for Template:", spaViewModel);
-                    var skipSpaBind, spaBindData;
-                    if (!spa.isBlank(spaViewModel)) {
-                      if (spaRVOptions.skipDataBind) {
-                        spa.console.log('Skipped Data Binding.');
+                    var dataPreProcessAsyncRes = Array.prototype.slice.call(arguments);
+                    if (isPreProcessed) {
+                      spa.console.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
+                      if (isSinlgeAsyncPreProcess && (dataPreProcessAsyncRes.length > 1) && (dataPreProcessAsyncRes[1] == 'success') ){
+                        //&& (spa.is(dataPreProcessAsyncRes[0], 'string')) && ((/\s*\{/).test(dataPreProcessAsyncRes[0])) ){
+                        //if only 1 ajax request with JSON String as response
+                        dataPreProcessAsyncRes[0] = spa.toJSON(dataPreProcessAsyncRes[0]);
+                        dataPreProcessAsyncRes.splice(1);
                       } else {
-
-                        if (!spaRVOptions.dataTemplatesCache) {
-                          delete spa.compiledTemplates4DataBind[rCompName];
-                          delete spa.compiledTemplates[rCompName];
-                        }
-
-                        if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
-                          if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
-                            templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
-                            spa.console.log('TemplateBeforeBind', templateContentToBindAndRender);
-                            var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                            spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
-                            templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
-                            templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
-                            spa.console.log('TemplateAfterBind', templateContentToBindAndRender);
-                            if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) spa.compiledTemplates4DataBind[rCompName] = {};
-                            skipSpaBind=true;
+                        //multiple ajax in preProcess
+                        _.each(dataPreProcessAsyncRes, function(apiRes, idx) {
+                          if ( apiRes && spa.is(apiRes, 'array')  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
+                            dataPreProcessAsyncRes[idx] = spa.toJSON(apiRes[0]);
                           }
-                        }
-
-                        if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
-                          if ((typeof Handlebars != "undefined") && Handlebars) {
-                            spa.console.log("Data bind using handlebars.js.", templateContentToBindAndRender);
-                            try{
-                              var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
-                              var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                              spaBindData = data4Template;
-                              if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
-                              compiledTemplate = preCompiledTemplate(data4Template);
-                              spa.console.log(compiledTemplate);
-                            }catch(e){
-                              console.error('Template', e);
-                            }
-                          } else {
-                            spa.console.error("handlebars.js is not loaded.");
-                          }
-                        }
-
-                      }
-                    }
-                    spa.console.log("Template Compiled:", compiledTemplate);
-
-                    doDeepRender = false;
-                    retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
-
-                    //Callback Function's context
-                    var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
-                    if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
-                      delete renderCallbackContext['__prop__']['data']['_global_'];
-                      delete renderCallbackContext['__prop__']['data']['_this_'];
-                      delete renderCallbackContext['__prop__']['data']['_this'];
-                    }
-                    if (retValue['model']) {
-                      delete retValue['model']['_global_'];
-                      delete retValue['model']['_this_'];
-                      delete retValue['model']['_this'];
-                    }
-
-                    /* Default Global components before-render */
-                    spa.renderUtils.runCallbackFn(spa.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
-
-                    //beforeRender
-                    var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
-                    if (fnBeforeRender){
-                      var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
-                      fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
-                      if (!spa.is(fnBeforeRenderRes, 'undefined')) {
-                        switch (spa.of(fnBeforeRenderRes)) {
-                          case 'string' :
-                            retValue.view = fnBeforeRenderRes;
-                            break;
-                          case 'boolean':
-                            abortRender = !fnBeforeRenderRes;
-                            break;
-                        }
-                      }
-                    };
-
-                    abortView = (retValue.view).beginsWithStr( '<!---->' );
-                    if (abortRender) {
-                      retValue = {};
-                      spa.console.warn('Render aborted by '+fnBeforeRender);
-                    } else if (!abortView) {
-                      var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
-                      if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
-                        abortRender = true; retValue = {};
-                        spa.console.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
-                      }
-                    }
-
-                    if (!abortRender) {
-                      if (abortView) {
-                        spa.console.log('Rendering component [',rCompName,'] view aborted.');
-                      } else {
-                        var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
-                        spa.console.log('Injecting component in DOM (',viewContainerId,').'+(targetRenderContainerType||'html'));
-                        switch(targetRenderContainerType) {
-                          case "value" :
-                            $(viewContainerId).val(retValue.view);
-                            break;
-                          case "text" :
-                            $(viewContainerId).text(retValue.view);
-                            break;
-
-                          default:
-                            doDeepRender = true;
-                            switch (true) {
-                              case (targetRenderMode.equalsIgnoreCase("append")):
-                                $(viewContainerId).append(retValue.view);
-                                break;
-                              case (targetRenderMode.equalsIgnoreCase("prepend")):
-                                $(viewContainerId).prepend(retValue.view);
-                                break;
-                              default: $(viewContainerId).html(retValue.view); break;
-                            }
-                            break;
-                        };
-                      }
-
-                      $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
-                      _$renderCountUpdate(rCompName);
-                      spa.console.info("Render: SUCCESS");
-                      var rhKeys = _.keys(spa.renderHistory);
-                      var rhLen = rhKeys.length;
-                      if (rhLen > spa.renderHistoryMax) {
-                        $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
-                          delete spa.renderHistory[key];
                         });
                       }
-                      retValue.cron = "" + spa.now();
-                      if (spa.renderHistoryMax>0) {
-                        spa.renderHistory[retValue.id] = retValue;
-                      };
+                      spa.console.log(dataPreProcessAsyncRes.__now());
+                    }
 
-                      if (doDeepRender && !abortView) {
-                        /*display selected i18n lang*/
-                        if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
-                          spa.i18n.displayLang();
+                    var fnDataProcess = _renderOption('dataProcess', 'process'), finalTemplateData;
+                    if (fnDataProcess && (_.isString(fnDataProcess))) {
+                      fnDataProcess = spa.findSafe(window, fnDataProcess);
+                    }
+                    retValue['modelOriginal'] = $.extend({}, initialTemplateData);
+                    retValue['model'] = initialTemplateData;
+                    if (fnDataProcess && _.isFunction(fnDataProcess)) {
+                      var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
+                      dataPreProcessAsyncRes.unshift(initialTemplateData);
+                      finalTemplateData = fnDataProcess.apply(dataProcessContext, dataPreProcessAsyncRes);
+                    } else if (isPreProcessed) {
+                      spa.console.warn(rCompName,'.dataPreProcessAsync without dataProcess. Merging responses.');
+                      dataPreProcessAsyncRes.unshift(initialTemplateData);
+                      _.merge.apply(_, dataPreProcessAsyncRes);
+                    }
+
+                    retValue['model'] = (spa.is(finalTemplateData, 'undefined'))? initialTemplateData : finalTemplateData;
+                    if (!_.isObject(retValue['model'])) {
+                      retValue['model'] = retValue['modelOriginal'];
+                    }
+                    spa.console.log(rCompName, 'Final Template Data:', retValue['model']);
+
+                    { if (rCompName) {
+                        if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
+                          var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
+                          if (compLocOrApiData.hasOwnProperty('spaComponent')) {
+                            app[rCompName]['$data'] = {};
+                          } else {
+                            app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, compLocOrApiData) : {};
+                          }
+                          app[rCompName]['__global__']= window || {};
                         }
-                        /*apply i18n*/
-                        spa.i18n.apply(viewContainerId);
 
-                        _init_SPA_DOM_(viewContainerId);
-                        if (!skipSpaBind) {
-                          spa.dataBind(viewContainerId, spaBindData, '', true);
+                        retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
+                        retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
+                      }
+                      retValue['model']['_global_'] = window || {};
+
+                      var spaViewModel = retValue.model, compiledTemplate;
+                      //spa.viewModels[retValue.id] = retValue.model;
+
+                      var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
+                      var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
+                      if (allowScriptsInTemplates) {
+                        templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScrptInTemplate_/g, "script");
+                      }
+
+                      /* {$}                  ==> app.thisComponentName.
+                      * {$someComponentName} ==> app.someComponentName.
+                      *
+                      * {@$}                  ==> _global_.app.thisComponentName.
+                      * {@$someComponentName} ==> _global_.app.someComponentName.
+                      */
+                      //for values
+                      var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
+                      if (!spaRVOptions.skipDataBind && componentRefsV) {
+                        _.forEach(componentRefsV, function(cRef){
+                          templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                            cRef.replace(/{\s*\$this|{\s*\@\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                        });
+                      }
+
+                      //for reference
+                      var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
+                      if (!spaRVOptions.skipDataBind && componentRefs) {
+                        _.forEach(componentRefs, function(cRef){
+                          templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
+                            cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
+                        });
+                      }
+
+                      compiledTemplate = templateContentToBindAndRender;
+                      spa.console.log("Template Source:", templateContentToBindAndRender);
+                      spa.console.log("DATA for Template:", spaViewModel);
+                      var skipSpaBind, spaBindData;
+                      if (!spa.isBlank(spaViewModel)) {
+                        if (spaRVOptions.skipDataBind) {
+                          spa.console.log('Skipped Data Binding.');
+                        } else {
+
+                          if (!spaRVOptions.dataTemplatesCache) {
+                            delete spa.compiledTemplates4DataBind[rCompName];
+                            delete spa.compiledTemplates[rCompName];
+                          }
+
+                          if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
+                            if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
+                              templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
+                              spa.console.log('TemplateBeforeBind', templateContentToBindAndRender);
+                              var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                              spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
+                              templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
+                              templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
+                              spa.console.log('TemplateAfterBind', templateContentToBindAndRender);
+                              if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) spa.compiledTemplates4DataBind[rCompName] = {};
+                              skipSpaBind=true;
+                            }
+                          }
+
+                          if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
+                            if ((typeof Handlebars != "undefined") && Handlebars) {
+                              spa.console.log("Data bind using handlebars.js.", templateContentToBindAndRender);
+                              try{
+                                var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
+                                var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                                spaBindData = data4Template;
+                                if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
+                                compiledTemplate = preCompiledTemplate(data4Template);
+                                spa.console.log(compiledTemplate);
+                              }catch(e){
+                                console.error('Error in Template', e);
+                              }
+                            } else {
+                              spa.console.error("handlebars.js is not loaded.");
+                            }
+                          }
+
+                        }
+                      }
+                      spa.console.log("Template Compiled:", compiledTemplate);
+
+                      doDeepRender = false;
+                      retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
+
+                      //Callback Function's context
+                      var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
+                      if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
+                        delete renderCallbackContext['__prop__']['data']['_global_'];
+                        delete renderCallbackContext['__prop__']['data']['_this_'];
+                        delete renderCallbackContext['__prop__']['data']['_this'];
+                      }
+                      if (retValue['model']) {
+                        delete retValue['model']['_global_'];
+                        delete retValue['model']['_this_'];
+                        delete retValue['model']['_this'];
+                      }
+
+                      /* Default Global components before-render */
+                      spa.renderUtils.runCallbackFn(spa.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
+
+                      //beforeRender
+                      var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
+                      if (fnBeforeRender){
+                        var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
+                        fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
+                        if (!spa.is(fnBeforeRenderRes, 'undefined')) {
+                          switch (spa.of(fnBeforeRenderRes)) {
+                            case 'string' :
+                              retValue.view = fnBeforeRenderRes;
+                              break;
+                            case 'boolean':
+                              abortRender = !fnBeforeRenderRes;
+                              break;
+                          }
+                        }
+                      }
+
+                      abortView = (retValue.view).beginsWithStr( '<!---->' );
+                      if (abortRender) {
+                        retValue = {};
+                        spa.console.warn('Render aborted by '+fnBeforeRender);
+                      } else if (!abortView) {
+                        var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
+                        if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
+                          abortRender = true; retValue = {};
+                          spa.console.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
+                        }
+                      }
+
+                      if (!abortRender) {
+                        if (abortView) {
+                          spa.console.log('Rendering component [',rCompName,'] view aborted.');
+                        } else {
+                          var targetRenderContainerType = _renderOption('dataRenderType', 'renderType');
+                          spa.console.log('Injecting component in DOM (',viewContainerId,').'+(targetRenderContainerType||'html'));
+                          switch(targetRenderContainerType) {
+                            case "value" :
+                              $(viewContainerId).val(retValue.view);
+                              break;
+                            case "text" :
+                              $(viewContainerId).text(retValue.view);
+                              break;
+
+                            default:
+                              doDeepRender = true;
+                              switch (true) {
+                                case (targetRenderMode.equalsIgnoreCase("append")):
+                                  $(viewContainerId).append(retValue.view);
+                                  break;
+                                case (targetRenderMode.equalsIgnoreCase("prepend")):
+                                  $(viewContainerId).prepend(retValue.view);
+                                  break;
+                                default: $(viewContainerId).html(retValue.view); break;
+                              }
+                              break;
+                          }
                         }
 
-                        /*Register Events in Components*/
-                        spa.renderUtils.registerComponentEvents(rCompName);
-                      };
+                        $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
+                        _$renderCountUpdate(rCompName);
+                        spa.console.info("Render: SUCCESS");
+                        var rhKeys = _.keys(spa.renderHistory);
+                        var rhLen = rhKeys.length;
+                        if (rhLen > spa.renderHistoryMax) {
+                          $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
+                            delete spa.renderHistory[key];
+                          });
+                        }
+                        retValue.cron = "" + spa.now();
+                        if (spa.renderHistoryMax>0) {
+                          spa.renderHistory[retValue.id] = retValue;
+                        }
 
-                      spa.console.log(retValue);
+                        if (doDeepRender && !abortView) {
+                          /*Register Events in Components*/
+                          spa.renderUtils.registerComponentEvents(rCompName);
 
-                      /* component's specific callback */
-                      var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback");
-                      if (spaRVOptions.dataRenderCallback) {
-                        _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
-                      }
-                      var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
-                      spa.console.info("Processing callback: " + _fnCallbackAfterRender);
+                          /*display selected i18n lang*/
+                          if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
+                            spa.i18n.displayLang();
+                          }
 
-                      if (!isCallbackDisabled) {
-                        spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
-                      }
+                          _init_SPA_DOM_(viewContainerId);
+                          if (!skipSpaBind) {
+                            spa.dataBind(viewContainerId, spaBindData, '', true);
+                          }
 
-                      /*run callback if any*/
-                      /* Default Global components callback */
-                      spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+                          /*apply i18n*/
+                          spa.i18n.apply(viewContainerId);
 
-                      /*Deep/Child Render*/
-                      if (doDeepRender && !abortView) {
-                        $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+                          if (_routeReloadUrl(rCompName)) return (retValue); //Routing-Request-On-Reload
+                        }
 
-                        // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
-                        // if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                        //   spa.console.info('mounting defered component', spaRVOptions.mountComponent);
-                        //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
-                        //   spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
-                        // };
-                        // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
+                        spa.console.log(retValue);
 
-                        spa.renderComponentsInHtml(viewContainerId, rCompName);
-                      };
+                        /* component's specific callback */
+                        var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback");
+                        if (spaRVOptions.dataRenderCallback) {
+                          _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
+                        }
+                        var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
+                        spa.console.info("Processing callback: " + _fnCallbackAfterRender);
 
-                    }//if !abortRender
+                        if (!isCallbackDisabled) {
+                          spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                        }
 
-                    //End of Valid Data
+                        /*run callback if any*/
+                        /* Default Global components callback */
+                        spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+
+                        /*Deep/Child Render*/
+                        if (doDeepRender && !abortView) {
+                          $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+
+                          // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
+                          // if (spaRVOptions.hasOwnProperty('mountComponent')) {
+                          //   spa.console.info('mounting defered component', spaRVOptions.mountComponent);
+                          //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
+                          //   spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                          // };
+                          // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
+
+                          spa.renderComponentsInHtml(viewContainerId, rCompName);
+                        }
+
+                      }//if !abortRender
+
+                      //End of Valid Data
+                    }
+                  });
+                }  else { //NOT a valid Data
+                  if ( spa.is(app.api['onResError'], 'function') ) {
+                    app.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
+                  } else {
+                    spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
                   }
-                });
-              }  else { //NOT a valid Data
-                spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
+                }
               }
-            }
-            catch(e){
-              console.error(e);
-            }
-            spa.console.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
-          })
-          .fail(function () {
-            console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
-          });//.done(spa.runOnceOnRender);
+              catch(e){
+                console.error(e);
+              }
+              spa.console.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+            })
+            .fail(function () {
+              console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
+            });//.done(spa.runOnceOnRender);
+        }
+        else {
+          spa.console.error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
+        }
+        spa.console.groupEnd("spaView");
       }
-      else {
-        spa.console.error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
-      }
-      spa.console.groupEnd("spaView");
-    }
+
+    }, function _onScriptsLoadFailed(){
+      console.error("External Scripts Loading Failed! Unexpected!? Check the Script Path/Network.");
+    });
+
     return (retValue);
   };
 
@@ -7964,8 +8094,50 @@ window['app']['api'] = window['app']['api'] || {};
         spa.updateTrackFormCtrls(this);
       });
 
+      $el.find('textarea,input:not(:checkbox),input:not(:radio)').filter(':not([data-validate])').each(function(){
+        this.setAttribute('data-validate',"{onInput:{fn:_check.noop}}");
+      });
+
+      var xssValidationSpec = ''
+        , xssValidation     = spa.defaults.validation.xss
+        , vXssInAttr        = ($el.attr('data-validate-xss') || '').trim()
+        , xssValidationMsg  = (xssValidation.msg || '').trim();
+
+      if ( /msg\s*:/g.test(vXssInAttr) ) {
+        xssValidationMsg = spa.toJSON(vXssInAttr)['msg'];
+        if (xssValidationMsg) {
+          vXssInAttr = 'on';
+        } else {
+          xssValidationMsg = 'Invalid input.';
+        }
+      }
+
+      if (xssValidationMsg && !(vXssInAttr.equalsIgnoreCase( 'off' ) || vXssInAttr.equalsIgnoreCase( 'no' ) || vXssInAttr.equalsIgnoreCase( 'skip' ) || vXssInAttr.equalsIgnoreCase( 'false' )) ){
+        if (vXssInAttr.length > 4) {
+          xssValidationSpec = ","+vXssInAttr;
+        } else {
+          xssValidationSpec = ",on"+(xssValidation.on.capitalize())+":{fn:'"+(xssValidation.fn)+"',msg:'"+(xssValidationMsg)+"'}";
+        }
+      }
+
       //clear validate msg on focus
-      if (!$el.attr('data-validate-common')) $el.attr('data-validate-common', '{onFocus:{fn:_clearSpaValidateMsg, offline:false}}');
+      var commonClearFnSpec = "onFocus:{fn:_clearSpaValidateMsg,offline:false}"+xssValidationSpec;
+      var cValidateInAttr = ($el.attr('data-validate-common') || '').trim();
+      if (cValidateInAttr) {
+        if (cValidateInAttr.indexOf('_clearSpaValidateMsg')<0) {
+          var newAttr;
+          if (cValidateInAttr[0] == '{') {
+            cValidateInAttr[0] = ',';
+            newAttr = '{'+commonClearFnSpec+cValidateInAttr;
+          } else {
+            newAttr = '{'+commonClearFnSpec+','+cValidateInAttr+'}';
+          }
+          $el.attr('data-validate-common', newAttr);
+        }
+      } else {
+        $el.attr('data-validate-common', '{'+commonClearFnSpec+'}');
+      }
+
       spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || formId));
       if (!$el.hasClass('track-changes') && hasCtrlElements) {
         spa.trackFormElChange(el);
@@ -7986,7 +8158,7 @@ window['app']['api'] = window['app']['api'] || {};
     } else {
       console.warn('SPA validation module is not loaded.');
     }
-  };
+  }
 
   //ToBeRemoved
   // spa.hasAutoRoutes = function(routeHash, operator){
@@ -8156,9 +8328,19 @@ window['app']['api'] = window['app']['api'] || {};
         return this;
       }
     },
+    htm:function(newValue){
+      if (spa.is(newValue, 'undefined')) {
+        return this.html();
+      } else {
+        this.each(function(){
+          $(this).html( spa.sanitizeScript(newValue) );
+        });
+        return this;
+      }
+    },
     isDisabled: function(fnCall){
       var isDisabled = (this.hasClass('disabled') || this.is('[disabled]'));
-      if (isDisabled && fnCall) { fnCall.call(this, this); };
+      if (isDisabled && fnCall) { fnCall.call(this, this); }
       return isDisabled;
     },
     isEnabled: function(fnCall){
@@ -8742,13 +8924,12 @@ window['app']['api'] = window['app']['api'] || {};
       urlReplaceKeyValues = urlReplaceKeyValues || {};
 
       var apiUrl = (spa.api.urls[apiKey] || apiKey)
-        , isStaticUrl = apiUrl.beginsWithStr('!') || spa.api.mock
+        , isStaticUrl = apiUrl.beginsWithStr('!') || spa.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || spa.api.forceParamValuesInMockUrls
         , paramsInUrl = _.uniq(apiUrl.extractStrBetweenIn('{', '}'))
         , pKey, pValue;
 
       if (!spa.isBlank(paramsInUrl)) {
-
         _.each(paramsInUrl, function(param){
           pKey = param.replace(/[{}<>]/g, '');
           if (pKey && urlReplaceKeyValues.hasOwnProperty(pKey)) {
@@ -8777,7 +8958,7 @@ window['app']['api'] = window['app']['api'] || {};
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
       var defAjaxOptions = spa.findSafe(window, 'app.api.ajaxOptions', {});
-      var apiErroHandle = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : spa.api.onReqError;
+      var apiErroHandle = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : (app.api['onError'] || spa.api.onReqError);
 
       ajaxOptions = $.extend({}, defAjaxOptions, ajaxOptions,  {
         error: apiErroHandle,
@@ -8787,7 +8968,11 @@ window['app']['api'] = window['app']['api'] || {};
             ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
           else {
-            spa.api.onResError.call(this, axResponse, textStatus, jqXHR);
+            if ( spa.is(app.api['onResError'], 'function') ) {
+              app.api.onResError.call(this, axResponse, textStatus, jqXHR);
+            } else {
+              spa.api.onResError.call(this, axResponse, textStatus, jqXHR);
+            }
           }
         }
       });
@@ -8817,12 +9002,12 @@ window['app']['api'] = window['app']['api'] || {};
             finalReqPayload = JSON.stringify(finalReqPayload);
           }
           ajaxOptions['data'] = finalReqPayload;
-        };
+        }
       }
 
       if ((ajaxOptions.url).beginsWithStr(spa.api.urlKeyIndicator)){
         ajaxOptions.url = spa.api.url((ajaxOptions.url).trimLeftStr(spa.api.urlKeyIndicator), ajaxOptions.data);
-      };
+      }
 
       if (app['debug'] || spa['debug']) console.info(['API(ajax) call with options', ajaxOptions]);
 
@@ -8865,9 +9050,9 @@ window['app']['api'] = window['app']['api'] || {};
         if (axOverrideOptions['dataUrlParams']) {
           if ((''+(axOptions['url'])).beginsWithStr(spa.api.urlKeyIndicator)){
             axOptions.url = spa.api.url((axOptions.url).trimLeftStr(spa.api.urlKeyIndicator), axOverrideOptions['dataUrlParams']);
-          };
+          }
           delete axOverrideOptions['dataUrlParams'];
-        };
+        }
         _.merge(axOptions, axOverrideOptions);
       }
       spa.console.log('API ajax options >>');
@@ -9002,15 +9187,19 @@ window['app']['api'] = window['app']['api'] || {};
     var retValue = '',
         liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', '');
     if (liveApiPrefix) {
-      if (liveApiPrefix.indexOf(',')>0) {
-        var liveApiPrefixLst = liveApiPrefix.split(','), i=0, len=liveApiPrefixLst.length, liveApiPrefixX;
+      var liveApiPrefixLst = [], i=0, len=0, liveApiPrefixX;
+      if (spa.is(liveApiPrefix, 'string')) {
+        liveApiPrefixLst = liveApiPrefix.split(',');
+      } else if (spa.is(liveApiPrefix, 'array')) {
+        liveApiPrefixLst = liveApiPrefix;
+      }
+      len=liveApiPrefixLst.length;
+      if (len>1) {
         while (!retValue && i<len) {
           liveApiPrefixX = liveApiPrefixLst[i++].trim();
-          //retValue = (liveApiPrefixX && apiUrl.beginsWithStr(liveApiPrefixX))? liveApiPrefixX : '';
           retValue = liveApiPrefixX? (apiUrl.beginsWithStr(liveApiPrefixX)? liveApiPrefixX : (!_isRelativePath(apiUrl) && apiUrl.indexOf(liveApiPrefixX)>0 ? liveApiPrefixX : '') ) : '';
         }
       } else {
-        //retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : '';
         retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : (!_isRelativePath(apiUrl) && apiUrl.indexOf(liveApiPrefix)>0 ? liveApiPrefix : '');
       }
     }
@@ -9018,8 +9207,8 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _ajaxSetReqHeaders(req, options){
-    var reqHeadersToSend = spa.findSafe(window, 'app.api.reqHeaders');
-    if (is(reqHeadersToSend, 'function')) reqHeadersToSend = reqHeadersToSend(req, options);
+    var reqHeaders = spa.findSafe(window, 'app.api.reqHeaders');
+    var reqHeadersToSend = (is(reqHeaders, 'function'))? reqHeaders(req, options) : reqHeaders;
     if (is(reqHeadersToSend, 'object')) {
       _.forEach(Object.keys(reqHeadersToSend), function(reqHeadKey){
         req.setRequestHeader(reqHeadKey, reqHeadersToSend[reqHeadKey]);
@@ -9044,7 +9233,7 @@ window['app']['api'] = window['app']['api'] || {};
 
     if ((options.url).beginsWithStr(spa.api.urlKeyIndicator)) {
       options.url = spa.api.url((options.url).trimLeftStr(spa.api.urlKeyIndicator), options.data);
-    };
+    }
     var actualUrl = options.url, isMockReq;
 
     //any request Header to send?
@@ -9057,11 +9246,11 @@ window['app']['api'] = window['app']['api'] || {};
 
     //Common Request Error Handling if not defined
     if ((options['dataType'] != 'script') && (!options.hasOwnProperty('error'))) {
-      options['error'] = spa.api.onReqError;
+      options['error'] = app.api['onError'] || spa.api.onReqError;
     }
 
-    var liveApiPrefixStr = '', regExUrlParams = /({+)([^}])*(}+)/;
-    if (spa.api.mock || actualUrl.beginsWithStr('!')) {
+    var liveApiPrefixStr = '', regExUrlParams = /({+)([^}])*(}+)/, urlParamsData;
+    if (spa.api.mock || app.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
         options.url = (_isRelativePath(actualUrl.trimLeftStr('~'))? (spa.api.baseUrl||'') : '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
@@ -9078,13 +9267,13 @@ window['app']['api'] = window['app']['api'] || {};
           if ( regExUrlParams.test(actualUrl) ) {
             spa.console.log('URL has undefined params >>', actualUrl, options.data);
             try {
-              var urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
+              urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
               actualUrl = spa.api.url(actualUrl.replace(/{{/g,'{').replace(/}}/g,'}'), urlParamsData);
-            } catch(e){};
+            } catch(e){}
             spa.console.log('Updated URL>>', actualUrl);
-          };
+          }
 
-          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), "api_/").replace(/\?/, reqMethod+"/data.json");
+          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), "api_/").replace(/(\/)*\?/, reqMethod+"/data.json?").replace(/\?$/, '');
           if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
           isMockReq = true;
         }
@@ -9096,7 +9285,7 @@ window['app']['api'] = window['app']['api'] || {};
         options.url = (_isRelativePath(actualUrl)? (spa.api.baseUrl||'') : '') + actualUrl + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       }
-    };
+    }
 
     spa.console.log('Remove mock params if any in URL>', options.url);
     options.url = (options.url).replace(/{{([^}])*}}(\/*)/g,''); //remove any mock url-params {{<xyz>}}
@@ -9104,9 +9293,9 @@ window['app']['api'] = window['app']['api'] || {};
     if ( regExUrlParams.test(options.url) ) {
       spa.console.log('URL has undefined params>', options.url, options.data);
       try {
-        var urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
+        urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
         options.url = spa.api.url((options.url).replace(/{</g,'{').replace(/>}/g,'}'), urlParamsData);
-      } catch(e){};
+      } catch(e){}
     }
     //Final Ajax URL
     spa.console.log('Final Ajax URL>', options.url);
@@ -9116,21 +9305,30 @@ window['app']['api'] = window['app']['api'] || {};
       options.url = options.url.replace(/[{<>}]/g, '_');
     }
 
-
     //Global defaultPayload
-    if (spa.api['defaultPayload']) {
-      var reqPayloadType = spa.of(options['data'])
-        , defaultPayload = spa.api['defaultPayload']
-        , defaultPayloadX = (spa.is(defaultPayload, 'function')? defaultPayload(reqPayload) : (spa.is(defaultPayload, 'object')? _.merge({}, defaultPayload) : defaultPayload))
-        , reqPayload = (reqPayloadType == 'string')? spa.toJSON(options['data']) : options['data'];
+    var defaultPayloadGlobal  = app.api['defaultPayload'] || spa.api['defaultPayload'];
+    if (defaultPayloadGlobal) {
+      var reqPayloadType  = spa.of(options['data'])
+        , reqPayload      = (reqPayloadType == 'string')? spa.toJSON(options['data']) : options['data']
+        , defaultPayloadFnRes, finalReqPayload;
 
-      if (spa.is(defaultPayloadX, 'object')) {
-        var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge({}, defaultPayloadX, reqPayload) : defaultPayloadX;
-        if (!spa.isBlank(finalReqPayload) && (reqPayloadType == 'string')) {
-          finalReqPayload = JSON.stringify(finalReqPayload);
+      if (spa.is(defaultPayloadGlobal, 'function')) {
+        defaultPayloadFnRes = defaultPayloadGlobal.call(options, reqPayload, options);
+        if (spa.is(defaultPayloadFnRes, 'object')) {
+          finalReqPayload = JSON.parse(JSON.stringify( defaultPayloadFnRes ));
+          if (!spa.isBlank(finalReqPayload)) {
+            options['data'] = (reqPayloadType == 'string')? JSON.stringify(finalReqPayload) : finalReqPayload;
+          }
         }
-        options['data'] = finalReqPayload;
-      };
+      } else {
+        if (spa.is(defaultPayloadGlobal, 'object|array')) {
+          finalReqPayload = JSON.parse(JSON.stringify( defaultPayloadGlobal ));
+        } else {
+          finalReqPayload = defaultPayloadGlobal;
+        }
+        finalReqPayload = (spa.is(finalReqPayload, 'object|array') && spa.is(reqPayload, 'object|array'))? _.merge({}, finalReqPayload, reqPayload) : finalReqPayload;
+        options['data'] = (!spa.isBlank(finalReqPayload) && (reqPayloadType == 'string'))? JSON.stringify(finalReqPayload) : finalReqPayload;
+      }
     }
 
     if (spa.ajaxPreProcess) {
@@ -9146,7 +9344,7 @@ window['app']['api'] = window['app']['api'] || {};
           , 'Z-Payload': spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data'])
         });
       delete options['data'];
-    };
+    }
 
     if (app['debug'] || spa['debug']) console.log('ajax Options', options);
   }
@@ -9224,6 +9422,8 @@ window['app']['api'] = window['app']['api'] || {};
   /* *************** data-spa-route - SPA Route Solution Begins ************************ */
   var _urlHashBase        = '#'
     , _blockNav
+    , _hideNavClassName   = ''
+    , _hideNav
     , _onAutoRoute        = true
     , _autoRoutesFound    = []
     , _maxAutoRoute       = 100
@@ -9243,14 +9443,9 @@ window['app']['api'] = window['app']['api'] || {};
 
   function _initAutoRoute() {
     _autoRoutesFound = [];
-    _maxAutoRoute = 100;
+    _maxAutoRoute = 50;
   }
   function _initRoutesDefaults(){
-    var spaRoutesDefaults = $('body').attr('data-spa-routes');
-    if (!spa.isBlank(spaRoutesDefaults)) {
-      spaRoutesDefaults = spa.toJSON(spaRoutesDefaults);
-      _.merge(spa.defaults.routes, spaRoutesDefaults);
-    }
     _prevUrlHash = spa.urlHashFull( _urlHashBase );
 
     _urlHashBase        = (spa.findSafe(spa, 'defaults.routes.base', '')            || '#').trim();
@@ -9258,11 +9453,13 @@ window['app']['api'] = window['app']['api'] || {};
     _blockNavClass      = ('.'+_blockNavClassName);
     _allowNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.allow', '') || 'ALLOW-SPA-NAV').trim();
     _hideNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.hide', '')  || 'HIDE-SPA-NAV').trim();
-    _hideNavClass       = ('.'+_hideNavClassName);
+    //_hideNavClass       = ('.'+_hideNavClassName);
     _attrSpaRoute       = (spa.findSafe(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route').trim();
     _attrSpaRouteParams = (spa.findSafe(spa, 'defaults.routes.attr.params', '')     || 'data-spa-route-params').trim();
     _routeByHref        = (_attrSpaRoute.equalsIgnoreCase('href'));
     _attrOnNavAway      = (spa.findSafe(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway').trim();
+
+    _hideNav = $('body').hasClass( _hideNavClassName );
   }
 
   function _blockSpaNavigation(scope){
@@ -9278,14 +9475,17 @@ window['app']['api'] = window['app']['api'] || {};
     _blockNav = _isSpaNavBlocked();
     return $scope;
   }
-  function _showSpaNavigation(){
-    $('body').removeClass( _hideNavClassName );
-  }
-  function _hideSpaNavigation(){
-    $('body').addClass( _hideNavClassName );
-  }
+  // function _showSpaNavigation(){
+  //   $('body').removeClass( _hideNavClassName );
+  // }
+  // function _hideSpaNavigation(){
+  //   $('body').addClass( _hideNavClassName );
+  // }
+  // function _isToShowSpaNav(){
+  //   return (!$('body').hasClass( _hideNavClassName ));
+  // }
   function _isToShowSpaNav(){
-    return (!$('body').hasClass( _hideNavClassName ));
+    return !_hideNav;
   }
   function _isSpaNavBlocked( scope ){
     if (scope) {
@@ -9386,8 +9586,8 @@ window['app']['api'] = window['app']['api'] || {};
 
   spa.blockNav     = _blockSpaNavigation;
   spa.allowNav     = _allowSpaNavigation;
-  spa.showNav      = _showSpaNavigation;
-  spa.hideNav      = _hideSpaNavigation;
+  //spa.showNav      = _showSpaNavigation;
+  //spa.hideNav      = _hideSpaNavigation;
   spa.isNavBlocked = _isSpaNavBlocked;
   spa.isNavAllowed = _isSpaNavAllowed;
   spa.isToShowNav  = _isToShowSpaNav;
@@ -9428,7 +9628,7 @@ window['app']['api'] = window['app']['api'] || {};
   function _processDynHash(dynRouteHash, eventAfterProcess){
     var isDynamicHash = (dynRouteHash.indexOf(':')>=0)
       , e2Trigger = eventAfterProcess;
-    if (spa.is(eventAfterProcess, 'boolean')) { e2Trigger = eventAfterProcess? 'click' : ''; };
+    if (spa.is(eventAfterProcess, 'boolean')) { e2Trigger = eventAfterProcess? 'click' : ''; }
 
     if (isDynamicHash) {
       //console.log('In _processDynHash', arguments, JSON.stringify(_dynHashProcessed));
@@ -9500,7 +9700,7 @@ window['app']['api'] = window['app']['api'] || {};
       for (var i = lastHashIndex; i>=0; i--) {
 
         prevHash = (hashList[i-1]||'');
-        if (_onAutoRoute && prevHash.indexOf(':')>0 && !(_autoRoutesFound.__has(prevHash))) { i--; }; //GoBack if to prevHash is dynamic
+        if (_onAutoRoute && prevHash.indexOf(':')>0 && !(_autoRoutesFound.__has(prevHash))) { i--; } //GoBack if to prevHash is dynamic
 
         //console.log('pHash>', prevHash);
 
@@ -9530,13 +9730,13 @@ window['app']['api'] = window['app']['api'] || {};
 
             if ($hashTriggerEl.isEnabled() && !$hashTriggerEl.hasClass('AUTO-ROUTING'))
               $hashTriggerEl.addClass('AUTO-ROUTING').trigger($hashTriggerEl.data('routeEvent') || 'click');
-            if (isLastHash) { break; } else { i=i+2; }
+            if (isLastHash) { _winLocHash_ = ''; break; } else { i=i+2; }
           }
         }
       }
     }
     _routeOnClick = false;
-  };
+  }
 
   function _updateBrowserAddress(newAddress, delayUpdate){
     spa.console.log('_updateBrowserAddress >>>>>>>>>[', newAddress, ']delay:',delayUpdate,'prev:', _prevUrlHash);
@@ -9626,9 +9826,9 @@ window['app']['api'] = window['app']['api'] || {};
     if (idxInSrc>=0) {
       var matchRoutes = oldRoutes.splice(idxInSrc)
         , xIdx;
-      for(var i=0; i<reqRoutes.length;i++){
-        xIdx = reqRoutes[i].indexOf('*');
-        newRoutes[i] = (xIdx<0)? reqRoutes[i] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[i]) : matchRoutes[i]) ;
+      for(var j=0; j<reqRoutes.length;j++){
+        xIdx = reqRoutes[j].indexOf('*');
+        newRoutes[j] = (xIdx<0)? reqRoutes[j] : ((xIdx)? getMatchHash(matchRoutes, reqRoutes[j]) : matchRoutes[j]) ;
       }
       newRoutes = oldRoutes.concat(newRoutes);
     } else {
@@ -9840,17 +10040,18 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
 
+
   function _$routeElement(routeUrl) {
     return $('['+(_attrSpaRoute)+'$="'+(routeUrl.trim())+'"].ROUTE:first');
   }
   function _$routeElements(routeUrl) {
     return $('['+(_attrSpaRoute)+'$="'+(routeUrl.trim())+'"].ROUTE');
   }
-  function _routeNewUrl(routePath){
+  function _routeNewUrl(routePath, force){
     var newHashUrl = _routeToUrl(routePath);
     spa.console.log('Route:',routePath, 'URL:', newHashUrl);
     if (newHashUrl) {
-      if (_blockNav) {
+      if (!force && _blockNav) {
         _handleNavAwayEvent(newHashUrl);
       } else {
         var $routeElement = _$routeElement(routePath);
@@ -9861,15 +10062,192 @@ window['app']['api'] = window['app']['api'] || {};
             $routeElement.click();
           }
         } else {
-          _updateBrowserAddress(newHashUrl);
+
+          if (_isToShowSpaNav()) {
+            _updateBrowserAddress(newHashUrl);
+          } else {
+            _winLocHash_ = newHashUrl;
+          }
+
           if (routePath.trim() == '/') {
+            spa.allowNav();
             window.location.reload();
           } else {
             _onPopStateChange();
           }
+
         }
       }
     }
+  }
+
+  function _StoreMgmt(xStorage) {
+
+      function _set(k, v) {
+        function _store(keyName, valueStr) {
+          xStorage.setItem(('' + keyName), JSON.stringify(valueStr));
+        }
+
+        if (arguments.length == 1) {
+          if (_type(k, 'object')) {
+            Object.keys(k).forEach(function (kX) {
+              _store(kX, k[kX]);
+            });
+          } else if (_type(k, 'array')) {
+            k.forEach(function (vX, kX) {
+              _store(kX, vX);
+            });
+          }
+        } else if (arguments.length == 2) {
+          _store(k, v);
+        }
+      }
+
+      function _get(k) {
+        if (arguments.length == 0) {
+          return _all();
+        } else if (arguments.length == 1) {
+          if (_type(k, 'string')) {
+            return (k.indexOf(',') > 0) ? _all.apply(null, k.split(',')) : JSON.parse(xStorage.getItem(k));
+          } else if (_type(k, 'array')) {
+            return _all.apply(null, k);
+          }
+        } else {
+          return _all.apply(null, arguments);
+        }
+      }
+
+      function _all() {
+        var filter = arguments.length;
+        var filterKeys = Array.prototype.slice.call(arguments).map(function (x) {
+          return ('' + x).trim();
+        });
+        var retObj = {};
+        Object.keys(xStorage).forEach(function (key) {
+          if (!filter || (filterKeys.indexOf(key) > -1)) {
+            retObj[key] = _get(key);
+          }
+        });
+        return retObj;
+      }
+
+      function _remove(k){
+        function _removeItem( rKey ){
+          xStorage.removeItem( rKey );
+        }
+        function _removeItems(){
+          if (arguments.length) {
+            Array.prototype.slice.call(arguments).forEach(function( rKey ){
+              xStorage.removeItem( rKey );
+            });
+          }
+        }
+
+        if (arguments.length == 0) {
+          _clear();
+        } else if (arguments.length == 1) {
+          if (_type(k, 'string')) {
+            if (k.indexOf(',') > 0) {
+              _removeItems.apply(null, k.split(','));
+            } else {
+              _removeItem( k );
+            }
+          } else if (_type(k, 'array')) {
+            _removeItems.apply(null, k);
+          }
+        } else {
+          _removeItems.apply(null, arguments);
+        }
+      }
+
+      function _clear() {
+        var filter = arguments.length;
+        if (filter) {
+          var filterKeys = Array.prototype.slice.call(arguments).map(function (x) {
+            return ('' + x).trim();
+          });
+          Object.keys(xStorage).forEach(function (key) {
+            if (filterKeys.indexOf(key) < 0) {
+              xStorage.removeItem( key );
+            }
+          });
+        } else {
+          xStorage.clear();
+        }
+      }
+
+      function _type(tOf) {
+        var _typeOf = Object.prototype.toString.call(tOf).split(' ')[1].toLowerCase().replace(/\]$/gi, '');
+        return (arguments.length == 2) ? (('' + arguments[1]).toLowerCase().indexOf(_typeOf) > -1) : _typeOf;
+      }
+
+      //Constructor
+      var sStoreUtil = function (key, value) {
+        if (arguments.length == 0) {
+          return _all();
+        } else if (arguments.length == 1) {
+          if (_type(key, 'object|array')) {
+            _set(key);
+            return key;
+          } else {
+            return _get(key);
+          }
+        } else if (arguments.length == 2) {
+          _set(key, value);
+          return _get(key);
+        }
+      };
+
+      //Methods
+      sStoreUtil.set           = _set;
+      sStoreUtil.get           = _get;
+      sStoreUtil.getAll        = _all;
+      sStoreUtil.remove        = _remove;
+      sStoreUtil.removeAll     = _clear;
+      sStoreUtil.removeExcept  = _clear;
+      sStoreUtil.clear         = _clear;
+      sStoreUtil.clearExcept   = _clear;
+
+      return sStoreUtil;
+    }
+
+  spa.sesStore = _StoreMgmt(sessionStorage);
+  spa.locStore = _StoreMgmt(localStorage);
+
+//  spa.sesStore = {
+//    set: function(storeKey, storeValue){
+//      sessionStorage.setItem(storeKey, JSON.stringify(storeValue));
+//    },
+//    get: function(storeKey){
+//      return JSON.parse(sessionStorage.getItem(storeKey));
+//    },
+//    remove: function(storeKey){
+//      sessionStorage.removeItem(storeKey);
+//    },
+//    clear: function(){
+//      sessionStorage.clear();
+//    }
+//  };
+
+  function _routeReloadUrl(compName){
+    var redirUrl = (spa.sesStore.get('_spaReloadUrl')||'').trim();
+    if (compName && (redirUrl.indexOf(compName)!=0)) return;
+    if (redirUrl) {
+      spa.sesStore.remove('_spaReloadUrl');
+      redirUrl = redirUrl.replace(/.*#/gi,'');
+      spa.route(redirUrl, true);
+      return true;
+    }
+  }
+
+  spa.reload = function(reloadUrl){
+    if (reloadUrl) spa.sesStore.set('_spaReloadUrl', reloadUrl||'');
+    spa.allowNav();
+    window.location.reload();
+  };
+
+  spa.hasReloadUrl = function(){
+    return !!(spa.sesStore.get('_spaReloadUrl')||'').trim();
   };
 
   spa.initRoutes = _initRouteHash;
@@ -9902,7 +10280,7 @@ window['app']['api'] = window['app']['api'] || {};
       , is2WayBind = ('2way'.equalsIgnoreCase(spa.components[cName]['dataBindType']));
     el.classList.add('DATA-MODEL-CHANGE-SRC');
 
-    bindKey=_getBindKeyOf(el, 'value|$');
+    var bindKey =_getBindKeyOf(el, 'value|$');
     spa.setSimpleObjProperty(bindData, bindKey, elValue);
     if (is2WayBind) {
       _.merge(spa.$data(cName), bindData);
@@ -9968,14 +10346,16 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
   function _init_SPA_() {
-    /*init SPA routes; a simple routing solution */
-    _initRoutesDefaults();//run_once
+
     _ctrlBrwowserNav(); //run_once
 
     /*init i18nLang - run_once*/
     init_i18n_Lang();
 
     _init_SPA_DOM_('body');
+
+    /*apply i18n*/
+    spa.i18n.apply('body');
   }
 
   /*
@@ -9994,6 +10374,48 @@ window['app']['api'] = window['app']['api'] || {};
     }
     setTimeout(fnAsyc, 0);
   };
+
+  function _initApiUrls(){
+    _appApiInitialized = !!(Object.keys(app['api']).length);
+    if (_appApiInitialized) spa.console.log('Initializing app.api');
+
+    var appApiBaseUrl = spa.findSafe(window, 'app.api.baseUrl');
+    if (!spa.isBlank(appApiBaseUrl)) {
+      spa.api.baseUrl = appApiBaseUrl;
+    }
+
+    var appApiUrls = spa.findSafe(window, 'app.api.urls');
+    if (spa.isBlank(spa.api.urls) && !spa.isBlank(appApiUrls)) {
+      spa.api.urls = app.api.urls;
+    }
+
+    if (!spa.isBlank(spa.api.urls)) {
+      var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix|app.api.mockRootAtPaths');
+      if (!spa.isBlank(liveApiPrefix)) {
+        var apiContextList = is(liveApiPrefix, 'array')? liveApiPrefix : (''+liveApiPrefix).split(',')
+          , contextMode, urlMode;
+
+        _.each(apiContextList, function(apiContext, idx){
+          apiContext = apiContext.trim();
+          contextMode = apiContext[0];
+          if (contextMode == '!' || contextMode == '~') {
+            apiContext = apiContext.substr(1);
+            _.each(spa.api.urls, function(url, key){
+              urlMode = url[0];
+              if ( (!(urlMode == '!' || urlMode == '~'))
+                && ((url.indexOf(apiContext) == 0) || (url.indexOf('/'+apiContext) > 0)) ) {
+                spa.api.urls[key] = contextMode+url;
+              }
+            });
+          }
+          apiContextList[idx] = apiContext;
+        });
+        app.api['liveApiPrefix'] = apiContextList;
+        delete app.api.mockRootAtPaths;
+      }
+
+    }
+  }
 
   function _initSpaApp(){
     function runSpaEvent(eName){
@@ -10022,11 +10444,29 @@ window['app']['api'] = window['app']['api'] || {};
     }
 
     $.when( runSpaEvent('onInit') ).done( initSpaModules );
-
   }
-  spa.start = _initSpaApp;
+  //spa.start = _initSpaApp;
+
+  function _initSpaDefaults(){
+    var defaultsInTag
+      , dataInBody = $('body').data();
+    _.each(Object.keys(spa.defaults), function(spaDefaultsKey){
+      if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
+        defaultsInTag = dataInBody[ 'spaDefaults'+(spaDefaultsKey.capitalize()) ];
+        if (!spa.isBlank(defaultsInTag)){
+          _.merge(spa.defaults[spaDefaultsKey], spa.toJSON(defaultsInTag));
+        }
+      }
+    });
+
+    _initRoutesDefaults(); //run_once
+    _initApiUrls(); //need to run on 1st Component renderCallback as well
+  }
 
   $(document).ready(function(){
+    //Read spa.defaults from body
+    _initSpaDefaults();
+
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
     /* ajaxPrefilter */
@@ -10036,6 +10476,6 @@ window['app']['api'] = window['app']['api'] || {};
 
   });
 
-})(this);
+})();
 
 spa.console.info("spa loaded.");
