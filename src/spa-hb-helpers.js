@@ -1,4 +1,4 @@
-/** @license SPA-handlebars-helpers.js | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license SPA-handlebars-helpers.js | (c) Kumararaja | License (MIT) */
 /* ============================================================================
  * SPA-handlebars-helpers.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development using SPA.js (spajs.org)
@@ -272,9 +272,8 @@
       }
     }
 
-    //:if must be  a block
-    if (isIfCall && !(isBlock && isConditionBlock)) {
-      console.error("[Template Syntax Error] :if must have 'CONDITION' and BLOCK. use {{#:if ... 'CONDITION' ... }} ... {{else}} ... {{/:if}}");
+    //:if must be a block
+    if (isIfCall && !(isBlock && ((is(mainArgs[0], 'function')) ||  isConditionBlock) )) {
       throw new Error("[Template Syntax Error] :if must have 'CONDITION' and BLOCK. use {{#:if ... 'CONDITION' ... }} ... {{else}} ... {{/:if}}");
     }
 
@@ -292,13 +291,15 @@
         if (hasHash(options)) {
           contextData = getHashRaw(options);
           if (contextData) {
-            if (contextData.hasOwnProperty('thenContext') || contextData.hasOwnProperty('context')
+            if (   contextData.hasOwnProperty('thenWith') || contextData.hasOwnProperty('with')
+                || contextData.hasOwnProperty('thenContext') || contextData.hasOwnProperty('context')
                 || contextData.hasOwnProperty('thenData') ||  contextData.hasOwnProperty('data')) {
-              thenContext = contextData['thenContext'] || contextData['context'] || contextData['thenData'] || contextData['data'];
+              thenContext = contextData['thenWith'] || contextData['with'] || contextData['thenContext'] || contextData['context'] || contextData['thenData'] || contextData['data'];
             }
-            if (contextData.hasOwnProperty('elseContext') || contextData.hasOwnProperty('context')
+            if (   contextData.hasOwnProperty('elseWith') || contextData.hasOwnProperty('with')
+                || contextData.hasOwnProperty('elseContext') || contextData.hasOwnProperty('context')
                 || contextData.hasOwnProperty('elseData') || contextData.hasOwnProperty('data')) {
-              elseContext = contextData['elseContext'] || contextData['context'] || contextData['elseData'] || contextData['data'];
+              elseContext = contextData['elseWith'] || contextData['with'] || contextData['elseContext'] || contextData['context'] || contextData['elseData'] || contextData['data'];
             }
           }
         }
@@ -494,7 +495,7 @@
 
   function _normalizeStr(inputVal) {
     return _trimStr(inputVal).replace(/\s+/g, ' ');
-  };
+  }
 
   function _toInt(inputVal) {
     inputVal = ('' + inputVal).replace(/[^+-0123456789.]/g, '');
@@ -556,13 +557,13 @@
     inputVal = _toString(inputVal);
     if (!is(tStr, 'string')) tStr = '';
     return (inputVal.replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
-  };
+  }
 
   function _trimRightStr(inputVal, tStr) {
     inputVal = _toString(inputVal);
     if (!is(tStr, 'string')) tStr = '';
     return (inputVal.replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
-  };
+  }
 
   function _getLeftStr(inputVal, fromIndex) {
     inputVal = _toString(inputVal);
@@ -572,7 +573,7 @@
     }
     fromIndex = _toInt(fromIndex);
     return (fromIndex)? inputVal.substr(0, fromIndex) : '';
-  };
+  }
 
   function _getRightStr(inputVal, fromIndex) {
     inputVal = _toString(inputVal);
@@ -584,7 +585,7 @@
     }
     fromIndex = _toInt(fromIndex);
     return (fromIndex<0)? '' : inputVal.substr(fromIndex+sLen);
-  };
+  }
 
   /**
    * DateTime Format using moment.js
@@ -671,7 +672,7 @@
       'MMMM' : Mmmm[rightNow.getMonth()].toUpperCase(),
       'Mmm'  : Mmm[rightNow.getMonth()],
       'MMM'  : Mmm[rightNow.getMonth()].toUpperCase(),
-      '0M'   : _prefix0(rightNow.getMonth()+1, '0', 2, -1),
+      '0M'   : _prefix0(rightNow.getMonth()+1),
       'MM'   : rightNow.getMonth()+1,
 
       'Dddd' : Dddd[rightNow.getDay()],
@@ -680,15 +681,15 @@
       'DDD'  : Ddd[rightNow.getDay()].toUpperCase(),
       'Dd'   : Dd[rightNow.getDay()],
       'DD'   : Dd[rightNow.getDay()].toUpperCase(),
-      '0d'   : _prefix0(rightNow.getDate(), '0', 2, -1),
+      '0d'   : _prefix0(rightNow.getDate()),
       'dd'   : rightNow.getDate(),
 
 
-      '0h'   : _prefix0(rightNow.getHours(), '0', 2, -1),
+      '0h'   : _prefix0(rightNow.getHours()),
       'hh'   : rightNow.getHours(),
-      '0m'   : _prefix0(rightNow.getMinutes(), '0', 2, -1),
+      '0m'   : _prefix0(rightNow.getMinutes()),
       'mm'   : rightNow.getMinutes(),
-      '0s'   : _prefix0(rightNow.getSeconds(), '0', 2, -1),
+      '0s'   : _prefix0(rightNow.getSeconds()),
       'ss'   : rightNow.getSeconds(),
 
       'ms'   : rightNow.getMilliseconds()
@@ -709,7 +710,7 @@
     if (!is(min, 'number')) min = 1;
     if (!is(max, 'number')) max = min+999;
     return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
+  }
 
   function _randPwd(passLen, srcStr){
     if (!is(passLen, 'number')) passLen = 8;
@@ -796,7 +797,7 @@
     var retArr = [];
     if (!_isEmpty(srcStr)) {
       if (splitBy) {
-       retArr = srcStr.split(splitBy);
+        retArr = srcStr.split(splitBy);
       } else {
         if (srcStr.indexOf(',')>0) {
           retArr = srcStr.split(',');
@@ -810,7 +811,7 @@
           retArr = [srcStr];
         }
       }
-    };
+    }
     return retArr;
   }
 
@@ -983,7 +984,7 @@
     selByVal = (selValLst.length);
     selByTxt = (selTxtLst.length);
 
-    vKey = opt['value'] || opt['value_text'],
+    vKey = opt['value'] || opt['value_text'];
     tKey = opt['text'] || opt['value_text'];
     vtSplit = (opt['vtSplit']||'').replace(/colon/gi,':');
     useIndex4Val = (vKey.toLowerCase()=='index');
@@ -1013,7 +1014,7 @@
 
     if (is(arrOrObj, 'string')) {
       arrOrObj = _splitString(arrOrObj, opt['splitBy']);
-    };
+    }
 
     switch (_of(arrOrObj)) {
       case 'object':
@@ -1148,17 +1149,8 @@
     }
   }
 
-  function toDottedPath(srcStr){
-    return _trimStr((srcStr||"").replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.'), ("\\."));
-  }
-
   function valueOfKeyPath(obj, pathStr, def) {
-    for (var i = 0, path = toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
-      if (!obj || typeof obj == "undefined") return def;
-      obj = obj[path[i]];
-    }
-    if (typeof obj == "undefined") return def;
-    return obj;
+    return spa.findInObject(obj, pathStr, def);
   }
 
   function _sort(arrList, optStr){
@@ -1187,7 +1179,7 @@
 
     if (is(arrList, 'string') && arrList.length>0) {
       arrList = _splitString(arrList, opt['splitBy']);
-    };
+    }
 
     if (is(arrList, 'array') && arrList.length>0) {
 
@@ -1275,7 +1267,7 @@
     }
 
     return resultObj;
-  };
+  }
 
   function _join(){
     var helperOptions  = _Array_.pop.call(arguments),
@@ -1311,7 +1303,7 @@
                   joinResult['__joined__'].push(arg);
                 } else {
                   joinResult['__joined__'] = [arg];
-                };
+                }
                 break;
             }
             break;
@@ -1383,7 +1375,7 @@
       strValue = strValue.trim();
       if (!strValue.length) {
         return strValue;
-      };
+      }
 
       var strValType = strValue[0],
           retValue = strValue;
@@ -1416,7 +1408,7 @@
             var vObj = {}, inObjKey, inObjVal;
             (strValue.split(',')).forEach(function(aItem){
               aItem = aItem.trim();
-              inObjKey = _getLeftStr(aItem, ':').trim(),
+              inObjKey = _getLeftStr(aItem, ':').trim();
               inObjVal = _getRightStr(aItem, ':').trim();
               if (inObjKey) {
                 vObj[inObjKey] = strToNative(inObjVal);
@@ -1487,13 +1479,13 @@
         cType = _unCapitalize(helperOptions.name.replace(/:console/g, ''));
     if ((cType == 'time') && arguments.length) {
       console.log.apply(undefined, arguments);
-    };
+    }
     if (cType.indexOf('mem')==0) {
       console.log(console.memory);
     } else {
       console[cType].apply(undefined, arguments);
     }
-  };
+  }
 
   function _replaceStr (srcStr){
     var helperOptions = arguments[arguments.length-1],
@@ -1516,14 +1508,14 @@
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
     if (inputVal == 0) return '0';
     var i = parseInt(Math.floor(Math.log(inputVal) / Math.log(1024)));
-    return Math.round(inputVal / Math.pow(1024, i), 2) + ' ' + sizes[i];
+    return parseFloat(inputVal / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
   }
 
   if ((typeof Handlebars != "undefined") && Handlebars) {
     Handlebars.registerHelper({
-      ':'              : _hbjshelper_, //+Block
+      ':'              : _hbjshelper_,  //+Block
+      ':if'            : _hbjshelper_,  //+Block
 
-      ':if'            : _hbjshelper_,           //+Block
       ':is'            : _is,           //+Block
       ':isEmpty'       : _isEmpty,      //+Block
 
@@ -1625,6 +1617,6 @@
       ':bytesToSize'   : _bytesToSize
 
     });
-  };
+  }
 
 })();

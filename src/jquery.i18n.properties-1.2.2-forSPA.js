@@ -1,4 +1,4 @@
-/** @license jquery-i18n-properties-custom | (c) Kumararaja <sucom.kumar@gmail.com> | License (MIT) */
+/** @license jquery-i18n-properties-custom | (c) Kumararaja | License (MIT) */
 /******************************************************************************
  * jquery.i18n.properties
  *
@@ -74,7 +74,7 @@
 
       if (settings.async) {
         for (var i = 0, j = files.length; i < j; i++) {
-          
+
           // 1. with language code and country code (eg, Messages_pt_BR.properties)
           if (settings.language.length >= 5) {
             var longCode = settings.language.substring(0, 5);
@@ -93,7 +93,7 @@
               settings.totalFiles += 1;
             }
           }
-          
+
         }
       }
 
@@ -115,7 +115,7 @@
             loadAndParseFile(settings.path + files[k] + (settings.ext || '.properties'), settings);
           }
         }
-        
+
       }
 
       // call callback
