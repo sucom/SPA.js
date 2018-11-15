@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.65.0-RC14';
+  spa.VERSION = '2.65.0';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),

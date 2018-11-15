@@ -761,7 +761,16 @@ spa['validateForm'] = spa['validate'] = spa['doDataValidation'] = function(conte
   return(failedInfo);
 };
 
+spa['removeValidationMsg'] = function(forObj){
+  $(forObj).each(function(i, el){
+    spa['_validate']._showValidateMsg(el, '', true);
+  });
+};
+
 spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
+  if (arguments.length == 2) {
+    isValid = spa.isBlank(msg);
+  }
   $(forObj).each(function(i, el){
     spa['_validate']._showValidateMsg(el, msg, isValid, errMsgTemplate);
   });
