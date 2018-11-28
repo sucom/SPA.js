@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.65.0';
+  spa.VERSION = '2.65.1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -9339,9 +9339,13 @@ window['app']['api'] = window['app']['api'] || {};
       delete options['data'];
     }
     if (isMockReq) {
+      var payLoadInMock = spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data']);
+      if (payLoadInMock && spa.is(payLoadInMock, 'string') && payLoadInMock.length > 6144) {
+        payLoadInMock = 'LAREGE-PAYLOAD-WITH-CHAR-LENGTH:'+(payLoadInMock.length);
+      }
       options['headers'] = _.merge({}, options['headers'], {
-            'Z-Live-URL':actualUrl
-          , 'Z-Payload': spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data'])
+            'Z-Live-URL': actualUrl
+          , 'Z-Payload': payLoadInMock
         });
       delete options['data'];
     }
