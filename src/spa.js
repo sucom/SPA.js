@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.65.1';
+  spa.VERSION = '2.65.2';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -7200,7 +7200,10 @@ window['app']['api'] = window['app']['api'] || {};
         , viewDataModelName
         , isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")))
         , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data"
-        , defPayLaod = _appApiDefaultPayload(), dataUrlPayLoad, _stringifyPayload = spa.findSafe(app, 'api.ajaxOptions.stringifyPayload');
+        , defPayLaod = _appApiDefaultPayload()
+        , dataUrlPayLoad
+        , _stringifyPayload = (spaRVOptions && spaRVOptions.hasOwnProperty('stringifyPayload'))? spaRVOptions['stringifyPayload'] : spa.findSafe(app, 'api.ajaxOptions.stringifyPayload');
+
       dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
       viewDataModelName = dataModelName.replace(/\./g, "_");
 
