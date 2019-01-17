@@ -967,13 +967,14 @@
     , vKey='', tKey='', vtSplit='', useIndex4Val
     , optionsArray = [];
 
-    if (hasHash(helperOptions)) {
-      opt = getHash(helperOptions, opt);
-    } else if (is(optStr, 'string')) {
+    if (is(optStr, 'string')) {
       _splitString(optStr, ';').forEach(function(optKeyVal){
         var optKV = optKeyVal.split(':');
         opt[optKV[0].trim()] = is(optKV[1], 'undefined')? '' :  optKV[1].trim();
       });
+    }
+    if (hasHash(helperOptions)) {
+      opt = getHash(helperOptions, opt);
     }
 
     selIdxLst = opt['selIndex']? _splitString(opt['selIndex']) : [];
