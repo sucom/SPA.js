@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.65.3';
+  spa.VERSION = '2.65.4-RC1';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -9197,7 +9197,7 @@ window['app']['api'] = window['app']['api'] || {};
         liveApiPrefixLst = liveApiPrefix;
       }
       len=liveApiPrefixLst.length;
-      if (len>1) {
+      if (len>0) {
         while (!retValue && i<len) {
           liveApiPrefixX = liveApiPrefixLst[i++].trim();
           retValue = liveApiPrefixX? (apiUrl.beginsWithStr(liveApiPrefixX)? liveApiPrefixX : (!_isRelativePath(apiUrl) && apiUrl.indexOf(liveApiPrefixX)>0 ? liveApiPrefixX : '') ) : '';
@@ -9338,7 +9338,8 @@ window['app']['api'] = window['app']['api'] || {};
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
     }
 
-    if (spa.isBlank( options['data'] ) || (spa.is(options['data'], 'string') && (/{\s*}/.test(options['data']))) ) {
+    if (spa.isBlank( options['data'] ) || (spa.is(options['data'], 'string') && !(/[a-z0-9]/i.test(options['data'])))) {
+      spa.console.log( 'REMVOING EMPTY PAYLOAD' );
       delete options['data'];
     }
     if (isMockReq) {
