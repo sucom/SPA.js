@@ -165,7 +165,7 @@
     var hashObj = (hasHash(obj)? obj['hash'] : {});
     if (toObj) {
       Object.keys(hashObj).forEach(function(hashKey){
-        toObj[hashKey] = hashObj[hashKey].trim();
+        toObj[hashKey] = is(hashObj[hashKey], 'string')? hashObj[hashKey].trim() : hashObj[hashKey];
       });
       return toObj;
     } else {
