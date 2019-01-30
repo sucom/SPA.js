@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.65.4';
+  spa.VERSION = '2.66.0-RC4';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -2783,10 +2783,12 @@ window['app']['api'] = window['app']['api'] || {};
     return srcStr;
   };
 
+  spa.jsonDataSanityCheck;
   function _isValidEvalStr(str){
+    if (!spa.jsonDataSanityCheck) return true;
     var idxOfB = str.indexOf('(');
     if ( (idxOfB>=0) && (str.indexOf(')', idxOfB)>idxOfB) ){
-      console.warn('Insecured String:', str);
+      console.warn('Insecured String with braces():', str);
       return false;
     }
     return true;
@@ -3865,7 +3867,8 @@ window['app']['api'] = window['app']['api'] || {};
     return retValue;
   };
 
-  spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = function (obj) {
+
+  function _toQueryString(obj) {
     return _.isObject(obj)? (Object.keys(obj).reduce(function (str, key, i) {
       var delimiter, val;
       delimiter = (i === 0) ? '' : '&';
@@ -3873,7 +3876,8 @@ window['app']['api'] = window['app']['api'] || {};
       val = _.isArray(obj[key])? obj[key].map(function(item){ return encodeURIComponent(item); }).join(',') : encodeURIComponent(obj[key]);
       return [str, delimiter, key, '=', val].join('');
     }, '')) : '';
-  };
+  }
+  spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = _toQueryString;
 
   $.fn.serializeUncheckedCheckboxes = function (appendTo) {
     var $chkBox, unchkvalue, keyName, keyValue
@@ -8918,7 +8922,11 @@ window['app']['api'] = window['app']['api'] || {};
     baseUrl:'',
     liveUrlSuffix:'',
     urls:{},
+
     mock:false,
+    mockBaseUrl:'',
+    mockRootFolder:'api_',
+
     defaultPayload:false,
     forceParamValuesInMockUrls:false,
     urlKeyIndicator:'@',
@@ -9232,6 +9240,217 @@ window['app']['api'] = window['app']['api'] || {};
     return !isFullPath;
   }
 
+  function _isFn() { return (typeof arguments[0] === 'function'); }
+  function _isObj() { return (typeof arguments[0] === 'object'); }
+  function _ajax( options ){
+
+    var axOptions = {
+      url: '',
+      responseType: 'json', // text, html, css, csv, xml, json, pdf, zip
+      async: true,
+      cache: false,
+      method: 'GET',    // GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS, TRACE
+      headers: {},      // {key: 'value'} or function which returns {key: 'value'}
+      auth: null,       // { user: '', pwd: ''},
+      timeout: 0,       // 0=No Timeout; in milliseconds
+      success: null,    // function(response, statusCode, XHR){}
+      error: null,      // function(statusCode, statusText, XHR){}
+      finally: null     // function(response, statusCode, XHR){}
+
+      //data:
+      //onAbort:            function(XHR, event){}
+      //onError:            function(XHR, event){}
+      //onLoad:             function(XHR, event){}
+      //onLoadEnd:          function(XHR, event){}
+      //onLoadStart:        function(XHR, event){}
+      //onProgress:         function(XHR, event){}
+      //onReadyStateChange: function(XHR, event){}
+      //onTimeout:          function(XHR, event){}
+    };
+
+    var contentTypes = {TEXT:'text/plain', HTML:'text/html', CSS:'text/css', CSV:'text/csv', XML:'text/xml', JSON:'application/json', PDF:'application/pdf', ZIP:'application/zip' },
+        axResType = axOptions.responseType.toUpperCase(),
+        contentType = contentTypes[ axResType ] || axOptions.responseType,
+        axHeaders = {};
+
+    // updating axOptions
+    Object.keys(options || {}).forEach(function(oKey){
+      axOptions[oKey] = options[oKey];
+    });
+
+    axOptions.method = axOptions.method.toUpperCase();
+
+    // Set Headers
+    if (_isFn(axOptions.headers)) {
+      axOptions.headers = axOptions.headers.call(undefined, axOptions);
+    }
+    if (_isObj(axOptions.headers)) {
+      Object.keys(axOptions.headers).forEach(function(oKey){
+        axHeaders[oKey] = axOptions.headers[oKey];
+      });
+    }
+
+    if (contentType) {
+      axHeaders['Content-Type'] = contentType;
+    }
+    axHeaders['Cache-Control'] = axOptions.cache? 'max-age=86400000' : 'no-cache, no-store, must-revalidate, max-age=0';
+    axHeaders['Expires']       = axOptions.cache? ((new Date( (new Date()).setDate( (new Date()).getDate() + 1 ) )).toUTCString()) : '0';
+    if (!axOptions.cache) {
+      axHeaders['Pragma'] = 'no-cache';
+    }
+
+    //----------------------------------------------------------------------
+    // Create new HTTP Request Object
+    var xhr = new XMLHttpRequest(), axData;
+
+    xhr['requestOptions'] = axOptions;
+
+    // Setup timeout
+    if (axOptions.timeout) {
+      xhr.timeout   = axOptions.timeout;
+    }
+
+    var onReadyStateChange;
+
+    Object.keys(axOptions).forEach(function(oKey){
+      var eName = oKey.toLowerCase();
+      if ((eName === 'onreadystatechange') && (_isFn(axOptions[oKey]))) {
+        onReadyStateChange = axOptions[oKey];
+      } else if ((eName.indexOf('on') === 0) && (_isFn(axOptions[oKey]))) {
+        xhr[eName] = function(e){
+          axOptions[oKey].call(axOptions, xhr, e);
+        };
+      }
+    });
+
+    // Setup our listener to process request state changes
+    xhr.onreadystatechange = function (e) {
+
+        if (onReadyStateChange) {
+          onReadyStateChange.call(axOptions, xhr, e);
+        }
+
+        // Only run if the request is complete
+        if (xhr.readyState !== 4) return;
+
+        var xhrResponse = xhr.responseText;
+
+        // Process our return data
+        if (xhr.status >= 200 && xhr.status < 300) {
+          if (axResType === 'JSON') {
+            try {
+              if (xhrResponse) {
+                xhrResponse = JSON.parse(xhrResponse);
+              }
+            } catch(e) {
+              xhrResponse = xhr.responseText;
+              console.warn('Invalid JSON response.', xhrResponse, xhr, e);
+            }
+          }
+          // This will run when the request is successful
+          if (_isFn(axOptions.success)) {
+            axOptions.success.call(axOptions, xhrResponse, xhr.status, xhr);
+          }
+        } else {
+            // This will run when it's not
+            if (_isFn(axOptions.error)) {
+              axOptions.error.call(axOptions, xhr.status, xhr.statusText, xhr);
+            }
+        }
+
+        // This will run always
+        if (_isFn(axOptions.finally)) {
+          axOptions.finally.call(axOptions, xhrResponse, xhr.status, xhr);
+        }
+
+    };
+
+    if (axOptions.hasOwnProperty('data') && axOptions.method === 'GET') {
+      axData = (_isObj(axOptions['data']))? _toQueryString(axOptions['data']) : (''+axOptions['data']);
+      if (axData) {
+        axOptions.url += ((axOptions.url.indexOf('?') < 0)? '?' : ((/\?$|\&$/.test(axOptions.url))? '' : '&')) + axData;
+      }
+    }
+
+    // Open request
+    // The first argument is the post type (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+    // The second argument is the endpoint URL
+    // The third arugment is async: true/false
+    try {
+      if (axOptions.auth && (_isObj(axOptions.auth))) {
+        if (axOptions.auth.hasOwnProperty('user')) {
+          if (axOptions.auth.hasOwnProperty('pwd')) {
+            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user, axOptions.auth.pwd);
+          } else {
+            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user);
+          }
+        }
+      } else {
+        xhr.open(axOptions.method, axOptions.url, axOptions.async);
+      }
+
+      // Set Request Headers
+      Object.keys(axHeaders).forEach(function(oKey){
+        xhr.setRequestHeader(oKey, axHeaders[oKey]);
+      });
+
+      // Send Payload
+      if ((axOptions.method !== 'GET') && axOptions.hasOwnProperty('data')) {
+        axData = (_isObj(axOptions['data']))? JSON.stringify(axOptions['data']) : axOptions['data'];
+        xhr.send( axData );
+      } else {
+        xhr.send();
+      }
+    }catch(e){
+      console.warn('Ajax-Exception', xhr, e);
+    }
+
+    return xhr;
+  }
+  spa.ajax = _ajax;
+
+  function _mockSysTest() {
+    if (app['api']) {
+      _ajax({url: _mockFinalUrl(), method:'HEAD', error:function(){
+          var mockBaseUrl  = ((spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || location.origin).trimRightStr('/')) + '/',
+              mockRootFldr = ((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
+              newMockAddress = prompt('Enter Mock Root Address: http[s]://server.address[:port]/root-folder', mockBaseUrl+mockRootFldr);
+          if (newMockAddress) {
+            var rootIndex = newMockAddress.indexOf('/', 8),
+                newMockBaseUrl  = (rootIndex > 0)? newMockAddress.slice(0, rootIndex) : newMockAddress,
+                newMockRootFldr = (rootIndex > 0)? newMockAddress.substr(rootIndex+1) : '';
+            app.api['mockBaseUrl']    = (newMockBaseUrl == location.origin)? '' : newMockBaseUrl;
+            app.api['mockRootFolder'] = newMockRootFldr;
+            _mockSysTest();
+          }
+        }});
+    }
+  }
+  spa.mockSysTest = _mockSysTest;
+
+  function _mockFinalUrl( liveUrl, reqMethod, liveApiPrefixStr ){
+    liveUrl          = liveUrl || '/';
+    reqMethod        = reqMethod || '';
+    liveApiPrefixStr = liveApiPrefixStr || _isLiveApiUrl(liveUrl);
+
+    var finalMockUrl = '',
+        mockBaseUrl = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '',
+        mockRootFldr = ((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/',
+        finalMockUrl = (liveUrl||'').replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), mockRootFldr).replace(/(\/)*\?/, reqMethod+"/data.json?").replace(/\?$/, '');
+
+    if (mockBaseUrl) {
+      mockBaseUrl = (mockBaseUrl.trimRightStr('/'))+'/';
+      var indexOfDblSlash = finalMockUrl.indexOf('//');
+      if (indexOfDblSlash < 0) {
+        finalMockUrl = mockBaseUrl + finalMockUrl;
+      } else if (indexOfDblSlash < 7) {
+        finalMockUrl = mockBaseUrl + ( finalMockUrl.substr( finalMockUrl.indexOf('/', finalMockUrl.indexOf('//')+2 )+1 ) );
+      }
+    }
+
+    return finalMockUrl;
+  }
+
   function _ajaxPrefilter(options, orgOptions, jqXHR){
 
     if ((options.url).beginsWithStr(spa.api.urlKeyIndicator)) {
@@ -9276,8 +9495,10 @@ window['app']['api'] = window['app']['api'] || {};
             spa.console.log('Updated URL>>', actualUrl);
           }
 
-          options.url = (actualUrl).replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), "api_/").replace(/(\/)*\?/, reqMethod+"/data.json?").replace(/\?$/, '');
-          if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + options.url + "]");
+          var finalMockUrl = _mockFinalUrl(actualUrl, reqMethod, liveApiPrefixStr);
+          options.url = finalMockUrl;
+
+          if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + finalMockUrl + "]");
           isMockReq = true;
         }
       }
@@ -10219,8 +10440,18 @@ window['app']['api'] = window['app']['api'] || {};
       return sStoreUtil;
     }
 
-  spa.sesStore = _StoreMgmt(sessionStorage);
-  spa.locStore = _StoreMgmt(localStorage);
+  try {
+    spa.sesStore = _StoreMgmt(sessionStorage);
+  } catch(e){
+    console.warn('No Access to sessionStorage.', e);
+  }
+
+  try {
+    spa.locStore = _StoreMgmt(localStorage);
+  } catch(e){
+    console.warn('No Access to localStorage.', e);
+  }
+
 
 //  spa.sesStore = {
 //    set: function(storeKey, storeValue){
