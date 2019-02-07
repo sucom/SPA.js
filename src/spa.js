@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.66.0-RC4';
+  spa.VERSION = '2.66.0-RC5';
 
   /* native document selector */
   var _$  = document.querySelector.bind(document),
@@ -3983,14 +3983,14 @@ window['app']['api'] = window['app']['api'] || {};
 
   /* find(jsonObject, 'key1.key2.key3[0].key4'); */
   spa.findSafe = spa.findInObj = spa.findInObject = spa.locateSafe = spa.valueOfPath = spa.find = spa.locate = function (objSrc, pathStr, forUndefined) {
-    if (is(objSrc, 'window|array|object|function') && pathStr) {
+    if (is(objSrc, 'window|array|object|function|global') && pathStr) {
       var pathList = _.map(pathStr.split('|'), function(path){ return path.trim(); } );
       pathStr = pathList.shift();
       var nxtPath = pathList.join('|');
 
       var unDef, retValue = objSrc;
       for (var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
-        if (is(retValue, 'object|window|function')) {
+        if (is(retValue, 'object|window|function|global')) {
           retValue = retValue[ path[i].trim() ];
         } else if (is(retValue, 'array')) {
           retValue = retValue[ spa.toInt(path[i]) ];
@@ -9825,7 +9825,9 @@ window['app']['api'] = window['app']['api'] || {};
   function _ctrlBrwowserNav(){
     window.onpageshow = _onpageshow;
     window.onpopstate = _onPopStateChange;
-    window.onbeforeunload = _onWindowReload;
+    if (is(window, 'window')) {
+      window.onbeforeunload = _onWindowReload;
+    }
   }
   window.onerror = function(eMsg, source, line){
     //if (eMsg.indexOf('SyntaxError')>0)
