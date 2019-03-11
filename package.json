@@ -1,6 +1,6 @@
 {
   "name": "spa.js",
-  "version": "2.66.0-RC5",
+  "version": "2.66.0-RC6",
   "description": "Single Page Application (SPA) Simplified Framework/Library",
   "main": "dist/spa-bundle.js",
   "scripts": {
