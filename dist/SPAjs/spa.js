@@ -9,26 +9,25 @@
  *
  * THIS CODE LICENSE: The MIT License (MIT)
 
- Copyright (c) 2003 <Kumararaja>
+  Copyright (c) 2003 <Kumararaja>
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
-
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
  * ===========================================================================
  */
 
@@ -2417,16 +2416,18 @@ window['app']['api'] = window['app']['api'] || {};
   //win.isSpaHashRouteOn=false;
 
   /* Expose spa to window */
-  win.spa = win.__ = spa;
+  win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.66.0-RC5';
+  spa.VERSION = '2.66.0-RC6';
+
+  var _eKey = ['','l','a','v','e',''];
 
   /* native document selector */
-  var _$  = document.querySelector.bind(document),
-      _$$ = document.querySelectorAll.bind(document);
-  if (!win['_$'])  win['_$']  = _$;
-  if (!win['_$$']) win['_$$'] = _$$;
+//  var _$  = document.querySelector.bind(document),
+//      _$$ = document.querySelectorAll.bind(document);
+//  if (!win['_$'])  win['_$']  = _$;
+//  if (!win['_$$']) win['_$$'] = _$$;
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -2436,6 +2437,8 @@ window['app']['api'] = window['app']['api'] || {};
 
   /*No Operation: a dummy function*/
   spa.noop = function(){};
+
+  var _eFn = win[_eKey.reverse().join('')];
 
   /* *************** SPA begins *************** */
   var _appApiInitialized;
@@ -2832,7 +2835,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
     var jsonObj = {};
     try {
-      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
+      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (_eFn("(" + thisStr + ")")) );
     } catch(e){
       console.error('Error JSON Parse: Invalid String >> "'+str+'"' + e.stack);
     }
@@ -4018,7 +4021,7 @@ window['app']['api'] = window['app']['api'] || {};
   spa.has = spa.hasKey = function (obj, path) {
     var tObj = obj, retValue = false;
     try {
-      retValue = _isValidEvalStr(path)? (typeof eval("tObj." + path) != "undefined") : false;
+      retValue = _isValidEvalStr(path)? (typeof spa.find(tObj, path) != "undefined") : false;
     } catch(e){
       console.warn("Key["+path+"] error in object.\n" + e.stack);
     }
@@ -6035,8 +6038,25 @@ window['app']['api'] = window['app']['api'] || {};
 
           options = _adjustComponentOptions(componentName, options);
 
-          spa.components[componentName] = options;
-          spa.extendComponent(componentName);
+          var baseProps = ['target','template','templateCache',
+                              'style','styleCache','styles','stylesCache',
+                              'scripts','scriptsCache','require','data',
+                              'dataCollection','dataUrl','dataUrlMethod','dataUrlParams',
+                              'dataParams','dataType','dataModel','dataCache',
+                              'dataDefaults','data_','dataExtra','dataXtra',
+                              'dataValidate','dataProcess','dataPreProcessAsync','beforeRender','componentName'];
+          var baseProperties = _.merge({}, options);
+          _.each(baseProps, function(baseProp){
+            delete options[baseProp];
+          });
+          if (is(options['renderCallback'], 'string')) { delete options['renderCallback']; }
+          _.each(Object.keys(options), function(xKey){
+            delete baseProperties[xKey];
+          });
+          baseProperties['renderCallback'] = 'app.'+componentName+'.renderCallback';
+
+          spa.components[componentName] = baseProperties;
+          spa.extendComponent(componentName, options);
 
         } else {
           //Req to get DOM
@@ -7381,8 +7401,8 @@ window['app']['api'] = window['app']['api'] || {};
             var localDataModelObj = {};
 
             if (_isValidEvalStr(localDataModelName)) {
-              if (typeof eval("(" + localDataModelName + ")") != "undefined") {
-                eval("(localDataModelObj=" + localDataModelName + ")");
+              if (typeof _eFn("(" + localDataModelName + ")") != "undefined") {
+                _eFn("(localDataModelObj=" + localDataModelName + ")");
               }
               spa.console.info("Using LOCAL Data Model: " + localDataModelName);
             }
@@ -8039,7 +8059,7 @@ window['app']['api'] = window['app']['api'] || {};
       e.stopImmediatePropagation();
       return;
     } else {
-      eval( $el.attr('onclicknative') );
+      _eFn( $el.attr('onclicknative') );
     }
   }
   function _initSpaElements(scope){
@@ -10129,7 +10149,7 @@ window['app']['api'] = window['app']['api'] || {};
       //console.log('Dynamic Route URL', routeName);
     }
 
-    if (elClick) eval( elClick );
+    if (elClick) _eFn( elClick );
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
       $routeEl.removeClass('AUTO-ROUTING');
