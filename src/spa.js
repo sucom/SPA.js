@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.66.0-RC6';
+  spa.VERSION = '2.66.0-RC7';
 
   var _eKey = ['','l','a','v','e',''];
 
@@ -6481,6 +6481,7 @@ window['app']['api'] = window['app']['api'] || {};
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
       , _cScriptExt  = spa.defaults.components.scriptExt
       , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
+      , _cJsonFile   = _cFilesPath+'.json'
       , _renderComp  = function(){
           spa.console.info('_renderComp > '+componentName+' with below options');
           spa.console.info(options);
@@ -6562,6 +6563,8 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.info(spa.components[componentName]);
       _renderComp();
     } else {
+      //load component's base prop from .json or .(min.)js
+
       if (_cScriptFile) {
         spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
         $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
@@ -6572,6 +6575,7 @@ window['app']['api'] = window['app']['api'] || {};
       } else {
         _parseComp();
       }
+
     }
   };
 
@@ -8364,6 +8368,22 @@ window['app']['api'] = window['app']['api'] || {};
         });
         return this;
       }
+    },
+    dataJSON:function(key, newValue, overWrite){
+      var curElData;
+      if (arguments.length) {
+        curElData = spa.toJSON(this.data(key));
+        curElData = spa.is(curElData, 'object')? curElData : {};
+        if (!spa.is(newValue, 'undefined')) {
+          curElData = overWrite? newValue : (_.merge(curElData, newValue));
+          var curElDataStr = JSON.stringify(curElData);
+          var keyDashed = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+          this.attr("data-"+keyDashed, curElDataStr).data(key, curElDataStr);
+        }
+      } else {
+        curElData = this.data();
+      }
+      return curElData;
     },
     isDisabled: function(fnCall){
       var isDisabled = (this.hasClass('disabled') || this.is('[disabled]'));
