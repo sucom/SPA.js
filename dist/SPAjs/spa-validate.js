@@ -403,13 +403,20 @@ spa['_validate'] = {
                           alertObj = $forObjParent.children().last();
                         }
                       }
-                      var i18nKey='', i18nSpec='', i18nData='';
+                      var i18nKey='', i18nSpec='', i18nData='', i18nDataObj;
                       if ((($(alertObj).attr("class")) === ($(errMsgTemplate).attr("class"))) || isCustomErrMsgElement)
                       { if (msg.beginsWithStrIgnoreCase("i18n:"))
                         { i18nKey  = (msg.getLeftStr('|') || msg).replace(/i18n:/gi, '');
                           i18nData = msg.getRightStr('|');
                           i18nSpec = "{html:'" + i18nKey + "'}";
-                          msg = spa.i18n.text(i18nKey, spa.toJSON(i18nData));
+                          i18nDataObj = spa.toJSON(i18nData);
+                          i18nDataObj = spa.is(i18nDataObj, 'object')? i18nDataObj : {};
+                          var elAttrData_i18nData = $forObj.dataJSON('i18nData');
+                          if (!spa.isBlank(elAttrData_i18nData)) {
+                            i18nDataObj = _.merge(i18nDataObj, elAttrData_i18nData);
+                          }
+
+                          msg = spa.i18n.text(i18nKey, i18nDataObj);
                         }
                         if (!spa['_validate']._isOnOfflineValidation)
                         { $(alertObj).attr("data-i18n",i18nSpec).data("i18n",i18nSpec);
