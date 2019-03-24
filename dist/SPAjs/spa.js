@@ -6481,7 +6481,6 @@ window['app']['api'] = window['app']['api'] || {};
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
       , _cScriptExt  = spa.defaults.components.scriptExt
       , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
-      , _cJsonFile   = _cFilesPath+'.json'
       , _renderComp  = function(){
           spa.console.info('_renderComp > '+componentName+' with below options');
           spa.console.info(options);
@@ -10169,7 +10168,7 @@ window['app']['api'] = window['app']['api'] || {};
       //console.log('Dynamic Route URL', routeName);
     }
 
-    if (elClick) _eFn( elClick );
+    if (elClick) eval( elClick );
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
       $routeEl.removeClass('AUTO-ROUTING');
