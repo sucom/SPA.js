@@ -2835,7 +2835,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
     var jsonObj = {};
     try {
-      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (_eFn("(" + thisStr + ")")) );
+      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
     } catch(e){
       console.error('Error JSON Parse: Invalid String >> "'+str+'"' + e.stack);
     }
@@ -7404,8 +7404,8 @@ window['app']['api'] = window['app']['api'] || {};
             var localDataModelObj = {};
 
             if (_isValidEvalStr(localDataModelName)) {
-              if (typeof _eFn("(" + localDataModelName + ")") != "undefined") {
-                _eFn("(localDataModelObj=" + localDataModelName + ")");
+              if (typeof eval("(" + localDataModelName + ")") != "undefined") {
+                eval("(localDataModelObj=" + localDataModelName + ")");
               }
               spa.console.info("Using LOCAL Data Model: " + localDataModelName);
             }
@@ -8062,7 +8062,7 @@ window['app']['api'] = window['app']['api'] || {};
       e.stopImmediatePropagation();
       return;
     } else {
-      _eFn( $el.attr('onclicknative') );
+      eval( $el.attr('onclicknative') );
     }
   }
   function _initSpaElements(scope){
