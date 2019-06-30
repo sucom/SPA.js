@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.66.0-RC7';
+  spa.VERSION = '2.66.0-RC8';
 
   var _eKey = ['','l','a','v','e',''];
 
@@ -2804,13 +2804,15 @@ window['app']['api'] = window['app']['api'] || {};
 
       if (!_isValidEvalStr(thisStr)) return str;
 
+      if (thisStr.match(/^\</)) return str; //could be HTML
+
       if (!(thisStr.containsStr("{") || thisStr.containsStr(":") || thisStr.containsStr("\\[") || thisStr.containsStr("'") || thisStr.containsStr('\"') ))
       { if (thisStr.containsStr(",") || thisStr.containsStr(";")) {
           return thisStr.replace(/ /g,'').replace(/;/g, ',').split(',');
         } else if (key4PrimaryDataTypes) {
           thisStr = '{'+key4PrimaryDataTypes+':'+thisStr+'}';
         } else {
-          return thisStr;
+          return spa.strToNative(thisStr);
         }
       }
 
@@ -3991,15 +3993,33 @@ window['app']['api'] = window['app']['api'] || {};
       pathStr = pathList.shift();
       var nxtPath = pathList.join('|');
 
-      var unDef, retValue = objSrc;
-      for (var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length; i < len; i++) {
-        if (is(retValue, 'object|window|function|global')) {
-          retValue = retValue[ path[i].trim() ];
-        } else if (is(retValue, 'array')) {
-          retValue = retValue[ spa.toInt(path[i]) ];
-        } else {
-          retValue = unDef;
-          break;
+      var unDef, retValue, isWildKey = (pathStr.indexOf('*') >= 0);
+      if (isWildKey) {
+        retValue = (function(xObj, xKey) {
+                      var xValue;
+                      if ((typeof xObj == 'object') || (typeof xObj == 'function')) {
+                        if (xObj.hasOwnProperty(xKey)) {
+                          xValue = xObj[xKey];
+                        } else {
+                          var oKeys = Object.keys(xObj), idx=0;
+                          while ( is(xValue, 'undefined') && (idx < oKeys.length) ) {
+                            xValue = arguments.callee( xObj[ oKeys[idx++] ], xKey );
+                          }
+                        }
+                      }
+                      return xValue;
+                    }(objSrc, pathStr.replace(/\*/g, '')));
+      } else {
+        var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length;
+        for (retValue = objSrc; i < len; i++) {
+          if (is(retValue, 'object|window|function|global')) {
+            retValue = retValue[ path[i].trim() ];
+          } else if (is(retValue, 'array')) {
+            retValue = retValue[ spa.toInt(path[i]) ];
+          } else {
+            retValue = unDef;
+            break;
+          }
         }
       }
 
@@ -4007,14 +4027,18 @@ window['app']['api'] = window['app']['api'] || {};
         if (nxtPath) {
           return spa.findSafe(objSrc, nxtPath, forUndefined);
         } else {
-          return forUndefined;
+          return (is(forUndefined, 'function'))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
         }
       } else {
         return retValue;
       }
 
     } else {
-      return spa.isBlank(pathStr)? objSrc : forUndefined;
+      if (arguments.length == 3) {
+        return (is(forUndefined, 'function'))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+      } else {
+        return objSrc;
+      }
     }
   };
 
@@ -4028,7 +4052,7 @@ window['app']['api'] = window['app']['api'] || {};
     return retValue;
   };
 
-  function of (x) {
+  function of(x) {
     return (Object.prototype.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
   }
   function is(x, type) {
@@ -6472,6 +6496,48 @@ window['app']['api'] = window['app']['api'] || {};
 
     spa.console.info('Called renderComponent: '+componentName+' with options', options);
 
+    var isServerComponent = /[^a-z0-9]/ig.test( componentName );
+    if (isServerComponent){
+      var componentUrl = componentName, urlKey;
+      if (componentName[0] === spa.api.urlKeyIndicator) {
+        urlKey = componentName.trimLeftStr(spa.api.urlKeyIndicator);
+        componentUrl = spa.api.urls[urlKey] || '';
+      }
+      options['componentUrl'] = componentUrl;
+      spa.console.info('Called to render ServerComponent: ['+componentName+'] with options', options);
+
+      if (urlKey && !componentUrl) {
+        console.warn('ComponentURL undefined: app.api.urls.'+urlKey);
+      }
+
+      if (componentUrl) {
+        var xTargetEl     = options['targetEl']
+          , xUrlHeaders   = spa.toJSON(options['urlHeaders'])
+          , xUrlParams    = spa.toJSON(options['urlParams'])
+          , xUrlPayload   = spa.toJSON(options['urlPayload'])
+          , xUrlMethod    = (options['urlMethod'] || 'GET').toLowerCase()
+          , xUrlCache     = (String(options['urlCache'] || 'false').toLowerCase() !== 'false')
+          , xUrl          = spa.api.url(componentUrl, xUrlParams);
+
+        spa.console.log('Loading ServerComponent ...');
+        spa.api[xUrlMethod](xUrl, xUrlPayload, function _onSuccess(xContent) {
+          $(xTargetEl).html(xContent);
+          spa.renderComponentsInHtml(xTargetEl);
+        }, function _onFail(jqXHR, textStatus, errorThrown) {
+          console.warn('Unable to load ServerComponent.')
+          console.error(String(textStatus).toUpperCase()+':'+errorThrown, jqXHR);
+        }, {
+          ajaxOptions: {
+            dataType: 'html',
+            headers: xUrlHeaders,
+            cache: xUrlCache
+          }
+        });
+
+      }
+      return;
+    }
+
     var tmplId = '_rtt_'+componentName, tmplBody = '';
 
     options = _adjustComponentOptions(componentName, options);
@@ -6734,14 +6800,16 @@ window['app']['api'] = window['app']['api'] || {};
         }
 
         if (spaCompName) {
+
           if (!el.id) {
-            newElId = 'spaCompContainer_'+spaCompName+'_'+ ($('body').find('[rel=spaComponentContainer_'+spaCompName+']').length+1);
+            var _spaCompName = spaCompName.replace(/[^a-z0-9]/gi,'');
+            newElId = 'spaCompContainer_'+_spaCompName+'_'+ ($('body').find('[rel=spaComponentContainer_'+_spaCompName+']').length+1);
             el.id = newElId;
-            el.setAttribute("rel", "spaComponentContainer_"+spaCompName);
+            el.setAttribute("rel", "spaComponentContainer_"+_spaCompName);
           }
 
           var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
-          spaCompOptions = _.merge( {target: "#"+el.id, spaComponent:spaCompName}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
+          spaCompOptions = _.merge( {target: "#"+el.id, targetEl: el, spaComponent:(spaCompName.trim())}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
 
           //GET Data for render begins
           if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
@@ -8074,14 +8142,22 @@ window['app']['api'] = window['app']['api'] || {};
       , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclicknative])');
 
     //Fix Forms
-    $forms.attr('onsubmit', 'return false;').addClass('spa-form'); //Disable form submit
+    $forms.filter(function(){
+      return !$(this).closest('pre').length;
+    }).attr('onsubmit', 'return false;').addClass('spa-form'); //Disable form submit
 
     //Fix a tags
-    $aLinksEx.attr('target', '_blank').addClass('spa-external-link'); //set target for external links
-    $aLinksIn.attr('href', 'javascript:;').addClass('spa-link'); //disable href for internal links
+    $aLinksEx.filter(function(){
+      return !$(this).closest('pre').length;
+    }).attr('target', '_blank').addClass('spa-external-link'); //set target for external links
+    $aLinksIn.filter(function(){
+      return !$(this).closest('pre').length;
+    }).attr('href', 'javascript:;').addClass('spa-link'); //disable href for internal links
 
     //Fix clickable elements button for disable
-    $clickEls.addClass('as-btn').renameAttr('onclick', 'onclicknative').on('click', _disabledElClick);
+    $clickEls.filter(function(){
+      return !$(this).closest('pre').length;
+    }).addClass('as-btn').renameAttr('onclick', 'onclicknative').on('click', _disabledElClick);
   }
   spa.initElementsIn = _initSpaElements;
 
@@ -8981,10 +9057,11 @@ window['app']['api'] = window['app']['api'] || {};
 
       if (!spa.isBlank(paramsInUrl)) {
         _.each(paramsInUrl, function(param){
-          pKey = param.replace(/[{}<>]/g, '');
-          if (pKey && urlReplaceKeyValues.hasOwnProperty(pKey)) {
-            pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? urlReplaceKeyValues[pKey] : ('_'+pKey)) : urlReplaceKeyValues[pKey]);
-            apiUrl = apiUrl.replace(new RegExp(param, 'g'), pValue);
+          pKey   = param.replace(/[{}<>]/g, '');
+          if (pKey) {
+            pValue = spa.findSafe(urlReplaceKeyValues, pKey, urlReplaceKeyValues['_undefined']);
+            pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? pValue : ('_'+pKey)) : pValue);
+            apiUrl = apiUrl.replace(new RegExp(param.replace(/([^a-zA-Z0-9])/g,'\\$1'), 'g'), pValue);
           }
         });
       }
@@ -9013,7 +9090,7 @@ window['app']['api'] = window['app']['api'] || {};
       ajaxOptions = $.extend({}, defAjaxOptions, ajaxOptions,  {
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
-          axResponse = _.isString(axResponse)? spa.toJSON(axResponse) : axResponse;
+          axResponse = (_.isString(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? spa.toJSON(axResponse) : axResponse;
           if (spa.api['isCallSuccess'](axResponse)) {
             ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
