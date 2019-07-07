@@ -2419,9 +2419,9 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.66.0-RC8';
+  spa.VERSION = '2.66.0';
 
-  var _eKey = ['','l','a','v','e',''];
+  //var _eKey = ['','l','a','v','e',''];
 
   /* native document selector */
 //  var _$  = document.querySelector.bind(document),
@@ -2438,7 +2438,7 @@ window['app']['api'] = window['app']['api'] || {};
   /*No Operation: a dummy function*/
   spa.noop = function(){};
 
-  var _eFn = win[_eKey.reverse().join('')];
+  //var _eFn = win[_eKey.reverse().join('')];
 
   /* *************** SPA begins *************** */
   var _appApiInitialized;
@@ -6781,6 +6781,10 @@ window['app']['api'] = window['app']['api'] || {};
   spa.renderComponentsInHtml = function (scope, pComponentName) {
     scope = scope||'body';
     pComponentName = (pComponentName || '').trim();
+
+    $(scope).find('spa-component[src]:not([data-spa-component]),x-component[src]:not([data-spa-component])').each(function(){
+      this.setAttribute('data-spa-component', this.getAttribute('src'));
+    });
 
     var $spaCompList = $(scope).find('[data-spa-component]');
     if ($spaCompList.length){
