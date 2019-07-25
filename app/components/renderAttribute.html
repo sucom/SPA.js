@@ -1,4 +1,4 @@
-<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+<x-component class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
   <h2>Component Render</h2>
   <h3>Using HTML Attribute <mark>data-spa-component</mark></h3>
 
@@ -8,4 +8,14 @@
 
     <div data-spa-component="footer"></div>
   </script>
+
+
+  <h3>Using HTML tag <mark>&lt;spa-component&gt;</mark> or <mark>&lt;x-component&gt;</mark></h3>
+  <h6>(from v2.66.0+)</h6>
+  <script type="text/code" class="code trim" data-lang="html">
+    <spa-component src="header"></spa-component>
+
+    <x-component src="footer"></x-component>
+  </script>
+
 </div>
