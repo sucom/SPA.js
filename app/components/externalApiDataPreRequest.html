@@ -1,0 +1,41 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>Component's Base Properties</h2>
+  <h3><mark>dataPreRequest</mark></h3>
+
+  <p>A function to be executed before component's data API call.</p>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX', {
+
+      dataPreRequest: function(){
+
+        // doSomething before API call like showing progress message/indicator/animation etc.
+
+        // optionally override base dataXXXX properties before the API call by return object of this function.
+        // return { dataUrl: 'newUrl' }
+
+      }
+
+    });
+  </script>
+
+  <blockquote>
+    dataPreRequest is an optional base property. Also, refer to <a href="#getStarted/componentsDefaults">Component's Defaults</a> to trigger a function for all components before it's API call.
+  </blockquote>
+
+  <blockquote>
+    All base properties can be overridden before the render call using <mark>spa.$render( )</mark> method.
+  </blockquote>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$render('componentX', {
+
+      dataPreRequest: function(){
+
+        // doSomething before API call.
+
+      }
+
+    });
+  </script>
+
+</div>

@@ -1435,7 +1435,7 @@
         var vRefPatterns = retValue.match(/(@\[\s*(.*?)\s*])/g),
             vRefPath,argIdx,repValue,kPath;
         if (vRefPatterns) {
-          _.forEach(vRefPatterns, function(vRefPathPattern){
+          vRefPatterns.forEach(function(vRefPathPattern){
             vRefPath = vRefPathPattern.replace(/@\[/,'').replace(/]/,'');
             argIdx   = vRefPath.substring(0, vRefPath.indexOf('.'));
             repValue = '';

@@ -377,12 +377,18 @@ spa['_validate'] = {
   }
   , _showValidateMsg : function __showValidateMsg(forObj, msg, isValid, errMsgTemplate, skipCtrlUpdate) {
                       msg = msg || "";
+
+                      var $forObj = $(forObj);
+                      if (!$forObj.length){
+                        spa.console.warn('Validation config/setup is wrong for validation Msg:['+msg+'] forEl:', forObj);
+                        return;
+                      }
+
                       if ((arguments.length>2) && _.isString(isValid)) { errMsgTemplate = isValid; }
                       if ((arguments.length>2) && _.isBoolean(isValid) && (isValid)) { msg = ""; }
                       errMsgTemplate = errMsgTemplate || spa['_validate']._validateAlertTemplate;
 
-                      var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<'));
-                      var $forObj = $(forObj),
+                      var isCustomErrMsgElement = (!errMsgTemplate.beginsWithStrIgnoreCase('<')),
                           $forObjParent = $forObj.parent(),
                           errClassTargetSelector = $forObj.data('errorClassTarget'),
                           $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObjParent,

@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.66.0';
+  spa.VERSION = '2.67.0';
 
   //var _eKey = ['','l','a','v','e',''];
 
@@ -5926,13 +5926,14 @@ window['app']['api'] = window['app']['api'] || {};
   spa.tempBind$data = {};
   spa.defaults = {
       components: {
-          templateEngine: "handlebars"
+          templateEngine: 'handlebars'
         , rootPath: 'app/components/'
         , inFolder: true
         , templateExt: '.html'
         , scriptExt: '.js'
         , templateScript: false
         , templateCache: true
+        , dataPreRequest: ''
         , render:''
         , callback:''
         , extend$data: true
@@ -6062,13 +6063,13 @@ window['app']['api'] = window['app']['api'] || {};
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = ['target','template','templateCache',
-                              'style','styleCache','styles','stylesCache',
-                              'scripts','scriptsCache','require','data',
-                              'dataCollection','dataUrl','dataUrlMethod','dataUrlParams',
-                              'dataParams','dataType','dataModel','dataCache',
-                              'dataDefaults','data_','dataExtra','dataXtra',
-                              'dataValidate','dataProcess','dataPreProcessAsync','beforeRender','componentName'];
+          var baseProps = [ 'target','template','templateCache',
+                            'style','styleCache','styles','stylesCache',
+                            'scripts','scriptsCache','require','dataPreRequest','data',
+                            'dataCollection','dataUrl','dataUrlMethod','dataUrlParams',
+                            'dataParams','dataType','dataModel','dataCache',
+                            'dataDefaults','data_','dataExtra','dataXtra',
+                            'dataValidate','dataProcess','dataPreProcessAsync','beforeRender','componentName'];
           var baseProperties = _.merge({}, options);
           _.each(baseProps, function(baseProp){
             delete options[baseProp];
@@ -7073,6 +7074,7 @@ window['app']['api'] = window['app']['api'] || {};
 
     var spaRVOptions = {
       data: {}
+      , dataPreRequest : spa.defaults.components.dataPreRequest
       , dataUrl: ""
       , dataUrlParams: {}
       , dataUrlMethod: "GET"
@@ -7290,6 +7292,25 @@ window['app']['api'] = window['app']['api'] || {};
       spa.console.info("External Scripts Loaded.");
 
       if (!_appApiInitialized && (Object.keys(app['api']).length)) _initApiUrls();
+
+      var dataPreRequest = (spaRVOptions)? spaRVOptions['dataPreRequest'] : '';
+      if (spa.is(dataPreRequest, 'string')) {
+        dataPreRequest = spa.renderUtils.getFn(dataPreRequest);
+      }
+      if (spa.is(dataPreRequest, 'function')) {
+        try{
+          var dataPreRequestRes = dataPreRequest.call(app[rCompName]);
+          if (dataPreRequestRes && spa.is(dataPreRequestRes, 'object')) {
+            Object.keys(dataPreRequestRes).forEach(function(oKey){
+              if (oKey.indexOf('data')==0) {
+                spaRVOptions[oKey] = dataPreRequestRes[oKey];
+              }
+            });
+          }
+        }catch(ex){
+          console.error('dataPreRequest-Error in app.'+rCompName, ex);
+        }
+      }
 
       /* Load Data */
       spa.console.group("spaDataModel");
