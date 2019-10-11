@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Title</title>
+  </head>
+  <body>
+
+  <div id="containerHome"></div>
+  <div data-spa-component="footer"></div>
+
+  <script src="//cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"          ></script>
+  <script src="//cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.min.js"  ></script>
+  <script src="//cdn.jsdelivr.net/gh/sucom/SPA.js@latest/dist/spa-bundle.min.js" ></script>
+
+  <script>
+    spa.onReady = function(){
+      spa.$render('home', {target: '#containerHome'});
+    };
+  </script>
+
+  </body>
+</html>
