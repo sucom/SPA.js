@@ -31,8 +31,10 @@
   </form>
 
   <script>
-    document.querySelector('#contactReqId').value = (new Date()).getMilliseconds();
-    document.querySelector('#contactForm').submit();
+    function submitContact() {
+      document.querySelector('#contactReqId').value = (new Date()).getMilliseconds();
+      document.querySelector('#contactForm').submit();
+    }
   </script>
 </body>
 </html>
