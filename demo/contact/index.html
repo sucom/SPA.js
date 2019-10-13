@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Contact Form</title>
+</head>
+<body>
+  <form action="https://uxperience.live/contact/spajs" method="post">
+    <input type="hidden" name="t" value="">
+    <div>
+      <label for="contactName">Name</label><span>*</span><br>
+      <input type="text" name="n" id="contactName" value="" placeholder="Your name" required>
+    </div>
+    <div>
+      <label for="contactEmail">Email</label><span>*</span><br>
+      <input type="email" name="e" id="contactEmail" value="" placeholder="Your email" required>
+    </div>
+    <div>
+      <label for="msgSub">Subject</label><span>*</span><br>
+      <input type="text" name="s" id="msgSub" value="" placeholder="Subject" required>
+    </div>
+    <div>
+      <label for="msgTxt">Message</label><span>*</span><br>
+      <input type="text" name="m" id="msgTxt" value="" placeholder="Message" required>
+    </div>
+    <div>
+      <input type="submit" value="Submit">
+    </div>
+  </form>
+</body>
+</html>
