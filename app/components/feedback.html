@@ -1,0 +1,42 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h1>Feedback / Contact</h1>
+
+  <section>
+    What do you think of SPA.js? Feel free to write your comments.
+  </section>
+
+  <br><br>
+
+  <section>
+    <form id="feedbackForm" onsubmit="submitFeedback();return false;">
+      <input type="hidden" name="t" id="feedbackReqId" value="">
+      <div>
+        <label for="contactName">Name</label> <span>*</span><br>
+        <input type="text" name="n" id="contactName" value="" placeholder="Your name" maxlength="50" size="30" required>
+      </div>
+      <br>
+      <div>
+        <label for="contactEmail">Email</label> <span>*</span><br>
+        <input type="email" name="e" id="contactEmail" value="" placeholder="Your email" maxlength="100" size="60" required>
+      </div>
+      <br>
+      <div>
+        <label for="msgSub">Subject</label> <span>*</span><br>
+        <input type="text" name="s" id="msgSub" value="" placeholder="Subject" maxlength="150" size="80" required>
+      </div>
+      <br>
+      <div>
+        <label for="msgTxt">Message</label> <span>*</span><br>
+        <input type="text" name="m" id="msgTxt" value="" placeholder="Message" maxlength="250" size="120" required>
+      </div>
+      <br>
+      <div>
+        <input type="submit" value="Submit">
+      </div>
+    </form>
+    <br><br>
+    <div>
+      <span id="feedbackResponseMsg"></span>
+    </div>
+  </section>
+</div>

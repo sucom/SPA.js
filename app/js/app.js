@@ -97,3 +97,17 @@ spa.$extend('sidebar', {
   }
 });
 /* ----------------------------------- */
+function submitFeedback() {
+  $('#feedbackReqId').val(spa.now());
+  var formData = spa.serializeFormToSimpleObject( '#feedbackForm' );
+  if (formData.n && formData.e && formData.s && formData.m) {
+    $('#feedbackResponseMsg').html('Processing ...');
+    spa.api.post('https://uxperience.live/contact/spajs/api/', formData).then(function(apiRes){
+      $('#feedbackResponseMsg').html('Thank you for the message. The team will get back to you soon.');
+      $('#feedbackForm')[0].reset();
+      $('#feedbackForm #contactName')[0].focus();
+    }).fail(function(){
+      $('#feedbackResponseMsg').html('Unable to process your request now. Please try again later.');
+    });
+  }
+}
