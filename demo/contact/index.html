@@ -7,8 +7,8 @@
   <title>Contact Form</title>
 </head>
 <body>
-  <form action="https://uxperience.live/contact/spajs" method="post">
-    <input type="hidden" name="t" value="">
+  <form id="contactForm" action="https://uxperience.live/contact/spajs" method="POST">
+    <input type="hidden" name="t" id="contactReqId" value="">
     <div>
       <label for="contactName">Name</label><span>*</span><br>
       <input type="text" name="n" id="contactName" value="" placeholder="Your name" required>
@@ -26,8 +26,13 @@
       <input type="text" name="m" id="msgTxt" value="" placeholder="Message" required>
     </div>
     <div>
-      <input type="submit" value="Submit">
+      <button onclick="submitContact();">Submit</button>
     </div>
   </form>
+
+  <script>
+    document.querySelector('#contactReqId').value = (new Date()).getMilliseconds();
+    document.querySelector('#contactForm').submit();
+  </script>
 </body>
 </html>
