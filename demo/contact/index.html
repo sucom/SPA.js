@@ -43,7 +43,7 @@
       $('#contactReqId').val(spa.now());
       var formData = spa.serializeFormToSimpleObject( '#contactForm' );
       $('#responseMsg').html('Processing ...');
-      spa.api.post('api/', formData).then(function(apiRes){
+      spa.api.post('https://uxperience.live/contact/spajs/api/', formData).then(function(apiRes){
         $('#responseMsg').html('Thank you for the message. The team will get back to you soon.');
         $('#contactForm')[0].reset();
       }).fail(function(){
