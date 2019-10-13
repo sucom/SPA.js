@@ -7,7 +7,8 @@
   <title>Contact Form</title>
 </head>
 <body>
-  <form id="contactForm" action="https://uxperience.live/contact/spajs" method="POST">
+
+  <form id="contactForm" onsubmit="submitContact();return false;">
     <input type="hidden" name="t" id="contactReqId" value="">
     <div>
       <label for="contactName">Name</label><span>*</span><br>
@@ -26,14 +27,28 @@
       <input type="text" name="m" id="msgTxt" value="" placeholder="Message" required>
     </div>
     <div>
-      <button onclick="submitContact();">Submit</button>
+      <input type="submit" value="Submit">
     </div>
   </form>
 
+  <div>
+    <span id="responseMsg"></span>
+  </div>
+
+  <script src="../../xlib2/jquery/jquery-3.4.1.min.js"></script>
+  <script src="../../src/spa-bundle.min.js"></script>
+
   <script>
     function submitContact() {
-      document.querySelector('#contactReqId').value = (new Date()).getMilliseconds();
-      document.querySelector('#contactForm').submit();
+      $('#contactReqId').val(spa.now());
+      var formData = spa.serializeFormToSimpleObject( '#contactForm' );
+      $('#responseMsg').html('Processing ...');
+      spa.api.post('api/', formData).then(function(apiRes){
+        $('#responseMsg').html('Thank you for the message. The team will get back to you soon.');
+        $('#contactForm')[0].reset();
+      }).fail(function(){
+        console.log('Unable to process your request now. Please try again later.');
+      });
     }
   </script>
 </body>
