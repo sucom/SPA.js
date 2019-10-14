@@ -12,26 +12,26 @@
       <input type="hidden" name="t" id="feedbackReqId" value="">
       <div>
         <label for="contactName">Name</label> <span>*</span><br>
-        <input type="text" name="n" id="contactName" value="" placeholder="Your name" maxlength="50" size="30" required>
+        <input class="form-control" type="text" name="n" id="contactName" value="" placeholder="Your name" maxlength="50" required>
       </div>
       <br>
       <div>
         <label for="contactEmail">Email</label> <span>*</span><br>
-        <input type="email" name="e" id="contactEmail" value="" placeholder="Your email" maxlength="100" size="60" required>
+        <input class="form-control" type="email" name="e" id="contactEmail" value="" placeholder="Your email" maxlength="100" required>
       </div>
       <br>
       <div>
         <label for="msgSub">Subject</label> <span>*</span><br>
-        <input type="text" name="s" id="msgSub" value="" placeholder="Subject" maxlength="150" size="80" required>
+        <input class="form-control" type="text" name="s" id="msgSub" value="" placeholder="Subject" maxlength="150" required>
       </div>
       <br>
       <div>
         <label for="msgTxt">Message</label> <span>*</span><br>
-        <input type="text" name="m" id="msgTxt" value="" placeholder="Message" maxlength="250" size="120" required>
+        <textarea class="form-control" type="text" name="m" id="msgTxt" value="" placeholder="Message" maxlength="250" style="height:150px" required></textarea>
       </div>
       <br>
       <div>
-        <input type="submit" value="Submit">
+        <input class="btn btn-primary" type="submit" value="Submit">
       </div>
     </form>
     <br><br>
