@@ -1,6 +1,8 @@
 spa.$('componentX', {
   //style:'.', // Enable only if this component has specific styles in componentX.css
 
+  target: '#targetContainer',
+
   data: { name: 'componentX' },
   //dataUrl: '', // use this property for external data source instead of above static data property
 
