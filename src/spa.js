@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.67.0';
+  spa.VERSION = '2.68.0';
 
   //var _eKey = ['','l','a','v','e',''];
 
@@ -4611,8 +4611,8 @@ window['app']['api'] = window['app']['api'] || {};
       $('body').append("<div id='spaViewTemplateContainer' style='display:none' rel='Template Container'></div>");
     }
     spa.console.info("Adding <script id='" + (tmplId) + "' type='text/" + tmplType + "'>");
-
-    tmplBody = tmplBody.replace(/<(\s)*script/gi,'<_BlockedScrptInTemplate_').replace(/<(\s)*(\/)(\s)*script/gi,'</_BlockedScrptInTemplate_')
+    var Tag4BlockedScript = '_BlockedScript_';
+    tmplBody = tmplBody.replace(/<(\s)*script/gi,'<'+Tag4BlockedScript+' src-ref="'+tmplId+'"').replace(/<(\s)*(\/)(\s)*script/gi,'</'+Tag4BlockedScript)
             .replace(/<(\s)*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<(\s)*(\/)(\s)*link/gi,'</_LINKTAGINTEMPLATE_');
     $("#spaViewTemplateContainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
   };
@@ -4622,11 +4622,11 @@ window['app']['api'] = window['app']['api'] || {};
     if ($tmplScript.length) {
       $tmplScript.remove();
     }
-    spa.addTemplateScript(tmplId, tmplBody, tmplType);
+    spa.addTemplateScript(tmplId, tmplBody, tmplType, tmplAxOptions);
   };
 
   /* Load external or internal (inline or #container) content as template script */
-  spa.loadTemplate = function (tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload) {
+  spa.loadTemplate = function (tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions) {
     tmplId = tmplId.replace(/#/g, "");
     tmplPath = (tmplPath.ifBlankStr("inline")).trimStr();
     templateType = templateType || "x-template";
@@ -4653,7 +4653,7 @@ window['app']['api'] = window['app']['api'] || {};
       else if (tmplPath.equalsIgnoreCase("none")) {
         spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] defined as NONE. Ignoring template.");
       }
-      else if (!tmplPath.equalsIgnoreCase("script")) { /* load from templdate-URL */
+      else if (!tmplPath.equalsIgnoreCase("script")) { /* load from template-URL */
         var axTemplateRequest;
         if (tmplReload) {
           spa.console.warn(">>>>>>>>>> Making New Template Request");
@@ -4670,10 +4670,18 @@ window['app']['api'] = window['app']['api'] || {};
             }
           });
         } else {
-          axTemplateRequest = $.get(tmplPath, function (template) {
-            spa.addTemplateScript(tmplId, template, templateType);
-            spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
-          }, "html");
+          if (tmplAxOptions['params']) {
+            tmplPath = spa.api.url(tmplPath, tmplAxOptions['params']);
+          }
+          var axMethod = String(tmplAxOptions['method'] || 'get').toLowerCase();
+          if (axMethod=='get' || axMethod=='post') {
+            axTemplateRequest = $[axMethod](tmplPath, tmplAxOptions['payload'], function (template) {
+              spa.addTemplateScript(tmplId, template, templateType);
+              spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
+            }, "html");
+          } else {
+            console.warn('Invalid templateUrlMethod:['+axMethod+'] for templateUrl:['+tmplPath+'] target:['+viewContainerId+']');
+          }
         }
         tAjaxRequests.push(axTemplateRequest);
       } else {
@@ -4685,7 +4693,7 @@ window['app']['api'] = window['app']['api'] || {};
       if (tmplReload) {
         spa.console.warn("Reload Template[" + tmplId + "] of [" + templateType + "]");
         $tmplId.remove();
-        tAjaxRequests = spa.loadTemplate(tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload);
+        tAjaxRequests = spa.loadTemplate(tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
       } else if (spa.isBlank(($tmplId.html()))) {
         spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] script found EMPTY!");
         var externalPath = "" + $tmplId.attr("path");
@@ -4693,7 +4701,7 @@ window['app']['api'] = window['app']['api'] || {};
           templateType = ((($tmplId.attr("type")||"").ifBlankStr(templateType)).toLowerCase()).replace(/text\//gi, "");
           spa.console.info("prepare/remove to re-load Template[" + tmplId + "]  of [" + templateType + "] from external path: [" + externalPath + "]");
           $tmplId.remove();
-          tAjaxRequests = spa.loadTemplate(tmplId, externalPath, templateType, viewContainerId, tAjaxRequests, tmplReload);
+          tAjaxRequests = spa.loadTemplate(tmplId, externalPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
         }
       } else {
         spa.console.info("Template[" + tmplId + "]  of [" + templateType + "] already found in local.");
@@ -5191,10 +5199,11 @@ window['app']['api'] = window['app']['api'] || {};
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
 
-    var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot));
+    var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot)), blockedScriptTagName;
     if (onVirtualDOM) {
-      var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<_BlockedScrptInTemplate_')
-                                    .replace(/<\s*(\/)\s*script/gi,'</_BlockedScrptInTemplate_');
+      blockedScriptTagName = '_BlockedScriptInTemplate_';
+      var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<'+blockedScriptTagName)
+                                    .replace(/<\s*(\/)\s*script/gi,'</'+blockedScriptTagName);
       $contextRoot = $('<div style="display:none">'+bindTmplHtml+'</div>');
     } else {
       $contextRoot = $(contextRoot);
@@ -5403,7 +5412,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
 
     templateData = null;
-    return onVirtualDOM? ($contextRoot.html().replace(/_BlockedScrptInTemplate_/g, "script")) : $contextRoot;
+    return onVirtualDOM? ($contextRoot.html().replace((new RegExp(blockedScriptTagName, 'g')), "script")) : $contextRoot;
   };
 
   spa.togglePassword = function(elPwd){
@@ -6000,9 +6009,9 @@ window['app']['api'] = window['app']['api'] || {};
             var _cFldrPath   = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder)? (componentName+"/"): '');
             xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
           }
-          if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
-            xTmplUrlPath += spa.defaults.components.templateExt;
-          }
+          // if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
+          //   xTmplUrlPath += spa.defaults.components.templateExt;
+          // }
         }
         options['template'] = xTmplUrlPath;
       }
@@ -6063,7 +6072,8 @@ window['app']['api'] = window['app']['api'] || {};
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = [ 'target','template','templateCache',
+          var baseProps = [ 'target','template','templateCache','templateScript',
+                            'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data',
                             'dataCollection','dataUrl','dataUrlMethod','dataUrlParams',
@@ -6521,6 +6531,7 @@ window['app']['api'] = window['app']['api'] || {};
           , xUrl          = spa.api.url(componentUrl, xUrlParams);
 
         spa.console.log('Loading ServerComponent ...');
+
         spa.api[xUrlMethod](xUrl, xUrlPayload, function _onSuccess(xContent) {
           $(xTargetEl).html(xContent);
           spa.renderComponentsInHtml(xTargetEl);
@@ -6562,9 +6573,9 @@ window['app']['api'] = window['app']['api'] || {};
                 if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
                   xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
                 }
-                if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
-                  xTmplUrlPath += spa.defaults.components.templateExt;
-                }
+                // if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no file extension, set default
+                //   xTmplUrlPath += spa.defaults.components.templateExt;
+                // }
               }
               spa.components[componentName]['template'] = xTmplUrlPath;
             } else {
@@ -6996,6 +7007,7 @@ window['app']['api'] = window['app']['api'] || {};
    spa.render("#containerID", uOption);
    */
   spa.render = function (viewContainerId, uOptions) {
+    spa.console.log('spa.render', viewContainerId, uOptions);
 
     if (!arguments.length) return;
 
@@ -7137,7 +7149,7 @@ window['app']['api'] = window['app']['api'] || {};
       }
     }
 
-    spa.console.log(rCompName+'$'+(spaRVOptions['isRefreshCall']?'refresh':'render')+' with options:', spaRVOptions, '$data', spa.findSafe(app, rCompName+'.$data'));
+    spa.console.log(rCompName+'.$'+(spaRVOptions['isRefreshCall']?'refresh':'render')+' with options:', spaRVOptions, '$data', spa.findSafe(app, rCompName+'.$data'));
 
     var $viewContainerId = $(viewContainerId);
     var pCompName  = $viewContainerId.attr('data-rendered-component') || '';
@@ -7623,14 +7635,6 @@ window['app']['api'] = window['app']['api'] || {};
         if (_.isArray(vTemplates) && !_.isEmpty(vTemplates)) {
           spa.console.info("Array of template(s) without templateID(s).");
           var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
-  //        var dynTmplIDForContainer;
-  //        _.each(vTemplates, function(templateUrl, sIndex){
-  //          spa.console.log(templateUrl);
-  //          if (templateUrl) {
-  //            dynTmplIDForContainer = "__tmpl_" + ((''+templateUrl).replace(/[^a-z0-9]/gi,'_'));
-  //            newTemplatesObj[dynTmplIDForContainer] = (""+templateUrl);
-  //          }
-  //        });
           spa.console.info("Template(s) with template ID(s).");
           spa.console.log(newTemplatesObj);
           if (_.isEmpty(newTemplatesObj)) {
@@ -7702,9 +7706,10 @@ window['app']['api'] = window['app']['api'] || {};
 
           spa.console.info("Load Templates");
           spa.console.info(vTemplates);
+          var tmplOptions = {method: spaRVOptions['templateUrlMethod'], params: spaRVOptions['templateUrlParams'], payload: spaRVOptions['templateUrlPayload']};
           _.each(vTemplateNames, function (tmplId, tmplIndex) {
-            spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId]);
-            spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache);
+            spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaRVOptions]);
+            spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache, tmplOptions);
           });
 
           var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
@@ -7889,8 +7894,10 @@ window['app']['api'] = window['app']['api'] || {};
 
                       var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
                       var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
-                      if (allowScriptsInTemplates) {
-                        templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScrptInTemplate_/g, "script");
+                      if (allowScriptsInTemplates){
+                        templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScript_ src-ref="([^"])*"/g, 'script').replace(/_BlockedScript_/g, "script");
+                      } else {
+                        templateContentToBindAndRender = templateContentToBindAndRender.replace(/<\/_BlockedScript_>/g, "&lt;/_BlockedScript_&gt;");
                       }
 
                       /* {$}                  ==> app.thisComponentName.
@@ -8572,490 +8579,6 @@ window['app']['api'] = window['app']['api'] || {};
   spa.properties = {
     version: spa.VERSION
   };
-
-  /* spaRoute OLD complex not published
-   * */
-  // spa.routes = {};
-  // spa.routesOptions = {
-  //     useHashRoute: true
-  //   , usePatterns:true
-  //   , defaultPageRoute : ""
-  //   , beforeRoute : ""
-  //   , defaultTemplateExt : ".html"
-  //   , defaultScriptExt : ".js"
-  //   , loadDefaultScript:true
-  //   , defaultRouteTargetContainerIdPrefix  : "routeContainer_"
-  //   , defaultRouteTemplateContainerIdPrefix: "template_"
-  // };
-
-  // spa.routePatterns = {
-  //   routes: []
-  //   , register: undefined //Object of pattern and function eg. {name:"memberDetailsView", pattern:"#member/view?:memid", routeoptions:{}}
-  //   , deregister: undefined //input [String | Array] of pattern
-  // };
-
-  // spa.routePatterns.register = function(rPatternOptions, overwrite) {
-  //   //validate and Push {name:"xyz", pattern:"", routeoptions:{}}
-  //   if (rPatternOptions && !_.isEmpty(rPatternOptions)) {
-  //     var pushRoutePattern = function(rOptions, _overwrite) {
-  //       if (_.has(rOptions, "pattern")){
-  //         rOptions["pattern"] = rOptions["pattern"].replace(/\?/g, "\\?");
-
-  //         if (!_.has(rOptions, "name")){
-  //           rOptions['name'] = rOptions['pattern'].replace(/[^a-z0-9_]/gi, '');
-  //         }
-  //         if (!_.has(rOptions, "routeoptions")) {
-  //           rOptions['routeoptions'] = {};
-  //         }
-  //         if (!_.find(spa.routePatterns.routes, {'pattern':rOptions['pattern']})){ //No Duplicate Pattern
-  //           if (_.find(spa.routePatterns.routes, {'name':rOptions['name']})){ //If find duplicate name
-  //             if (_overwrite) {
-  //               spa.routePatterns.routes.push(rOptions);
-  //             }
-  //           } else {
-  //             spa.routePatterns.routes.push(rOptions);
-  //           }
-  //         }
-  //       }
-  //     };
-
-  //     if (_.isArray(rPatternOptions)){
-  //       _.each(rPatternOptions, function(rOpt){
-  //         pushRoutePattern(rOpt, overwrite);
-  //       });
-  //     } else if (_.isObject(rPatternOptions)) {
-  //       pushRoutePattern(rPatternOptions, overwrite);
-  //     } else {
-  //       spa.console.error("Invalid RoutePattern Options. Provide Array/Object of RouteOptions");
-  //     }
-  //   } else {
-  //     spa.console.error("Empty RoutePattern Options.");
-  //   }
-  // };
-
-  // spa.routePatterns.deregister = function(rNamesOrPatterns){
-  //   if (rNamesOrPatterns && !_.isEmpty(rNamesOrPatterns)) {
-  //     var removeRoutePattern = function(rNameOrPattern){
-  //       if (rNameOrPattern) {
-  //         var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
-  //           return (opt.name == rNameOrPattern || opt.pattern == rNameOrPattern);
-  //         });
-  //         if (indexOfNameOrPattern>=0) {
-  //           _.pullAt(spa.routePatterns.routes, indexOfNameOrPattern);
-  //         } else {
-  //           spa.console.error("Route Pattern Not Found for <"+rNameOrPattern+">");
-  //         }
-  //       }
-  //     };
-
-  //     if (_.isArray(rNamesOrPatterns)){
-  //       _.each(rNamesOrPatterns, function(rNorP){
-  //         removeRoutePattern(rNorP);
-  //       });
-  //     } else if (_.isString(rNamesOrPatterns)) {
-  //       removeRoutePattern(rNamesOrPatterns);
-  //     } else {
-  //       spa.console.error("Invalid RoutePattern Name/Pattern. Provide Array/Name of RouteNames/Patterns");
-  //     }
-  //   }
-  // };
-
-  // spa.routeName = function(hashRoute){
-  //   var _hashRoute = (hashRoute || spa.urlHash());
-  //   if (_hashRoute.containsStr("\\?")) {
-  //     _hashRoute = _hashRoute.split("?")[0];
-  //   }
-  //   return (_hashRoute.trimLeftStr("#")).replace(/[^a-z0-9]/gi,'_');
-  // };
-
-  // spa.routeContainerId = function(hashRoute){
-  //   var routeTargetContainerPrefix = ((spa.routesOptions.defaultRouteTargetContainerIdPrefix).trimLeftStr("#"));
-  //   return (routeTargetContainerPrefix+spa.routeName(hashRoute));
-  // };
-
-  // spa.routeTemplateId = function(hashRoute){
-  //   var routeTargetContainerPrefix = ((spa.routesOptions.defaultRouteTemplateContainerIdPrefix).trimLeftStr("#"));
-  //   return (routeTargetContainerPrefix+spa.routeName(hashRoute));
-  // };
-
-  /*
-    spa.routeRender = function(elRouteBase, routeOptions)
-    elRouteBase  ==> valid jQuery element identifier
-    routeOptions ==>
-    { render                                    : false             //Optional; default: true; mention only to stop route
-      target                                    : '#targetRenderID' //Optional; default: autoGeneratedHiddenContainer based on routePath
-      template | templates                      : '' or []          //Optional; default: pathFrom Route with extension; use '.' to load default template
-      [ext | tmplext | tmplExt]                 : '.jsp'            //Optional; default: '.html'; html template extension with dot(.)
-      scripts                                   : '' or [] or false //Optional; default: same as templatePath with extension .js; use '.' to load default script
-      [dataurl | dataUrl]                       : ''                //Optional; default: NO-DATA
-      [after | callback | callBack]             : '' or function(){} or functionName //Optional: default: spa.routes.<ROUTE-PATH>_renderCallback
-      [before | beforeroute | beforeRoute]      : '' or function(){} or functionName //Optional: default: spa.routesOptions.beforeRoute
-    }
-  */
-  // spa.routeRender = function(elRouteBase, routeOptions){
-  //   var $elRouteBase = (elRouteBase)? $(elRouteBase) : undefined;
-
-  //   var tagRouteOptions = ($elRouteBase)? ( (""+$elRouteBase.data("sparoute")) || "") : ("");
-  //   if (   (tagRouteOptions.trimStr()).equalsIgnoreCase("false")
-  //       || (tagRouteOptions.trimStr()).equalsIgnoreCase("no")
-  //       || (tagRouteOptions.trimStr()).equalsIgnoreCase("off")
-  //      ) tagRouteOptions = "quit:true";
-  //   var oTagRouteOptions = (tagRouteOptions)? spa.toJSON(tagRouteOptions) : {};
-
-  //   //Override with jsRouteOptions
-  //   _.merge(oTagRouteOptions, routeOptions);
-
-  //   if (oTagRouteOptions.hasOwnProperty("quit") && (oTagRouteOptions['quit'])) {
-  //     return; //abort route
-  //   }
-
-  //   var routeNameWithPath = "#RouteNotDefinedInHREF";
-  //   if ($elRouteBase) {
-  //     routeNameWithPath = $elRouteBase.attr("href");
-  //   } else if (routeOptions['urlhash']) {
-  //     routeNameWithPath = routeOptions['urlhash']['url'];
-  //   }
-  //   routeNameWithPath = (routeNameWithPath).trimLeftStr("#");
-
-  //   var routeParams = "";
-  //   if (routeNameWithPath.containsStr("\\?")) {
-  //     var _routeParts = routeNameWithPath.split("?");
-  //     routeNameWithPath = _routeParts[0];
-  //     routeParams = _routeParts[1];
-  //   }
-  //   var routeName = oTagRouteOptions['name'] || (spa.routeName(routeNameWithPath));
-
-  //   routeNameWithPath += routeNameWithPath.endsWithStr("/")? "index" : "";
-
-  //   if (spa.routes[routeName]) {
-  //     spa.routes[routeName]($elRouteBase, routeParams, oTagRouteOptions);
-  //   } else {
-  //     spa.console.info("Route method <spa.routes."+routeName+"> NOT FOUND. Attempting to route using [data-sparoute] options.");
-
-  //     var foundRouteTmplExt = (oTagRouteOptions.hasOwnProperty('ext')
-  //     || oTagRouteOptions.hasOwnProperty('tmplext')
-  //     || oTagRouteOptions.hasOwnProperty('tmplExt'));
-
-  //     //foundRenderTarget = oTagRouteOptions['target'] && spa.isElementExist(oTagRouteOptions['target'])
-  //     var renderTarget      = ""+((oTagRouteOptions['target']||"").trimStr())
-  //       , tmplExt           = (foundRouteTmplExt)? (oTagRouteOptions['ext'] || oTagRouteOptions['tmplext'] || oTagRouteOptions['tmplExt']) : (spa.routesOptions["defaultTemplateExt"]||"")
-  //       , defaultTmplPath   = (routeNameWithPath+tmplExt+"?"+routeParams).trimRightStr("\\?")
-  //       , defaultScriptPath = routeNameWithPath+(spa.routesOptions["defaultScriptExt"]||".js")
-  //       , defaultCallBeforeRoute = "spa.routes."+routeName+"_before"
-  //       , defaultRenderCallback  = "spa.routes."+routeName+"_renderCallback"
-  //       , useTargetOptions = spa.findIgnoreCase(oTagRouteOptions, "usetargetoptions")
-  //       , spaRenderOptions = {
-  //           dataRenderCallback : defaultRenderCallback
-  //         , rElRouteOptions : oTagRouteOptions
-  //         , rElDataAttr: ($elRouteBase)? $elRouteBase.data() : {}
-  //       };
-
-  //     //TODO: support for key 'html' instead of 'template'
-  //     if (oTagRouteOptions.hasOwnProperty('template') && !oTagRouteOptions.hasOwnProperty('templates')) {
-  //       oTagRouteOptions['templates'] = oTagRouteOptions['template'];
-  //       delete oTagRouteOptions['template'];
-  //     }
-
-  //     if (renderTarget.equalsIgnoreCase(".")) {
-  //       renderTarget = "#"+spa.setElIdIfNot($elRouteBase);
-  //     } else if (spa.isBlank(renderTarget)) {
-  //       renderTarget = ("#"+spa.routeContainerId(routeName));
-  //     }
-  //     var foundRenderTarget = spa.isElementExist(renderTarget);
-
-  //     spa.console.info("Render Target <"+renderTarget+">");
-  //     /*Cache Settings*/
-  //     if (oTagRouteOptions.hasOwnProperty("dataCache")) {
-  //       spaRenderOptions['dataCache'] = oTagRouteOptions['dataCache'];
-  //     }
-  //     if (oTagRouteOptions.hasOwnProperty("templatesCache") || oTagRouteOptions.hasOwnProperty("templateCache") || oTagRouteOptions.hasOwnProperty("htmlsCache") || oTagRouteOptions.hasOwnProperty("htmlCache")) {
-  //       spaRenderOptions['dataTemplatesCache'] = oTagRouteOptions['templatesCache'] || oTagRouteOptions['templateCache'] || oTagRouteOptions['htmlsCache'] || oTagRouteOptions['htmlCache'];
-  //     }
-  //     if (oTagRouteOptions.hasOwnProperty("scriptsCache") || oTagRouteOptions.hasOwnProperty("scriptCache")) {
-  //       spaRenderOptions['dataScriptsCache'] = oTagRouteOptions['scriptsCache'] || oTagRouteOptions['scriptCache'];
-  //     }
-
-  //     /*Templates*/
-  //     //TODO: support for key 'htmls' instead of 'templates'
-  //     spaRenderOptions['dataTemplates'] = {};
-  //     var tmplID= "__spaRouteTemplate_" + routeName;
-  //     if (!oTagRouteOptions.hasOwnProperty("templates") || (oTagRouteOptions['templates'])) {
-  //       var oTagRouteOptionsTemplates = oTagRouteOptions['templates'];
-  //       var rTemplateId = spa.routeTemplateId(routeName);
-  //       var routeTemplateContainerID = "#"+rTemplateId;
-  //       var hashTmplID = "__tmpl_"+rTemplateId;
-  //       switch(true) {
-  //         case (_.isString(oTagRouteOptionsTemplates)) :
-  //           var targetTmplId = tmplID;
-  //           var tmplPath = oTagRouteOptionsTemplates.trimStr();
-  //           if ((tmplPath).equalsIgnoreCase('.')) {
-  //             tmplPath = defaultTmplPath;
-  //           } else if ((tmplPath).equalsIgnoreCase('#')) {
-  //             targetTmplId = hashTmplID;
-  //             tmplPath = routeTemplateContainerID;
-  //           }
-  //           spaRenderOptions.dataTemplates[targetTmplId] = tmplPath.ifBlankStr("none");
-  //           break;
-  //         case (_.isArray(oTagRouteOptionsTemplates)) :
-  //           if (_.indexOf(oTagRouteOptionsTemplates, '.')>=0) { //Include default path-template (external)
-  //             spaRenderOptions.dataTemplates[tmplID+"_dot"] = defaultTmplPath;
-  //             _.pull(oTagRouteOptionsTemplates, '.');
-  //           }
-  //           if (_.indexOf(oTagRouteOptionsTemplates, '#')>=0) { //Include route hash-template (internal)
-  //             spaRenderOptions.dataTemplates[hashTmplID] = routeTemplateContainerID;
-  //             _.pull(oTagRouteOptionsTemplates, '#');
-  //           }
-  //           _.each(oTagRouteOptionsTemplates, function(templateUrl, sIndex){
-  //             spaRenderOptions.dataTemplates[tmplID + '_'+(sIndex+1)] = templateUrl.ifBlankStr("none");
-  //           });
-  //           break;
-  //         default:
-  //           spaRenderOptions.dataTemplates[tmplID] = defaultTmplPath;
-  //           break;
-  //       }
-  //     } else {
-  //       spa.console.warn("Route without template");
-  //       spaRenderOptions.dataTemplates[tmplID] = "none";
-  //     }
-
-  //     /*Scripts*/
-  //     var useScripts = (!oTagRouteOptions.hasOwnProperty("scripts") || (oTagRouteOptions['scripts']));
-  //     if (useScripts) {
-  //       spaRenderOptions['dataScripts'] = {};
-  //       var scriptID = "__spaRouteScript_" + routeName;
-  //       switch(true) {
-  //         case (_.isString(oTagRouteOptions['scripts'])) :
-  //           spaRenderOptions.dataScripts[scriptID] = ((oTagRouteOptions['scripts']).equalsIgnoreCase('.'))? defaultScriptPath : oTagRouteOptions['scripts'];
-  //           break;
-  //         case (_.isArray(oTagRouteOptions['scripts'])) :
-  //           if (_.indexOf(oTagRouteOptions['scripts'], '.')>=0) { //Include default script
-  //             spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
-  //             _.pull(oTagRouteOptions['scripts'], '.');
-  //           }
-  //           _.each(oTagRouteOptions['scripts'], function(scriptUrl, sIndex){
-  //             spaRenderOptions.dataScripts[scriptID + '_'+(sIndex+1)] = scriptUrl;
-  //           });
-  //           break;
-  //         default:
-  //           if (spa.routesOptions.loadDefaultScript) {
-  //             spaRenderOptions.dataScripts[scriptID] = defaultScriptPath;
-  //           } else {
-  //             spa.console.warn("Script(s) not included. Use <spa.routesOptions.loadDefaultScript = true> to load default script <"+defaultScriptPath+">.");
-  //           }
-  //           break;
-  //       }
-  //       spa.console.log(spaRenderOptions['dataScripts']);
-  //     }
-
-  //     /*Data and Params*/
-  //     if (oTagRouteOptions['dataUrl'] || oTagRouteOptions['dataurl']) {
-  //       var tagDataUrl = oTagRouteOptions['dataurl'] || oTagRouteOptions['dataUrl'];
-  //       var spaRenderDataUrls = spa.toRenderDataStructure(tagDataUrl, routeParams, spa.findSafe(routeOptions, "urlhash.urlParams.params", {}) );
-  //       if (!_.isEmpty(spaRenderDataUrls)) {
-  //         _.merge(spaRenderOptions, spaRenderDataUrls);
-  //       }
-  //     }
-
-  //     /*Callback*/
-  //     var overrideDefaultCallback = (
-  //     oTagRouteOptions.hasOwnProperty('after')
-  //     || oTagRouteOptions.hasOwnProperty('callback')
-  //     || oTagRouteOptions.hasOwnProperty('callBack'));
-  //     if (overrideDefaultCallback || oTagRouteOptions['after'] || oTagRouteOptions['callback'] || oTagRouteOptions['callBack']) {
-  //       spaRenderOptions['dataRenderCallback'] = oTagRouteOptions['after'] || oTagRouteOptions['callback'] || oTagRouteOptions['callBack'] || "";
-  //     }
-
-  //     //NO SCRIPTS
-  //     if ( oTagRouteOptions.hasOwnProperty("scripts")
-  //       && spa.isBlank(oTagRouteOptions["scripts"])
-  //     ) {
-  //       //NO CALLBACK or CALLBACK="."
-  //       if (!overrideDefaultCallback) {
-  //         spaRenderOptions['dataRenderCallback'] = "";
-  //       } else if ( _.isString((spaRenderOptions['dataRenderCallback']))
-  //               && (spaRenderOptions['dataRenderCallback']).equalsIgnoreCase(".")) {
-  //         spaRenderOptions['dataRenderCallback'] = defaultRenderCallback;
-  //       }
-  //     }
-
-  //     /*owerride Options with Target elements property if any*/
-  //     if (useTargetOptions && foundRenderTarget){
-  //       //Read spaRender options from target element and override(ie. delete) above options
-  //       var $elTarget = $(renderTarget);
-  //       if ($elTarget.data('url')) {
-  //         delete spaRenderOptions['dataUrl'];
-  //       }
-  //       if ($elTarget.data('template') || $elTarget.data('templates')) {
-  //         delete spaRenderOptions['dataTemplates'];
-  //       }
-  //       if ($elTarget.data('scripts')) {
-  //         delete spaRenderOptions['dataScripts'];
-  //       }
-  //       if ($elTarget.data('renderCallback')) {
-  //         delete spaRenderOptions['dataRenderCallback'];
-  //       }
-  //     }
-  //     /*before Render function to modify options*/
-
-  //     spa.console.info("Route Render Options Before preRenderProcess:");
-  //     spa.console.info(spaRenderOptions);
-  //     var beforeRenderOptions = {};
-  //     var fnToRunBefore = oTagRouteOptions['before'] || oTagRouteOptions['beforeroute'] || oTagRouteOptions['beforeRoute'] || spa.routesOptions["beforeRoute"];
-  //     spa.console.info("callBeforeRoute: "+fnToRunBefore);
-  //     if (fnToRunBefore) {
-  //       if (!_.isFunction(fnToRunBefore) && _.isString(fnToRunBefore)) {
-  //         if (fnToRunBefore.equals(defaultCallBeforeRoute)) { //TODO: why?
-  //           //cancel default route-before-function
-  //           defaultCallBeforeRoute = undefined; //TODO: why?
-  //         }
-  //         fnToRunBefore = spa.findSafe(window, fnToRunBefore);
-  //       }
-  //       if (_.isFunction(fnToRunBefore)){
-  //         beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
-  //         if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
-  //       } else {
-  //         spa.console.error("CallBeforeRouteFunction <"+oTagRouteOptions['before']+"> NOT FOUND.");
-  //       }
-  //     }
-  //     if (defaultCallBeforeRoute) {
-  //       fnToRunBefore = spa.findSafe(window, defaultCallBeforeRoute);
-  //       if (fnToRunBefore && _.isFunction(fnToRunBefore)) {
-  //         beforeRenderOptions = fnToRunBefore.call(undefined, {el:$elRouteBase, target:renderTarget, renderOptions:spaRenderOptions, routeOptions:oTagRouteOptions});
-  //         if (_.isObject(beforeRenderOptions)) _.merge(spaRenderOptions, beforeRenderOptions);
-  //       }
-  //     }
-
-  //     spa.console.info("Route Render Options After preRenderProcess:");
-  //     spa.console.info(spaRenderOptions);
-  //     /*Ready to spaRender*/
-  //     if ((!spaRenderOptions.hasOwnProperty("render") || (spaRenderOptions['render'])) &&
-  //       (!oTagRouteOptions.hasOwnProperty("render") || (oTagRouteOptions['render']))) {
-  //       spa.render(renderTarget, spaRenderOptions);
-  //     }
-  //   }//End of Route
-
-  //   return true;
-  // };
-
-  /*
-    spa.route(el); //el = HTML element with href=#RoutePath?key=value&key=value
-    spa.route(el, routeOptions); //el with Options
-    spa.route("#RoutePath?key=value&key=value");
-    spa.route("#RoutePath?key=value&key=value", routeOptions); //routePath with Options
-
-    //routeOptions
-    { render                                    : false             //Optional; default: true; mention only to stop route
-      target                                    : '#targetRenderID' //Optional; default: autoGeneratedHiddenContainer based on routePath
-      templates                                 : '' or []          //Optional; default: pathFrom Route with extension; use '.' to load default template
-      [ext | tmplext | tmplExt]                 : '.jsp'            //Optional; default: '.html'; html template extension with dot(.)
-      scripts                                   : '' or [] or false //Optional; default: same as templatePath with extension .js; use '.' to load default script
-      [dataurl | dataUrl]                       : ''                //Optional; default: NO-DATA
-      [after | callback | callBack]             : '' or function(){} or functionName //Optional: default: spa.routes.<ROUTE-PATH>_renderCallback
-      [before | beforeroute | beforeRoute]      : '' or function(){} or functionName //Optional: default: spa.routesOptions.beforeRoute
-    }
-  */
-  //ToBeRemoved
-  // spa.route = function(elRouteBase, routeOptions){
-
-  //   if (_.isString(elRouteBase) && spa.isBlank((""+elRouteBase).trimStr("#")) ) {
-  //     return false; //BlankHash
-  //   }
-
-  //   var foundRouteElBase = !_.isString(elRouteBase);
-  //   routeOptions = routeOptions || {};
-
-  //   if (!foundRouteElBase) { //Find element with given route or create one with same route
-  //     var elWithRoute = $("[data-sparoute][href='"+elRouteBase+"']");
-  //     foundRouteElBase = !_.isEmpty(elWithRoute);
-  //     if (!foundRouteElBase) {
-  //       spa.console.warn("Route source element NOT FOUND for route <"+elRouteBase+">");
-  //       if (spa.routesOptions.usePatterns) {
-  //         spa.console.info("Searching RoutePattern.");
-  //         var rPatternRouteOptions;
-  //         var indexOfNameOrPattern = _.findIndex(spa.routePatterns.routes, function(opt){
-  //           var matchFound=false;
-  //           var _routeMatch = spa.routeMatch(opt.pattern, elRouteBase);
-  //           if (_routeMatch) {
-  //             matchFound = true;
-  //             rPatternRouteOptions = _.merge({}, opt['routeoptions'] || {});
-  //             rPatternRouteOptions['urlhash'] = {pattern:(opt.pattern).replace(/\\\?/g, '?') , url:elRouteBase, urlParams:_routeMatch};
-  //           }
-  //           return matchFound;
-  //         });
-
-  //         if (indexOfNameOrPattern<0) {
-  //           spa.console.warn("Pattern not found.");
-  //           spa.console.info(spa.routePatterns.routes);
-  //         } else {
-  //           spa.console.info(rPatternRouteOptions);
-  //           spa.routeRender(undefined, rPatternRouteOptions);
-  //         }
-  //       } else {
-  //         spa.console.warn("Pattern match Disabled.");
-  //       }
-  //     } else {
-  //       elRouteBase = elWithRoute.get(0);
-  //     }
-  //   }
-
-  //   if (!foundRouteElBase) {
-  //     if (routeOptions['forceroute'] || routeOptions['forceRoute']) {
-  //       spa.console.warn("Attempt dynamic route.");
-  //       foundRouteElBase = true;
-  //       elRouteBase = $("<a href='"+elRouteBase+"'></a>").get(0);
-  //     } else {
-  //       spa.console.warn("Exit Route.");
-  //       return false; //exit;
-  //     }
-  //   }
-
-  //   if (foundRouteElBase){
-  //     return spa.routeRender(elRouteBase, routeOptions);
-  //   }// if foundRouteElBase
-  // };
-
-  //ToBe removed...
-  // spa.initRoutesX = function(routeInitScope, routeInitOptions) {
-  //   if (typeof routeInitScope == "object") {
-  //     routeInitOptions = routeInitScope;
-  //     routeInitScope = routeInitOptions["context"] || routeInitOptions["scope"] || "";
-  //   }
-  //   if (routeInitOptions) {
-  //     spa.console.info("Init routesOptions");
-  //     _.merge(spa.routesOptions, routeInitOptions);
-
-  //     if (!isSpaHashRouteOn && spa.routesOptions.useHashRoute) _initWindowOnHashChange();
-  //     if (isSpaHashRouteOn && !spa.routesOptions.useHashRoute) _stopWindowOnHashChange();
-
-  //     //options without (context or scope)
-  //     if (!(routeInitOptions.hasOwnProperty('context') || routeInitOptions.hasOwnProperty('scope'))) {
-  //       return;
-  //     }
-  //   }
-
-  //   spa.console.info("Init spaRoutes. Scan for [data-sparoute] in context: <"+(routeInitScope||"body")+">");
-  //   $(routeInitScope||"body").find("[data-sparoute]").each(function(index, el){
-
-  //     if (!spa.isBlank((($(el).attr("href") || "")+"#").split("#")[1])) {
-  //       $(el).off("click");
-  //       $(el).on("click", function() {
-  //         if (isSpaHashRouteOn) {
-  //           var elHash  = "#"+(((($(el).attr("href") || "")+"#").split("#")[1]).trimStr("#"));
-  //           var winHash = spa.getLocHash();
-  //           if (elHash.equals(winHash)){
-  //             spa.route(this);
-  //           }
-  //         } else {
-  //           spa.route(this);
-  //         }
-  //       });
-
-  //       if (el.hasAttribute("data-sparoute-default")) {
-  //         spa.route(el);
-  //       }
-  //     }
-  //   });
-  // };
 
   //API Section begins
   spa.api = {
