@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.68.0';
+  spa.VERSION = '2.69.0';
 
   //var _eKey = ['','l','a','v','e',''];
 
@@ -2800,7 +2800,7 @@ window['app']['api'] = window['app']['api'] || {};
   spa.toJSON = function (str, key4PrimaryDataTypes) {
     var thisStr;
     if (_.isString(str)) {
-      thisStr = str.trimStr();
+      thisStr = str.trimStr().trimStr(',').trimStr(';');
 
       if (!_isValidEvalStr(thisStr)) return str;
 
@@ -2994,6 +2994,20 @@ window['app']['api'] = window['app']['api'] || {};
     replaceWithIfNotBlank = (typeof replaceWithIfNotBlank === "undefined")? (("" + src).trimStr()) : replaceWithIfNotBlank;
     return ( spa.isBlank(src) ? (replaceWithIfBlank) : (replaceWithIfNotBlank) );
   };
+
+  function __finalValue(srcVal) {
+    var retVal = srcVal, fnContext = arguments[1], fnArgs = Array.prototype.slice.call(arguments, 2);
+    if (_is(retVal, 'string')) {
+      if (retVal.indexOf('(')>0) { //function
+        retVal = retVal.getLeftStr('(');
+      }
+      retVal = spa.findSafe(window, (retVal.trim()), undefined);
+    }
+    if (_is(retVal, 'function') && (arguments.length>1)) {
+      retVal = retVal.apply(fnContext, fnArgs);
+    }
+    return retVal;
+  }
 
   /* now: Browser's current timestamp */
   spa.now = function () {
@@ -4052,15 +4066,15 @@ window['app']['api'] = window['app']['api'] || {};
     return retValue;
   };
 
-  function of(x) {
+  function _of(x) {
     return (Object.prototype.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
   }
-  function is(x, type) {
+  function _is(x, type) {
     return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
   }
 
-  spa.of = of;
-  spa.is = is;
+  spa.of = of = _of;
+  spa.is = is = _is;
 
   function _isObjHasKeys(obj, propNames, deep){
 
@@ -4654,35 +4668,35 @@ window['app']['api'] = window['app']['api'] || {};
         spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] defined as NONE. Ignoring template.");
       }
       else if (!tmplPath.equalsIgnoreCase("script")) { /* load from template-URL */
-        var axTemplateRequest;
+
+        var axMethod = String(tmplAxOptions['method'] || 'get').toLowerCase();
+        if (tmplAxOptions['params']) {
+          tmplPath = spa.api.url(tmplPath, tmplAxOptions['params']);
+        }
         if (tmplReload) {
           spa.console.warn(">>>>>>>>>> Making New Template Request");
-          axTemplateRequest = $.ajax({
-            url: tmplPath,
-            cache: false,
-            dataType: "html",
-            success: function (template) {
-              spa.addTemplateScript(tmplId, template, templateType);
-              spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-              spa.console.error("Failed Loading Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]. [" + textStatus + ":" + errorThrown + "]");
-            }
-          });
-        } else {
-          if (tmplAxOptions['params']) {
-            tmplPath = spa.api.url(tmplPath, tmplAxOptions['params']);
-          }
-          var axMethod = String(tmplAxOptions['method'] || 'get').toLowerCase();
-          if (axMethod=='get' || axMethod=='post') {
-            axTemplateRequest = $[axMethod](tmplPath, tmplAxOptions['payload'], function (template) {
-              spa.addTemplateScript(tmplId, template, templateType);
-              spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
-            }, "html");
-          } else {
-            console.warn('Invalid templateUrlMethod:['+axMethod+'] for templateUrl:['+tmplPath+'] target:['+viewContainerId+']');
-          }
         }
+
+        var axTemplateRequest = $.ajax({
+          url: tmplPath,
+          method: axMethod,
+          headers : tmplAxOptions['headers'],
+          data: tmplAxOptions['payload'],
+          cache: !tmplReload,
+          dataType: 'html',
+          onTmplError: tmplAxOptions['onError'],
+          success: function (template) {
+            spa.addTemplateScript(tmplId, template, templateType);
+            spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            if (this.onTmplError && _is(this.onTmplError, 'function')) {
+              this.onTmplError.call(this, jqXHR, textStatus, errorThrown);
+            }
+            spa.console.error("Failed Loading Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]. [" + textStatus + ":" + errorThrown + "]");
+          }
+        });
+
         tAjaxRequests.push(axTemplateRequest);
       } else {
         spa.console.error("Template[" + tmplId + "] of [" + templateType + "] NOT defined in <script>.");
@@ -6073,12 +6087,12 @@ window['app']['api'] = window['app']['api'] || {};
           options = _adjustComponentOptions(componentName, options);
 
           var baseProps = [ 'target','template','templateCache','templateScript',
-                            'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload',
+                            'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data',
-                            'dataCollection','dataUrl','dataUrlMethod','dataUrlParams',
+                            'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders',
                             'dataParams','dataType','dataModel','dataCache',
-                            'dataDefaults','data_','dataExtra','dataXtra',
+                            'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
                             'dataValidate','dataProcess','dataPreProcessAsync','beforeRender','componentName'];
           var baseProperties = _.merge({}, options);
           _.each(baseProps, function(baseProp){
@@ -6523,29 +6537,37 @@ window['app']['api'] = window['app']['api'] || {};
 
       if (componentUrl) {
         var xTargetEl     = options['targetEl']
-          , xUrlHeaders   = spa.toJSON(options['urlHeaders'])
-          , xUrlParams    = spa.toJSON(options['urlParams'])
-          , xUrlPayload   = spa.toJSON(options['urlPayload'])
+          , xUrlHeaders   = __finalValue(spa.toJSON(options['urlHeaders']), options)
+          , xUrlParams    = __finalValue(spa.toJSON(options['urlParams']), options)
+          , xUrlPayload   = __finalValue(spa.toJSON(options['urlPayload']), options)
           , xUrlMethod    = (options['urlMethod'] || 'GET').toLowerCase()
           , xUrlCache     = (String(options['urlCache'] || 'false').toLowerCase() !== 'false')
-          , xUrl          = spa.api.url(componentUrl, xUrlParams);
+          , xUrl          = spa.api.url(componentUrl, xUrlParams)
+          , xUrlError     = __finalValue(options['urlError']);
 
         spa.console.log('Loading ServerComponent ...');
 
-        spa.api[xUrlMethod](xUrl, xUrlPayload, function _onSuccess(xContent) {
-          $(xTargetEl).html(xContent);
-          spa.renderComponentsInHtml(xTargetEl);
-        }, function _onFail(jqXHR, textStatus, errorThrown) {
-          console.warn('Unable to load ServerComponent.')
-          console.error(String(textStatus).toUpperCase()+':'+errorThrown, jqXHR);
-        }, {
-          ajaxOptions: {
-            dataType: 'html',
-            headers: xUrlHeaders,
-            cache: xUrlCache
-          }
-        });
-
+        spa.api[xUrlMethod](xUrl, xUrlPayload
+          , function _onSuccess(xContent) {
+              $(xTargetEl).html(xContent);
+              spa.renderComponentsInHtml(xTargetEl);
+            }
+          , function _onFail(jqXHR, textStatus, errorThrown) {
+              if (this.onError && _is(this.onError, 'function')) {
+                this.onError.call(this, jqXHR, textStatus, errorThrown);
+              } else {
+                console.warn('Unable to load ServerComponent.');
+                console.error(String(textStatus).toUpperCase()+':'+errorThrown, jqXHR);
+              }
+            }
+          , {
+            ajaxOptions: {
+              dataType: 'html',
+              headers: xUrlHeaders,
+              cache: xUrlCache,
+              onError: xUrlError
+            }
+          });
       }
       return;
     }
@@ -7468,8 +7490,9 @@ window['app']['api'] = window['app']['api'] || {};
                         var fnOnApiDataUrlErrorHandle = dataApi['error'] || dataApi['onerror'] || dataApi['onError'];
                         if (!fnOnApiDataUrlErrorHandle) {
                           fnOnApiDataUrlErrorHandle = dataModelCollection['error'] || dataModelCollection['onerror'] || dataModelCollection['onError']; //use common error
-                          if ((!fnOnApiDataUrlErrorHandle) && (!spa.isBlank(spaRVOptions.dataUrlErrorHandle))) {
-                            fnOnApiDataUrlErrorHandle = spaRVOptions.dataUrlErrorHandle;
+                          var fnOnDataUrlError = spaRVOptions['dataUrlErrorHandle'] || spaRVOptions['onDataUrlError'] || spaRVOptions['onError'];
+                          if ((!fnOnApiDataUrlErrorHandle) && (fnOnDataUrlError)) {
+                            fnOnApiDataUrlErrorHandle = fnOnDataUrlError;
                           }
                         }
                         if (fnOnApiDataUrlErrorHandle) {
@@ -7706,7 +7729,17 @@ window['app']['api'] = window['app']['api'] || {};
 
           spa.console.info("Load Templates");
           spa.console.info(vTemplates);
-          var tmplOptions = {method: spaRVOptions['templateUrlMethod'], params: spaRVOptions['templateUrlParams'], payload: spaRVOptions['templateUrlPayload']};
+          var tmplPayload = spaRVOptions['templateUrlPayload'];
+          if (tmplPayload && _is(tmplPayload, 'string') && (tmplPayload.indexOf('=')<0)) {
+            tmplPayload = __finalValue(tmplPayload, spaRVOptions);
+          }
+          var tmplOptions = {
+              method : spaRVOptions['templateUrlMethod']
+            , params : __finalValue(spaRVOptions['templateUrlParams'], spaRVOptions)
+            , payload: tmplPayload
+            , headers: __finalValue(spaRVOptions['templateUrlHeaders'], spaRVOptions)
+            , onError: __finalValue(spaRVOptions['onTemplateUrlError'] || spaRVOptions['onError'])
+          };
           _.each(vTemplateNames, function (tmplId, tmplIndex) {
             spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaRVOptions]);
             spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache, tmplOptions);
