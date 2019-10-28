@@ -2419,7 +2419,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.69.0';
+  spa.VERSION = '2.69.1';
 
   //var _eKey = ['','l','a','v','e',''];
 
@@ -4636,7 +4636,7 @@ window['app']['api'] = window['app']['api'] || {};
     if ($tmplScript.length) {
       $tmplScript.remove();
     }
-    spa.addTemplateScript(tmplId, tmplBody, tmplType, tmplAxOptions);
+    spa.addTemplateScript(tmplId, tmplBody, tmplType);
   };
 
   /* Load external or internal (inline or #container) content as template script */
@@ -4646,6 +4646,7 @@ window['app']['api'] = window['app']['api'] || {};
     templateType = templateType || "x-template";
     viewContainerId = viewContainerId || "#DummyInlineTemplateContainer";
     tAjaxRequests = tAjaxRequests || [];
+    tmplAxOptions = tmplAxOptions || {};
     spa.console.group("spaTemplateAjaxQue");
     if (!spa.isElementExist("#"+tmplId)) {
       spa.console.info("Template[" + tmplId + "] of [" + templateType + "] NOT found. Source [" + tmplPath + "]");
