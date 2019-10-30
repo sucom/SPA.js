@@ -21,7 +21,7 @@ spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function
       <li>- spa.api methods are short-hand methods for <mark>jQuery.ajax( )</mark></li>
       <li>- for default ajaxOptions for all spa.api methods refer <a href="#getStarted/spaApi">SPA API Basic / Configuration</a> section</li>
       <li>- ajaxOptions override param is supported only from SPA.js version:2.35.0+</li>
-      <li>- If neded, feel free to use <a href="http://api.jquery.com/jquery.ajax/" target="_blank">$.ajax( )</a> instead of spa.api methods</li>
+      <li>- If needed, feel free to use <a href="http://api.jquery.com/jquery.ajax/" target="_blank">$.ajax( )</a> instead of spa.api methods</li>
       <li>- Also feel free to use any javascript AJAX libraries like <a href="https://visionmedia.github.io/superagent/" target="_blank">SuperAgent</a>, <a href="https://github.github.io/fetch/" target="_blank">Fetch</a>, etc.</li>
     </ul>
   </blockquote>
@@ -87,7 +87,7 @@ spa.api.del(apiUrl:String, data:Object, onSuccessFn:Function, onErrorFn:Function
         headers: {
           Accept: 'application/json',
           locale: 'en_US',
-          authToken: 'ALBL-DJDUE8-93939-0099KKDKD-03939K-KSKSJDMDKIUFHSLS-38373DJ847DHKBLBJJ'
+          authToken: 'ABCD-XYZ-93939-0099IJK-03939K-8765-38373DJ8-D47XZY'
         }
     }}
   </script>
@@ -153,19 +153,19 @@ var apiUrl = spa.api.url( '@saveFormA', {id: '12345'} )
       var apiX = spa.api.get('@apiXUrlKey', payLoadObj);
 
       apiX
-        .then(function(apiResponse, strTextStatus, jqXHRobj){
+        .then(function(apiResponse, strTextStatus, jqXHRObj){
 
         //doSomething on success
 
-      }).fail(function( jqXHRobj, strTextStatus, strErrorThrown ){
+      }).fail(function( jqXHRObj, strTextStatus, strErrorThrown ){
 
         //something gone wrong. check arguments.
 
-      }).done(function( apiResponse, strTextStatus, jqXHRobj ){
+      }).done(function( apiResponse, strTextStatus, jqXHRObj ){
 
         //doSomething when done.
 
-      }).always(function( data|jqXHR, strTextStatus, jqXHRobj|strErrorThrown ) {
+      }).always(function( data|jqXHR, strTextStatus, jqXHRObj|strErrorThrown ) {
 
         //doSomething always
 

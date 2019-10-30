@@ -41,7 +41,13 @@
 
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-        <button data-spa-route="/home" onclick="{$}authenticateUser();">Login</button>
+
+        <button data-spa-route="/login" onclick="{$}authenticateUser();">Login</button>
+
+        ...
+
+        <button data-spa-route="##/home" onclick="spa.$render('home');">home</button>
+        <button data-spa-route="##/logout" onclick="{$}logout();">Logout</button>
 
         ... ...
 
@@ -59,18 +65,30 @@
       </script>
     </p>
 
-    <p><mark>Route-Path</mark> spcification.
+    <p><mark>Route-Path</mark> specification.
       <ul>
+        <li>If begins with <mark>##/</mark>, Replaces the route fully.</li>
         <li>If begins with <mark>/</mark>, Replaces the route beginning with path, if not replaces fully.</li>
         <li>If begins with <mark>-</mark>, Reduces the path by a number (default: 1) followed by <mark>-</mark>.</li>
+
       </ul>
 
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
-        <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
-        <!-- replaces the prvious route url
 
-          if exisiting path: //127.0.0.1/index.html#/home/settings/network
+        <a data-spa-route="##/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <!-- replaces the previous route url fully
+
+          if existing path: //127.0.0.1/index.html#/settings/network
+            the new path ==> //127.0.0.1/index.html#/home/view-profile
+        -->
+
+        ... ...
+
+        <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
+        <!-- replaces the previous route url
+
+          if existing path: //127.0.0.1/index.html#/home/settings/network
             the new path ==> //127.0.0.1/index.html#/home/view-profile
         -->
 
@@ -79,10 +97,10 @@
         <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
         <!-- replace the existing path
 
-          if exisiting path: //127.0.0.1/index.html#/home
+          if existing path: //127.0.0.1/index.html#/home
             the new path ==> //127.0.0.1/index.html#/home/view-profile
 
-          if exisiting path: //127.0.0.1/index.html#
+          if existing path: //127.0.0.1/index.html#
             the new path ==> //127.0.0.1/index.html#/home/view-profile
         -->
 
@@ -91,7 +109,7 @@
         <button data-spa-route="-" onclick=" ... " class=" ... "> Cancel </button>
         <!-- reduces the existing path by 1 from end. For more specify a Number after -
 
-          if exisiting path: //127.0.0.1/index.html#/home/view-profile
+          if existing path: //127.0.0.1/index.html#/home/view-profile
             the new path ==> //127.0.0.1/index.html#/home
         -->
       </script>
@@ -113,10 +131,10 @@
         <a data-spa-route="/home/view-profile" onclick=" ... " class=" ... "> View Profile </a>
         <!-- replaces the existing path
 
-          if exisiting path: //127.0.0.1/index.html#/home
+          if existing path: //127.0.0.1/index.html#/home
             the new path ==> //127.0.0.1/index.html#/home/view-profile
 
-          if exisiting path: //127.0.0.1/index.html#/home/settings
+          if existing path: //127.0.0.1/index.html#/home/settings
             the new path ==> //127.0.0.1/index.html#/home/view-profile
         -->
 
@@ -125,7 +143,7 @@
         <button data-spa-route=">-" onclick=" ... " class=" ... "> Cancel </button>
         <!-- reduces the existing path by 1 from end. For more specify a Number after -
 
-          if exisiting path: //127.0.0.1/index.html#/home/edit-profile
+          if existing path: //127.0.0.1/index.html#/home/edit-profile
             the new path ==> //127.0.0.1/index.html#/home (Stored for later route by < )
         -->
 
@@ -133,7 +151,7 @@
         <button data-spa-route="<" onclick=" ... " class=" ... "> Yes, Cancel </button>
         <-- replaces with the stored path
 
-          if exisiting path: //127.0.0.1/index.html#/home/edit-profile
+          if existing path: //127.0.0.1/index.html#/home/edit-profile
 
           the stored path ==> //127.0.0.1/index.html#/home
 
@@ -202,7 +220,7 @@
 
   <section>
     <h2>Initializing Routes.</h2>
-    <p>By default, the routes are initalized on render of the component.
+    <p>By default, the routes are initialized on render of the component.
       However, if the <mark>data-spa-route</mark> elements are added to DOM after component render (like building table using 3rd party library)
       and need to initialize routes for those elements use <mark>spa.initRoutes</mark>.
       <p><i>componentX.html</i></p>
@@ -265,7 +283,7 @@
       </form>
       </script>
     </p>
-    <p>In addition to the restriction a cutom function can be called using <mark>[onNavAway]</mark> event attribute.
+    <p>In addition to the restriction a custom function can be called using <mark>[onNavAway]</mark> event attribute.
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
         <form id="FormX" class="BLOCK-SPA-NAV" onNavAway="{$}confirmBeforeLeave();">
@@ -288,14 +306,14 @@
       </script>
     </p>
 
-    <p>Instead of a cutom function, the <mark>[onNavAway]</mark> event attribute can point to an element within the container,
+    <p>Instead of a custom function, the <mark>[onNavAway]</mark> event attribute can point to an element within the container,
       whose [onclick] event will be triggered based on it's enable state.
       <p><i>componentX.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
         <form id="FormX" class="BLOCK-SPA-NAV" onNavAway="#btnCancel">
           <!-- When the user navigates away using browser's navigation (BACK or RELOAD) or any other UI element outside this FORM,
             this component's #btnCancel button's onclick event will be triggered (if the button state is enabled) with NO PARAMS.
-            However, the toUrl and byEl's [id] and [data-spa-route] attributes will be added to the target (#btnCancel) element.
+            However, the toUrl and by element's [id] and [data-spa-route] attributes will be added to the target (#btnCancel) element.
             Just follow the below example and investigate the function arguments and it's data properties.
           -->
 
@@ -373,7 +391,7 @@
   <section>
     <h2>Routes by a[href]</h2>
     <h6>(from v2.53.0+)</h6>
-    <p>If needed, the routes can be done using <mark>[href]</mark> or any other <mark>[data-]</mark> (preferred) attribut by indicating the attribute in configuration.
+    <p>If needed, the routes can be done using <mark>[href]</mark> or any other <mark>[data-]</mark> (preferred) attribute by indicating the attribute in configuration.
       <p><i>index.html</i></p>
       <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="index.html" data-lines="20">
       <!DOCTYPE html>
