@@ -1,4 +1,4 @@
-/** @license SPA.js | (c) Kumararaja | License (MIT) */
+/** @license (MIT) SPA.js | (c) Kumararaja */
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -59,7 +59,7 @@ window['app']['api'] = window['app']['api'] || {};
 }());
 
 /* ***** lodash begins ***** */
-/* ***** https://github.com/lodash/lodash/blob/master/LICENSE ***** */
+/** @license (MIT) lodash | https://github.com/lodash/lodash/blob/master/LICENSE */
 (function(){
   if (window['_']) return;
 
@@ -2400,6 +2400,7 @@ window['app']['api'] = window['app']['api'] || {};
 
 
 /* SPA begins */
+/** @license (MIT) SPA.js (core) | https://github.com/sucom/SPA.js/blob/master/LICENSE */
 (function() {
 
   /* Establish the win object, `window` in the browser */
@@ -2419,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.69.1';
+  spa.VERSION = '2.70.0';
 
   //var _eKey = ['','l','a','v','e',''];
 
@@ -4431,39 +4432,47 @@ window['app']['api'] = window['app']['api'] || {};
     }
     return newUrl;
   }
+
   $.cachedScript = function (url, options) {
     spa.console.log('Ajax for script:',url, 'options:',options);
-    /* allow user to set any option except for dataType, cache, and url */
+    /* allow user to set any option except for dataType and url */
     url = _getFullPath4Component(url, (options? options['spaComponent'] : '') );
-    if (!(url.endsWithStrIgnoreCase( '.js' ))) {
+    if (!(url.endsWithStrIgnoreCase( '.js' )) && (url.indexOf('?')<0)) {
       url += spa.defaults.components.scriptExt;
     }
-    options = $.extend(options || {}, {
+    options = options || {};
+    if (!options.hasOwnProperty('cache')) {
+      options['cache'] = true;
+    }
+    options = $.extend(options, {
       dataType: "script",
-      cache: true,
       url: url
     });
-    spa.console.info("$.cachedScript('" + url + "')");
-    /* Use $.ajax() since it is more flexible than $.getScript
-     * Return the jqXHR object so we can chain callbacks
-     */
+    spa.console.info("Loading Script('" + url + "') ...");
     return $.ajax(options);
   };
 
   $.cachedStyle = function (styleId, url, options) {
-    /* allow user to set any option except for dataType, cache, and url */
-    options = $.extend(options || {}, {
+    /* allow user to set any option except for dataType and url */
+    var $styleContainerEl = $('#'+styleId, 'head');
+    options = options || {};
+
+    if (!options.hasOwnProperty('cache')) {
+      options['cache'] = true;
+    }
+    if (!$styleContainerEl.length) {
+      options['cache'] = spa.defaults.components.offline; //1st load from the server
+    }
+
+    options = $.extend(options, {
       dataType: "text",
-      cache: true,
       url: url,
       success: function (cssStyles) {
+        $styleContainerEl.remove();
         $("head").append("<style id='" + (styleId) + "' type='text/css'>" + cssStyles + "<\/style>");
       }
     });
-    spa.console.info("$.cachedScript('" + url + "')");
-    /* Use $.ajax() since it is more flexible than $.getScript
-     * Return the jqXHR object so we can chain callbacks
-     */
+    spa.console.info("Loading style('" + url + "') ... ");
     return $.ajax(options);
   };
 
@@ -4592,21 +4601,27 @@ window['app']['api'] = window['app']['api'] || {};
   };
 
   /* Loading style */
-  spa.loadStyle = function (styleId, stylePath, useStyleTag, tAjaxRequests) {
+  spa.loadStyle = function (styleId, stylePath, styleCache, tAjaxRequests) {
     styleId = styleId.replace(/#/, "");
-    useStyleTag = useStyleTag || false;
+    styleCache = !!styleCache;
     tAjaxRequests = tAjaxRequests || [];
     spa.console.group("spaStylesLoad");
     if (spa.isBlank(stylePath)) {
       spa.console.error("style path [" + stylePath + "] for [" + styleId + "] NOT defined.");
     }
     else {
-      if (useStyleTag) {
-        spa.addStyle(styleId, stylePath);
+      var getCss = !styleCache;
+      if (styleCache) {
+        if ($('#'+styleId, 'head').length) {
+          spa.console.info("Style('" + stylePath + "') already loaded.");
+        } else {
+          getCss = true;
+        }
       }
-      else { /* load style style-URL */
+      if (getCss) {
+        //1st load from the server
         tAjaxRequests.push(
-          $.cachedStyle(styleId, stylePath).done(function (style, textStatus) {
+          $.cachedStyle(styleId, stylePath, {cache: spa.defaults.components.offline}).done(function (style, textStatus) {
             spa.console.info("Loaded style [" + styleId + "] from [" + stylePath + "]. STATUS: " + textStatus);
           })
         );
@@ -4674,16 +4689,14 @@ window['app']['api'] = window['app']['api'] || {};
         if (tmplAxOptions['params']) {
           tmplPath = spa.api.url(tmplPath, tmplAxOptions['params']);
         }
-        if (tmplReload) {
-          spa.console.warn(">>>>>>>>>> Making New Template Request");
-        }
+        spa.console.warn(">>>>>>>>>> Making New Template Request");
 
         var axTemplateRequest = $.ajax({
           url: tmplPath,
           method: axMethod,
           headers : tmplAxOptions['headers'],
           data: tmplAxOptions['payload'],
-          cache: !tmplReload,
+          cache: spa.defaults.components.offline, //1st load from the server
           dataType: 'html',
           onTmplError: tmplAxOptions['onError'],
           success: function (template) {
@@ -5961,6 +5974,7 @@ window['app']['api'] = window['app']['api'] || {};
         , render:''
         , callback:''
         , extend$data: true
+        , offline: false
       }
     , routes: {
         base: '#',
@@ -6092,9 +6106,10 @@ window['app']['api'] = window['app']['api'] || {};
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data',
                             'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders',
-                            'dataParams','dataType','dataModel','dataCache',
+                            'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
-                            'dataValidate','dataProcess','dataPreProcessAsync','beforeRender','componentName'];
+                            'dataValidate','dataProcess','dataPreProcessAsync',
+                            'beforeRender','beforeRefresh','componentName'];
           var baseProperties = _.merge({}, options);
           _.each(baseProps, function(baseProp){
             delete options[baseProp];
@@ -6619,7 +6634,7 @@ window['app']['api'] = window['app']['api'] || {};
 
           if (renderOptions.hasOwnProperty('style') && spa.is(renderOptions.style, 'string')) {
             renderOptions['dataStyles'] = {};
-            renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : renderOptions.style;
+            renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : (((/^(\.\/)/).test(renderOptions.style))? (_cFldrPath+(renderOptions.style).substr(2)) : (renderOptions.style));
             delete renderOptions['style'];
             spa.console.info('Using component style for ['+componentName+']');
             spa.console.info(renderOptions);
@@ -6666,10 +6681,10 @@ window['app']['api'] = window['app']['api'] || {};
       //load component's base prop from .json or .(min.)js
 
       if (_cScriptFile) {
-        spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']');
-        $.cachedScript(_cScriptFile, {success:_parseComp}).done(spa.noop)
+        spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']'); //1st load from server
+        $.cachedScript(_cScriptFile, {success:_parseComp, cache:spa.defaults.components.offline}).done(spa.noop)
           .fail(function(){
-            console.warn('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']. Continue Loading component with default properties.');
+            spa.console.warn('Failed Loading component ['+componentName+'] source from ['+_cScriptFile+']. Continue Loading component with default properties.');
             _parseComp();
           });
       } else {
@@ -7124,6 +7139,7 @@ window['app']['api'] = window['app']['api'] || {};
       , dataModel: ''
       , dataValidate: false
       , dataProcess: ''
+      , dataUrlCache: false
       , dataCache: false
       , extend$data : spa.defaults.components.extend$data
 
@@ -7313,7 +7329,7 @@ window['app']['api'] = window['app']['api'] || {};
       var scriptPath;
       vScriptsList = _.map(vScriptsNames, function (scriptId) {
         scriptPath = _getFullPath4Component(vScripts[scriptId], rCompName);
-        if (!(scriptPath.endsWithStrIgnoreCase( '.js' ))) {
+        if (!(scriptPath.endsWithStrIgnoreCase( '.js' )) && (scriptPath.indexOf('?')<0)) {
           scriptPath += spa.defaults.components.scriptExt;
         }
         return ((spaRVOptions.dataScriptsCache? '' : '~') + scriptPath);
@@ -7554,7 +7570,7 @@ window['app']['api'] = window['app']['api'] || {};
             if (!spa.isBlank(spaRVOptions.dataUrlParams)){
               dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
             }
-            spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions.dataCache) + "] from URL =>" + dataModelUrl);
+            spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache']) + "] from URL =>" + dataModelUrl);
             var ajaxReqHeaders = spaRVOptions.dataUrlHeaders;
             if (spa.isBlank(ajaxReqHeaders)) {
               ajaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
@@ -7573,7 +7589,7 @@ window['app']['api'] = window['app']['api'] || {};
                 method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
                 headers: ((spa.is(ajaxReqHeaders, 'function'))? ajaxReqHeaders() : ajaxReqHeaders),
                 data: dataUrlPayLoad,
-                cache: spaRVOptions.dataCache,
+                cache: spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache'],
                 dataType: spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text'),
                 success: function (result) {
                   var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
@@ -7798,11 +7814,12 @@ window['app']['api'] = window['app']['api'] || {};
             }
 
             spa.console.info("External styles to be loaded [cache:" + (spaRVOptions.dataStylesCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vStyles));
-            var vStylesNames = _.keys(vStyles);
+            var vStylesNames = _.keys(vStyles), fullStylePath;
 
             spa.console.group("spaLoadingStyles");
             _.each(vStylesNames, function (styleId) {
-              spaAjaxRequestsQue = spa.loadStyle(styleId, vStyles[styleId], spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
+              fullStylePath = _getFullPath4Component(vStyles[styleId], rCompName);
+              spaAjaxRequestsQue = spa.loadStyle(styleId, fullStylePath, spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
             });
             spa.console.info("External Styles Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
             spa.console.groupEnd("spaLoadingStyles");
