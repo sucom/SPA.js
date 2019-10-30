@@ -2,13 +2,10 @@
   <h1>Component's Script</h1>
 
   <h2>The Basics</h2>
-  <p>A component Script file <mark>componentX.js</mark> contains two SPA component helper functions.</p>
+  <p>A component Script file <mark>componentX.js</mark> contains a single SPA component helper function to define its properties.</p>
 
   <blockquote>
-      <mark>spa.$( 'componentX' , { } )</mark> to define Component's base properties like template, target, dataUrl etc.
-  </blockquote>
-  <blockquote>
-    <mark>spa.$extend( 'componentX' , { } )</mark> to define Component's extended properties like events
+      <mark>spa.$( 'componentX' , { } )</mark> to define Component's base properties (like template, target, dataUrl etc.) and extended properties like events
       and other custom actions to be performed on component UI.
   </blockquote>
 
@@ -16,12 +13,24 @@
     spa.$('componentX', {
 
       //base properties
+      target: '',
+      dataUrl: '',
 
-    });
+      // ...
 
-    spa.$extend('componentX', {
+      // ...
 
       //extended properties
+
+      renderCallback: function() {
+
+      },
+
+      events: [ { target: 'element-selector', onClick: function() {} } ]
+
+      // ...
+
+      // ...
 
     });
   </script>
