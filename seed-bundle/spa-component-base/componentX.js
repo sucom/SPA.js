@@ -1,5 +1,5 @@
-spa.$('componentX', {
-  //style:'.', // Enable only if this component has specific styles in componentX.css
+spa.$('componentXpath', {
+  //style:'.', // Enable only if this component has specific styles in componentXpath/componentXfile.css
 
   target: '#targetContainer',
 
