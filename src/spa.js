@@ -2420,7 +2420,7 @@ window['app']['api'] = window['app']['api'] || {};
   win.spa = win.__ = win._$ = win.w3 = spa;
 
   /* Current version. */
-  spa.VERSION = '2.71.0-RC1';
+  spa.VERSION = '2.71.0-RC2';
 
   //var _eKey = ['','l','a','v','e',''];
 
@@ -4434,6 +4434,15 @@ window['app']['api'] = window['app']['api'] || {};
     return newUrl;
   }
 
+  $.ajaxSetup({
+    converters: {
+		  "text javascript": function( responseText ) {
+        //if (!(/^(\s*)</.test(responseText)))
+        if (responseText[0] != '<')
+          $.globalEval( responseText );
+		  }
+	  }
+  });
   $.cachedScript = function (url, options) {
     spa.console.log('Ajax for script:',url, 'options:',options);
     /* allow user to set any option except for dataType and url */
@@ -4446,7 +4455,7 @@ window['app']['api'] = window['app']['api'] || {};
       options['cache'] = true;
     }
     options = $.extend(options, {
-      dataType: "script",
+      dataType: "javascript",
       url: url
     });
     spa.console.info("Loading Script('" + url + "') ...");
@@ -6489,10 +6498,15 @@ window['app']['api'] = window['app']['api'] || {};
     }
     return isDestroyed;
   };
-  spa.showComponent = function (componentName) {
-    componentName = (componentName || '').replace(/[^a-z0-9]/gi, '_').trim();
+  spa.showComponent = function (componentPath, options) {
+    var componentName = (componentPath || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (componentName) {
-      $('[data-rendered-component="'+componentName+'"]').show();
+      var $componentContainer = $('[data-rendered-component="'+componentName+'"]');
+      if ($componentContainer.length) {
+        $componentContainer.show();
+      } else {
+        spa.$render(componentPath, options);
+      }
     }
   };
   spa.hideComponent = function (componentName) {
@@ -6771,10 +6785,10 @@ window['app']['api'] = window['app']['api'] || {};
     } else {
       //load component's base prop from .json or .(min.)js
       if (_cScriptFile) {
-        spa.console.info('Loading component ['+componentName+'] source from ['+_cScriptFile+']'); //1st load from server
+        spa.console.info("Attempt to load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"]"); //1st load from server
         $.cachedScript(_cScriptFile, {success:_parseComp, cache:spa.defaults.components.offline}).done(spa.noop)
           .fail(function(){
-            console.info('Failed to Load component ['+componentNameFull+'] properties from ['+_cScriptFile+']. Continue Loading component with default properties.');
+            spa.console.info("Attempt to Load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"] has FAILED. Not to worry. Continuing to render with default properties.");
             _parseComp();
           });
       } else {
@@ -8248,7 +8262,7 @@ window['app']['api'] = window['app']['api'] || {};
               spa.console.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
             })
             .fail(function () {
-              console.error("External Data/Templates/Styles/Scripts Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
+              console.error("External Data|Template|Style|Script Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
             });//.done(spa.runOnceOnRender);
         }
         else {
@@ -9604,8 +9618,7 @@ window['app']['api'] = window['app']['api'] || {};
     }
   }
   window.onerror = function(eMsg, source, line){
-    //if (eMsg.indexOf('SyntaxError')>0)
-      console.warn('Invalid Content: Check the network/path/content.', eMsg, source, line);
+    console.warn('Invalid Content: Check the network/path/content.', eMsg, source, line);
   };
 
   function _routeSpaUrlOnHashChange(){
