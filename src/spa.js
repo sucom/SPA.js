@@ -31,34 +31,8 @@
  * ===========================================================================
  */
 
-window['app'] = window['app'] || {api:{}};
-window['app']['api'] = window['app']['api'] || {};
-
-/* Avoid 'console' errors in browsers that lack a console*/
-(function() {
-  var method;
-  var noop = function(){};
-  var methods = [
-      'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
-      'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
-      'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd',
-      'timeStamp', 'trace', 'warn'
-  ];
-  var length = methods.length;
-  var console = (window.console = window.console || {});
-  while (length--) {
-    method = methods[length];
-    //Only stub undefined methods.
-    if (!console[method]) {
-      console[method] = noop;
-    }
-  }
-
-  if (!('none' in window)) window['none'] = '';
-  if (!('noop' in window)) window['noop'] = function(){};
-}());
-
-/* ***** lodash begins ***** */
+/* ***** lodash custom begins ***** */
+/* ToBe Replaced */
 /** @license (MIT) lodash | https://github.com/lodash/lodash/blob/master/LICENSE */
 (function(){
   if (window['_']) return;
@@ -2396,13 +2370,36 @@ window['app']['api'] = window['app']['api'] || {};
   }
 
 })();
-/* ***** lodash ends ***** */
-
+/* ***** lodash custom ends ***** */
 
 /* SPA begins */
 /** @license (MIT) SPA.js (core) | https://github.com/sucom/SPA.js/blob/master/LICENSE */
-(function() {
 
+/* Avoid 'console' errors in browsers that lack a console */
+(function() {
+  var method;
+  var noop = function(){};
+  var methods = [
+      'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
+      'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
+      'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd',
+      'timeStamp', 'trace', 'warn'
+  ];
+  var length = methods.length;
+  var console = (window.console = window.console || {});
+  while (length--) {
+    method = methods[length];
+    //Only stub undefined methods.
+    if (!console[method]) {
+      console[method] = noop;
+    }
+  }
+
+  if (!('none' in window)) window['none'] = '';
+  if (!('noop' in window)) window['noop'] = function(){};
+}());
+
+(function() {
   /* Establish the win object, `window` in the browser */
   var win = this;
 
@@ -2416,19 +2413,27 @@ window['app']['api'] = window['app']['api'] || {};
   /*Flag for URL Hash Routing*/
   //win.isSpaHashRouteOn=false;
 
-  /* Expose spa to window */
-  win.spa = win.__ = win._$ = win.w3 = spa;
+  /* Expose spa to window with aliaz */
+  win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.71.0-RC2';
+  spa.VERSION = '2.71.0';
+
+  // Creating app scope
+  var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
+  if (window['app'] && (/^html(.*)element$/i.test(appVarType))) { //HTML Element id="app"
+    window['app'] = {api:{}};
+  }
+  window['app'] = window['app'] || {api:{}};
+  window['app']['api'] = window['app']['api'] || {};
 
   //var _eKey = ['','l','a','v','e',''];
 
   /* native document selector */
-//  var _$  = document.querySelector.bind(document),
-//      _$$ = document.querySelectorAll.bind(document);
-//  if (!win['_$'])  win['_$']  = _$;
-//  if (!win['_$$']) win['_$$'] = _$$;
+  // var _$  = document.querySelector.bind(document),
+  //     _$$ = document.querySelectorAll.bind(document);
+  // if (!win['_$'])  win['_$']  = _$;
+  // if (!win['_$$']) win['_$$'] = _$$;
 
   /* isIE or isNonIE */
   var isById = (document.getElementById)
@@ -6145,7 +6150,7 @@ window['app']['api'] = window['app']['api'] || {};
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data',
-                            'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders',
+                            'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders','defaultPayload','stringifyPayload',
                             'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
                             'dataValidate','dataProcess','dataPreProcessAsync',
@@ -7820,7 +7825,7 @@ window['app']['api'] = window['app']['api'] || {};
           spa.console.info("Load Templates");
           spa.console.info(vTemplates);
           var tmplPayload = spaRVOptions['templateUrlPayload'];
-          if (tmplPayload && _is(tmplPayload, 'string') && (tmplPayload.indexOf('=')<0)) {
+          if ( tmplPayload && ((_is(tmplPayload, 'function')) || (_is(tmplPayload, 'string') && (tmplPayload.indexOf('=')<0)))) {
             tmplPayload = __finalValue(tmplPayload, spaRVOptions);
           }
           var tmplOptions = {
