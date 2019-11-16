@@ -853,3 +853,25 @@ blockquote {
 strong {
   font-size: 13px;
 }
+
+.indent-10 {
+  text-indent: 10px;
+}
+.indent-15 {
+  text-indent: 15px;
+}
+.indent-20 {
+  text-indent: 20px;
+}
+.indent-25 {
+  text-indent: 25px;
+}
+.indent-30 {
+  text-indent: 30px;
+}
+.indent-35 {
+  text-indent: 35px;
+}
+.indent-40 {
+  text-indent: 40px;
+}

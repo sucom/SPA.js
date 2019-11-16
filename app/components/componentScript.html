@@ -36,4 +36,109 @@
   </script>
 
   <p>Refer Component's Base and Extended Properties section for more details.</p>
+
+  <h3>Nested components</h3>
+  <p>Starting <mark>v2.71.0+</mark>, the component's folder can be nested as below.</p>
+  <ul>
+    <li><strong>app/components</strong></li>
+    <li class="indent-10">- componentX
+      <ul>
+        <li class="indent-20">- componentX1
+          <ul>
+            <li class="indent-35">componentX1.html</li>
+            <li class="indent-35">componentX1.js</li>
+          </ul>
+        </li>
+        <li class="indent-20">- componentX2
+          <ul>
+            <li class="indent-35">componentX2.html</li>
+            <li class="indent-35">componentX2.js</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li class="indent-10">- componentY
+      <ul>
+        <li class="indent-20">- componentY1
+          <ul>
+            <li class="indent-35">componentY1.html</li>
+            <li class="indent-35">componentY1.js</li>
+          </ul>
+        </li>
+        <li class="indent-20">- componentY2
+          <ul>
+            <li class="indent-35">componentY2.html</li>
+            <li class="indent-35">componentY2.js</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+
+  <br>
+  <p>In componentX1.js, define the path of the component (the path after app/components folder) with slash(/) as path separator, like the example below.</p>
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    spa.$('componentX/componentX1', {
+
+      //base properties
+      // ...
+
+      //extended properties
+      // ...
+
+    });
+  </script>
+  <p>This will register the component in app scope using a single name, replacing <mark>/</mark> with <mark>_</mark> as
+    <strong>app.</strong><mark>componentX_componentX1</mark> So, it can be accessed/referenced using a single word with <mark>_</mark> delimiter.</p>
+
+  <blockquote>
+      <p>NOTE: The nested components can be created easily with <mark><a href="https://www.npmjs.com/package/spa-cli" target="_blank">spa-cli</a></mark>
+        as well as Visual Studio Code Extension (<mark><a href="https://marketplace.visualstudio.com/items?itemName=spajs.spajs" target="_blank">spajs</a></mark></mark>)</p>
+
+        CMD&gt;<strong> spa-cli . componentX/componentX1</strong>
+  </blockquote>
+
+  <h3>To render normal component</h3>
+  <section>
+    <i>using &lt;<mark>spa-component</mark>&gt; tag</i>
+    <script type="text/code" class="code trim" data-lang="html">
+    <spa-component src="componentX"></spa-component>
+    </script>
+
+    <i>using [<mark>data-spa-component</mark>] attribute</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <div data-spa-component="componentX"></div>
+    </script>
+
+    <i>using script</i>
+    <script type="text/code" class="code trim" data-lang="JavaScript">
+      spa.$render('componentX', { ... });
+    </script>
+  </section>
+
+  <h3>To render nested component</h3>
+  <section>
+    <p>(prefix component path with $, else it will try to load server-side rendered component)</p>
+
+    <i>using &lt;<mark>spa-component</mark>&gt; tag</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <spa-component src="$componentX/componentX1"></spa-component>
+    </script>
+
+    <i>using [<mark>data-spa-component</mark>] attribute</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <div data-spa-component="$componentX/componentX1"></div>
+    </script>
+
+    <i>using script</i>
+    <script type="text/code" class="code trim" data-lang="JavaScript">
+      spa.$render('componentX/componentX1', { ... });
+    </script>
+
+  </section>
+
+
+
+
+
 </div>
