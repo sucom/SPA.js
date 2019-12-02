@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.71.0';
+  spa.VERSION = '2.72.0';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -5470,6 +5470,35 @@
     return onVirtualDOM? ($contextRoot.html().replace((new RegExp(blockedScriptTagName, 'g')), "script")) : $contextRoot;
   };
 
+  spa.bindTemplateData = function (xTemplate, data) {
+    var xContent = xTemplate;
+    if ((/^\s*#[a-z]+/i).test(xTemplate)) {
+      xContent = $(xTemplate).html();
+    }
+
+    if (spa.isBlank(data)) {
+      return xContent;
+    }
+
+    if ((/ data-bind\s*=/i).test(xContent)) {
+      xContent = spa.bindData(xTemplate, data);
+    }
+
+    if ((/{{(.+)}}/).test(xContent)) {
+      if ((typeof Handlebars != 'undefined') && Handlebars) {
+        try {
+          xContent = Handlebars.compile(xContent)(data);
+        } catch (e) {
+          console.log('Error Handlebars compile/bind.', e);
+        }
+      } else {
+        console.warn('Handlebars Template Library not found!');
+      }
+    }
+
+    return xContent;
+  };
+
   spa.togglePassword = function(elPwd){
     if (!$(elPwd).next('.icon.eye').length){
       var $eyeEl = $('<i class="icon eye"></i>');
@@ -6149,7 +6178,7 @@
           var baseProps = [ 'target','template','templateCache','templateScript',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
-                            'scripts','scriptsCache','require','dataPreRequest','data',
+                            'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind',
                             'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders','defaultPayload','stringifyPayload',
                             'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
@@ -6906,6 +6935,15 @@
     scope = scope||'body';
     pComponentName = (pComponentName || '').trim();
 
+    // <spa-template src=""> <x-template src="">
+    $(scope).find('spa-template[src]:not([data-spa-component]),x-template[src]:not([data-spa-component])').each(function(){
+      this.setAttribute('data-spa-component', this.getAttribute('src'));
+      this.setAttribute('data-skip-data-bind', 'true');
+      this.setAttribute('data-template-script', 'true');
+      this.style.display = 'none';
+    });
+
+    // <spa-component src=""> <x-component src="">
     $(scope).find('spa-component[src]:not([data-spa-component]),x-component[src]:not([data-spa-component])').each(function(){
       this.setAttribute('data-spa-component', this.getAttribute('src'));
     });
@@ -8206,7 +8244,7 @@
 
                           _init_SPA_DOM_(viewContainerId);
                           if (!skipSpaBind) {
-                            spa.dataBind(viewContainerId, spaBindData, '', true);
+                            spa.bindData(viewContainerId, spaBindData, '', true);
                           }
 
                           /*apply i18n*/
