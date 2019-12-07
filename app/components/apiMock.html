@@ -141,6 +141,10 @@ app['api'] = { liveApiPrefix: 'api/' };
     If you are not getting the mock data, watch browser's developer tool and check for 404 error to find the actual path for mock data.
   </blockquote>
 
+  <h4>Mock Data (static) Folder Root (api_)</h4>
+  <p>The default mock (static) folder root (api_) can be changed using <mark>app.api.mockRootFolder</mark> key. Note: The path is with reference to the start page (e.g. index.html)</p>
+  <p>If the mock (Static) data is hosted on another server, it can be pointed to that using <mark>app.api.mockBaseUrl</mark>. Note: <mark>app.api.mockRootFolder</mark> value will be appended at the end. So, set to blank, if needed.</p>
+
   </section>
 
 </div>
