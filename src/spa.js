@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.72.0';
+  spa.VERSION = '2.73.0';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -8754,8 +8754,9 @@
     urls:{},
 
     mock:false,
-    mockBaseUrl:'',
+    mockBaseUrl:'', //TOBE REMOVED!
     mockRootFolder:'api_',
+    mockDataFile: 'data.json',
 
     defaultPayload:false,
     forceParamValuesInMockUrls:false,
@@ -9243,8 +9244,9 @@
   function _mockSysTest() {
     if (app['api']) {
       _ajax({url: _mockFinalUrl(), method:'HEAD', error:function(){
-          var mockBaseUrl  = ((spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || location.origin).trimRightStr('/')) + '/',
-              mockRootFldr = ((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
+          var mockBaseUrlExternal = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '';
+          var mockBaseUrl  = ((mockBaseUrlExternal || location.origin).trimRightStr('/')) + '/',
+              mockRootFldr = mockBaseUrlExternal? '' : ((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
               newMockAddress = prompt('Enter Mock Root Address: http[s]://server.address[:port]/root-folder', mockBaseUrl+mockRootFldr);
           if (newMockAddress) {
             var rootIndex = newMockAddress.indexOf('/', 8),
@@ -9265,9 +9267,10 @@
     liveApiPrefixStr = liveApiPrefixStr || _isLiveApiUrl(liveUrl);
 
     var finalMockUrl = '',
-        mockBaseUrl = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '',
-        mockRootFldr = ((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/',
-        finalMockUrl = (liveUrl||'').replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), mockRootFldr).replace(/(\/)*\?/, reqMethod+"/data.json?").replace(/\?$/, '');
+        mockBaseUrl  = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '',
+        mockRootFldr = mockBaseUrl? '' : (((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/'),
+        mockDataFile = spa.findSafe(app, 'api.mockDataFile') || spa.findSafe(spa, 'api.mockDataFile') || '',
+        finalMockUrl = (liveUrl||'').replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), mockRootFldr).replace(/(\/)*\?/, reqMethod+'/'+mockDataFile+'?').replace(/\?$/, '');
 
     if (mockBaseUrl) {
       mockBaseUrl = (mockBaseUrl.trimRightStr('/'))+'/';
