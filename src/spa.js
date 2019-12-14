@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.73.0';
+  spa.VERSION = '2.74.0';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -9028,7 +9028,10 @@
 
   function _isLiveApiUrl(apiUrl, liveApiUrls){
     var retValue = '',
-        liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', '');
+        liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', ''),
+        isMockUrl = apiUrl.beginsWithStr('!');
+
+    apiUrl = apiUrl.trimLeftStr('!');
     if (liveApiPrefix) {
       var liveApiPrefixLst = [], i=0, len=0, liveApiPrefixX;
       if (spa.is(liveApiPrefix, 'string')) {
@@ -9045,6 +9048,8 @@
       } else {
         retValue = apiUrl.beginsWithStr(liveApiPrefix)? liveApiPrefix : (!_isRelativePath(apiUrl) && apiUrl.indexOf(liveApiPrefix)>0 ? liveApiPrefix : '');
       }
+    } else if (isMockUrl) {
+      retValue = '??';
     }
     return retValue;
   }
@@ -9266,6 +9271,16 @@
     reqMethod        = reqMethod || '';
     liveApiPrefixStr = liveApiPrefixStr || _isLiveApiUrl(liveUrl);
 
+    if (liveApiPrefixStr === '??') {
+      var dblSlashIdx = liveUrl.indexOf('//');
+      if (dblSlashIdx < 0) {
+        liveApiPrefixStr = '/MOCK-ROOT/';
+        liveUrl = liveApiPrefixStr+(liveUrl.trimLeftStr('/'));
+      } else {
+        liveApiPrefixStr = liveUrl.substring(0, liveUrl.indexOf('/', dblSlashIdx+2)+1);
+      }
+    }
+
     var finalMockUrl = '',
         mockBaseUrl  = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '',
         mockRootFldr = mockBaseUrl? '' : (((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/'),
@@ -9313,8 +9328,8 @@
       } else {
         var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
         options['type'] = 'GET'; //force GET for mock URLs
-        actualUrl = actualUrl.trimLeftStr('!');
         liveApiPrefixStr = _isLiveApiUrl(actualUrl);
+        actualUrl = actualUrl.trimLeftStr('!');
         if (liveApiPrefixStr) {
           if (!actualUrl.containsStr('\\?')) {
             actualUrl = actualUrl.trimRightStr('/') + '?';
