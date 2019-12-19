@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.74.0';
+  spa.VERSION = '2.75.0-RC1';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -2843,9 +2843,9 @@
     }
     var jsonObj = {};
     try {
-      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (eval("(" + thisStr + ")")) );
+      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (Function('"use strict";return (' + thisStr + ')')()) );
     } catch(e){
-      console.error('Error JSON Parse: Invalid String >> "'+str+'"' + e.stack);
+      console.error('Error JSON Parse: Invalid String >> "'+str+'"\n>> ' + (e.stack.substring(0, e.stack.indexOf('\n'))) );
     }
     return jsonObj;
   };
@@ -6931,20 +6931,48 @@
     return spaCompOptions.hasOwnProperty('data')? spaCompOptions.data : {};
   }
 
+  function _spaTagsSelector(tagNames){
+    return tagNames.split(',').map(function(tagName){
+      return (tagName.trim())+'[src]:not([data-spa-component])';
+    }).join(',');
+  }
+
   spa.renderComponentsInHtml = function (scope, pComponentName) {
     scope = scope||'body';
     pComponentName = (pComponentName || '').trim();
 
     // <spa-template src=""> <x-template src="">
-    $(scope).find('spa-template[src]:not([data-spa-component]),x-template[src]:not([data-spa-component])').each(function(){
+    var templateTags = _spaTagsSelector('spa-template,x-template');
+    $(scope).find(templateTags).each(function(){
       this.setAttribute('data-spa-component', this.getAttribute('src'));
       this.setAttribute('data-skip-data-bind', 'true');
       this.setAttribute('data-template-script', 'true');
       this.style.display = 'none';
     });
 
+    // <spa-html src=""> <x-html src=""> with optional [data] attribute
+    var htmlTags = _spaTagsSelector('spa-html,x-html');
+    $(scope).find(htmlTags).each(function(){
+      var htmlSrc = this.getAttribute('src');
+      var isSpaComponent = ((htmlSrc[0] === '$') || !(/[^a-z0-9]/ig).test( htmlSrc ));
+      if (isSpaComponent && !spa.components[htmlSrc.replace(/[^a-z0-9]/gi,'_')]) {
+        var cOptions = {
+          templateScript: true
+        };
+        var skipDataBind = (!(this.hasAttribute('data') || this.hasAttribute('data-url')));
+        if (skipDataBind) {
+          cOptions['skipDataBind'] = true;
+        } else if (!this.hasAttribute('data-url')) {
+          cOptions['data'] = this.hasAttribute('data')? spa.toJSON(this.getAttribute('data')) : {};
+        }
+        spa.$(htmlSrc, cOptions);
+      }
+      this.setAttribute('data-spa-component', htmlSrc);
+    });
+
     // <spa-component src=""> <x-component src="">
-    $(scope).find('spa-component[src]:not([data-spa-component]),x-component[src]:not([data-spa-component])').each(function(){
+    var componentTags = _spaTagsSelector('spa-component,x-component');
+    $(scope).find(componentTags).each(function(){
       this.setAttribute('data-spa-component', this.getAttribute('src'));
     });
 
@@ -6966,6 +6994,9 @@
         }
 
         if (spaCompName) {
+          if (!spa.components[spaCompName] && (el.hasAttribute('no-script') || el.hasAttribute('noscript') || el.hasAttribute('nojs') || el.hasAttribute('no-js'))) {
+            spa.$(spaCompName, {});
+          }
 
           if (!el.id) {
             var _spaCompName = String(spaCompName).trim();
@@ -7665,8 +7696,11 @@
             var localDataModelObj = {};
 
             if (_isValidEvalStr(localDataModelName)) {
-              if (typeof eval("(" + localDataModelName + ")") != "undefined") {
-                eval("(localDataModelObj=" + localDataModelName + ")");
+              try {
+                // _evStr
+                localDataModelObj = (Function('"use strict";return (' + localDataModelName + ')')());
+              } catch(e) {
+                console.error('Error in spa.$(\''+(spaRVOptions['componentName'])+'\'): Invalid Data Model >> "local:'+localDataModelName+'"\n>> ' + (e.stack.substring(0, e.stack.indexOf('\n'))) );
               }
               spa.console.info("Using LOCAL Data Model: " + localDataModelName);
             }
@@ -8322,14 +8356,25 @@
   };
 
   function _disabledElClick(e) {
-    var $el = $(this);
+    var targetEl = this
+      , $el = $(targetEl);
+
     if ($el.hasClass('disabled') || $el.is('[disabled]') || $el.is(':disabled') ) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
       return;
     } else {
-      eval( $el.attr('onclicknative') );
+      var elClick = targetEl.getAttribute('onclickthis');
+      if ( elClick && (!(('null' == elClick) || ('undefined' == elClick))) ) {
+        try {
+          // _evStr
+          elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
+        } catch(e) {
+          console.error((e.stack.substring(0, e.stack.indexOf('\n')))
+            +'! Failed to trigger [onclick(:->onclickthis)] event on Element:\n', targetEl);
+        }
+      }
     }
   }
   function _initSpaElements(scope){
@@ -8338,7 +8383,7 @@
       , hrefNonRouteFilter = _routeByHref? '.no-spa-route' : ''
       , $aLinksEx = $context.find('a[href]:not([href^="#"]):not([href^="javascript:"]):not([target])'+hrefNonRouteFilter)
       , $aLinksIn = $context.find('a:not([href])')
-      , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclicknative])');
+      , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclickthis])');
 
     //Fix Forms
     $forms.filter(function(){
@@ -8356,7 +8401,7 @@
     //Fix clickable elements button for disable
     $clickEls.filter(function(){
       return !$(this).closest('pre').length;
-    }).addClass('as-btn').renameAttr('onclick', 'onclicknative').on('click', _disabledElClick);
+    }).addClass('as-btn').renameAttr('onclick', 'onclickthis').on('click', _disabledElClick);
   }
   spa.initElementsIn = _initSpaElements;
 
@@ -9922,7 +9967,8 @@
     var spaRoutePath = spa.urlHash([], _urlHashBase);
     //console.clear();
     //console.log('Current Route:', spaRoutePath);
-    var $routeEl    = $(this)
+    var targetEl = this
+      , $routeEl = $(targetEl)
       , routeData
       , usePrevHash
       , delayUpdate
@@ -9930,7 +9976,7 @@
       , routeName
       , newHashUrl
       , continueAutoRoute
-      , elClick = $routeEl.attr('onrouteclick');
+      , elClick = targetEl.getAttribute('onrouteclick') || '';
 
     if ($routeEl.hasClass('disabled') || $routeEl.is(':disabled')) {
       e.stopImmediatePropagation();
@@ -9977,7 +10023,16 @@
       //console.log('Dynamic Route URL', routeName);
     }
 
-    if (elClick) eval( elClick );
+    if ((elClick && (!(('null' == elClick) || ('undefined' == elClick))))
+      && (!($routeEl.hasClass('disabled') || $routeEl.is('[disabled]') || $routeEl.is(':disabled')))) {
+      try {
+        // _evStr
+        elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
+      } catch (e) {
+        console.error((e.stack.substring(0, e.stack.indexOf('\n')))
+          +'! Failed to trigger [onclick(:->onrouteclick)] event on Element:\n', targetEl);
+      }
+    }
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
       $routeEl.removeClass('AUTO-ROUTING');
