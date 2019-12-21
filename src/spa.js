@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC1';
+  spa.VERSION = '2.75.0-RC2';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -4439,14 +4439,27 @@
     return newUrl;
   }
 
+  function _ajaxScriptHandle( responseText, axOptions ) {
+    var xScript = document.createElement( "script" );
+    xScript.setAttribute( 'id', 'js-'+spa.now() );
+    if (spa.defaults.csp.nonce) {
+      xScript.setAttribute( 'nonce', spa.defaults.csp.nonce );
+    }
+    xScript.text = responseText;
+    document.head.appendChild( xScript ).parentNode.removeChild( xScript );
+  }
   $.ajaxSetup({
     converters: {
-		  "text javascript": function( responseText ) {
-        //if (!(/^(\s*)</.test(responseText)))
-        if (responseText[0] != '<')
-          $.globalEval( responseText );
-		  }
-	  }
+      "text javascript": function(){},
+      "text spaComponent": function(){}
+    },
+    dataFilter: function (rawResponse, dataType) {
+      if (dataType === 'javascript' || dataType === 'spaComponent') {
+        _ajaxScriptHandle(rawResponse, this);
+        rawResponse = '';
+      }
+      return rawResponse;
+    }
   });
   $.cachedScript = function (url, options) {
     spa.console.log('Ajax for script:',url, 'options:',options);
@@ -4459,8 +4472,10 @@
     if (!options.hasOwnProperty('cache')) {
       options['cache'] = true;
     }
+    if (!options.hasOwnProperty('dataType')) {
+      options['dataType'] = 'javascript';
+    }
     options = $.extend(options, {
-      dataType: "javascript",
       url: url
     });
     spa.console.info("Loading Script('" + url + "') ...");
@@ -4484,7 +4499,8 @@
       url: url,
       success: function (cssStyles) {
         $styleContainerEl.remove();
-        $("head").append("<style id='" + (styleId) + "' type='text/css'>" + cssStyles + "<\/style>");
+        var styleNonceAttr = (spa.defaults.csp.nonce)? (' nonce="'+(spa.defaults.csp.nonce)+'"') : '';
+        $("head").append('<style id="' + (styleId) + '" type="text/css"'+styleNonceAttr+'>' + cssStyles + '<\/style>');
       }
     });
     spa.console.info("Loading style('" + url + "') ... ");
@@ -4504,8 +4520,9 @@
     }
     else {
       spa.console.info("script [" + scriptId + "] NOT found. Added script tag with src [" + scriptSrc + "]");
-      var scriptSrcAttr = (scriptSrc)? "src='" + scriptSrc + "'" : "";
-      $("#spaScriptsContainer").append("<script id='" + (scriptId) + "' type='text/javascript' "+scriptSrcAttr+"><\/script>");
+      var scriptSrcAttr = (scriptSrc)? (' src="' + scriptSrc + '"') : '';
+      var scriptNonceAttr = (spa.defaults.csp.nonce)? (' nonce="'+(spa.defaults.csp.nonce)+'"') : '';
+      $("#spaScriptsContainer").append('<script id="' + (scriptId) + '" type="text/javascript"'+scriptSrcAttr+scriptNonceAttr+'><\/script>');
     }
     spa.console.groupEnd("spaAddScriptTag");
   };
@@ -4670,7 +4687,9 @@
     var Tag4BlockedScript = '_BlockedScript_';
     tmplBody = tmplBody.replace(/<(\s)*script/gi,'<'+Tag4BlockedScript+' src-ref="'+tmplId+'"').replace(/<(\s)*(\/)(\s)*script/gi,'</'+Tag4BlockedScript)
             .replace(/<(\s)*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<(\s)*(\/)(\s)*link/gi,'</_LINKTAGINTEMPLATE_');
-    $("#spaViewTemplateContainer").append("<script id='" + (tmplId) + "' type='text/" + tmplType + "'>" + tmplBody + "<\/script>");
+
+    var scriptNonceAttr = (spa.defaults.csp.nonce)? (' nonce="'+(spa.defaults.csp.nonce)+'"') : '';
+    $("#spaViewTemplateContainer").append('<script id="'+(tmplId)+'" type="text/'+tmplType+'"'+scriptNonceAttr+'>' + tmplBody + '<\/script>');
   };
   spa.updateTemplateScript = function (tmplId, tmplBody, tmplType){
     tmplId = tmplId.replace(/#/, "");
@@ -6058,6 +6077,9 @@
           msg: 'i18n:invalid.input'
         }
     }
+    , csp : {
+      nonce: ''
+    }
     , set: function(oNewValues, newValue) {
         if (spa.is(oNewValues,'object')) {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
@@ -6817,10 +6839,10 @@
       spa.console.info(spa.components[componentName]);
       _renderComp();
     } else {
-      //load component's base prop from .json or .(min.)js
+      //load component's base prop from .(min.)js
       if (_cScriptFile) {
         spa.console.info("Attempt to load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"]"); //1st load from server
-        $.cachedScript(_cScriptFile, {success:_parseComp, cache:spa.defaults.components.offline}).done(spa.noop)
+        $.cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:spa.defaults.components.offline}).done(spa.noop)
           .fail(function(){
             spa.console.info("Attempt to Load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"] has FAILED. Not to worry. Continuing to render with default properties.");
             _parseComp();
@@ -6828,7 +6850,6 @@
       } else {
         _parseComp();
       }
-
     }
   };
 
@@ -6994,7 +7015,7 @@
         }
 
         if (spaCompName) {
-          if (!spa.components[spaCompName] && (el.hasAttribute('no-script') || el.hasAttribute('noscript') || el.hasAttribute('nojs') || el.hasAttribute('no-js'))) {
+          if ((!spa.components[spaCompName]) && (el.hasAttribute('no-script') || el.hasAttribute('noscript') || el.hasAttribute('nojs') || el.hasAttribute('no-js'))) {
             spa.$(spaCompName, {});
           }
 
@@ -7011,6 +7032,10 @@
 
           var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
           spaCompOptions = _.merge( {target: "#"+el.id, targetEl: el, spaComponent:(spaCompName.trim()), _reqFrTag_: 1}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
+
+          if (el.hasAttribute('skipDataBind') || el.hasAttribute('skip-data-bind')) {
+            spaCompOptions['skipDataBind'] = true;
+          }
 
           //GET Data for render begins
           if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
@@ -10593,15 +10618,22 @@
 
   function _initSpaDefaults(){
     var defaultsInTag
-      , dataInBody = $('body').data();
-    _.each(Object.keys(spa.defaults), function(spaDefaultsKey){
-      if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
-        defaultsInTag = dataInBody[ 'spaDefaults'+(spaDefaultsKey.capitalize()) ];
-        if (!spa.isBlank(defaultsInTag)){
-          _.merge(spa.defaults[spaDefaultsKey], spa.toJSON(defaultsInTag));
+      , $body  = $('body')
+      , elBody = $body[0]
+      , dataInBody = $body.data();
+
+    if (!spa.isBlank(dataInBody)) {
+      dataInBody['spaDefaults'] = spa.toJSON(elBody.getAttribute('data-spa-defaults') || {});
+
+      _.each(Object.keys(spa.defaults), function(spaDefaultsKey){
+        if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
+          defaultsInTag = dataInBody.spaDefaults[spaDefaultsKey] || dataInBody[ 'spaDefaults'+(spaDefaultsKey.toTitleCase()) ];
+          if (!spa.isBlank(defaultsInTag)){
+            _.merge(spa.defaults[spaDefaultsKey], spa.toJSON(defaultsInTag));
+          }
         }
-      }
-    });
+      });
+    }
 
     _initRoutesDefaults(); //run_once
     _initApiUrls(); //need to run on 1st Component renderCallback as well
