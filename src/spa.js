@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC2';
+  spa.VERSION = '2.75.0-RC3';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -4439,14 +4439,16 @@
     return newUrl;
   }
 
-  function _ajaxScriptHandle( responseText, axOptions ) {
-    var xScript = document.createElement( "script" );
-    xScript.setAttribute( 'id', 'js-'+spa.now() );
-    if (spa.defaults.csp.nonce) {
-      xScript.setAttribute( 'nonce', spa.defaults.csp.nonce );
+  function _ajaxScriptHandle( responseText ) {
+    if (responseText.trim()) {
+      var xScript = document.createElement( "script" );
+      xScript.setAttribute( 'id', 'js-'+spa.now() );
+      if (spa.defaults.csp.nonce) {
+        xScript.setAttribute( 'nonce', spa.defaults.csp.nonce );
+      }
+      xScript.text = responseText;
+      document.head.appendChild( xScript ).parentNode.removeChild( xScript );
     }
-    xScript.text = responseText;
-    document.head.appendChild( xScript ).parentNode.removeChild( xScript );
   }
   $.ajaxSetup({
     converters: {
@@ -4455,7 +4457,7 @@
     },
     dataFilter: function (rawResponse, dataType) {
       if (dataType === 'javascript' || dataType === 'spaComponent') {
-        _ajaxScriptHandle(rawResponse, this);
+        _ajaxScriptHandle(rawResponse);
         rawResponse = '';
       }
       return rawResponse;
@@ -8393,8 +8395,9 @@
       var elClick = targetEl.getAttribute('onclickthis');
       if ( elClick && (!(('null' == elClick) || ('undefined' == elClick))) ) {
         try {
+          $el.renameAttr('onclickthis', 'onclick').trigger('click').renameAttr('onclick', 'onclickthis');
           // _evStr
-          elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
+          // elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
         } catch(e) {
           console.error((e.stack.substring(0, e.stack.indexOf('\n')))
             +'! Failed to trigger [onclick(:->onclickthis)] event on Element:\n', targetEl);
@@ -8407,7 +8410,7 @@
       , $forms    = $context.find('form:not([onsubmit])')
       , hrefNonRouteFilter = _routeByHref? '.no-spa-route' : ''
       , $aLinksEx = $context.find('a[href]:not([href^="#"]):not([href^="javascript:"]):not([target])'+hrefNonRouteFilter)
-      , $aLinksIn = $context.find('a:not([href])')
+      , $aLinksIn = $context.find('a:not([href]):not(.no-link)')
       , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclickthis])');
 
     //Fix Forms
@@ -10051,8 +10054,9 @@
     if ((elClick && (!(('null' == elClick) || ('undefined' == elClick))))
       && (!($routeEl.hasClass('disabled') || $routeEl.is('[disabled]') || $routeEl.is(':disabled')))) {
       try {
+        $routeEl.renameAttr('onrouteclick', 'onclick').trigger('click').renameAttr('onclick', 'onrouteclick');
         // _evStr
-        elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
+        // elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
       } catch (e) {
         console.error((e.stack.substring(0, e.stack.indexOf('\n')))
           +'! Failed to trigger [onclick(:->onrouteclick)] event on Element:\n', targetEl);
@@ -10131,7 +10135,7 @@
       .on('click', _onRouteAutoReg);
 
     var $routeElements = $(scope||'body').find('['+(_attrSpaRoute)+']:not(.ROUTE)')
-      .renameAttr('onclick', 'onRouteClick')
+      .renameAttr('onclick', 'onrouteclick')
       .addClass('ROUTE')
       .off('click', _onRouteElClick)
       .on('click', _onRouteElClick);
