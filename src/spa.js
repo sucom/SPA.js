@@ -2417,7 +2417,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC3';
+  spa.VERSION = '2.75.0-RC4';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -2436,10 +2436,28 @@
   // if (!win['_$$']) win['_$$'] = _$$;
 
   /* isIE or isNonIE */
-  var isById = (document.getElementById)
-    , isByName = (document.all);
-  spa.isIE = (isByName) ? true : false;
-  spa.isNonIE = (isById && !isByName) ? true : false;
+  var ieVer = (function() {
+    try {
+      var ua = navigator.userAgent;
+      var msie = ua.indexOf('MSIE ');
+      if (msie > 0) {
+        // IE 10 or older => return version number
+        return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+      }
+      var trident = ua.indexOf('Trident/');
+      if (trident > 0) {
+        // IE 11 => return version number
+        var rv = ua.indexOf('rv:');
+        return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+      }
+    } catch (e) {};
+
+    // other browser
+    return 0;
+  }());
+
+  spa.isIE = (document['documentMode'] || ieVer);
+  spa.isNonIE = (!spa.isIE);
 
   /*No Operation: a dummy function*/
   spa.noop = function(){};
@@ -9662,7 +9680,6 @@
 
   var _skipUrlChangeOn = 'x'+spa.now();
   function _onPopStateChange(e){
-    //console.log('onPopStateChange...');
     _routeSpaUrlOnHashChange();
 
     if (_curBlockedUrlHash && _curBlockedUrlHash != _skipUrlChangeOn) {
@@ -9745,8 +9762,12 @@
   spa.isInBlockedSpaNavContainer = _inBlockedSpaNavContainer;
 
   function _ctrlBrwowserNav(){
-    window.onpageshow = _onpageshow;
-    window.onpopstate = _onPopStateChange;
+    window.onpageshow   = _onpageshow;
+    if (spa.isIE) {
+      window.onhashchange = _onPopStateChange;
+    } else {
+      window.onpopstate   = _onPopStateChange;
+    }
     if (is(window, 'window')) {
       window.onbeforeunload = _onWindowReload;
     }
