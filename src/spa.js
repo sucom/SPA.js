@@ -2413,11 +2413,11 @@
   /*Flag for URL Hash Routing*/
   //win.isSpaHashRouteOn=false;
 
-  /* Expose spa to window with aliaz */
+  /* Expose spa to window with alias */
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC4';
+  spa.VERSION = '2.75.0-RC5';
 
   // Creating app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -6082,7 +6082,8 @@
           hide : 'HIDE-SPA-NAV',
           block: 'BLOCK-SPA-NAV',
           allow: 'ALLOW-SPA-NAV'
-        }
+        },
+        onClickAs: 'click'
     }
     , lang: {
         path: 'app/language/',
@@ -8400,6 +8401,49 @@
     return (retValue);
   };
 
+  function _Event(eName, targetEl) {
+    var xEvent;
+    var isBubbles    = true;
+    var isCancelable = true;
+    if (spa.isIE) {
+      xEvent = document.createEvent('Event');
+      xEvent.initEvent(eName, isBubbles, isCancelable);
+    } else {
+      xEvent = new Event(eName, {bubbles:isBubbles, cancelable:isCancelable});
+    }
+    if (targetEl) xEvent.targetElement = targetEl;
+    return xEvent;
+  }
+
+  function _triggerClickEventOnAttr(targetEl, eAttr) {
+    var targetEvent = (spa.defaults.routes.onClickAs || 'click').toLowerCase();
+    var $targetEl = $(targetEl);
+    var jsStmts   = (''+(targetEl.getAttribute(eAttr)) || '').trim();
+    var useEventDispatch = (targetEvent !== 'click');
+
+    if ((jsStmts && (!(('null' == jsStmts) || ('undefined' == jsStmts))))
+      && (!($targetEl.hasClass('disabled') || $targetEl.is('[disabled]') || $targetEl.is(':disabled')))) {
+      try {
+        if (useEventDispatch) {
+          var onAltEventName = 'on'+targetEvent;
+          $targetEl.renameAttr(eAttr, onAltEventName);
+          targetEl.dispatchEvent( _Event(targetEvent, targetEl) );
+          $targetEl.renameAttr(onAltEventName, eAttr);
+        } else {
+          // _evStr
+          jsStmts.split(';').forEach(function(stmt){
+            if (stmt.trim()) {
+              Function('event','(' + (stmt.trim()) + ')').call( targetEl, _Event(targetEvent, targetEl) );
+            }
+          });
+        }
+      } catch (e) {
+        console.error((e.stack.substring(0, e.stack.indexOf('\n')))
+          +'! Failed to trigger ['+targetEvent+'(:->'+eAttr+')] event on Element:\n', targetEl);
+      }
+    }
+  }
+
   function _disabledElClick(e) {
     var targetEl = this
       , $el = $(targetEl);
@@ -8410,17 +8454,7 @@
       e.stopImmediatePropagation();
       return;
     } else {
-      var elClick = targetEl.getAttribute('onclickthis');
-      if ( elClick && (!(('null' == elClick) || ('undefined' == elClick))) ) {
-        try {
-          $el.renameAttr('onclickthis', 'onclick').trigger('click').renameAttr('onclick', 'onclickthis');
-          // _evStr
-          // elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
-        } catch(e) {
-          console.error((e.stack.substring(0, e.stack.indexOf('\n')))
-            +'! Failed to trigger [onclick(:->onclickthis)] event on Element:\n', targetEl);
-        }
-      }
+      _triggerClickEventOnAttr(targetEl, 'onclickthis');
     }
   }
   function _initSpaElements(scope){
@@ -10024,8 +10058,7 @@
       , routeDir
       , routeName
       , newHashUrl
-      , continueAutoRoute
-      , elClick = targetEl.getAttribute('onrouteclick') || '';
+      , continueAutoRoute;
 
     if ($routeEl.hasClass('disabled') || $routeEl.is(':disabled')) {
       e.stopImmediatePropagation();
@@ -10072,17 +10105,7 @@
       //console.log('Dynamic Route URL', routeName);
     }
 
-    if ((elClick && (!(('null' == elClick) || ('undefined' == elClick))))
-      && (!($routeEl.hasClass('disabled') || $routeEl.is('[disabled]') || $routeEl.is(':disabled')))) {
-      try {
-        $routeEl.renameAttr('onrouteclick', 'onclick').trigger('click').renameAttr('onclick', 'onrouteclick');
-        // _evStr
-        // elClick.split(';').forEach(function(stmt){ if (stmt.trim()) (Function('(' + (stmt.trim()) + ')').call(targetEl)); });
-      } catch (e) {
-        console.error((e.stack.substring(0, e.stack.indexOf('\n')))
-          +'! Failed to trigger [onclick(:->onrouteclick)] event on Element:\n', targetEl);
-      }
-    }
+    _triggerClickEventOnAttr(targetEl, 'onrouteclick');
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
       $routeEl.removeClass('AUTO-ROUTING');
