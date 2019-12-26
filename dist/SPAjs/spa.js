@@ -8805,5 +8805,4 @@
   });
 
 })();
-
-_log.info("spa loaded.");
+spa.console.info("spa loaded.");
