@@ -1,6 +1,5 @@
-/* ***** lodash custom begins ***** */
-/* ToBe Replaced */
-/** @license (MIT) lodash | https://github.com/lodash/lodash/blob/master/LICENSE */
+/* ToBe Removed (lodash custom) */
+/*@license lodash (custom) (MIT|https://github.com/lodash/lodash/blob/master/LICENSE]*/
 (function(){
   if (window['_']) return;
 
@@ -2337,4 +2336,3 @@
   }
 
 })();
-/* ***** lodash custom ends ***** */

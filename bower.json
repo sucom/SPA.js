@@ -3,7 +3,7 @@
   "description": "Single Page Application (SPA) Simplified Framework/Library",
   "main": "dist/spa-bundle.js",
 
-  "version": "2.67.0",
+  "version": "2.75.0",
   "license": "MIT",
   "homepage": "https://github.com/sucom/SPA.js",
 
@@ -37,7 +37,7 @@
   ],
 
   "dependencies": {
-    "jquery": "^3.2.1",
-    "handlebars": "^4.0.10"
+    "jquery": "^3.4.1",
+    "handlebars": "^4.5.3"
   }
 }
