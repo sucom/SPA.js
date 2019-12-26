@@ -1,4 +1,4 @@
-/** @license SPA-handlebars-helpers.js | (c) Kumararaja | License (MIT) */
+/*@license SPA.js (Handlebars Helpers) [MIT]*/
 /* ============================================================================
  * SPA-handlebars-helpers.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development using SPA.js (spajs.org)

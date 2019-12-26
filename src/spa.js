@@ -1,4 +1,4 @@
-/** @license (MIT) SPA.js | (c) Kumararaja */
+/**@license SPA.js (core) [MIT]*/
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -32,12 +32,10 @@
  */
 
 /* SPA begins */
-/** @license (MIT) SPA.js (core) | https://github.com/sucom/SPA.js/blob/master/LICENSE */
 
 /* Avoid 'console' errors in browsers that lack a console */
 (function() {
   var method;
-  var noop = function(){};
   var methods = [
       'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
       'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
@@ -50,7 +48,7 @@
     method = methods[length];
     //Only stub undefined methods.
     if (!console[method]) {
-      console[method] = noop;
+      console[method] = function(){};
     }
   }
 
@@ -62,37 +60,22 @@
   /* Establish the win object, `window` in the browser */
   var win = this;
 
-  /* Create a safe reference to the spa object for use below. */
-  var spa = function (obj) {
-    if (obj instanceof spa) { return obj; }
-    if (!(this instanceof spa)) { return new spa(obj); }
-  };
-
-  //ToBeRemoved
-  /*Flag for URL Hash Routing*/
-  //win.isSpaHashRouteOn=false;
+  /* Create new */
+  var spa = function(){};
 
   /* Expose spa to window with alias */
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC6';
+  spa.VERSION = '2.75.0-RC7';
 
-  // Creating app scope
+  // Creating new app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
   if (window['app'] && (/^html(.*)element$/i.test(appVarType))) { //HTML Element id="app"
     window['app'] = {api:{}};
   }
   window['app'] = window['app'] || {api:{}};
   window['app']['api'] = window['app']['api'] || {};
-
-  //var _eKey = ['','l','a','v','e',''];
-
-  /* native document selector */
-  // var _$  = document.querySelector.bind(document),
-  //     _$$ = document.querySelectorAll.bind(document);
-  // if (!win['_$'])  win['_$']  = _$;
-  // if (!win['_$$']) win['_$$'] = _$$;
 
   /* isIE or isNonIE */
   var ieVer = (function() {
@@ -115,16 +98,29 @@
     return 0;
   }());
 
-  spa.isIE = (document['documentMode'] || ieVer);
-  spa.isNonIE = (!spa.isIE);
+  var isIE = (document['documentMode'] || ieVer)
+    , isNonIE = !isIE;
+  spa.isIE = isIE;
+  spa.isNonIE = isNonIE;
 
   /*No Operation: a dummy function*/
-  spa.noop = function(){};
-
-  //var _eFn = win[_eKey.reverse().join('')];
+  function noop(){};
+  spa.noop = noop;
 
   /* *************** SPA begins *************** */
   var _appApiInitialized;
+  var _reservedObjKeys = 'hasOwnProperty,prototype,__proto__'.split(',');
+  function _isReservedKey (key) {
+    return (_reservedObjKeys.indexOf(key) > -1);
+  }
+  function _hasOwnProp (xObj, xKey) {
+    return Object.prototype.hasOwnProperty.call(xObj, xKey);
+  }
+  function _argsToArr(){
+    return Array.prototype.slice.call(arguments[0]);
+  }
+  spa.argsToArr = _argsToArr;
+
   spa.debug = false;
   spa['debugger'] = {
       on:function(){ spa.debug = true; }
@@ -132,34 +128,34 @@
     , toggle:function() { spa.debug = !spa.debug; }
   };
   /*Internal console out*/
-  spa.cOut = function(consoleType, args){
+  function cOut(consoleType, args){
     if (spa.debug && console[consoleType]) {
-      console[consoleType](args.length===1? args[0] : args);
+      console[consoleType].apply(null, args);
     }
-  };
+  }
   spa['console'] = {
       'clear'         : function(){ console['clear'](); }
-    , 'assert'        : function(){ spa.cOut('assert',         arguments); }
-    , 'count'         : function(){ spa.cOut('count',          arguments); }
-    , 'debug'         : function(){ spa.cOut('debug',          arguments); }
-    , 'dir'           : function(){ spa.cOut('dir',            arguments); }
-    , 'dirxml'        : function(){ spa.cOut('dirxml',         arguments); }
-    , 'error'         : function(){ spa.cOut('error',          arguments); }
-    , 'exception'     : function(){ spa.cOut('exception',      arguments); }
-    , 'group'         : function(){ spa.cOut('group',          arguments); }
-    , 'groupCollapsed': function(){ spa.cOut('groupCollapsed', arguments); }
-    , 'groupEnd'      : function(){ spa.cOut('groupEnd',       arguments); }
-    , 'info'          : function(){ spa.cOut('info',           arguments); }
-    , 'log'           : function(){ spa.cOut('log',            arguments); }
-    , 'markTimeline'  : function(){ spa.cOut('markTimeline',   arguments); }
-    , 'profile'       : function(){ spa.cOut('profile',        arguments); }
-    , 'profileEnd'    : function(){ spa.cOut('profileEnd',     arguments); }
-    , 'table'         : function(){ spa.cOut('table',          arguments); }
-    , 'time'          : function(){ spa.cOut('time',           arguments); }
-    , 'timeEnd'       : function(){ spa.cOut('timeEnd',        arguments); }
-    , 'timeStamp'     : function(){ spa.cOut('timeStamp',      arguments); }
-    , 'trace'         : function(){ spa.cOut('trace',          arguments); }
-    , 'warn'          : function(){ spa.cOut('warn',           arguments); }
+    , 'assert'        : function(){ cOut('assert',         _argsToArr(arguments)); }
+    , 'count'         : function(){ cOut('count',          _argsToArr(arguments)); }
+    , 'debug'         : function(){ cOut('debug',          _argsToArr(arguments)); }
+    , 'dir'           : function(){ cOut('dir',            _argsToArr(arguments)); }
+    , 'dirxml'        : function(){ cOut('dirxml',         _argsToArr(arguments)); }
+    , 'error'         : function(){ cOut('error',          _argsToArr(arguments)); }
+    , 'exception'     : function(){ cOut('exception',      _argsToArr(arguments)); }
+    , 'group'         : function(){ cOut('group',          _argsToArr(arguments)); }
+    , 'groupCollapsed': function(){ cOut('groupCollapsed', _argsToArr(arguments)); }
+    , 'groupEnd'      : function(){ cOut('groupEnd',       _argsToArr(arguments)); }
+    , 'info'          : function(){ cOut('info',           _argsToArr(arguments)); }
+    , 'log'           : function(){ cOut('log',            _argsToArr(arguments)); }
+    , 'markTimeline'  : function(){ cOut('markTimeline',   _argsToArr(arguments)); }
+    , 'profile'       : function(){ cOut('profile',        _argsToArr(arguments)); }
+    , 'profileEnd'    : function(){ cOut('profileEnd',     _argsToArr(arguments)); }
+    , 'table'         : function(){ cOut('table',          _argsToArr(arguments)); }
+    , 'time'          : function(){ cOut('time',           _argsToArr(arguments)); }
+    , 'timeEnd'       : function(){ cOut('timeEnd',        _argsToArr(arguments)); }
+    , 'timeStamp'     : function(){ cOut('timeStamp',      _argsToArr(arguments)); }
+    , 'trace'         : function(){ cOut('trace',          _argsToArr(arguments)); }
+    , 'warn'          : function(){ cOut('warn',           _argsToArr(arguments)); }
   };
 
   /* event handler for window.onhashchange */
@@ -171,6 +167,9 @@
   spa.onUrlHashChange;
   spa.onReload;
 
+  //ToBeRemoved
+  /*Flag for URL Hash Routing*/
+  //win.isSpaHashRouteOn=false;
   //ToBeRemoved
   /* spa route management internal functions */
   // function _initWindowOnHashChange(){
@@ -372,10 +371,10 @@
   spa.sanitizeXSS = _sanitizeXSS;
 
   String.prototype.splitToArray = String.prototype.toArray = function (splitBy) {
-    return spa.isBlank((''+this)) ? [] : ((''+this).split(splitBy));
+    return _isBlank((''+this)) ? [] : ((''+this).split(splitBy));
   };
 
-  function getMatchStr(str){
+  function _getMatchStr(str){
     switch(str){
       case '{': return '}';
       case '[': return ']';
@@ -389,9 +388,9 @@
       bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
       bS = (bS)? bS[0] : '';
     }
-    eS = eS || getMatchStr(bS);
+    eS = eS || _getMatchStr(bS);
     var retArr = (''+this).match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
-    if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
+    if (unique && !_isBlank(retArr)) retArr = retArr.__unique();
     return retArr;
   };
 
@@ -400,16 +399,16 @@
       bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
       bS = (bS)? bS[0] : '';
     }
-    eS = eS || getMatchStr(bS);
+    eS = eS || _getMatchStr(bS);
     var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
     var retArr = ((''+this).match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
         return x.replace(rx,'');
       });
-    if (unique && !spa.isBlank(retArr)) retArr = retArr.__unique();
+    if (unique && !_isBlank(retArr)) retArr = retArr.__unique();
     return retArr;
   };
 
-  spa.strToNative = function(srcStr){
+  function _strToNative(srcStr){
     var tStr = srcStr.trim();
     function isNumeric(){
       var nonNumericChars = tStr.replace(/[0-9]/g, '');
@@ -439,10 +438,11 @@
       case isArray()   : return ('{xArr:'+tStr+'}').toJSON().xArr;
       default: return srcStr;
     }
-  };
+  }
   String.prototype.toNative = function(){
-    return spa.strToNative(''+this);
+    return _strToNative(''+this);
   };
+  spa.strToNative = _strToNative;
 
   //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
   //bS: '{'
@@ -480,9 +480,9 @@
     return true;
   }
 
-  spa.toJSON = function (str, key4PrimaryDataTypes) {
+  function _toObj(str, key4PrimaryDataTypes) {
     var thisStr;
-    if (_.isString(str)) {
+    if (_isStr(str)) {
       thisStr = str.trimStr().trimStr(',').trimStr(';');
 
       if (!_isValidEvalStr(thisStr)) return str;
@@ -495,7 +495,7 @@
         } else if (key4PrimaryDataTypes) {
           thisStr = '{'+key4PrimaryDataTypes+':'+thisStr+'}';
         } else {
-          return spa.strToNative(thisStr);
+          return _strToNative(thisStr);
         }
       }
 
@@ -521,15 +521,16 @@
     var jsonObj = {};
     try {
       // _evStr
-      jsonObj = (!_.isString(str) && _.isObject(str)) ? str : ( spa.isBlank(str) ? null : (Function('"use strict";return (' + thisStr + ')')()) );
+      jsonObj = (!_isStr(str) && _isObj(str)) ? str : ( _isBlank(str) ? null : (Function('"use strict";return (' + thisStr + ')')()) );
     } catch(e){
       console.error('Error JSON Parse: Invalid String >> "'+str+'"\n>> ' + (e.stack.substring(0, e.stack.indexOf('\n'))) );
     }
     return jsonObj;
-  };
+  }
   String.prototype.toJSON = function () {
-    return spa.toJSON(''+this);
+    return _toObj(''+this);
   };
+  spa.toJSON = spa.toObj =_toObj;
 
   String.prototype.toBoolean = function () {
     var retValue = true;
@@ -582,23 +583,84 @@
     return (spa.getOnLastSplit(pickIndex));
   };
   spa.getOnLastSplit = spa.pickOnLastSplit = function (pickIndex) {
-    return ((pickIndex < 0) ? (_.last(spa.lastSplitResult)) : (spa.lastSplitResult[pickIndex]));
+    return ((pickIndex < 0) ? (_last(spa.lastSplitResult)) : (spa.lastSplitResult[pickIndex]));
   };
 
-  /* isBlank / isEmpty */
-  spa.isBlank = spa.isEmpty = function (src) {
+  /* isXYZ */
+  function _of(x) {
+    return (Object.prototype.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
+  }
+  function _is(x, type) {
+    return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
+  }
+
+  function _isArr ( x ) {
+    return _is(x, 'array');
+  }
+  function _isBool ( x ) {
+    return _is(x, 'boolean');
+  }
+  function _isFn ( x ) {
+    return _is(x, 'function');
+  }
+  function _isObj ( x ) {
+    return _is(x, 'object');
+  }
+  function _isStr ( x ) {
+    return _is(x, 'string');
+  }
+  function _isNum ( x ) {
+    return _is(x, 'number');
+  }
+  function _isNumStr( x ) {
+    return (''+x).isNumberStr();
+  }
+  function _isUndef ( x ) {
+    return _is(x, 'undefined');
+  }
+
+  function _isArrLike ( x ) {
+    if (_isArr(x)) {
+      return true;
+    }
+    if (!x) {
+      return false;
+    }
+    if (typeof x !== 'object') {
+      return false;
+    }
+    if (x.nodeType === 1) {
+      return !!x.length;
+    }
+    if (x.length === 0) {
+      return true;
+    }
+    if (x.length > 0) {
+      return ((0 in x) && ((x.length - 1) in x));
+    }
+    return false;
+  }
+
+  function _isEmptyObj( ArrayOrObject ) {
+		var key;
+		for ( key in ArrayOrObject ) {
+			return false;
+		}
+		return true;
+	}
+  function _isBlank (src) {
     var retValue = true;
     if (!((typeof src === 'undefined') || (src === null))) {
       switch (true) {
-        case (_.isString(src)):
+        case (_isStr(src)):
           retValue = ((src).trimStr().length == 0);
           break;
-        case (_.isFunction(src)):
+        case (_isFn(src)):
             retValue = false;
           break;
-        case (_.isArray(src)) :
-        case (_.isObject(src)):
-          retValue = _.isEmpty(src);
+        case (_isArr(src)) :
+        case (_isObj(src)):
+          retValue = _isEmptyObj(src);
           break;
         default:
           retValue = ((''+src).trimStr().length == 0);
@@ -606,11 +668,25 @@
       }
     }
     return retValue;
-  };
+  }
+  /* Check DOM has requested element */
+  function _isElementExist(elSelector) {
+    return (!_isEmptyObj($(elSelector).get()));
+  }
 
-  spa.isNumber = function (str) {
-    return (''+str).isNumberStr();
-  };
+  // Export through spa
+  spa.of = of = _of;
+  spa.is = is = _is;
+  spa.isArray        = _isArr;
+  spa.isArrayLike    = _isArrLike;
+  spa.isBoolean      = _isBool;
+  spa.isFunction     = _isFn;
+  spa.isObject       = _isObj;
+  spa.isString       = _isStr;
+  spa.isNumber       = _isNum;
+  spa.isEmptyObject  = _isEmptyObj;
+  spa.isElementExist = _isElementExist;
+  spa.isBlank  = spa.isEmpty = _isEmpty = _isBlank;
 
   spa.toBoolean = function (str) {
     var retValue = true;
@@ -630,32 +706,29 @@
 
   spa.toInt = function (str) {
     str = ("" + str).replace(/[^+-0123456789.]/g, "");
-    str = spa.isBlank(str) ? "0" : ((str.indexOf(".") >= 0) ? str.substring(0, str.indexOf(".")) : str);
+    str = _isBlank(str) ? "0" : ((str.indexOf(".") >= 0) ? str.substring(0, str.indexOf(".")) : str);
     return (parseInt(str * 1, 10));
   };
 
   spa.toFloat = function (str) {
     str = ("" + str).replace(/[^+-0123456789.]/g, "");
-    str = spa.isBlank(str) ? "0" : str;
+    str = _isBlank(str) ? "0" : str;
     return (parseFloat(str * (1.0)));
   };
+
+  function _toStr(obj) {
+    var retValue = "" + obj;
+    if (_isObj(obj)) {
+      retValue = JSON.stringify(obj);
+    }
+    return (retValue);
+  };
+  spa.toStr = _toStr;
 
   /*Tobe Removed: replaced with toStr*/
   spa.toString = function (obj) {
     spa.console.warn("spa.toString is deprecated. use spa.toStr instead.");
-    var retValue = "" + obj;
-    if (_.isObject(obj)) {
-      retValue = JSON.stringify(obj);
-    }
-    return (retValue);
-  };
-
-  spa.toStr = function (obj) {
-    var retValue = "" + obj;
-    if (_.isObject(obj)) {
-      retValue = JSON.stringify(obj);
-    }
-    return (retValue);
+    return _toStr(obj);
   };
 
   spa.dotToX = function (dottedName, X) {
@@ -676,18 +749,18 @@
   spa.ifBlank = spa.ifEmpty = spa.ifNull = function (src, replaceWithIfBlank, replaceWithIfNotBlank) {
     replaceWithIfBlank = ("" + (replaceWithIfBlank || "")).trimStr();
     replaceWithIfNotBlank = (typeof replaceWithIfNotBlank === "undefined")? (("" + src).trimStr()) : replaceWithIfNotBlank;
-    return ( spa.isBlank(src) ? (replaceWithIfBlank) : (replaceWithIfNotBlank) );
+    return ( _isBlank(src) ? (replaceWithIfBlank) : (replaceWithIfNotBlank) );
   };
 
   function __finalValue(srcVal) {
     var retVal = srcVal, fnContext = arguments[1], fnArgs = Array.prototype.slice.call(arguments, 2);
-    if (_is(retVal, 'string')) {
+    if (_isStr(retVal)) {
       if (retVal.indexOf('(')>0) { //function
         retVal = retVal.getLeftStr('(');
       }
-      retVal = spa.findSafe(window, (retVal.trim()), undefined);
+      retVal = _find(window, (retVal.trim()), undefined);
     }
-    if (_is(retVal, 'function') && (arguments.length>1)) {
+    if (_isFn(retVal) && (arguments.length>1)) {
       retVal = retVal.apply(fnContext, fnArgs);
     }
     return retVal;
@@ -739,13 +812,56 @@
         else { return (bytes / 1073741824).toFixed(3) + " GB"; }
     }
 
-    return (spa.is(format, 'undefined') || format)? formatByteSize(sizeOf(obj)) : sizeOf(obj);
+    return (_isUndef(format) || format)? formatByteSize(sizeOf(obj)) : sizeOf(obj);
   };
+
+  function _range(start, end, step) {
+    var result = [];
+    var argLen = arguments.length;
+    if (argLen) {
+      if (argLen === 1) {
+        end = start; start = 0; step = (start <= end)? 1 : -1;
+      } else if (argLen === 2) {
+        step = (start <= end)? 1 : -1;
+      }
+      var length = Math.max(Math.ceil((end - start) / (step || 1)), 0);
+      while (length--) {
+        result.push(start);
+        start += step;
+      }
+    }
+    return result;
+  }
 
   /*String to Array; spa.range("N1..N2:STEP")
    * y-N..y+N : y=CurrentYear*/
-  spa.range = function (rangeSpec) {
-    var rSpec = (rangeSpec.toUpperCase()).split("..")
+  spa.range = function () {
+    var argLen = arguments.length;
+    if (!argLen || ((argLen === 1) && (''+arguments[0]).trim() === '0')) return [];
+
+    var rangeSpec = arguments[0];
+    if (typeof arguments[0] !== 'string') {
+      if (argLen) {
+        if (argLen === 1) {
+          rangeSpec = '0..'+(arguments[0])+':1';
+        } else if (argLen === 2) {
+          rangeSpec = (arguments[0])+'..'+(arguments[1])+':1';
+        } else {
+          rangeSpec = (arguments[0])+'..'+(arguments[1])+':'+(arguments[2]);
+        }
+      }
+    };
+
+    rangeSpec = rangeSpec.toUpperCase();
+    rangeSpec = rangeSpec.replace(/Y([0-9])/g, 'Y+$1');
+    if (rangeSpec.indexOf('..')<0) {
+      rangeSpec = ((rangeSpec.indexOf('Y')>-1)? 'Y..' : '0..') + rangeSpec;
+    }
+    if ((rangeSpec.indexOf('Y')>-1) && (rangeSpec.indexOf('..Y')<0)) {
+      rangeSpec = rangeSpec.replace(/\.\.([0-9])/g, '..+$1').replace(/\.\./g,'..Y');
+    }
+
+    var rSpec = rangeSpec.split("..")
       , rangeB = "" + rSpec[0]
       , rangeE = "" + rSpec[1]
       , rStep = "1";
@@ -762,7 +878,7 @@
     var rB = spa.toInt(rangeB)
       , rE = spa.toInt(rangeE)
       , rS = spa.toInt(rStep);
-    return (rangeB > rangeE) ? ((_.range(rE, (rB) + 1, rS)).reverse()) : (_.range(rB, (rE) + 1, rS));
+    return (rangeB > rangeE) ? ((_range(rE, (rB) + 1, rS)).reverse()) : (_range(rB, (rE) + 1, rS));
   };
 
   spa.checkAndPreventKey = function (e, disableKeys) {
@@ -784,8 +900,8 @@
       //, keyCode = ""+e.keyCode, withShiftKey = (disableKeys.indexOf("+shift") >= 0);
     spa.checkAndPreventKey(e, disableKeys);
 
-    var changeFocusNext = (!spa.isBlank(("" + $keyElement.data("focusNext")).replace(/undefined/, "").toLowerCase()));
-    var changeFocusPrev = (!spa.isBlank(("" + $keyElement.data("focusBack")).replace(/undefined/, "").toLowerCase()));
+    var changeFocusNext = (!_isBlank(("" + $keyElement.data("focusNext")).replace(/undefined/, "").toLowerCase()));
+    var changeFocusPrev = (!_isBlank(("" + $keyElement.data("focusBack")).replace(/undefined/, "").toLowerCase()));
     if (changeFocusNext && (spa.checkAndPreventKey(e, "9"))) {
       $($keyElement.data("focusNext")).get(0).focus();
     }
@@ -814,7 +930,7 @@
             timeDelay = ((''+targetEl.getAttribute('data-pause-time')).replace(/[^0-9]/g,'') || '1250')*1;
         if (keyPauseTimer) clearTimeout(keyPauseTimer);
         keyPauseTimer = setTimeout(function(){
-          var fnName = targetEl.getAttribute('onKeyPause').split('(')[0], fn2Call=spa.findSafe(window,fnName);
+          var fnName = targetEl.getAttribute('onKeyPause').split('(')[0], fn2Call=_find(window,fnName);
           if (fn2Call) fn2Call.call(targetEl, targetEl);
         }, timeDelay);
       });
@@ -869,10 +985,7 @@
     }
   };
 
-  /* Check DOM has requested element */
-  spa.isElementExist = function (elSelector) {
-    return (!$.isEmptyObject($(elSelector).get()));
-  };
+
 
   spa.swapClass = spa.swapObjClass = function (objIDs, removeClass, addClass) {
     $(objIDs).removeClass(removeClass);
@@ -1100,14 +1213,14 @@
     var sortByAttr = ["", "key", "value"];
     beginsAt = beginsAt || 0;
     sortBy = sortBy || 0;
-    if ((_.isString(list)) && (list.indexOf("..") > 0)) {
+    if ((_isStr(list)) && (list.indexOf("..") > 0)) {
       list = spa.range(list);
     }
     if (beginsAt >= 0) {
       spa.optionsReduceToLength(elSelector, beginsAt);
     }
-    if (_.isArray(list)) {
-      _.each(list, function (opt) {
+    if (_isArr(list)) {
+      _each(list, function (opt) {
         spa.optionAppend(elSelector, opt, opt);
       });
     }
@@ -1117,13 +1230,13 @@
         for (var key in list) {
           listArray.push({key: key, value: list[key]});
         }
-        var listSorted = _.sortBy(listArray, sortByAttr[sortBy]);
-        _.each(listSorted, function (opt) {
+        var listSorted = _sortBy(listArray, sortByAttr[sortBy]);
+        _each(listSorted, function (opt) {
           spa.optionAppend(elSelector, opt.key, opt.value);
         });
       }
       else {
-        _.each(list, function (value, key) {
+        _each(list, function (value, key) {
           spa.optionAppend(elSelector, key, value);
         });
       }
@@ -1171,14 +1284,15 @@
     while (new Date().getTime() < dt.getTime());
   };
 
-  /*Tobe removed; use _.filter*/
+  /*Tobe removed;*/
   spa.filterJSON = function (jsonData, xFilter) {
-    return $(jsonData).filter(function (index, item) {
-      for (var i in xFilter) {
-        if (!item[i].toString().match(xFilter[i])) return null;
-      }
-      return item;
-    });
+    console.warn('spa.filterJSON has been removed. please use alternate filter.');
+    //    return $(jsonData).filter(function (index, item) {
+    //      for (var i in xFilter) {
+    //        if (!item[i].toString().match(xFilter[i])) return null;
+    //      }
+    //      return item;
+    //    });
   };
 
   /* randomPassword: Random Password for requested length */
@@ -1205,8 +1319,8 @@
   };
 
   spa.appendToObj = function(xObj, oKey, oValue) {
-    if (_.has(xObj, oKey)) {
-      if (!_.isArray(xObj[oKey])) {
+    if (_hasKey(xObj, oKey)) {
+      if (!_isArr(xObj[oKey])) {
         xObj[oKey] = [xObj[oKey]];
       }
       xObj[oKey].push(oValue);
@@ -1285,7 +1399,7 @@
     if (arguments.length == 3) {
       return spa.setSimpleObjProperty(obj, keyNameStr, propValue);
     } else if (arguments.length == 2) {
-      return spa.findSafe(obj, keyNameStr);
+      return _find(obj, keyNameStr);
     } else {
       return obj;
     }
@@ -1308,13 +1422,13 @@
   function _extract(){
     var args = Array.prototype.slice.call(arguments);
     try {
-      if (!spa.is(args[0], 'object')) args.unshift({});
-      if (spa.is(args[1], 'string')) args[1] = args[1].split(',');
+      if (!_isObj(args[0])) args.unshift({});
+      if (_isStr(args[1])) args[1] = args[1].split(',');
     } catch (e) {
       console.error('Invalid arguments', e);
     }
 
-    if (!(spa.is(args[0], 'object') && (spa.is(args[1], 'array')))) {
+    if (!(_isObj(args[0]) && (_isArr(args[1])))) {
       console.error('Invalid arguments.');
       return;
     }
@@ -1324,7 +1438,7 @@
       , srcObjs = args.slice(2);
     srcObjs.unshift(window); //load window @0
     var mapSpecArr, dstKey, srcIdx, srcKey, skipExtract, dstVal;
-    _.each(spec, function(mapSpec){
+    _each(spec, function(mapSpec){
       mapSpec = (mapSpec || '').trim();
       skipExtract = !(mapSpec && mapSpec != '@0');
       if (!skipExtract) {
@@ -1333,7 +1447,7 @@
           if (srcKey) {
             mapSpec = srcKey+':'+mapSpec;
           } else {
-            _.merge(dstObj, srcObjs[ spa.toInt(mapSpec) ]);
+            _mergeDeep(dstObj, srcObjs[ spa.toInt(mapSpec) ]);
             skipExtract = true;
           }
         }
@@ -1344,18 +1458,18 @@
           srcIdx = spa.toInt((mapSpecArr[1]||'').split('.')[0]);
           srcKey =  ((mapSpecArr[1]||'').getRightStr('.') || '').trim();
           if (!dstKey) dstKey = srcKey;
-          dstVal = srcKey? spa.findSafe(srcObjs[srcIdx], srcKey) : (srcIdx? srcObjs[srcIdx] : {});
+          dstVal = srcKey? _find(srcObjs[srcIdx], srcKey) : (srcIdx? srcObjs[srcIdx] : {});
           if (dstKey.endsWithStr('\\+')) {
             dstKey = dstKey.trimRightStr('+');
-            var preVal = spa.findSafe(dstObj, dstKey);
-            switch(spa.of(preVal)) {
+            var preVal = _find(dstObj, dstKey);
+            switch(_of(preVal)) {
               case 'object':
-                if (spa.is(dstVal, 'object')) {
-                  dstVal = _.merge({}, preVal, dstVal);
+                if (_isObj(dstVal)) {
+                  dstVal = _mergeDeep({}, preVal, dstVal);
                 }
                 break;
               case 'array':
-                if (spa.is(dstVal, 'array')) {
+                if (_isArr(dstVal)) {
                   dstVal = preVal.concat(dstVal);
                 } else {
                   dstVal = preVal.push(dstVal);
@@ -1373,7 +1487,7 @@
   spa.extract = _extract;
 
   function _$qrySelector(selector) {
-    if (spa.is(selector, 'string')) {
+    if (_isStr(selector)) {
       var selectors = (selector.trim()).split(' ')
         , rootSelector = selectors[0]
         , compName, compIndex;
@@ -1395,7 +1509,6 @@
     }
     return selector;
   }
-  //spa.$qrySelector = _$qrySelector;
 
   spa.setElValue = function (el, elValue) {
     var $el = $(_$qrySelector(el)); el = $el.get(0);
@@ -1490,11 +1603,11 @@
   };
 
   spa.serialize = function(scope, context, escHTML){
-    if (_.isBoolean(scope)) { //making scope optional
+    if (_isBool(scope)) { //making scope optional
       escHTML = scope;
       scope = '';
     }
-    if (_.isBoolean(context)) { //making context optional
+    if (_isBool(context)) { //making context optional
       escHTML = context;
       context = '';
     }
@@ -1509,10 +1622,10 @@
 
       if (!retObj.hasOwnProperty(keyName)) {
         retObj[keyName] = elValue;
-      } else if (!spa.isBlank(elValue)) {
-        if (spa.isBlank(retObj[keyName])) {
+      } else if (!_isBlank(elValue)) {
+        if (_isBlank(retObj[keyName])) {
           retObj[keyName] = elValue;
-        } else if (_.isArray(retObj[keyName])) {
+        } else if (_isArr(retObj[keyName])) {
           retObj[keyName].push(elValue);
         } else {
           retObj[keyName] = [retObj[keyName], elValue];
@@ -1561,7 +1674,7 @@
     if (qStringWithParams && (qStringWithParams.length > 0) && (qIndex >= 0) && ((qIndex == 0) || (ampIndex > qIndex))) {
       qStringWithParams = qStringWithParams.substring(qIndex + 1);
     }
-    _.each((qStringWithParams.split('&')), function (nvp) {
+    _each((qStringWithParams.split('&')), function (nvp) {
       nvp = nvp.split('=');
       if (nvp[0]) {
         spa.appendToObj(retValue, nvp[0], decodeURIComponent(nvp[1] || ''));
@@ -1572,11 +1685,11 @@
 
 
   function _toQueryString(obj) {
-    return _.isObject(obj)? (Object.keys(obj).reduce(function (str, key, i) {
+    return _isObj(obj)? (_keys(obj).reduce(function (str, key, i) {
       var delimiter, val;
       delimiter = (i === 0) ? '' : '&';
       key = encodeURIComponent(key);
-      val = _.isArray(obj[key])? obj[key].map(function(item){ return encodeURIComponent(item); }).join(',') : encodeURIComponent(obj[key]);
+      val = _isArr(obj[key])? _map(obj[key], function(item){ return encodeURIComponent(item); }).join(',') : encodeURIComponent(obj[key]);
       return [str, delimiter, key, '=', val].join('');
     }, '')) : '';
   }
@@ -1685,9 +1798,9 @@
   };
 
   /* find(jsonObject, 'key1.key2.key3[0].key4'); */
-  spa.findSafe = spa.findInObj = spa.findInObject = spa.locateSafe = spa.valueOfPath = spa.find = spa.locate = function (objSrc, pathStr, forUndefined) {
+  function _find(objSrc, pathStr, forUndefined) {
     if (is(objSrc, 'window|array|object|function|global') && pathStr) {
-      var pathList = _.map(pathStr.split('|'), function(path){ return path.trim(); } );
+      var pathList = _map(pathStr.split('|'), function(path){ return path.trim(); } );
       pathStr = pathList.shift();
       var nxtPath = pathList.join('|');
 
@@ -1699,8 +1812,8 @@
                         if (xObj.hasOwnProperty(xKey)) {
                           xValue = xObj[xKey];
                         } else {
-                          var oKeys = Object.keys(xObj), idx=0;
-                          while ( is(xValue, 'undefined') && (idx < oKeys.length) ) {
+                          var oKeys = _keys(xObj), idx=0;
+                          while ( _isUndef(xValue) && (idx < oKeys.length) ) {
                             xValue = arguments.callee( xObj[ oKeys[idx++] ], xKey );
                           }
                         }
@@ -1712,7 +1825,7 @@
         for (retValue = objSrc; i < len; i++) {
           if (is(retValue, 'object|window|function|global')) {
             retValue = retValue[ path[i].trim() ];
-          } else if (is(retValue, 'array')) {
+          } else if (_isArr(retValue)) {
             retValue = retValue[ spa.toInt(path[i]) ];
           } else {
             retValue = unDef;
@@ -1721,11 +1834,11 @@
         }
       }
 
-      if (is(retValue, 'undefined')) {
+      if (_isUndef(retValue)) {
         if (nxtPath) {
-          return spa.findSafe(objSrc, nxtPath, forUndefined);
+          return _find(objSrc, nxtPath, forUndefined);
         } else {
-          return (is(forUndefined, 'function'))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+          return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
         }
       } else {
         return retValue;
@@ -1733,33 +1846,28 @@
 
     } else {
       if (arguments.length == 3) {
-        return (is(forUndefined, 'function'))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+        return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
       } else {
         return objSrc;
       }
     }
-  };
+  }
+  spa.findSafe = spa.findInObj = spa.findInObject = spa.findIn = spa.find = _find;
 
-  spa.has = spa.hasKey = function (obj, path) {
-    var tObj = obj, retValue = false;
-    try {
-      retValue = _isValidEvalStr(path)? (typeof spa.find(tObj, path) != "undefined") : false;
-    } catch(e){
-      console.warn("Key["+path+"] error in object.\n" + e.stack);
+  function _hasKey(obj, path) {
+    if (arguments.length < 2) return false;
+    if ((typeof obj === 'object') && (typeof path === 'string') && (!/[\.\[\]\/\|\&\,]/g.test(path))) {
+      return obj.hasOwnProperty(path.trim());
+    } else {
+      var tObj = obj, retValue = false;
+      try {
+        retValue = _isValidEvalStr(path)? (typeof _find(tObj, path) != "undefined") : false;
+      } catch(e){
+        console.warn("Key["+path+"] error in object.\n" + e.stack);
+      }
+      return retValue;
     }
-    return retValue;
-  };
-
-  function _of(x) {
-    return (Object.prototype.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
   }
-  function _is(x, type) {
-    return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
-  }
-
-  spa.of = of = _of;
-  spa.is = is = _is;
-
   function _isObjHasKeys(obj, propNames, deep){
 
     function checkForAll(obj, propNames){
@@ -1792,7 +1900,7 @@
     }
 
     var retValue = false;
-    if (is(obj, 'object')){
+    if (_isObj(obj)){
       if (propNames){
         propNames =  ''+propNames;
         switch(true) {
@@ -1808,54 +1916,33 @@
 
     return retValue;
   }
-
-  spa.hasPrimaryKeys = function _spa_hasPrimaryKeys(obj, propNames){
-    return _isObjHasKeys(obj, propNames);
-  };
-  spa.hasKeys = function _spa_hasKeys(obj, propNames){
+  function _keys( xObj ) {
+    var xObjKeys = [];
+    try {
+      xObjKeys = Object.keys(xObj);
+    } catch(e){};
+    return xObjKeys;
+  }
+  function _spa_hasKeys(obj, propNames){
     return _isObjHasKeys(obj, propNames, true);
-  };
-
-  //NOT used anymore ToBeRemoved
-  // spa.hasIgnoreCase = spa.hasKeyIgnoreCase = function (obj, pathStr) {
-  //   var retValue = "", tObj = obj || {}, lookupPath = ""+spa.toDottedPath((pathStr));
-  //   var objKeys = spa.keysDottedAll(tObj); //get AllKeys with dotted notation
-  //   if (objKeys && !_.isEmpty(objKeys)) {
-  //     spa.console.debug(objKeys);
-  //     _.some(objKeys, function(oKey){
-  //       var isMatch = oKey.equalsIgnoreCase(lookupPath);
-  //       if (!isMatch) {
-  //         isMatch = oKey.beginsWithStrIgnoreCase(lookupPath+".");
-  //         if (isMatch) {
-  //           oKey = oKey.slice(0, oKey.lastIndexOf("."));
-  //         }
-  //       }
-  //       if (isMatch) retValue = oKey;
-  //       return (isMatch);
-  //     });
-  //   }
-  //   return retValue;
-  // };
-
-  //NOT used anymore ToBeRemoved
-  // spa.findIgnoreCase = function(obj, path, ifNot){
-  //   var retValue = ifNot;
-  //   var keyInObj = spa.hasIgnoreCase(obj, path);
-  //   if (keyInObj){
-  //     retValue = spa.findSafe(obj, keyInObj, ifNot);
-  //   };
-  //   return retValue;
-  // };
+  }
+  function _spa_hasPrimaryKeys(obj, propNames){
+    return _isObjHasKeys(obj, propNames);
+  }
+  spa.keys           = _keys;
+  spa.has            = spa.hasKey = _hasKey;
+  spa.hasKeys        = _spa_hasKeys;
+  spa.hasPrimaryKeys = _spa_hasPrimaryKeys;
 
   /*Get All keys like X-Path with dot and [] notations */
-  spa.keysDottedAll = function (a) {
-    var objKeys = spa.keysDotted(a);
-    if (objKeys && !_.isEmpty(objKeys)) {
+  function _keysDottedAll(a) {
+    var objKeys = _keysDotted(a);
+    if (objKeys && !_isEmpty(objKeys)) {
       objKeys = spa.toDottedPath(objKeys.join(",")).split(",");
     }
     return objKeys;
-  };
-  spa.keysDotted = function (a) {
+  }
+  function _keysDotted(a) {
     a = a || {};
     var list = [], xConnectorB, xConnectorE, curKey;
     (function (o, r) {
@@ -1865,7 +1952,7 @@
       }
       for (var c in o) {
         curKey = r.substring(1);
-        xConnectorB = (spa.isNumber(c)) ? "[" : ".";
+        xConnectorB = (_isNumStr(c)) ? "[" : ".";
         xConnectorE = (((curKey) && (xConnectorB == "[")) ? "]" : "");
         if (arguments.callee(o[c], r + xConnectorB + c + xConnectorE)) {
           list.push((curKey) + (((curKey) ? xConnectorB : "")) + c + (xConnectorE));
@@ -1874,26 +1961,398 @@
       return false;
     })(a);
     return list;
-  };
-
-  spa.keysCamelCase = function (a) {
-    return (_.map(spa.keysDotted(a), function (name) {
+  }
+  function _keysCamelCase(a) {
+    return (_map(_keysDotted(a), function (name) {
       var newName = (name).replace(/\./g, " ").toProperCase().replace(/ /g, "");
       return (newName[0].toLowerCase() + newName.substring(1));
     }));
-  };
-
-  spa.keysTitleCase = function (a) {
-    return (_.map(spa.keysDotted(a), function (name) {
+  }
+  function _keysTitleCase(a) {
+    return (_map(_keysDotted(a), function (name) {
       return ((name).replace(/\./g, " ").toProperCase().replace(/ /g, ""));
     }));
-  };
-
-  spa.keys_ = function (a) {
-    return (_.map(spa.keysDotted(a), function (name) {
+  }
+  function _keysLodash(a) {
+    return (_map(_keysDotted(a), function (name) {
       return ((name).replace(/\./g, "_"));
     }));
-  };
+  }
+  spa.keysDottedAll = _keysDottedAll;
+  spa.keysDotted    = _keysDotted;
+  spa.keysCamelCase = _keysCamelCase ;
+  spa.keysTitleCase = _keysTitleCase;
+  spa.keys_         = _keysLodash;
+
+  /* Array/Object Iterators */
+  function _each(xArr, fn) {
+    if (_isArrLike(xArr)) {
+      for(var i=0; i<xArr.length; i++) {
+        fn.call(xArr[i], xArr[i], i, xArr);
+      }
+    } else {
+      _keys(xArr).forEach(function(key){
+        fn.call(xArr[key], xArr[key], key, xArr);
+      });
+    }
+  }
+  function _map(xArr, fn) {
+    var retArr = [];
+    if (_isArrLike(xArr)) {
+      for(var i=0; i<xArr.length; i++) {
+        retArr.push( fn.call(xArr[i], xArr[i], i, xArr) );
+      }
+    } else {
+      _keys(xArr).forEach(function(key){
+        retArr.push( fn.call(xArr[key], xArr[key], key, xArr) );
+      });
+    }
+    return retArr;
+  }
+  function _every(xArr, fn) {
+    var retValue = true;
+    if (_isArrLike(xArr)) {
+      for(var i=0, xLen = xArr.length; (retValue && i<xLen); i++) {
+        retValue = !!fn.call(xArr[i], xArr[i], i, xArr);
+      }
+    } else {
+      var oKeys = _keys(xArr), key;
+      for(var i=0, xLen = oKeys.length; (retValue && i<xLen); i++) {
+        key = oKeys[i];
+        retValue = !!fn.call(xArr[key], xArr[key], key, xArr);
+      }
+    }
+    return retValue;
+  }
+  function _some(xArr, fn) {
+    var retValue = false;
+    if (_isArrLike(xArr)) {
+      for(var i=0, xLen = xArr.length; i<xLen; i++) {
+        retValue = !!fn.call(xArr[i], xArr[i], i, xArr);
+        if (retValue) break;
+      }
+    } else {
+      var oKeys = _keys(xArr), key;
+      for(var i=0, xLen = oKeys.length; i<xLen; i++) {
+        key = oKeys[i];
+        retValue = !!fn.call(xArr[key], xArr[key], key, xArr);
+        if (retValue) break;
+      }
+    }
+    return retValue;
+  }
+  function _filter(xArr, fn) {
+    var retArr = [];
+    if (_isArrLike(xArr)) {
+      for(var i=0; i<xArr.length; i++) {
+        (!fn.call(xArr[i], xArr[i], i, xArr))? '' : retArr.push( xArr[i] );
+      }
+    } else {
+      _keys(xArr).forEach(function(key){
+        (!fn.call(xArr[key], xArr[key], key, xArr))? '' : retArr.push( xArr[key] );
+      });
+    }
+    return retArr;
+  }
+
+  function _removeOn(xArr, fn) {
+    var removedItems = [];
+    if (_isArrLike(xArr)) {
+      for(var i=0; i<xArr.length; i++) {
+        if (fn.call(xArr[i], xArr[i], i, xArr)) {
+          removedItems.push( xArr.splice(i--,1)[0] );
+        }
+      }
+    } else {
+      _keys(xArr).forEach(function(key){
+        if (fn.call(xArr[key], xArr[key], key, xArr)) {
+          removedItems.push(xArr[key]);
+          delete xArr[key];
+        }
+      });
+    }
+    return removedItems;
+  }
+
+  function _sortBy(xArr, key) {
+    if (_isArrLike(xArr) && key) {
+      return xArr.sort(function(a, b){
+        var aValue = (_isNumStr(a[key]))? (a[key]*1) : a[key];
+        var bValue = (_isNumStr(b[key]))? (b[key]*1) : b[key];
+        var aType = typeof aValue;
+        var bType = typeof bValue;
+        var retValue = 0;
+        if ((aType === 'string') && (bType === 'string')) {
+          aValue = aValue.toUpperCase();
+          bValue = bValue.toUpperCase();
+          if (aValue < bValue) {
+            retValue = -1;
+          }
+          if (aValue > bValue) {
+            retValue = 1;
+          }
+        } else if ((aType === 'number') && (bType === 'number')) {
+          retValue = aValue - bValue;
+        }
+        return retValue;
+      });
+    } else {
+      return xArr;
+    }
+  }
+
+  function _zipObj(keyArr, valArr) {
+    var retObj = {};
+    if (_isArrLike(keyArr) && _isArrLike(valArr)) {
+      for(var i=0; i<keyArr.length; i++) {
+        retObj[keyArr[i]] = valArr[i];
+      }
+    }
+    return retObj;
+  }
+
+  function _uniq(xArr) {
+    return _filter(xArr, function(item, idx){
+      return (xArr.indexOf(item) == idx);
+    });
+  }
+
+  function _omit(xObj, omitKeys) {
+    var retObj = {};
+    if (_isArrLike(omitKeys) && omitKeys.length) {
+      if (_isObj(xObj)) {
+        _each(_keys(xObj), function(key){
+          if (omitKeys.indexOf(key) < 0) {
+            retObj[key] = xObj[key];
+          }
+        });
+      }
+      return retObj;
+    } else {
+      return xObj;
+    }
+  }
+
+  // simple compress
+  function _compress(s) {
+    var dict = {};
+    var data = (s + '').split('');
+    var out = [];
+    var currChar;
+    var phrase = data[0];
+    var code = 256;
+    for (var i=1; i<data.length; i++) {
+      currChar=data[i];
+      if (dict[phrase + currChar] != null) {
+        phrase += currChar;
+      }
+      else {
+        out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+        dict[phrase + currChar] = code;
+        code++;
+        phrase=currChar;
+      }
+    }
+    out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+    for (var i=0; i<out.length; i++) {
+      out[i] = String.fromCharCode(out[i]);
+    }
+    return out.join('');
+  }
+
+  function _getSignature(input, keyPrefix) {
+    keyPrefix = keyPrefix || '';
+
+    var xSign = keyPrefix;
+    var inputType = typeof input;
+
+    if (inputType === 'object') {
+      var oKeys = Object.keys(input).sort();
+      for(var z = 0; z < oKeys.length; z++)
+        xSign += _getSignature(input[ oKeys[z] ], oKeys[z]);
+    } else if (inputType === 'function') {
+      var fnName = input['name'];
+      if (!fnName || fnName === keyPrefix) {
+        var fnDef = input.toString();
+        fnName = (/function(.*?)\(/.exec(fnDef)[1]).trim();
+        if (fnName) {
+          xSign += 'F'+fnName;
+        } else {
+          xSign += fnDef;
+        }
+      } else {
+        xSign += 'F'+fnName;
+      }
+    } else {
+      xSign += input;
+    }
+
+    return xSign;
+  }
+
+  function _getSign(input) {
+    return _compress(_getSignature(input)
+        .replace(/\s/g,'_')
+        .replace(/\"/g,'d')
+        .replace(/\'/g,'s')
+        .replace(/\\/g,'b')
+        .replace(/\//g,'f')
+        .replace(/function/g,'Fn'));
+  }
+
+  function _union() {
+    var oCollection = {}, xArr;
+    for(var i=0; i < arguments.length; i++){
+      xArr = arguments[i];
+      if (_isArrLike(xArr)) {
+        for (var j = 0; j < xArr.length; j++)
+          oCollection[_getSign(xArr[j])] = xArr[j];
+      } else {
+        oCollection[_getSign(xArr)] = xArr;
+      }
+    }
+    spa.console.log('>>union-collection[keys, obj, src]:', _keys(oCollection), oCollection, arguments);
+    var unionArr = [], oKey;
+    for (oKey in oCollection) {
+      if (oCollection.hasOwnProperty(oKey))
+        unionArr.push(oCollection[oKey]);
+    }
+    oCollection = null;
+    return unionArr;
+  }
+
+  function _indexOf(xArr, mObj){
+    var retValue = -1;
+    if (_isArrLike(xArr) && xArr.length && _isObj(mObj)) {
+      var mKeys = _keys(mObj), isMatch, srcV, desV;
+      if (mKeys.length) {
+        for(var i=0; i<xArr.length; i++) {
+          for(var j=0; j<mKeys.length; j++){
+            srcV = mObj[ mKeys[j] ];
+            desV = xArr[i][ mKeys[j] ];
+            isMatch = (srcV === desV);
+            if (!isMatch) {
+              break;
+            }
+          }
+          if (isMatch) {
+            retValue = i;
+            break;
+          }
+        }
+      }
+    }
+    return retValue;
+  }
+
+  function _extend () {
+    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
+
+    if (arguments.length) {
+      for (var i = 0, nxtObj; (i < arguments.length); i++) {
+        nxtObj = arguments[i];
+        if (_isObj(nxtObj)) {
+          for (var key in nxtObj) {
+            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+              targetObj[key] = nxtObj[key];
+            }
+          }
+        } else if (_isArr(nxtObj)) {
+          targetObj = _mergeArray.call(null, targetObj, nxtObj);
+        }
+      }
+    }
+
+    return targetObj;
+  }
+
+  function _mergeDeep () {
+    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
+
+    if (arguments.length) {
+      for (var i = 0, nxtObj; (i < arguments.length); i++) {
+        nxtObj = arguments[i];
+        if (_isObj(nxtObj)) {
+          for (var key in nxtObj) {
+            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+              if (_isObj(nxtObj[key])) {
+                targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
+              } else if (_isArr(nxtObj[key])) {
+                if (nxtObj[key].length) {
+                  targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
+                } else {
+                  targetObj[key] = [];
+                }
+              } else {
+                targetObj[key] = nxtObj[key];
+              }
+            }
+          }
+        } else if (_isArr(nxtObj)) {
+          targetObj = _mergeArray.call(null, targetObj, nxtObj);
+        }
+      }
+    }
+
+    return targetObj;
+  }
+  function _mergeArray () {
+    var targetArr = ((arguments.length)? arguments[0] : []) || [];
+
+    if (arguments.length) {
+      for (var i = 0, nxtArr; (i < arguments.length); i++) {
+        nxtArr = arguments[i];
+        if (_isArr(nxtArr)) {
+          for (var aIdx = 0; aIdx < nxtArr.length; aIdx++) {
+            if (_isUndef(targetArr[aIdx])) {
+              targetArr[aIdx] = nxtArr[aIdx];
+            } else {
+              switch (_of(nxtArr[aIdx])) {
+                case 'object':
+                  targetArr[aIdx] = _mergeDeep(targetArr[aIdx], nxtArr[aIdx]);
+                  break;
+                case 'array' :
+                  targetArr[aIdx] = _mergeArray(targetArr[aIdx], nxtArr[aIdx]);
+                  break;
+                default:
+                  targetArr[aIdx] = nxtArr[aIdx];
+                  break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return targetArr;
+  }
+
+  spa.map      = _map;
+  spa.uniq     = _uniq;
+  spa.omit     = _omit;
+  spa.union    = _union;
+  spa.filter   = _filter;
+  spa.sortBy   = _sortBy;
+  spa.zipObj   = _zipObj;
+  spa.removeOn = _removeOn;
+  spa.each     = spa.forEach  = _each;
+  spa.every    = spa.forEvery = _every;
+  spa.some     = spa.forSome  = _some;
+  spa.indexOf  = _indexOf;
+  spa.extend   = _extend;
+  spa.merge    = _mergeDeep;
+
+  function _last(xArray, n) {
+    var retValue;
+    if (_isArrLike(xArray) && xArray.length>0) {
+      if (typeof n === 'number' && n > 1) {
+        retValue = xArray.slice(-1*n);
+      } else {
+        retValue = xArray[xArray.length-1];
+      }
+    }
+    return retValue;
+  }
 
   Object.defineProperties(Array.prototype, {
     '__now' : {
@@ -1980,10 +2439,10 @@
         }
 
         if (options) {
-          if (options.indexOf('i') && spa.is(value, 'string')) value = value.toLowerCase();
+          if (options.indexOf('i') && _isStr(value)) value = value.toLowerCase();
           for(var i=0; i<this.length; i++){
             var item = this[i];
-            if (options.indexOf('i') && spa.is(item, 'string')) item = item.toLowerCase();
+            if (options.indexOf('i') && _isStr(item)) item = item.toLowerCase();
             switch(true){
               case optionsHas('b'): //beginsWith
               case optionsHas('^'): retValue = optionsHas('~')? value.beginsWithStr( item ) : item.beginsWithStr( value ); break;
@@ -2010,6 +2469,14 @@
       },
       enumerable : false,
       configurable: false
+    },
+
+    '__last': {
+      value: function(n) {
+        return _last(this, n);
+      },
+      enumerable : false,
+      configurable: false
     }
 
   });
@@ -2031,14 +2498,14 @@
     },
     '__keys': {
       value: function _obj_keys(deep){
-        return (deep)? spa.keysDotted(this) : Object.keys(this);
+        return (deep)? _keysDotted(this) : Object.keys(this);
       },
       enumerable : false,
       configurable: false
     },
     '__keysAll': {
       value: function _obj_keysAll(){
-        return spa.keysDotted(this);
+        return _keysDotted(this);
       },
       enumerable : false,
       configurable: false
@@ -2066,7 +2533,7 @@
     },
     '__valueOf' : {
       value: function _obj_getValueOf(path, ifUndefined) {
-        return spa.findSafe(this, path, ifUndefined);
+        return _find(this, path, ifUndefined);
       },
       enumerable : false,
       configurable: false
@@ -2074,7 +2541,7 @@
     '__merge': {
       value: function _obj_merge(){
         Array.prototype.unshift.call(arguments, this);
-        return _.merge.apply(undefined, arguments);
+        return _mergeDeep.apply(undefined, arguments);
       },
       enumerable : false,
       configurable: false
@@ -2191,11 +2658,11 @@
   spa.addScriptTag = function (scriptId, scriptSrc) {
     scriptId = scriptId.replace(/#/, "");
     spa.console.group("spaAddScriptTag");
-    if (!spa.isElementExist("#spaScriptsContainer")) {
+    if (!_isElementExist("#spaScriptsContainer")) {
       spa.console.info("#spaScriptsContainer NOT Found! Creating one...");
       $('body').append("<div id='spaScriptsContainer' style='display:none' rel='Dynamic Scripts Container'></div>");
     }
-    if (spa.isElementExist("#" + scriptId)) {
+    if (_isElementExist("#" + scriptId)) {
       spa.console.info("script [" + scriptId + "] already found in local.");
     }
     else {
@@ -2211,11 +2678,11 @@
   spa.addStyle = function (styleId, styleSrc) {
     styleId = styleId.replace(/#/, "");
     spa.console.group("spaAddStyle");
-    if (!spa.isElementExist("#spaStylesContainer")) {
+    if (!_isElementExist("#spaStylesContainer")) {
       spa.console.info("#spaStylesContainer NOT Found! Creating one...");
       $('body').append("<div id='spaStylesContainer' style='display:none' rel='Dynamic Styles Container'></div>");
     }
-    if (spa.isElementExist("#" + styleId)) {
+    if (_isElementExist("#" + styleId)) {
       spa.console.info("style [" + styleId + "] already found in local.");
     }
     else {
@@ -2231,7 +2698,7 @@
     useScriptTag = useScriptTag || false;
     tAjaxRequests = tAjaxRequests || [];
     spa.console.group("spaScriptsLoad");
-    if (spa.isBlank(scriptPath)) {
+    if (_isBlank(scriptPath)) {
       spa.console.error("script path [" + scriptPath + "] for [" + scriptId + "] NOT defined.");
     }
     else {
@@ -2260,14 +2727,14 @@
   }
 
   spa.getComponentsFullPath = function(compNameLst){
-    compNameLst = spa.strToArray(spa.toJSON(compNameLst));
-    return _.map(compNameLst, function(compName){
+    compNameLst = spa.strToArray(_toObj(compNameLst));
+    return _map(compNameLst, function(compName){
         return (spa.defaults.components.rootPath)+ ((spa.defaults.components.inFolder || (/[^a-z0-9]/gi.test(compName)))? compName: '') +'/'+(_getComponentFileName(compName))+ (spa.defaults.components.scriptExt);
       });
   };
 
   spa.loadComponents = function(compNameLst, onDone, onFail) {
-    var unloadedComponents = _.filter(spa.strToArray(spa.toJSON(compNameLst)), function(compName){
+    var unloadedComponents = _filter(spa.strToArray(_toObj(compNameLst)), function(compName){
       return (!spa.components.hasOwnProperty(compName.replace(/[^a-z0-9]/gi,'_') ));
     });
     var scriptFullPathList = spa.getComponentsFullPath(unloadedComponents);
@@ -2275,11 +2742,11 @@
   };
 
   spa.loadScripts = function(scriptsLst, onDone, onFail) {
-    scriptsLst = spa.strToArray(spa.toJSON(scriptsLst));
+    scriptsLst = spa.strToArray(_toObj(scriptsLst));
 
-    if (!spa.isBlank(scriptsLst)) {
+    if (!_isBlank(scriptsLst)) {
       var ajaxQ = [];
-      _.each(scriptsLst, function(scriptPath) {
+      _each(scriptsLst, function(scriptPath) {
         ajaxQ.push(
           $.cachedScript(scriptPath).done(function (script, textStatus) {
             spa.console.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
@@ -2300,8 +2767,8 @@
   };
 
   spa.loadScriptsSync = function(scriptsLst, onDone, onFail) {
-    scriptsLst = spa.strToArray(spa.toJSON(scriptsLst));
-    if (spa.isBlank(scriptsLst)) {
+    scriptsLst = spa.strToArray(_toObj(scriptsLst));
+    if (_isBlank(scriptsLst)) {
       spa.renderUtils.runCallbackFn(onDone);
     } else {
       var scriptCache = true, scriptPath = scriptsLst.shift();
@@ -2330,7 +2797,7 @@
     styleCache = !!styleCache;
     tAjaxRequests = tAjaxRequests || [];
     spa.console.group("spaStylesLoad");
-    if (spa.isBlank(stylePath)) {
+    if (_isBlank(stylePath)) {
       spa.console.error("style path [" + stylePath + "] for [" + styleId + "] NOT defined.");
     }
     else {
@@ -2359,7 +2826,7 @@
   spa.addTemplateScript = function (tmplId, tmplBody, tmplType) {
     tmplId = tmplId.replace(/#/, "");
     tmplType = tmplType  || 'x-template';
-    if (!spa.isElementExist("#spaViewTemplateContainer")) {
+    if (!_isElementExist("#spaViewTemplateContainer")) {
       spa.console.info("#spaViewTemplateContainer NOT Found! Creating one...");
       $('body').append("<div id='spaViewTemplateContainer' style='display:none' rel='Template Container'></div>");
     }
@@ -2389,7 +2856,7 @@
     tAjaxRequests = tAjaxRequests || [];
     tmplAxOptions = tmplAxOptions || {};
     spa.console.group("spaTemplateAjaxQue");
-    if (!spa.isElementExist("#"+tmplId)) {
+    if (!_isElementExist("#"+tmplId)) {
       spa.console.info("Template[" + tmplId + "] of [" + templateType + "] NOT found. Source [" + tmplPath + "]");
       if (tmplPath && tmplPath == "undefined") {
         spa.addTemplateScript(tmplId, '', templateType);
@@ -2398,7 +2865,7 @@
         var localTemplateSrcContainerId = tmplPath.equalsIgnoreCase("inline")? viewContainerId : tmplPath;
         var $localTemplateSrcContainer = $(localTemplateSrcContainerId);
         var inlineTemplateHTML = $localTemplateSrcContainer.html();
-        if (spa.isBlank(inlineTemplateHTML)) {
+        if (_isBlank(inlineTemplateHTML)) {
           spa.console.error("Template[" + tmplId + "] of [" + templateType + "] NOT defined inline in ["+localTemplateSrcContainerId+"].");
         }
         else {
@@ -2407,7 +2874,7 @@
         }
       }
       else if (tmplPath.equalsIgnoreCase("none")) {
-        spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] defined as NONE. Ignoring template.");
+        spa.console.info("Template[" + tmplId + "] of [" + templateType + "] defined as NONE. Ignoring template.");
       }
       else if (!tmplPath.equalsIgnoreCase("script")) { /* load from template-URL */
 
@@ -2415,7 +2882,7 @@
         if (tmplAxOptions['params']) {
           tmplPath = spa.api.url(tmplPath, tmplAxOptions['params']);
         }
-        spa.console.warn(">>>>>>>>>> Making New Template Request");
+        spa.console.info(">>>>>>>>>> Making New Template Request");
 
         var axTemplateRequest = $.ajax({
           url: tmplPath,
@@ -2430,7 +2897,7 @@
             spa.console.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
           },
           error: function (jqXHR, textStatus, errorThrown) {
-            if (this.onTmplError && _is(this.onTmplError, 'function')) {
+            if (this.onTmplError && _isFn(this.onTmplError)) {
               this.onTmplError.call(this, jqXHR, textStatus, errorThrown);
             }
             spa.console.error("Failed Loading Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]. [" + textStatus + ":" + errorThrown + "]");
@@ -2445,13 +2912,13 @@
     else {
       var $tmplId = $("#"+tmplId);
       if (tmplReload) {
-        spa.console.warn("Reload Template[" + tmplId + "] of [" + templateType + "]");
+        spa.console.info("Reload Template[" + tmplId + "] of [" + templateType + "]");
         $tmplId.remove();
         tAjaxRequests = spa.loadTemplate(tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
-      } else if (spa.isBlank(($tmplId.html()))) {
+      } else if (_isBlank(($tmplId.html()))) {
         spa.console.warn("Template[" + tmplId + "] of [" + templateType + "] script found EMPTY!");
         var externalPath = "" + $tmplId.attr("path");
-        if (!spa.isBlank((externalPath))) {
+        if (!_isBlank((externalPath))) {
           templateType = ((($tmplId.attr("type")||"").ifBlankStr(templateType)).toLowerCase()).replace(/text\//gi, "");
           spa.console.info("prepare/remove to re-load Template[" + tmplId + "]  of [" + templateType + "] from external path: [" + externalPath + "]");
           $tmplId.remove();
@@ -2481,8 +2948,8 @@
     urlQuery.replace(/([^&=]+)=?([^&]*)(?:&+|$)/g, function (match, key, value) {
       (qParams[key] = qParams[key] || []).push(decodeURIComponent(value));
     });
-    _.each(qParams, function (value, key) {
-      qParams[key] = (_.isArray(value) && value.length == 1) ? value[0] : value;
+    _each(qParams, function (value, key) {
+      qParams[key] = (_isArr(value) && value.length == 1) ? value[0] : value;
     });
     return qParams;
   };
@@ -2503,8 +2970,8 @@
    * */
   spa.getLocHash = function(urlHashBase){
     var urlHash = (_winLocHash_ || window.location.hash).replace('#','');
-    //if (!urlHash && !spa.is(urlHashBase, 'undefined') && (urlHashBase!='#')) {
-    if (!(urlHash || spa.is(urlHashBase, 'undefined') || urlHashBase=='#')) {
+    //if (!urlHash && !_isUndef(urlHashBase) && (urlHashBase!='#')) {
+    if (!(urlHash || _isUndef(urlHashBase) || urlHashBase=='#')) {
       urlHash = (window.location.pathname)
                 .replace(/(\/)*(index|default)\.([a-z])*/i,'')
                 .replace((urlHashBase.replace(/\s*/g, '').trimRightStr("/")), '');
@@ -2520,19 +2987,19 @@
    * */
   spa.urlHash = function (returnOf, urlHashBase) {
     var hashDelimiter = "/", retValue = spa.getLocHash(urlHashBase);
-    if (returnOf || _.isNumber(returnOf)) {
+    if (returnOf || _isNum(returnOf)) {
       retValue = retValue.beginsWithStr(hashDelimiter) ? retValue.substring(retValue.indexOf(hashDelimiter) + (hashDelimiter.length)) : retValue;
       var hashArray = (retValue.length)? retValue.split(hashDelimiter) : [];
-      if (_.isNumber(returnOf)) {
+      if (_isNum(returnOf)) {
         if (returnOf<0) {
           retValue = hashArray[hashArray.length-1];
         } else {
           retValue = (hashArray && hashArray.length > returnOf) ? hashArray[returnOf] : "";
         }
       }
-      else if (_.isArray(returnOf)) {
-        retValue = (returnOf.length === 0) ? hashArray : _.zipObject(returnOf, hashArray);
-      } else if (_.isString(returnOf) && returnOf == "?") {
+      else if (_isArr(returnOf)) {
+        retValue = (returnOf.length === 0) ? hashArray : _zipObj(returnOf, hashArray);
+      } else if (_isStr(returnOf) && returnOf == "?") {
         retValue = (retValue.containsStr("\\?"))? spa.getOnSplit(retValue, "?", 1) : "";
       }
     }
@@ -2548,39 +3015,11 @@
   /*Similar to spa.urlParam on HashParams*/
   spa.hashParam = function (name) {
     var retValue = (''+spa.urlHash('?'));
-    if (typeof name !== "undefined" && !spa.isBlank(retValue)) {
+    if (typeof name !== "undefined" && !_isBlank(retValue)) {
       retValue = spa.urlParam((''+name), retValue);
     }
     return (retValue);
   };
-
-  /*
-   spa.routeMatch("#url-path/:param1/:param2?id=:param3", "#url-path/serviceName/actionName?id=Something")
-   ==>
-   {   hkeys: [':param1', ':param2', ':param3']
-   , params: {'param1':'serviceName','param2':'actionName','param3':'Something'}
-   }
-   *
-   * */
-  //ToBeRemoved/used the pattern matching logic
-  // spa.routeMatch = function (routePattern, urlHash) {
-  //   var rxParamMatcher = new RegExp(":[a-zA-Z0-9\\_\\-]+", "g")
-  //     , routeMatcher = new RegExp(routePattern.replace(rxParamMatcher, '([\\w\\+\\-\\|\\.\\?]+)'))
-  //     , _keysSrc = routePattern.match(rxParamMatcher)
-  //     , _values  = urlHash.match(routeMatcher)
-  //     , _matchResult = (_values && !_.isEmpty(_values))? _values.shift() : ""
-  //     , _keys   = (_keysSrc && !_.isEmpty(_keysSrc))? _keysSrc.join(',').replace(/:/g,'').split(',') : []
-  //     , _values = (_values && !_.isEmpty(_values))? _values.join(',').replace(/\?/g, '').split(',') : []
-  //     , retValue = undefined;
-  //   if (_matchResult) {
-  //     retValue = {
-  //       hkeys: _keysSrc
-  //       , params: _.zipObject(_keys, _values)
-  //     };
-  //   }
-  //   return (retValue);
-  // };
-
 
   /* i18n support */
   spa.i18n = {};
@@ -2613,10 +3052,10 @@
         async: i18nSettings.async,
         mode: i18nSettings.mode,
         callback: function () {
-          if (!spa.isElementExist('#i18nSpaRunTime')) {
+          if (!_isElementExist('#i18nSpaRunTime')) {
             $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
           }
-          $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!$.isEmptyObject($.i18n.map)) : $.i18n.loaded;
+          $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!_isEmptyObj($.i18n.map)) : $.i18n.loaded;
           spa.i18n.loaded = spa.i18n.loaded || $.i18n.loaded;
           if ((lang.length > 1) && (!$.i18n.loaded)) {
             spa.console.warn("Error Loading Language File [" + lang + "]. Loading default.");
@@ -2635,11 +3074,11 @@
     if (uLang) {
       if (spa.i18n.onLangChange) {
         var fnOnLangChange = spa.i18n.onLangChange,
-            nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
-        uLang = (spa.is(nLang, 'string'))? nLang : uLang;
+            nLang = (_isFn(fnOnLangChange))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
+        uLang = (_isStr(nLang))? nLang : uLang;
       }
       $('html').attr('lang', uLang.replace('_', '-'));
-      spa.i18n.setLanguage(uLang, _.merge({}, spa.defaults.lang, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
+      spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
     }
   }
   spa.i18n.setLang = function(lang, i18nSettings){
@@ -2650,7 +3089,7 @@
     i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
     if (i18nKey.beginsWithStrIgnoreCase('@')) {
       i18nKey = ((i18nKey.substr(1)).trim());
-      i18nKey = spa.findSafe(window, i18nKey, i18nKey);
+      i18nKey = _find(window, i18nKey, i18nKey);
     }
     return _i18nValue(i18nKey);
 
@@ -2675,9 +3114,9 @@
   spa.strBindData = function(xMsg, data, bStr, eStr){
     xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
     var varList = spa.extractStrBetweenEx(xMsg, bStr, eStr, true);
-    if (xMsg && !spa.isBlank(varList) && spa.is(data, 'object')) {
-      _.each(varList, function(key){
-        xMsg = xMsg.replace((new RegExp(bStr+'\\s*('+(key.trim())+')\\s*'+eStr, 'g')), spa.findSafe(data, key, ''));
+    if (xMsg && !_isBlank(varList) && _isObj(data)) {
+      _each(varList, function(key){
+        xMsg = xMsg.replace((new RegExp(bStr+'\\s*('+(key.trim())+')\\s*'+eStr, 'g')), _find(data, key, ''));
       });
     }
     return xMsg;
@@ -2688,9 +3127,9 @@
 
   spa.i18n.text = function (i18nKey, data) {
     var dMessage = spa.i18n.value(i18nKey);
-    if (data && spa.is(data, 'object')) {
+    if (data && _isObj(data)) {
       var msgParamValue = "", msgParamValueTrim="";
-      _.each(_.keys(data), function (key) {
+      _each(_keys(data), function (key) {
         msgParamValue = ""+data[key]; msgParamValueTrim = msgParamValue.trim();
         if (msgParamValue && (msgParamValueTrim.beginsWithStrIgnoreCase("i18n:") || msgParamValueTrim.beginsWithStrIgnoreCase("@")) ) msgParamValue = spa.i18n.value(msgParamValueTrim);
         dMessage = dMessage.replace(new RegExp("{\\s*("+(key.trim())+")\\s*}", "g"), msgParamValue);
@@ -2700,8 +3139,8 @@
     var lookupKeys=[i18nKey], isDuplicateKey;
     function parseMessage( xMsg ){
       var varList = spa.extractStrBetweenEx(xMsg, '{', '}', true);
-      if (!spa.isBlank(varList)) {
-        _.each(varList, function(key){
+      if (!_isBlank(varList)) {
+        _each(varList, function(key){
           isDuplicateKey = (isDuplicateKey || lookupKeys.indexOf(key)>=0);
           if (!isDuplicateKey) {
             lookupKeys.push(key);
@@ -2726,25 +3165,25 @@
     i18nKeySpec = i18nKeySpec || '';
     var $el = $(elSelector), oldSpec = $el.attr('data-i18n') || '', newSpec = '', oldSpecJSON, newSpecJSON;
 
-    if (spa.isBlank(oldSpec) || (i18nKeySpec.indexOf(':')==0) || (i18nKeySpec.indexOf('=')==0) || ((oldSpec.indexOf(':')<=0) && (i18nKeySpec.indexOf(':')<=0)) ) {
+    if (_isBlank(oldSpec) || (i18nKeySpec.indexOf(':')==0) || (i18nKeySpec.indexOf('=')==0) || ((oldSpec.indexOf(':')<=0) && (i18nKeySpec.indexOf(':')<=0)) ) {
       newSpec = i18nKeySpec.trimLeftStr(':').trimLeftStr('=');
     } else {
-      oldSpecJSON = (oldSpec.indexOf(':')>0)?     spa.toJSON(oldSpec||{})     : {html: (oldSpec.trimLeftStr(':').replace(/'/g,'')) };
-      newSpecJSON = (i18nKeySpec.indexOf(':')>0)? spa.toJSON(i18nKeySpec||{}) : {html: (i18nKeySpec.trimLeftStr(':').replace(/'/g,'')) };
+      oldSpecJSON = (oldSpec.indexOf(':')>0)?     _toObj(oldSpec||{})     : {html: (oldSpec.trimLeftStr(':').replace(/'/g,'')) };
+      newSpecJSON = (i18nKeySpec.indexOf(':')>0)? _toObj(i18nKeySpec||{}) : {html: (i18nKeySpec.trimLeftStr(':').replace(/'/g,'')) };
 
-      _.each(Object.keys(oldSpecJSON), function(key){
-        _.each(key.split('_'), function(sKey){
+      _each(_keys(oldSpecJSON), function(key){
+        _each(key.split('_'), function(sKey){
           if (sKey) oldSpecJSON[sKey] = oldSpecJSON[key];
         });
       });
-      _.each(Object.keys(newSpecJSON), function(key){
-        _.each(key.split('_'), function(sKey){
+      _each(_keys(newSpecJSON), function(key){
+        _each(key.split('_'), function(sKey){
           if (sKey) newSpecJSON[sKey] = newSpecJSON[key];
         });
       });
 
-      var finalSpec = _.merge({}, oldSpecJSON, newSpecJSON);
-      _.each(Object.keys(finalSpec), function(key){
+      var finalSpec = _mergeDeep({}, oldSpecJSON, newSpecJSON);
+      _each(_keys(finalSpec), function(key){
         if (key.indexOf('_')<=0){
           newSpec += key+":'"+(finalSpec[key])+"',";
         }
@@ -2753,7 +3192,7 @@
     }
 
     $el.attr('data-i18n', newSpec).data('i18n', newSpec);
-    if (apply || spa.is(apply, 'undefined')) spa.i18n.apply(elSelector);
+    if (apply || _isUndef(apply)) spa.i18n.apply(elSelector);
     return $el;
   };
 
@@ -2773,19 +3212,19 @@
         var $el = $(el),
             i18nSpecStr = $el.data("i18n") || '';
         if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
-        var i18nSpec = spa.toJSON(i18nSpecStr || "{}"),
+        var i18nSpec = _toObj(i18nSpecStr || "{}"),
             i18nData = i18nSpec['data'] || i18nSpec['i18ndata'];
         if (i18nData) {
           delete i18nSpec['data'];
           delete i18nSpec['i18ndata'];
         } else {
-          i18nData = spa.toJSON($el.data("i18nData") || "{}");
+          i18nData = _toObj($el.data("i18nData") || "{}");
         }
-        if (i18nSpec && !$.isEmptyObject(i18nSpec)) {
-          _.each(_.keys(i18nSpec), function (attrSpec) {
+        if (i18nSpec && !_isEmptyObj(i18nSpec)) {
+          _each(_keys(i18nSpec), function (attrSpec) {
             var i18nKey = i18nSpec[attrSpec];
             var i18nValue = spa.i18n.text(i18nKey, i18nData); //$.i18n.prop(i18nKey);
-            _.each(attrSpec.split("_"), function (attribute) {
+            _each(attrSpec.split("_"), function (attribute) {
               switch (attribute.toLowerCase()) {
                 case "html":
                   $el.html( spa.sanitizeXSS(i18nValue) );
@@ -2825,10 +3264,10 @@
 
   function _pipeSort(inVal, reverse) {
     var retValue = inVal;
-    if (spa.is(inVal, 'array')) {
+    if (_isArr(inVal)) {
       retValue = inVal.sort();
       if (reverse) retValue = retValue.reverse();
-    } else if (spa.is(inVal, 'string')) {
+    } else if (_isStr(inVal)) {
       var splitBy;
       switch(true) {
         case (inVal.indexOf(',')>=0):
@@ -2888,9 +3327,9 @@
     },
     reverse: function(inVal) {
       var retValue = inVal;
-      if (spa.is(inVal, 'array')) {
+      if (_isArr(inVal)) {
         retValue = inVal.reverse();
-      } else if (spa.is(inVal, 'string')) {
+      } else if (_isStr(inVal)) {
         var splitBy;
         switch(true) {
           case (inVal.indexOf(',')>=0):
@@ -2953,7 +3392,7 @@
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
 
-    var $contextRoot, onVirtualDOM = (spa.is(contextRoot, 'string') && (/\s*</).test(contextRoot)), blockedScriptTagName;
+    var $contextRoot, onVirtualDOM = (_isStr(contextRoot) && (/\s*</).test(contextRoot)), blockedScriptTagName;
     if (onVirtualDOM) {
       blockedScriptTagName = '_BlockedScriptInTemplate_';
       var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<'+blockedScriptTagName)
@@ -2963,7 +3402,7 @@
       $contextRoot = $(contextRoot);
     }
 
-    if (spa.isBlank(data)) {
+    if (_isBlank(data)) {
       return $contextRoot;
     }
 
@@ -2973,7 +3412,7 @@
     var tmplStoreName = compName || '_unknown_';
     //console.log('compName>', tmplStoreName);
 
-    var templateData = _.merge({__computed__:{}}, data);
+    var templateData = _mergeDeep({__computed__:{}}, data);
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
@@ -2989,7 +3428,7 @@
 
     function _getValue(key) {
       key = (key || '').trim();
-      return (key[0] == '#')? key : spa.findSafe(templateData, key);
+      return (key[0] == '#')? key : _find(templateData, key);
     }
 
     function _templateDynId(type, key) {
@@ -3002,17 +3441,17 @@
       return spa.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile( _unmaskHandlebars(template) ));
     }
 
-    _.each($dataBindEls, function(el) {
+    _each($dataBindEls, function(el) {
       $el = $(el);
       bindSpecStr = $el.data('bind') || '';
 
       if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
-      bindSpec = spa.toJSON(bindSpecStr || '{}');
+      bindSpec = _toObj(bindSpecStr || '{}');
       bindCallback = spa.renderUtils.getFn($el.attr('data-bind-callback') || '');
 
-      if (bindSpec && !$.isEmptyObject(bindSpec)) {
+      if (bindSpec && !_isEmptyObj(bindSpec)) {
 
-        _.each(_.keys(bindSpec), function (attrSpec) {
+        _each(_keys(bindSpec), function (attrSpec) {
           bindKeyFn = (bindSpec[attrSpec]+'|').split('|');
           bindKey   = bindKeyFn.shift().trim();
           negate    = (bindKey[0]=='!');
@@ -3023,7 +3462,7 @@
             bindValue = _getValue(bindKey);
           }
 
-          if (spa.is(bindValue, 'undefined|null')) bindValue = '';
+          if (_is(bindValue, 'undefined|null')) bindValue = '';
 
           for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
             fnFormat = bindKeyFn[fIdx].trim();
@@ -3043,11 +3482,11 @@
             }
           }
 
-          _.each(attrSpec.split("_"), function (attribute) {
+          _each(attrSpec.split("_"), function (attribute) {
             var computedKey='';
             attribute = attribute.trim();
             //console.log('[',attribute,']',bindKey,'=',bindValue);
-            if (!spa.is(bindValue, 'undefined')) {
+            if (!_isUndef(bindValue)) {
               switch (attribute.toLowerCase()) {
                 case 'html':
                   $el.html( spa.sanitizeXSS(bindValue) );
@@ -3057,7 +3496,7 @@
                   break;
                 case '$':
                   if ((/checkbox|radio/i).test(el.type)) {
-                    switch (spa.of(bindValue)){
+                    switch (_of(bindValue)){
                       case 'boolean':
                         el.checked = bindValue;
                         break;
@@ -3140,7 +3579,7 @@
 
     if (!skipBindCallback && !onVirtualDOM && $contextRoot.is('[data-rendered-component]')) {
       var componentName = $contextRoot.attr('data-rendered-component');
-      if (!spa.isBlank(componentName)) {
+      if (!_isBlank(componentName)) {
         var onBindCallback = 'app.'+componentName+'.bindCallback';
         spa.renderUtils.runCallbackFn(onBindCallback, templateData, app[componentName]);
       }
@@ -3175,7 +3614,7 @@
       xContent = $(xTemplate).html();
     }
 
-    if (spa.isBlank(data)) {
+    if (_isBlank(data)) {
       return xContent;
     }
 
@@ -3270,7 +3709,7 @@
       var $elForm             = $(elForm),
           changedElcount      = $elForm.find('.tracking-change.changed').length,
           validationResult    = spa.validateForm('#'+$elForm.attr('id')),
-          isValidForm         = (spa.isBlank(validationResult) || (validationResult[0]['errcode']==1) ),
+          isValidForm         = (_isBlank(validationResult) || (validationResult[0]['errcode']==1) ),
           validationErrFound  = ( !isValidForm || $elForm.find('.validation-error,.validation-pending').length),
           enableCtrlEls4Ch    = (changedElcount>0 && !validationErrFound),
           enableCtrlEls4Valid = (!validationErrFound),
@@ -3281,10 +3720,10 @@
         $ctrlEl = $(el);
         enableCtrlEls = $ctrlEl.hasClass('ctrl-on-change')? enableCtrlEls4Ch : enableCtrlEls4Valid;
         fnOnBeforeChange = $ctrlEl.attr('onBeforeChange');
-        if (!spa.isBlank(fnOnBeforeChange)) {
+        if (!_isBlank(fnOnBeforeChange)) {
           if (fnOnBeforeChange.indexOf('(')>0) fnOnBeforeChange = fnOnBeforeChange.getLeftStr('(');
-          fn2Run = spa.findSafe(window, (fnOnBeforeChange.trim()), undefined);
-          enableCtrlEls = spa.is(fn2Run, 'function')? (!!fn2Run.call(el, enableCtrlEls)) : enableCtrlEls;
+          fn2Run = _find(window, (fnOnBeforeChange.trim()), undefined);
+          enableCtrlEls = _isFn(fn2Run)? (!!fn2Run.call(el, enableCtrlEls)) : enableCtrlEls;
         }
 
         if ($ctrlEl.is(':disabled') == enableCtrlEls) {
@@ -3372,7 +3811,7 @@
     var modified, modifiedEl=undefined;
     var $elements = $(elSelector || "form:not([data-ignore-change]) :input:not(:disabled,:button,[data-ignore-change])");
     //$elements.each(function(index, element) //jQuery each does not break the loop
-    _.every($elements, function (element) //lo-dash breaks the loop when condition not satisified
+    _every($elements, function (element) //lo-dash breaks the loop when condition not satisified
     { if (!modified) {
         if ((element.tagName.match(/^(select|textarea)$/i)) && (element.value != element.defaultValue)) {
           modified = true;
@@ -3464,13 +3903,13 @@
         async: fillOptions.async,
         dataType: "text",
         success: function (result) {
-          data = spa.toJSON(''+result);
+          data = _toObj(''+result);
           ready2Fill = ((typeof data) == "object");
           _fillData();
         },
         error: function (jqXHR, textStatus, errorThrown) {
           spa.console.error("Failed loading data from [" + data + "]. [" + textStatus + ":" + errorThrown + "]");
-          if ( spa.is(app.api['onError'], 'function') ) {
+          if ( _isFn(app.api['onError']) ) {
             app.api.onError.call(this, jqXHR, textStatus, errorThrown);
           } else {
             spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
@@ -3485,11 +3924,11 @@
       keyFormat = (keyFormat.match(/^[a-z]/) != null) ? "aBc" : keyFormat;
       keyFormat = (keyFormat.match(/^[A-Z]/) != null) ? "AbC" : keyFormat;
 
-      var dataKeys = spa.keysDotted(data);
+      var dataKeys = _keysDotted(data);
       spa.console.group("fillData");
       spa.console.info(dataKeys);
 
-      _.each(dataKeys, function (dataKeyPath) {
+      _each(dataKeys, function (dataKeyPath) {
         spa.console.group(">>" + dataKeyPath);
         var dataKey = ""+(dataKeyPath.replace(/[\[\]]/g, "_") || "");
         var dataKeyForFormatterFnSpec = dataKeyPath.replace(/\[[0-9]+\]/g, "");
@@ -3536,7 +3975,7 @@
         spa.console.info(">> " + elSelector + " found: " + elCountInContext);
         var dataValue = null;
         if (elCountInContext > 0) {
-          dataValue = spa.find(data, dataKeyPath);
+          dataValue = _find(data, dataKeyPath);
           if ((!fillOptions.formatterOnKeys) && (fillOptions.formatterCommon)) {
             dataValue = fillOptions.formatterCommon(dataValue, dataKeyPath, data);
           }
@@ -3614,8 +4053,8 @@
       , itemUrl = {}
       , oParams = {}
       , replaceKeysWithValues = function (srcStr, oKeyValue) {
-          if (oKeyValue && Object.keys(oKeyValue).length) {
-            _.each(Object.keys(oKeyValue), function(key){
+          if (oKeyValue && _keys(oKeyValue).length) {
+            _each(_keys(oKeyValue), function(key){
               srcStr = srcStr.replace(new RegExp("{" + key + "}", "gi"), oKeyValue[key]);
             });
           }
@@ -3623,10 +4062,10 @@
         };
 
     if (soParams){
-      oParams = (_.isString(soParams))? spa.queryStringToJson(soParams) : ((_.isObject(soParams))? soParams : {});
+      oParams = (_isStr(soParams))? spa.queryStringToJson(soParams) : ((_isObj(soParams))? soParams : {});
     }
     switch(true) {
-      case (_.isString(saoDataUrl)) :
+      case (_isStr(saoDataUrl)) :
         /* 'path/to/data/api' => {dataUrl:'path/to/data/api'}
            'target.data.key|path/to/data/api' => {dataUrl:'path/to/data/api', dataModel:'target.data.key'}
         */
@@ -3635,9 +4074,9 @@
           saoDataUrl = spa.getOnLastSplit(1);
         }
         retObj['dataUrl'] = replaceKeysWithValues(saoDataUrl, hashParams);
-        if (!_.isEmpty(oParams)) retObj['dataParams'] = oParams;
+        if (!_isEmpty(oParams)) retObj['dataParams'] = oParams;
         break;
-      case (_.isArray(saoDataUrl)) :
+      case (_isArr(saoDataUrl)) :
         /* ['path/to/json/data/api0', 'path/to/json/data/api1', 'path/to/json/data/api2'] =>
          ==> dataCollection : {
          urls: [
@@ -3658,7 +4097,7 @@
          */
         dataCollection = {urls:[]};
         itemUrl = {};
-        _.each(saoDataUrl, function(apiUrl){
+        _each(saoDataUrl, function(apiUrl){
           itemUrl = {url:replaceKeysWithValues(apiUrl, hashParams), params:oParams};
           if (apiUrl.containsStr("\\|")) {
             itemUrl['target'] = spa.getOnSplit(apiUrl, "|", 0);
@@ -3667,7 +4106,7 @@
           dataCollection.urls.push(itemUrl);
         });
         break;
-      case (_.isObject(saoDataUrl)) :
+      case (_isObj(saoDataUrl)) :
         /*
          {dataA:'path/to/json/data/api0', dataB:'path/to/json/data/api1', dataC:'path/to/json/data/api3' }
 
@@ -3690,7 +4129,7 @@
          * */
         dataCollection = {urls:[]};
         itemUrl = {};
-        _.each(_.keys(saoDataUrl), function(dName){
+        _each(_keys(saoDataUrl), function(dName){
           itemUrl = {name:dName, url:replaceKeysWithValues(saoDataUrl[dName], hashParams), params:oParams};
           if (saoDataUrl[dName].containsStr("\\|")) {
             itemUrl['target'] = spa.getOnSplit(saoDataUrl[dName], "|", 0);
@@ -3700,7 +4139,7 @@
         });
         break;
     }
-    if (!_.isEmpty(dataCollection.urls)) {
+    if (!_isEmpty(dataCollection.urls)) {
       retObj['dataCollection'] = dataCollection;
     }
     return retObj;
@@ -3762,9 +4201,9 @@
       nonce: ''
     }
     , set: function(oNewValues, newValue) {
-        if (spa.is(oNewValues,'object')) {
+        if (_isObj(oNewValues)) {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
-          _.merge(this, oNewValues);
+          _mergeDeep(this, oNewValues);
         } else if (typeof oNewValues == 'string') {
           if (oNewValues == 'components.extend$data') {
             spa.defaults.components.extend$data = newValue;
@@ -3778,7 +4217,7 @@
 
   function _adjustComponentOptions(componentName, options){
     var tmplId = '_rtt_'+componentName, tmplBody = '';
-    if (options && _.isObject(options)  && spa.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
+    if (options && _isObj(options)  && spa.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
       if (options.hasOwnProperty('template')) {
         var givenTemplate = options['template'].trim();
         var isContainerId = (givenTemplate.beginsWithStr('#') && !givenTemplate.containsStr(' '));
@@ -3806,7 +4245,7 @@
       }
     }
 
-    if (options && _.isObject(options) && !spa.hasPrimaryKeys(options, 'data|dataUrl') && spa.hasPrimaryKeys(spa.api.urls, '$'+componentName)){
+    if (options && _isObj(options) && !spa.hasPrimaryKeys(options, 'data|dataUrl') && spa.hasPrimaryKeys(spa.api.urls, '$'+componentName)){
       options['dataUrl'] = '@$'+componentName;
     }
 
@@ -3824,14 +4263,14 @@
       return;
     }
 
-    if (_is(componentNameFull, 'object')) {
-      options = _.merge({}, componentNameFull);
+    if (_isObj(componentNameFull)) {
+      options = _mergeDeep({}, componentNameFull);
       componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
       options['componentName'] = componentNameFull;
       componentName = componentNameFull;
     }
 
-    if (!_is(componentName, 'string')) {
+    if (!_isStr(componentName)) {
       console.error('Invalid ComponentName:', componentName);
       return;
     }
@@ -3840,7 +4279,7 @@
       return;
     }
 
-    if (is(componentName, 'string') && componentName) {
+    if (_isStr(componentName) && componentName) {
       componentName = componentName.trim();
       if (componentName) {
 
@@ -3887,12 +4326,12 @@
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
                             'dataValidate','dataProcess','dataPreProcessAsync',
                             'beforeRender','beforeRefresh','componentName'];
-          var baseProperties = _.merge({}, options);
-          _.each(baseProps, function(baseProp){
+          var baseProperties = _mergeDeep({}, options);
+          _each(baseProps, function(baseProp){
             delete options[baseProp];
           });
-          if (is(options['renderCallback'], 'string')) { delete options['renderCallback']; }
-          _.each(Object.keys(options), function(xKey){
+          if (_isStr(options['renderCallback'])) { delete options['renderCallback']; }
+          _each(_keys(options), function(xKey){
             delete baseProperties[xKey];
           });
           baseProperties['renderCallback'] = 'app.'+componentName+'.renderCallback';
@@ -3953,21 +4392,21 @@
     if (arguments.length){
       var compList = arguments;                //spa.registerComponents('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) {         //spa.registerComponents(['compName1', 'compName2', 'compName3']);
+        if (_isArr(arguments[0])) {         //spa.registerComponents(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //spa.registerComponents('compName1') | spa.registerComponents('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //spa.registerComponents('compName1') | spa.registerComponents('compName1,compName2');
           compList = arguments[0].split(',');
         } else {
           compList = arguments[0];             // spa.registerComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
         }
       }
-      if (spa.is(compList, 'object')) {
-        _.each(Object.keys(compList), function(compName){
+      if (_isObj(compList)) {
+        _each(_keys(compList), function(compName){
           spa.console.info('Registering spa-component:['+compName+']');
           spa.registerComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
-        _.each(compList, function(compName){
+        _each(compList, function(compName){
           spa.console.info('Registering spa-component:['+compName+']');
           spa.registerComponent(compName.trim());
         });
@@ -3982,13 +4421,13 @@
       return;
     }
 
-    if (is(componentName, 'object')) {
-      options = _.merge({}, componentName);
+    if (_isObj(componentName)) {
+      options = _mergeDeep({}, componentName);
       componentName = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
       options['componentName'] = componentName;
     }
 
-    if (is(componentName, 'string') && componentName) {
+    if (_isStr(componentName) && componentName) {
       componentName = componentName.trim();
       if (componentName) {
         if (reservedCompNames.indexOf(componentName)>=0) {
@@ -4006,14 +4445,14 @@
 
         window['app'] = window['app'] || {};
         window.app[componentName] = window.app[componentName] || {};
-        if (options && _.isFunction(options)) {
+        if (options && _isFn(options)) {
           options = options.call(spa.components[componentName] || {});
         }
-        options = spa.is(options, 'object')? options : {};
+        options = _isObj(options)? options : {};
         if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.onRender', renderCallback: 'app.'+componentName+'.renderCallback'};
         if (spa.components[componentName]) {
           if (options['__prop__']) {
-            _.merge(spa.components[componentName], $.extend({},options['__prop__']));
+            _mergeDeep(spa.components[componentName], $.extend({},options['__prop__']));
           }
           options['__prop__'] = spa.components[componentName];
         }
@@ -4036,21 +4475,21 @@
     if (arguments.length){
       var compList = arguments;                //spa.extendComponents('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) {         //spa.extendComponents(['compName1', 'compName2', 'compName3']);
+        if (_isArr(arguments[0])) {         //spa.extendComponents(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //spa.extendComponents('compName1') | spa.registerComponents('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //spa.extendComponents('compName1') | spa.registerComponents('compName1,compName2');
           compList = arguments[0].split(',');
         } else {
           compList = arguments[0];             //spa.extendComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
         }
       }
-      if (spa.is(compList, 'object')) {
-        _.each(Object.keys(compList), function(compName){
+      if (_isObj(compList)) {
+        _each(_keys(compList), function(compName){
           spa.console.info('Extend spa-component:['+compName+']');
           spa.extendComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
-        _.each(compList, function(compName){
+        _each(compList, function(compName){
           spa.console.info('Extend spa-component:['+compName+']');
           spa.extendComponent(compName.trim());
         });
@@ -4060,8 +4499,8 @@
 
   spa.$bind = function(cName, newData) {
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
-    if (spa.isBlank(newData)) {
-      newData = spa.findSafe(app, cName+'.$data', {});
+    if (_isBlank(newData)) {
+      newData = _find(app, cName+'.$data', {});
     }
     spa.$(cName).spaBindData(newData);
   };
@@ -4073,9 +4512,9 @@
     mode = mode || 'update';
 
     function update$data(data){
-      if (spa.is(data, 'object')) {
+      if (_isObj(data)) {
         if (['update', 'merge'].__has(mode, 'i')) {
-          _.merge(app[cName].$data, data);
+          _mergeDeep(app[cName].$data, data);
         } else if (['*','reset','replace','overwrite'].__has(mode, 'i')) {
           app[cName].$data = data;
         }
@@ -4086,9 +4525,9 @@
 
     if (cName) {
       if (app.hasOwnProperty(cName)) {
-        retData = spa.findSafe(app, cName+'.$data');
+        retData = _find(app, cName+'.$data');
         if (newData) {
-          retData = update$data( (spa.is(newData, 'function'))? newData.call(app[cName], app[cName].$data) : newData );
+          retData = update$data( (_isFn(newData))? newData.call(app[cName], app[cName].$data) : newData );
 
           var $component = spa.$(cName);
           if ($component.is(':visible')) {
@@ -4116,7 +4555,7 @@
 
   spa.$dataWatch = function(cName, watchName, fnCallback){
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
-    if (!cName || !watchName || !spa.is(fnCallback, 'function')) return;
+    if (!cName || !watchName || !_isFn(fnCallback)) return;
 
     if (!_$dataWatchList.hasOwnProperty(cName)) {
       _$dataWatchList[cName] = {};
@@ -4153,11 +4592,11 @@
     if (!cName) return;
 
     if (_$dataWatchList.hasOwnProperty(cName)) {
-      var notifyList = Object.keys(_$dataWatchList[cName]);
+      var notifyList = _keys(_$dataWatchList[cName]);
       if (watchName) {
         notifyList = watchName.split(',');
       }
-      _.each(notifyList, function(xWatchName){
+      _each(notifyList, function(xWatchName){
         xWatchName = (xWatchName||'').trim();
         if (_$dataWatchList[cName].hasOwnProperty(xWatchName)) {
           _$dataWatchList[cName][xWatchName].call(undefined, app[cName]['$data'], app[cName], xWatchName);
@@ -4173,7 +4612,7 @@
     }
   }
   spa.$renderCount = function(componentName){
-    return spa.findSafe(window, 'app.'+(String(componentName).replace(/[^a-z0-9]/gi, '_'))+'.__renderCount__', 0);
+    return _find(window, 'app.'+(String(componentName).replace(/[^a-z0-9]/gi, '_'))+'.__renderCount__', 0);
   };
 
   spa.removeComponent = function (componentName, byComp) {
@@ -4185,10 +4624,10 @@
 
     function isOk2Remove$(cName){
       cName = String(cName).replace(/[^a-z0-9]/gi, '_').trim();
-      var ok2Remove$ = spa.isBlank(cName), _fnOnRemoveCompRes;
+      var ok2Remove$ = _isBlank(cName), _fnOnRemoveCompRes;
       if (!ok2Remove$) {
         _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(('app.'+cName+'.onRemove'), (byComp || '_script_'), app[cName]);
-        ok2Remove$ = (spa.is(_fnOnRemoveCompRes, 'undefined') || (spa.is(_fnOnRemoveCompRes, 'boolean') && _fnOnRemoveCompRes));
+        ok2Remove$ = (_isUndef(_fnOnRemoveCompRes) || (_isBool(_fnOnRemoveCompRes) && _fnOnRemoveCompRes));
         if (!ok2Remove$) {
           spa.console.warn('Remove $'+cName+' request denied onRemove()');
         }
@@ -4200,7 +4639,7 @@
       var $componentContainer = $('[data-rendered-component="'+(componentName)+'"]');
       if ($componentContainer.length) {
         var childComponents = $componentContainer.find('[data-rendered-component]').map(function(){ return $(this).attr('data-rendered-component'); })
-          , isChildRemoved = ((childComponents.length==0) || _.every(childComponents, function(cName){return isOk2Remove$(cName); }));
+          , isChildRemoved = ((childComponents.length==0) || _every(childComponents, function(cName){return isOk2Remove$(cName); }));
         if (isChildRemoved){
           if ( isOk2Remove$(componentName) ) {
             $componentContainer.html('').text('').val('').data('renderedComponent', '').removeAttr('data-rendered-component');
@@ -4211,7 +4650,7 @@
         ok2Remove = true;
       }
     }
-    return (spa.is(ok2Remove, 'boolean') && ok2Remove);
+    return (_isBool(ok2Remove) && ok2Remove);
   };
   spa.destroyComponent = function (componentName) {
     var isDestroyed;
@@ -4220,7 +4659,7 @@
       if ( spa.removeComponent(componentName) ) {
         delete app[componentName];
         if (spa.components[componentName]) {
-          var tmplScriptId = spa.findSafe(spa.components[componentName], 'template', '');
+          var tmplScriptId = _find(spa.components[componentName], 'template', '');
           if (tmplScriptId && !tmplScriptId.beginsWithStr('#')) {
             tmplScriptId = "#__tmpl_" + ((''+tmplScriptId).replace(/[^a-z0-9]/gi,'_'));
           }
@@ -4277,15 +4716,15 @@
     if (arguments.length){
       var compList = arguments; //('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) { //(['compName1', 'compName2', 'compName3']);
+        if (_isArr(arguments[0])) { //(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //('compName1') | ('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //('compName1') | ('compName1,compName2');
           compList = arguments[0].split(',');
         }
       }
       spa.console.log(compList);
       if (compList && compList.length) {
-        _.each(compList, function(compName){
+        _each(compList, function(compName){
           spa.console.info(actionName+' spa-component:['+compName.trim()+']');
           spa[actionName](compName.trim());
         });
@@ -4315,7 +4754,7 @@
   spa.refreshComponent = spa.$refresh = function (componentName, options) {
     if (!componentName) return;
     options = options || {};
-    if (!spa.is(options, 'object')) return;
+    if (!_isObj(options)) return;
 
     if (!options.hasOwnProperty('beforeRender')) {
       options['beforeRender'] = options['beforeRefresh'] || ('app.'+(componentName.replace(/[^a-z0-9]/gi, '_'))+'.onRefresh');
@@ -4339,15 +4778,15 @@
 
     var componentName = componentNameFull;
 
-    if (is(componentNameFull, 'object')) {
-      options = _.merge({}, componentNameFull);
+    if (_isObj(componentNameFull)) {
+      options = _mergeDeep({}, componentNameFull);
       componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
       options['componentName'] = componentNameFull;
       componentName = componentNameFull;
     }
 
     var isReq4SpaComponent = !options['_reqFrTag_'];
-    if (_is(componentNameFull, 'string')) {
+    if (_isStr(componentNameFull)) {
       componentNameFull = componentNameFull.trim();
       if (componentNameFull[0] == '$') {
         isReq4SpaComponent = true;
@@ -4357,7 +4796,7 @@
       return;
     }
 
-    if ( (!(options && is(options, 'object') && options['isRefreshCall'])) && spa.$renderCount(componentName) && spa.findSafe(window, 'app.'+componentName+'.refreshCallback', '')){
+    if ( (!(options && _isObj(options) && options['isRefreshCall'])) && spa.$renderCount(componentName) && _find(window, 'app.'+componentName+'.refreshCallback', '')){
       spa.console.info('Component ['+componentNameFull+'] has been rendered already. Refreshing instead of re-render.');
       spa.refreshComponent(componentName, options);
       return;
@@ -4381,9 +4820,9 @@
 
       if (componentUrl) {
         var xTargetEl     = options['targetEl']
-          , xUrlHeaders   = __finalValue(spa.toJSON(options['urlHeaders']), options)
-          , xUrlParams    = __finalValue(spa.toJSON(options['urlParams']), options)
-          , xUrlPayload   = __finalValue(spa.toJSON(options['urlPayload']), options)
+          , xUrlHeaders   = __finalValue(_toObj(options['urlHeaders']), options)
+          , xUrlParams    = __finalValue(_toObj(options['urlParams']), options)
+          , xUrlPayload   = __finalValue(_toObj(options['urlPayload']), options)
           , xUrlMethod    = (options['urlMethod'] || 'GET').toLowerCase()
           , xUrlCache     = (String(options['urlCache'] || 'false').toLowerCase() !== 'false')
           , xUrl          = spa.api.url(componentUrl, xUrlParams)
@@ -4397,7 +4836,7 @@
               spa.renderComponentsInHtml(xTargetEl);
             }
           , function _onFail(jqXHR, textStatus, errorThrown) {
-              if (this.onError && _is(this.onError, 'function')) {
+              if (this.onError && _isFn(this.onError)) {
                 this.onError.call(this, jqXHR, textStatus, errorThrown);
               } else {
                 console.warn('Unable to load ServerComponent.');
@@ -4438,7 +4877,7 @@
       , _cFilesPath  = _cFldrPath+componentFileName
       , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
       , _cScriptExt  = spa.defaults.components.scriptExt
-      , _cScriptFile = (options && _.isObject(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
+      , _cScriptFile = (options && _isObj(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
       , _renderComp  = function(){
           spa.console.info('_renderComp: '+componentName+' with below options');
           spa.console.info(options);
@@ -4474,7 +4913,7 @@
             spa.console.info(renderOptions);
           }
 
-          if (renderOptions.hasOwnProperty('style') && spa.is(renderOptions.style, 'string')) {
+          if (renderOptions.hasOwnProperty('style') && _isStr(renderOptions.style)) {
             renderOptions['dataStyles'] = {};
             renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : (((/^(\.\/)/).test(renderOptions.style))? (_cFldrPath+(renderOptions.style).substr(2)) : (renderOptions.style));
             delete renderOptions['style'];
@@ -4482,9 +4921,9 @@
             spa.console.info(renderOptions);
           }
 
-          if (renderOptions && _.isObject(renderOptions) && renderOptions['dataCache']) {
-            var $data = spa.findSafe(app, componentName+'.$data', {});
-            if (spa.isBlank($data)) {
+          if (renderOptions && _isObj(renderOptions) && renderOptions['dataCache']) {
+            var $data = _find(app, componentName+'.$data', {});
+            if (_isBlank($data)) {
               renderOptions['dataCache'] = false;
               spa.console.log('dataCache:false; Using/Ajaxing new data ...');
             } else {
@@ -4505,8 +4944,8 @@
           spa.console.info('In Source> spa.components['+componentName+']');
           spa.console.info(spa.components[componentName]);
           if (!spa.components.hasOwnProperty(componentName)) {
-            spa.console.warn('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Creating *NEW*');
-            if (spa.isBlank(options)) options = {};
+            spa.console.info('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Creating *NEW*');
+            if (_isBlank(options)) options = {};
             if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
             spa.components[componentName] = options;
             spa.console.info('NEW> spa.components['+componentName+']');
@@ -4523,7 +4962,7 @@
       //load component's base prop from .(min.)js
       if (_cScriptFile) {
         spa.console.info("Attempt to load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"]"); //1st load from server
-        $.cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:spa.defaults.components.offline}).done(spa.noop)
+        $.cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:spa.defaults.components.offline}).done(noop)
           .fail(function(){
             spa.console.info("Attempt to Load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"] has FAILED. Not to worry. Continuing to render with default properties.");
             _parseComp();
@@ -4547,22 +4986,22 @@
     if (arguments.length){
       var compList = arguments;                //('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
-        if (_.isArray(arguments[0])) {         //(['compName1', 'compName2', 'compName3']);
+        if (_isArr(arguments[0])) {         //(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_.isString(arguments[0])) { //('compName1') | spa.renderComponents('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //('compName1') | spa.renderComponents('compName1,compName2');
           compList = arguments[0].split(',');
         } else {
           compList = arguments[0];             //( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
         }
       }
 
-      if (spa.is(compList, 'object')) {
-        _.each(Object.keys(compList), function(compName){
+      if (_isObj(compList)) {
+        _each(_keys(compList), function(compName){
           spa.console.info('Rendering spa-component:['+compName+']');
           spa[actionName](compName, compList[compName]);
         });
       } else if (compList && compList.length) {
-        _.each(compList, function(compName){
+        _each(compList, function(compName){
           spa.console.info('Rendering spa-component:['+compName+']');
           spa[actionName](compName.trim());
         });
@@ -4580,9 +5019,9 @@
     pComponentName = pComponentName.replace(/[^a-z0-9]/gi, '_');
 
     var pCompRef = 'app.'+pComponentName+'.';
-    if (spa.is(newData, 'object')) {
+    if (_isObj(newData)) {
       if (!spa.tempBind$data.hasOwnProperty(pComponentName)) spa.tempBind$data[pComponentName] = {};
-      spa.tempBind$data[pComponentName]['$data'] = _.merge({}, spa.findSafe(app, pComponentName+'.$data', {}), newData);
+      spa.tempBind$data[pComponentName]['$data'] = _mergeDeep({}, _find(app, pComponentName+'.$data', {}), newData);
       pCompRef = 'spa.tempBind$data.'+pComponentName+'.';
     }
 
@@ -4597,18 +5036,18 @@
       if (/\:\s*\$data/.test(spaCompOpt)) {
         spaCompOpt = spaCompOpt.replace(/\:\s*\$data/g, ':'+pCompRef+'$data');
       }
-      spaCompOpt = spa.toJSON(spaCompOpt);
+      spaCompOpt = _toObj(spaCompOpt);
     }
 
     var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
-    spaCompOptions = _.merge( {}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
+    spaCompOptions = _mergeDeep( {}, spaCompOpt, $elData, _toObj(cOptionsInAttr));
 
-    if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
+    if (spaCompOptions.hasOwnProperty('data') && _isStr(spaCompOptions.data)) {
       var dataPath = spaCompOptions.data.trim();
       if (/^\$data/.test(dataPath)) {
         dataPath = pCompRef+dataPath;
       }
-      spaCompOptions.data = _.merge({}, spa.findSafe(window, dataPath, {}));
+      spaCompOptions.data = _mergeDeep({}, _find(window, dataPath, {}));
     }
 
     var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
@@ -4616,16 +5055,16 @@
       if (/\:\s*\$data/.test($dataInAttr)) {
         $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':'+pCompRef+'$data');
       }
-      if (spa.isBlank(spaCompOptions.data)) {
-        spaCompOptions['data'] = spa.toJSON($dataInAttr);
+      if (_isBlank(spaCompOptions.data)) {
+        spaCompOptions['data'] = _toObj($dataInAttr);
       } else {
-        _.merge(spaCompOptions.data, spa.toJSON($dataInAttr));
+        _mergeDeep(spaCompOptions.data, _toObj($dataInAttr));
       }
     }
-    if (!spa.isBlank(spaCompOptions['data']) && spaCompOptions['data'].hasOwnProperty('$data')) {
-      var rootData = _.merge({},spaCompOptions.data.$data);
+    if (!_isBlank(spaCompOptions['data']) && spaCompOptions['data'].hasOwnProperty('$data')) {
+      var rootData = _mergeDeep({},spaCompOptions.data.$data);
       delete spaCompOptions.data.$data;
-      _.merge(spaCompOptions.data, rootData);
+      _mergeDeep(spaCompOptions.data, rootData);
     }
 
     //console.log(spaCompOptions);
@@ -4665,7 +5104,7 @@
         if (skipDataBind) {
           cOptions['skipDataBind'] = true;
         } else if (!this.hasAttribute('data-url')) {
-          cOptions['data'] = this.hasAttribute('data')? spa.toJSON(this.getAttribute('data')) : {};
+          cOptions['data'] = this.hasAttribute('data')? _toObj(this.getAttribute('data')) : {};
         }
         spa.$(htmlSrc, cOptions);
       }
@@ -4692,7 +5131,7 @@
           if (/\:\s*\$data/.test(spaCompOpt)) {
             spaCompOpt = spaCompOpt.replace(/\:\s*\$data/g, ':app.'+pComponentName+'.$data');
           }
-          spaCompOpt = spa.toJSON(spaCompOpt);
+          spaCompOpt = _toObj(spaCompOpt);
         }
 
         if (spaCompName) {
@@ -4712,40 +5151,40 @@
           }
 
           var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
-          spaCompOptions = _.merge( {target: "#"+el.id, targetEl: el, spaComponent:(spaCompName.trim()), _reqFrTag_: 1}, spaCompOpt, $elData, spa.toJSON(cOptionsInAttr));
+          spaCompOptions = _mergeDeep( {target: "#"+el.id, targetEl: el, spaComponent:(spaCompName.trim()), _reqFrTag_: 1}, spaCompOpt, $elData, _toObj(cOptionsInAttr));
 
           if (el.hasAttribute('skipDataBind') || el.hasAttribute('skip-data-bind')) {
             spaCompOptions['skipDataBind'] = true;
           }
 
           //GET Data for render begins
-          if (spaCompOptions.hasOwnProperty('data') && spa.is(spaCompOptions.data,'string')) {
+          if (spaCompOptions.hasOwnProperty('data') && _isStr(spaCompOptions.data)) {
             var dataPath = spaCompOptions.data.trim();
             if (/^\$data/.test(dataPath)) {
               dataPath = 'app.'+pComponentName+'.'+dataPath;
             }
-            spaCompOptions.data = _.merge({}, spa.findSafe(window, dataPath, {}));
+            spaCompOptions.data = _mergeDeep({}, _find(window, dataPath, {}));
           }
           var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
           if ($dataInAttr) {
             if (/\:\s*\$data/.test($dataInAttr)) {
               $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':app.'+pComponentName+'.$data');
             }
-            if (spa.isBlank(spaCompOptions.data)) {
-              spaCompOptions['data'] = spa.toJSON($dataInAttr);
+            if (_isBlank(spaCompOptions.data)) {
+              spaCompOptions['data'] = _toObj($dataInAttr);
             } else {
-              _.merge(spaCompOptions.data, spa.toJSON($dataInAttr));
+              _mergeDeep(spaCompOptions.data, _toObj($dataInAttr));
             }
           }
-          if (!spa.isBlank(spaCompOptions['data']) && spaCompOptions['data'].hasOwnProperty('$data')) {
-            var rootData = _.merge({},spaCompOptions.data.$data);
+          if (!_isBlank(spaCompOptions['data']) && spaCompOptions['data'].hasOwnProperty('$data')) {
+            var rootData = _mergeDeep({},spaCompOptions.data.$data);
             delete spaCompOptions.data.$data;
-            _.merge(spaCompOptions.data, rootData);
+            _mergeDeep(spaCompOptions.data, rootData);
           }
           //GET Data for render ends
 
           if (spaCompOptions.hasOwnProperty('data')){
-            spaCompOptions['data_'] = _.merge({}, spaCompOptions.data);
+            spaCompOptions['data_'] = _mergeDeep({}, spaCompOptions.data);
             delete spaCompOptions['data'];
           }
 
@@ -4759,7 +5198,7 @@
   spa.renderUtils = {
     array2ObjWithKeyPrefix: function(arrayList, keyPrefix, targetId){
       var retObj = {};
-      _.each(arrayList, function(item){
+      _each(arrayList, function(item){
         item = (''+item).trimStr();
         if (item) {
           retObj[(keyPrefix + ((item.equals('.')? targetId : item).replace(/[^a-z0-9]/gi,'_')))] = (''+item);
@@ -4771,31 +5210,31 @@
     getFn:function(fnName) {
       var _fn = fnName, _undefined;
       if (fnName) {
-        if (_.isString(fnName)) {
-          _fn = spa.findSafe(window, fnName);
+        if (_isStr(fnName)) {
+          _fn = _find(window, fnName);
         }
       }
-      return (_fn && _.isFunction(_fn))? _fn : _undefined;
+      return (_fn && _isFn(_fn))? _fn : _undefined;
     },
     runCallbackFn: function (fn2Call, fnArg, thisContext) {
       if (fn2Call) {
         var _fn2Call = fn2Call, fnContextName, fnContext=thisContext;
 
-        if (_.isString(_fn2Call)) {
+        if (_isStr(_fn2Call)) {
           if (!fnContext) {
             if (fn2Call.match(']$')) {
               fnContextName = fn2Call.substring(0, fn2Call.lastIndexOf('['));
             } else if (fn2Call.indexOf('.')>0) {
               fnContextName = fn2Call.substring(0, fn2Call.lastIndexOf('.'));
             }
-            fnContext = (fnContextName)? spa.findSafe(window, fnContextName) : window;
+            fnContext = (fnContextName)? _find(window, fnContextName) : window;
           }
-          _fn2Call = spa.findSafe(window, _fn2Call);
+          _fn2Call = _find(window, _fn2Call);
         }
         if (_fn2Call) {
-          if (_.isFunction(_fn2Call)) {
-            spa.console.info("calling callback: " + fn2Call);
-            if (spa.is(fnArg, 'array') && fnArg[0]=='(...)') {
+          if (_isFn(_fn2Call)) {
+            spa.console.info("calling callback: ", 'Fn:'+(fn2Call['name'] || ''), fn2Call);
+            if (_isArr(fnArg) && fnArg[0]=='(...)') {
               fnArg.shift();
               return _fn2Call.apply(fnContext, fnArg);
             } else {
@@ -4805,23 +5244,23 @@
             spa.console.error("CallbackFunction <" + fn2Call + " = " + _fn2Call + "> is NOT a valid FUNCTION.");
           }
         } else {
-            spa.console.warn("CallbackFunction <" + fn2Call + "> is NOT defined.");
+            spa.console.info("CallbackFunction <" + fn2Call + "> is NOT defined.");
         }
       }
     },
     registerComponentEvents: function (compName) {
       if (compName && app[compName] && app[compName].hasOwnProperty('events')) {
         var elTargetSelector, $elTarget;
-        _.each(Object.keys(app[compName].events), function(eventId){
-          if (app[compName].events[eventId].hasOwnProperty('target') && (!spa.isBlank(app[compName].events[eventId].target))) {
+        _each(_keys(app[compName].events), function(eventId){
+          if (app[compName].events[eventId].hasOwnProperty('target') && (!_isBlank(app[compName].events[eventId].target))) {
             elTargetSelector = app[compName].events[eventId].target;
             $elTarget = spa.$(compName+' '+elTargetSelector); //$('body').find(elTargetSelector)
             $elTarget.filter(':not([spa-events-'+eventId+'="'+compName+'"])')
             .attr('spa-events-'+eventId, compName)
             .each(function(index, el){
-              _.each(Object.keys(app[compName].events[eventId]), function(eventNames){
+              _each(_keys(app[compName].events[eventId]), function(eventNames){
                 if (eventNames.indexOf('on')==0) {
-                  _.each(eventNames.split('_'), function(eventName){
+                  _each(eventNames.split('_'), function(eventName){
                     spa.console.log('registering component ['+compName+'] event: '+eventId+'-'+eventName);
                     $(el).on(eventName.trimLeftStr('on').toLowerCase(), app[compName].events[eventId][eventNames]);
                   });
@@ -4835,8 +5274,8 @@
   };
 
   function _appApiDefaultPayload(){
-    var defaultPayload = spa.findSafe(app, 'api.ajaxOptions.defaultPayload', {});
-    return (spa.is(defaultPayload, 'function')? defaultPayload() : (spa.is(defaultPayload, 'object')? _.merge({}, defaultPayload) : defaultPayload) );
+    var defaultPayload = _find(app, 'api.ajaxOptions.defaultPayload', {});
+    return (_isFn(defaultPayload)? defaultPayload() : (_isObj(defaultPayload)? _mergeDeep({}, defaultPayload) : defaultPayload) );
   }
 
   /*
@@ -4904,7 +5343,7 @@
 
     //render with single argument with target
     if ((arguments.length===1) && (typeof viewContainerId === "object")) {
-      uOptions = _.merge({}, viewContainerId);
+      uOptions = _mergeDeep({}, viewContainerId);
       if (uOptions.hasOwnProperty("target")) {
         viewContainerId = uOptions['target'];
         delete uOptions['target'];
@@ -4912,7 +5351,7 @@
         var oldTarget = $('[data-rendered-component="'+uOptions['componentName']+'"]').attr('id');
         viewContainerId = (oldTarget? '#' : '')+oldTarget;
         if (!viewContainerId) {
-          spa.console.warn('Render target is missing.');
+          console.warn('Render target is missing.');
           viewContainerId = "dynRender_"+spa.now()+"_"+(spa.rand(1000, 9999));
         }
       }
@@ -4952,7 +5391,7 @@
                       , renderMode            : "dataRenderMode"
                       , renderId              : "dataRenderId"
                       };
-        _.each(keyMaps, function(value, key) {
+        _each(keyMaps, function(value, key) {
           if (opt.hasOwnProperty(key)) {
             opt[value] = uOptions[key];
             delete opt[key];
@@ -4964,7 +5403,7 @@
     var retValue = {id: "", view: {}, model: {}, cron: "", elDataAttr:{}, target:viewContainerId, iOptions:uOptions};
     var spaAjaxRequestsQue = [];
     var doDeepRender = false;
-    var foundViewContainer = spa.isElementExist(viewContainerId);
+    var foundViewContainer = _isElementExist(viewContainerId);
     if (foundViewContainer){
       retValue.elDataAttr = $(viewContainerId).data();
     }
@@ -5020,7 +5459,7 @@
     };
 
     if (!foundViewContainer) {
-      if (!spa.isElementExist("#spaRunTimeHtmlContainer")) {
+      if (!_isElementExist("#spaRunTimeHtmlContainer")) {
         $("body").append("<div id='spaRunTimeHtmlContainer' style='display:none;'></div>");
       }
       $("#spaRunTimeHtmlContainer").append("<div id='" + viewContainerId.replace(/\#/gi, "") + "'></div>");
@@ -5030,25 +5469,25 @@
       var _globalCompOptions = {
         dataTemplatesCache : spa.defaults.components.templateCache
       };
-      uOptions = _.merge({}, _globalCompOptions, uOptions);
+      uOptions = _mergeDeep({}, _globalCompOptions, uOptions);
 
       var saveOptions = (uOptions.hasOwnProperty("saveOptions") && uOptions["saveOptions"]);
       for (var key in uOptions) {
         spaRVOptions[key] = uOptions[key];
         if (saveOptions && (!(key === "data" || key === "saveOptions"))) {
-          $(viewContainerId).data((""+( ("" + (_.at(""+key,4)||"") ).toLowerCase() )+key.slice(5)), spa.toStr(uOptions[key]));
+          $(viewContainerId).data((''+( ('' + ( ((''+key)[4]) || '') ).toLowerCase() )+key.slice(5)), spa.toStr(uOptions[key]));
         }
       }
     }
 
-    spa.console.log(rCompName+'.$'+(spaRVOptions['isRefreshCall']?'refresh':'render')+' with options:', spaRVOptions, '$data', spa.findSafe(app, rCompName+'.$data'));
+    spa.console.log(rCompName+'.$'+(spaRVOptions['isRefreshCall']?'refresh':'render')+' with options:', spaRVOptions, '$data', _find(app, rCompName+'.$data'));
 
     var $viewContainerId = $(viewContainerId);
     var pCompName  = $viewContainerId.attr('data-rendered-component') || '';
     var is$refresh = (pCompName == rCompName);
 
     function _fixRefreshCalls(propName, renderMethod, refreshMethod){
-      if (spa.is(spaRVOptions[propName], 'string')
+      if (_isStr(spaRVOptions[propName])
             && (spaRVOptions[propName] == ('app.'+rCompName+renderMethod))) {
         if (app[rCompName].hasOwnProperty(refreshMethod)) {
           spaRVOptions[propName] = 'app.'+rCompName+'.'+refreshMethod;
@@ -5072,18 +5511,18 @@
               return;
             }
           } else {
-            navAwayFn = spa.findSafe(window, onNavAway.split('(')[0].split(';')[0] );
-            if (navAwayFn && spa.is(navAwayFn, 'function')) {
+            navAwayFn = _find(window, onNavAway.split('(')[0].split(';')[0] );
+            if (navAwayFn && _isFn(navAwayFn)) {
               navAwayFnRes = navAwayFn.call(app[pCompName], app[pCompName],  app[rCompName]);
             }
-            if (navAwayFn && !(spa.is(navAwayFnRes, 'boolean') && navAwayFnRes)) return;
+            if (navAwayFn && !(_isBool(navAwayFnRes) && navAwayFnRes)) return;
           }
         } else {
-          navAwayFn = spa.findSafe(app, pCompName+'.onNavBlock' );
-          if (navAwayFn && spa.is(navAwayFn, 'function')) {
+          navAwayFn = _find(app, pCompName+'.onNavBlock' );
+          if (navAwayFn && _isFn(navAwayFn)) {
             navAwayFnRes = navAwayFn.call(app[pCompName], app[pCompName],  app[rCompName]);
           }
-          if (navAwayFn && !(spa.is(navAwayFnRes, 'boolean') && navAwayFnRes)) return;
+          if (navAwayFn && !(_isBool(navAwayFnRes) && navAwayFnRes)) return;
         }
       }
       spa.console.log('Render continues.');
@@ -5103,19 +5542,19 @@
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
     };
     var _renderOption = function(optionKey, dataAttrKey) {
-      return (spa.isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
+      return (_isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
     };
 
     /*Render Id*/
 //    var spaRenderId = ("" + $(viewContainerId).data("renderId")).replace(/undefined/, "");
-//    if (!spa.isBlank(spaRVOptions.dataRenderId)) {
+//    if (!_isBlank(spaRVOptions.dataRenderId)) {
 //      spaRenderId = spaRVOptions.dataRenderId;
 //    }
     var spaRenderId = _renderOption('dataRenderId', 'renderId');
     retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (spa.now()) + (spa.rand(1000, 9999)))));
 
 //    var targetRenderMode = ("" + $(viewContainerId).data("renderMode")).replace(/undefined/, "");
-//    if (!spa.isBlank(spaRVOptions.dataRenderMode)) {
+//    if (!_isBlank(spaRVOptions.dataRenderMode)) {
 //      targetRenderMode = spaRVOptions.dataRenderMode;
 //    }
     var targetRenderMode = _renderOption('dataRenderMode', 'renderMode') || 'replace';
@@ -5129,7 +5568,7 @@
     if (!(useOptions && uOptions.hasOwnProperty('dataScriptsCache'))) /* NOT provided in Render Request */
     { /* Read from view container [data-scripts-cache='{true|false}'] */
       var scriptsCacheInTagData = _renderOptionInAttr('scriptsCache'); //("" + $(viewContainerId).data("scriptsCache")).replace(/undefined/, "");
-      if (!spa.isBlank(scriptsCacheInTagData)) {
+      if (!_isBlank(scriptsCacheInTagData)) {
         spaRVOptions.dataScriptsCache = scriptsCacheInTagData.toBoolean();
         spa.console.info("Override [data-scripts-cache] with [data-scripts-cache] option in tag-attribute: " + spaRVOptions.dataScriptsCache);
       }
@@ -5139,39 +5578,39 @@
     }
 
     var vScriptsList = _renderOptionInAttr('scripts'); //(""+ $(viewContainerId).data("scripts")).replace(/undefined/, "");
-    if (vScriptsList && spa.isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
+    if (vScriptsList && _isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
       vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'";
     }
-    var vScripts = spa.toJSON(vScriptsList || "{}");
+    var vScripts = _toObj(vScriptsList || "{}");
 
     /* Check the option to override */
-    if ((!(_.isObject(spaRVOptions.dataScripts))) && (_.isString(spaRVOptions.dataScripts))) {
+    if ((!(_isObj(spaRVOptions.dataScripts))) && (_isStr(spaRVOptions.dataScripts))) {
       vScriptsList = (spaRVOptions.dataScripts || "").trimStr();
-      if (spa.isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
+      if (_isBlank((vScriptsList || "").replace(/[^:'\"]/g,''))){
         vScriptsList = "'"+ ((vScriptsList).split(",").join("','")) + "'";
       }
-      spaRVOptions.dataScripts = spa.toJSON(vScriptsList);
+      spaRVOptions.dataScripts = _toObj(vScriptsList);
     }
 
-    if (!$.isEmptyObject(spaRVOptions.dataScripts)) {
+    if (!_isEmptyObj(spaRVOptions.dataScripts)) {
       vScripts = spaRVOptions.dataScripts;
     }
-    if (_.isArray(vScripts)) {
-      _.remove(vScripts,function(item){ return !item; });
+    if (_isArr(vScripts)) {
+      _removeOn(vScripts,function(item){ return !item; });
     }
     spa.console.info(vScripts);
     var vScriptsNames;
     vScriptsList=[];
-    if (vScripts && (!$.isEmptyObject(vScripts))) {
-      if (_.isArray(vScripts)) {
+    if (vScripts && (!_isEmptyObj(vScripts))) {
+      if (_isArr(vScripts)) {
         spa.console.info("Convert array of script(s) without scriptID to object with scriptID(s).");
         var newScriptsObj = spa.renderUtils.array2ObjWithKeyPrefix(vScripts, '__scripts_', viewContainerId);
         spa.console.info("Scripts(s) with scriptID(s).");
         spa.console.log(newScriptsObj);
-        vScripts = (_.isEmpty(newScriptsObj))? {} : newScriptsObj;
+        vScripts = (_isEmpty(newScriptsObj))? {} : newScriptsObj;
       }
       spa.console.info("External scripts to be loaded [cache:" + (spaRVOptions.dataScriptsCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vScripts));
-      vScriptsNames = _.keys(vScripts);
+      vScriptsNames = _keys(vScripts);
     }
     else {
       spa.console.info("No scripts defined [data-scripts] in view container [" + viewContainerId + "] to load.");
@@ -5180,7 +5619,7 @@
 
     if (vScriptsNames) {
       var scriptPath;
-      vScriptsList = _.map(vScriptsNames, function (scriptId) {
+      vScriptsList = _map(vScriptsNames, function (scriptId) {
         scriptPath = _getFullPath4Component(vScripts[scriptId], rCompName);
         if (!(scriptPath.endsWithStrIgnoreCase( '.js' )) && (scriptPath.indexOf('?')<0)) {
           scriptPath += spa.defaults.components.scriptExt;
@@ -5195,17 +5634,17 @@
       /*Wait till scripts are loaded before proceed*/
       spa.console.info("External Scripts Loaded.");
 
-      if (!_appApiInitialized && (Object.keys(app['api']).length)) _initApiUrls();
+      if (!_appApiInitialized && (_keys(app['api']).length)) _initApiUrls();
 
       var dataPreRequest = (spaRVOptions)? spaRVOptions['dataPreRequest'] : '';
-      if (spa.is(dataPreRequest, 'string')) {
+      if (_isStr(dataPreRequest)) {
         dataPreRequest = spa.renderUtils.getFn(dataPreRequest);
       }
-      if (spa.is(dataPreRequest, 'function')) {
+      if (_isFn(dataPreRequest)) {
         try{
           var dataPreRequestRes = dataPreRequest.call(app[rCompName]);
-          if (dataPreRequestRes && spa.is(dataPreRequestRes, 'object')) {
-            Object.keys(dataPreRequestRes).forEach(function(oKey){
+          if (dataPreRequestRes && _isObj(dataPreRequestRes)) {
+            _keys(dataPreRequestRes).forEach(function(oKey){
               if (oKey.indexOf('data')==0) {
                 spaRVOptions[oKey] = dataPreRequestRes[oKey];
               }
@@ -5226,21 +5665,21 @@
         , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data"
         , defPayLaod = _appApiDefaultPayload()
         , dataUrlPayLoad
-        , _stringifyPayload = (spaRVOptions && spaRVOptions.hasOwnProperty('stringifyPayload'))? spaRVOptions['stringifyPayload'] : spa.findSafe(app, 'api.ajaxOptions.stringifyPayload');
+        , _stringifyPayload = (spaRVOptions && spaRVOptions.hasOwnProperty('stringifyPayload'))? spaRVOptions['stringifyPayload'] : _find(app, 'api.ajaxOptions.stringifyPayload');
 
       dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
       viewDataModelName = dataModelName.replace(/\./g, "_");
 
       var spaTemplateModelData = {};
       if (useParamData) {
-        spaTemplateModelData[viewDataModelName] = (spa.is(spaRVOptions.data, 'function'))? (spaRVOptions.data()) : (spaRVOptions.data);
+        spaTemplateModelData[viewDataModelName] = (_isFn(spaRVOptions.data))? (spaRVOptions.data()) : (spaRVOptions.data);
         spa.console.info("Loaded data model [" + dataModelName + "] from argument");
       }
       else {
         if (!(useOptions && uOptions.hasOwnProperty('dataCache'))) /* NOT provided in Render Request */
         { /* Read from view container [data-cache='{true|false}'] */
           var dataCacheInTagData = _renderOptionInAttr('cache');//("" + $(viewContainerId).data("cache")).replace(/undefined/, "");
-          if (!spa.isBlank(dataCacheInTagData)) {
+          if (!_isBlank(dataCacheInTagData)) {
             spaRVOptions.dataCache = dataCacheInTagData.toBoolean();
             spa.console.info("Override [data-cache] with [data-cache] option in tag-attribute: " + spaRVOptions.dataCache);
           }
@@ -5249,57 +5688,57 @@
           spa.console.info("Override [data-cache] with user option [dataCache]: " + spaRVOptions.dataCache);
         }
 
-        if (spa.isBlank(dataModelUrl)) { /*dataFound = false;*/
+        if (_isBlank(dataModelUrl)) { /*dataFound = false;*/
           spaTemplateModelData[viewDataModelName] = {};
 
           //Check dataCollection
           var dataModelCollection = _renderOptionInAttr('collection');//("" + $(viewContainerId).data("collection")).replace(/undefined/, ""); //from HTML
-          if (dataModelCollection) dataModelCollection = spa.toJSON(dataModelCollection); //convert to json if found
-          if (!spa.isBlank(spaRVOptions.dataCollection)) //override with javascript
+          if (dataModelCollection) dataModelCollection = _toObj(dataModelCollection); //convert to json if found
+          if (!_isBlank(spaRVOptions.dataCollection)) //override with javascript
           { dataModelCollection = spaRVOptions.dataCollection;
           }
-          if (_.isArray(dataModelCollection)) dataModelCollection = {urls: dataModelCollection};
+          if (_isArr(dataModelCollection)) dataModelCollection = {urls: dataModelCollection};
 
           var dataModelUrls = dataModelCollection['urls'];
 
-          if (spa.isBlank(dataModelUrls)) {
-            spa.console.warn("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
-            spaTemplateModelData[viewDataModelName] = _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra);
+          if (_isBlank(dataModelUrls)) {
+            spa.console.info("Model Data [" + dataModelName + "] or [data-url] or [data-collection] NOT found! Check the arguments or html markup. Rendering with options.");
+            spaTemplateModelData[viewDataModelName] = _mergeDeep({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra);
           }
           else { //Processing data-collection
-            if (!_.isArray(dataModelUrls)) {
+            if (!_isArr(dataModelUrls)) {
               spa.console.warn("Invalid [data-urls].Check the arguments or html markup. Rendering with empty data {}.");
             }
             else {
               spa.console.info("Processing data-URLs");
               var dataIndexApi = 0, defaultAutoDataNamePrefix = dataModelCollection['nameprefix'] || "data";
-              _.each(dataModelUrls, function (dataApi) {
+              _each(dataModelUrls, function (dataApi) {
                 var defaultApiDataModelName = (defaultAutoDataNamePrefix + dataIndexApi)
-                  , apiDataModelName = _.has(dataApi, 'name') ? (('' + dataApi.name).replace(/[^a-zA-Z0-9]/gi, '')) : (_.has(dataApi, 'target') ? ('' + dataApi.target) : defaultApiDataModelName)
-                  , apiDataUrl = _.has(dataApi, 'url') ? dataApi.url : (_.has(dataApi, 'path') ? dataApi.path : '');
+                  , apiDataModelName = _hasKey(dataApi, 'name') ? (('' + dataApi.name).replace(/[^a-zA-Z0-9]/gi, '')) : (_hasKey(dataApi, 'target') ? ('' + dataApi.target) : defaultApiDataModelName)
+                  , apiDataUrl = _hasKey(dataApi, 'url') ? dataApi.url : (_hasKey(dataApi, 'path') ? dataApi.path : '');
 
                 if (apiDataModelName.containsStr(".")) {
-                  apiDataModelName = _.last(apiDataModelName.split("."), 1);
+                  apiDataModelName = _last(apiDataModelName.split("."));
                 }
                 apiDataModelName = apiDataModelName.ifBlankStr(defaultApiDataModelName);
                 spa.console.info('processing data-api for: ' + apiDataModelName);
                 spa.console.log(dataApi);
 
                 if (apiDataUrl) {
-                  if (_.has(dataApi, 'urlParams')) {
+                  if (_hasKey(dataApi, 'urlParams')) {
                     apiDataUrl = spa.api.url(apiDataUrl, dataApi['urlParams']);
                   }
 
-                  var dataAjaxReqHeaders = _.has(dataApi, 'headers')? dataApi.headers : spaRVOptions['dataUrlHeaders'];
-                  if (spa.isBlank(dataAjaxReqHeaders)) {
-                    dataAjaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+                  var dataAjaxReqHeaders = _hasKey(dataApi, 'headers')? dataApi.headers : spaRVOptions['dataUrlHeaders'];
+                  if (_isBlank(dataAjaxReqHeaders)) {
+                    dataAjaxReqHeaders = _find(window, 'app.api.ajaxOptions.headers', {});
                   }
 
-                  dataUrlPayLoad = _.has(dataApi, 'params') ? dataApi.params : (_.has(dataApi, 'data') ? dataApi.data : {});
-                  if ((! _.has(dataApi, 'defaultPayload')) && (!spa.isBlank(defPayLaod))) {
-                    dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
+                  dataUrlPayLoad = _hasKey(dataApi, 'params') ? dataApi.params : (_hasKey(dataApi, 'data') ? dataApi.data : {});
+                  if ((! _hasKey(dataApi, 'defaultPayload')) && (!_isBlank(defPayLaod))) {
+                    dataUrlPayLoad = _mergeDeep({}, defPayLaod, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
                   }
-                  if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
+                  if (!_isBlank(dataUrlPayLoad) && _stringifyPayload) {
                     dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
                   }
 
@@ -5307,17 +5746,17 @@
                     $.ajax({
                       url: apiDataUrl,
                       method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
-                      headers: ((spa.is(dataAjaxReqHeaders, 'function'))? dataAjaxReqHeaders() : dataAjaxReqHeaders),
+                      headers: ((_isFn(dataAjaxReqHeaders))? dataAjaxReqHeaders() : dataAjaxReqHeaders),
                       data: dataUrlPayLoad,
-                      cache: _.has(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
-                      dataType: _.has(dataApi, 'type') ? dataApi.type : (spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text')),
+                      cache: _hasKey(dataApi, 'cache') ? dataApi.cache : spaRVOptions.dataCache,
+                      dataType: _hasKey(dataApi, 'type') ? dataApi.type : (spaRVOptions.dataType || _find(window, 'app.api.ajaxOptions.dataType', 'text')),
                       success: function (result, textStatus, jqXHR) {
                         var targetApiData
-                          , targetDataModelName = _.has(dataApi, 'target') ? ('' + dataApi.target) : ''
-                          , oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result;
+                          , targetDataModelName = _hasKey(dataApi, 'target') ? ('' + dataApi.target) : ''
+                          , oResult = _isStr(result)? _toObj(''+result, 'data') : result;
 
                         if (targetDataModelName.indexOf(".") > 0) {
-                          targetApiData = spa.hasKey(oResult, targetDataModelName) ? spa.find(oResult, targetDataModelName) : oResult;
+                          targetApiData = spa.hasKey(oResult, targetDataModelName) ? _find(oResult, targetDataModelName) : oResult;
                         }
                         else {
                           try {
@@ -5341,12 +5780,12 @@
                           fnApiDataSuccess = dataModelCollection['success'] || dataModelCollection['onsuccess'] || dataModelCollection['onSuccess']; //use common success
                         }
                         if (fnApiDataSuccess) {
-                          if (_.isFunction(fnApiDataSuccess)) {
+                          if (_isFn(fnApiDataSuccess)) {
                             fnApiDataSuccess.call(this, oResult, dataApi, textStatus, jqXHR);
                           }
-                          else if (_.isString(fnApiDataSuccess)) {
-                            var _xSuccessFn_ = spa.findSafe(window, fnApiDataSuccess);
-                            if (typeof _xSuccessFn_ === "function") {
+                          else if (_isStr(fnApiDataSuccess)) {
+                            var _xSuccessFn_ = _find(window, fnApiDataSuccess);
+                            if (_isFn(_xSuccessFn_)) {
                               _xSuccessFn_.call(this, oResult, dataApi, textStatus, jqXHR);
                             } else {
                               spa.console.log('Unknown ajax success handle: '+fnApiDataSuccess);
@@ -5366,19 +5805,19 @@
                           }
                         }
                         if (fnOnApiDataUrlErrorHandle) {
-                          if (_.isFunction(fnOnApiDataUrlErrorHandle)) {
+                          if (_isFn(fnOnApiDataUrlErrorHandle)) {
                             fnOnApiDataUrlErrorHandle.call(this, jqXHR, textStatus, errorThrown);
                           }
-                          else if (_.isString(fnOnApiDataUrlErrorHandle)) {
-                            var _xErrorFn_ = spa.findSafe(window, fnOnApiDataUrlErrorHandle);
-                            if (typeof _xErrorFn_ === "function") {
+                          else if (_isStr(fnOnApiDataUrlErrorHandle)) {
+                            var _xErrorFn_ = _find(window, fnOnApiDataUrlErrorHandle);
+                            if (_isFn(_xErrorFn_)) {
                               _xErrorFn_.call(this, oResult, dataApi);
                             } else {
                               spa.console.log('Unknown ajax error handle: '+fnOnApiDataUrlErrorHandle);
                             }
                           }
                         } else {
-                          if ( spa.is(app.api['onError'], 'function') ) {
+                          if ( _isFn(app.api['onError']) ) {
                             app.api.onError.call(this, jqXHR, textStatus, errorThrown);
                           } else {
                             spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
@@ -5412,7 +5851,7 @@
             }
 
             if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
-              spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? spa.find(localDataModelObj, dataModelName) : localDataModelObj;
+              spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? _find(localDataModelObj, dataModelName) : localDataModelObj;
             } else {
               try {
                 spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
@@ -5423,36 +5862,36 @@
 
           }
           else { /*External Data Source*/
-            if (!spa.isBlank(spaRVOptions.dataUrlParams)){
+            if (!_isBlank(spaRVOptions.dataUrlParams)){
               dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
             }
             spa.console.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache']) + "] from URL =>" + dataModelUrl);
             var ajaxReqHeaders = spaRVOptions.dataUrlHeaders;
-            if (spa.isBlank(ajaxReqHeaders)) {
-              ajaxReqHeaders = spa.findSafe(window, 'app.api.ajaxOptions.headers', {});
+            if (_isBlank(ajaxReqHeaders)) {
+              ajaxReqHeaders = _find(window, 'app.api.ajaxOptions.headers', {});
             }
 
             dataUrlPayLoad = spaRVOptions.dataParams;
-            if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!spa.isBlank(defPayLaod))) {
-              dataUrlPayLoad = _.merge({}, defPayLaod, ((!spa.isBlank(dataUrlPayLoad) && spa.is(dataUrlPayLoad, 'object'))? dataUrlPayLoad : {}));
+            if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!_isBlank(defPayLaod))) {
+              dataUrlPayLoad = _mergeDeep({}, defPayLaod, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
             }
-            if (!spa.isBlank(dataUrlPayLoad) && _stringifyPayload) {
+            if (!_isBlank(dataUrlPayLoad) && _stringifyPayload) {
               dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
             }
 
             var axOptions = {
                 url: dataModelUrl,
                 method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
-                headers: ((spa.is(ajaxReqHeaders, 'function'))? ajaxReqHeaders() : ajaxReqHeaders),
+                headers: ((_isFn(ajaxReqHeaders))? ajaxReqHeaders() : ajaxReqHeaders),
                 data: dataUrlPayLoad,
                 cache: spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache'],
-                dataType: spaRVOptions.dataType || spa.findSafe(window, 'app.api.ajaxOptions.dataType', 'text'),
+                dataType: spaRVOptions.dataType || _find(window, 'app.api.ajaxOptions.dataType', 'text'),
                 success: function (result) {
-                  var oResult = spa.is(result, 'string')? spa.toJSON(''+result, 'data') : result,
+                  var oResult = _isStr(result)? _toObj(''+result, 'data') : result,
                       validateData = _renderOption('dataValidate', 'validate');
 
                   if (dataModelName.indexOf(".") > 0) {
-                    spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? spa.find(oResult, dataModelName) : oResult;
+                    spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? _find(oResult, dataModelName) : oResult;
                   } else {
                     try{
                       if ((dataModelName == 'data') && !oResult.hasOwnProperty(dataModelName)) {
@@ -5469,19 +5908,19 @@
                 error: function (jqXHR, textStatus, errorThrown) {
                   //Call user defined function on Data URL Error
                   //var fnOnDataUrlErrorHandle = ("" + $(viewContainerId).data("urlErrorHandle")).replace(/undefined/, "");
-                  //if (!spa.isBlank(spaRVOptions.dataUrlErrorHandle)) {
+                  //if (!_isBlank(spaRVOptions.dataUrlErrorHandle)) {
                   //  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
                   //}
                   var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
-                  if (spa.isBlank(fnOnDataUrlErrorHandle)){
-                    if ( spa.is(app.api['onError'], 'function') ) {
+                  if (_isBlank(fnOnDataUrlErrorHandle)){
+                    if ( _isFn(app.api['onError']) ) {
                       app.api.onError.call(this, jqXHR, textStatus, errorThrown);
                     } else {
                       spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                     }
                   } else {
-                    var _xErrFn_ = spa.findSafe(window, fnOnDataUrlErrorHandle);
-                    if (typeof _xErrFn_ === 'function') {
+                    var _xErrFn_ = _find(window, fnOnDataUrlErrorHandle);
+                    if (_isFn(_xErrFn_)) {
                       _xErrFn_.call(this, jqXHR, textStatus, errorThrown);
                     } else {
                       spa.console.log('Unknown ajax error handle: '+fnOnDataUrlErrorHandle);
@@ -5503,24 +5942,24 @@
         //var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
         var vTemplate2RenderInTag = _renderOptionInAttr("template") || _renderOptionInAttr("html");
         var vTemplatesList = _renderOptionInAttr("templates") || _renderOptionInAttr("htmls");
-        if (vTemplatesList && spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
+        if (vTemplatesList && _isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
           vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
         }
-        var vTemplates = spa.toJSON(vTemplatesList || "{}");
+        var vTemplates = _toObj(vTemplatesList || "{}");
         /* Check the option to override */
-        if ((!(_.isObject(spaRVOptions.dataTemplates))) && (_.isString(spaRVOptions.dataTemplates))) {
+        if ((!(_isObj(spaRVOptions.dataTemplates))) && (_isStr(spaRVOptions.dataTemplates))) {
           vTemplatesList = (spaRVOptions.dataTemplates || "").trimStr();
-          if (spa.isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
+          if (_isBlank((vTemplatesList || "").replace(/[^:'\"]/g,''))){
             vTemplatesList = "'"+ ((vTemplatesList).split(",").join("','")) + "'";
           }
-          spaRVOptions.dataTemplates = spa.toJSON(vTemplatesList);
+          spaRVOptions.dataTemplates = _toObj(vTemplatesList);
         }
-        if (!$.isEmptyObject(spaRVOptions.dataTemplates)) {
+        if (!_isEmptyObj(spaRVOptions.dataTemplates)) {
           vTemplates = spaRVOptions.dataTemplates;
           vTemplatesList = "" + (JSON.stringify(vTemplates));
         }
-        if ((_.isEmpty(spa.toJSON((vTemplatesList||"").trimStr())))
-          || (_.isArray(vTemplates) && vTemplates.length==1 && spa.isBlank(vTemplates[0]))) {
+        if ((_isEmpty(_toObj((vTemplatesList||"").trimStr())))
+          || (_isArr(vTemplates) && vTemplates.length==1 && _isBlank(vTemplates[0]))) {
           vTemplates = {};
           vTemplatesList = "";
         }
@@ -5528,12 +5967,12 @@
         spa.console.info("Templates:");
         spa.console.info(vTemplates);
         //Handle if array without templateID, convert to object with auto templateID
-        if (_.isArray(vTemplates) && !_.isEmpty(vTemplates)) {
+        if (_isArr(vTemplates) && !_isEmpty(vTemplates)) {
           spa.console.info("Array of template(s) without templateID(s).");
           var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
           spa.console.info("Template(s) with template ID(s).");
           spa.console.log(newTemplatesObj);
-          if (_.isEmpty(newTemplatesObj)) {
+          if (_isEmpty(newTemplatesObj)) {
             vTemplates = {};
             vTemplatesList = "";
           } else {
@@ -5546,13 +5985,13 @@
         * 1: Check options
         * 2: if not in options check data-template
         * */
-        if ((!vTemplates) || ($.isEmptyObject(vTemplates))) {
+        if ((!vTemplates) || (_isEmptyObj(vTemplates))) {
           vTemplates = {};
           var _dataTemplate = spaRVOptions.dataTemplate
             , _tmplKey = ""
             , _tmplLoc ="";
-          if (spa.isBlank(_dataTemplate)) { //Not-in JS option
-            if (!spa.isBlank(vTemplate2RenderInTag)) { //Found in tag
+          if (_isBlank(_dataTemplate)) { //Not-in JS option
+            if (!_isBlank(vTemplate2RenderInTag)) { //Found in tag
               spa.console.info("Template to load from location <"+vTemplate2RenderInTag+">");
               _dataTemplate = vTemplate2RenderInTag;
             }
@@ -5560,7 +5999,7 @@
 
           _dataTemplate = (_dataTemplate || "").trimStr();
           spa.console.info("Primary Template: <"+_dataTemplate+">");
-          if (spa.isBlank(_dataTemplate) || _dataTemplate.equalsIgnoreCase("inline") || _dataTemplate.equals(".")){
+          if (_isBlank(_dataTemplate) || _dataTemplate.equalsIgnoreCase("inline") || _dataTemplate.equals(".")){
             spa.console.info("Using target container (inline) content as template.");
             _tmplKey = ("_tmplInline_" +(viewContainerId.trimStr("#")));
           } else if (_dataTemplate.beginsWithStr("#")) {
@@ -5578,9 +6017,9 @@
 
         spa.console.group("spaView");
 
-        if (vTemplates && (!$.isEmptyObject(vTemplates))) {
+        if (vTemplates && (!_isEmptyObj(vTemplates))) {
           spa.console.info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
-          var vTemplateNames = _.keys(vTemplates);
+          var vTemplateNames = _keys(vTemplates);
 
           spa.console.group("spaLoadingTemplates");
 
@@ -5590,7 +6029,7 @@
           { /* Read from view container [data-templates-cache='{true|false}'] */
             //var templatesCacheInTagData = ("" + $(viewContainerId).data("templatesCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("templateCache")).replace(/undefined/, "")  || ("" + $(viewContainerId).data("htmlsCache")).replace(/undefined/, "") || ("" + $(viewContainerId).data("htmlCache")).replace(/undefined/, "");
             var templatesCacheInTagData = _renderOptionInAttr("templatesCache") || _renderOptionInAttr("templateCache") || _renderOptionInAttr("htmlsCache") || _renderOptionInAttr("htmlCache");
-            if (!spa.isBlank(templatesCacheInTagData)) {
+            if (!_isBlank(templatesCacheInTagData)) {
               spaRVOptions.dataTemplatesCache = templatesCacheInTagData.toBoolean();
               spa.console.info("Override [data-templates-cache] with [data-templates-cache] option in tag-attribute: " + spaRVOptions.dataTemplatesCache);
             }
@@ -5603,7 +6042,7 @@
           spa.console.info("Load Templates");
           spa.console.info(vTemplates);
           var tmplPayload = spaRVOptions['templateUrlPayload'];
-          if ( tmplPayload && ((_is(tmplPayload, 'function')) || (_is(tmplPayload, 'string') && (tmplPayload.indexOf('=')<0)))) {
+          if ( tmplPayload && ((_isFn(tmplPayload)) || (_isStr(tmplPayload) && (tmplPayload.indexOf('=')<0)))) {
             tmplPayload = __finalValue(tmplPayload, spaRVOptions);
           }
           var tmplOptions = {
@@ -5613,7 +6052,7 @@
             , headers: __finalValue(spaRVOptions['templateUrlHeaders'], spaRVOptions)
             , onError: __finalValue(spaRVOptions['onTemplateUrlError'] || spaRVOptions['onError'])
           };
-          _.each(vTemplateNames, function (tmplId, tmplIndex) {
+          _each(vTemplateNames, function (tmplId, tmplIndex) {
             spa.console.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaRVOptions]);
             spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache, tmplOptions);
           });
@@ -5630,7 +6069,7 @@
           if (!(useOptions && uOptions.hasOwnProperty('dataStylesCache'))) /* NOT provided in Render Request */
           { /* Read from view container [data-styles-cache='{true|false}'] */
             var stylesCacheInTagData = _renderOptionInAttr("stylesCache"); //("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
-            if (!spa.isBlank(stylesCacheInTagData)) {
+            if (!_isBlank(stylesCacheInTagData)) {
               spaRVOptions.dataStylesCache = stylesCacheInTagData.toBoolean();
               spa.console.info("Override [data-styles-cache] with [data-styles-cache] option in tag-attribute: " + spaRVOptions.dataStylesCache);
             }
@@ -5640,24 +6079,24 @@
           }
 
           var vStylesList = _renderOptionInAttr("styles"); //(""+ $(viewContainerId).data("styles")).replace(/undefined/, "");
-          if (vStylesList && spa.isBlank((vStylesList || "").replace(/[^:'\"]/g,''))){
+          if (vStylesList && _isBlank((vStylesList || "").replace(/[^:'\"]/g,''))){
             vStylesList = "'"+ ((vStylesList).split(",").join("','")) + "'";
           }
-          var vStyles = spa.toJSON(vStylesList || "{}");
+          var vStyles = _toObj(vStylesList || "{}");
 
           /* Check the option to override */
-          if (!$.isEmptyObject(spaRVOptions.dataStyles)) {
+          if (!_isEmptyObj(spaRVOptions.dataStyles)) {
             vStyles = spaRVOptions.dataStyles;
           }
-          if (_.isArray(vStyles)) {
-            _.remove(vStyles,function(item){ return !item; });
+          if (_isArr(vStyles)) {
+            _removeOn(vStyles,function(item){ return !item; });
           }
-          if (vStyles && (!$.isEmptyObject(vStyles))) {
-            if (_.isArray(vStyles)) {
+          if (vStyles && (!_isEmptyObj(vStyles))) {
+            if (_isArr(vStyles)) {
               spa.console.info("Convert array of style(s) without styleID to object with styleID(s).");
               var newStylesObj = spa.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
   //            var dynStyleIDForContainer;
-  //            _.each(vStyles, function(styleUrl, sIndex){
+  //            _each(vStyles, function(styleUrl, sIndex){
   //              spa.console.log(styleUrl);
   //              if (styleUrl) {
   //                dynStyleIDForContainer = "__styles_" + ((''+styleUrl).replace(/[^a-z0-9]/gi,'_'));
@@ -5666,14 +6105,14 @@
   //            });
               spa.console.info("Style(s) with styleID(s).");
               spa.console.log(newStylesObj);
-              vStyles = (_.isEmpty(newStylesObj))? {} : newStylesObj;
+              vStyles = (_isEmpty(newStylesObj))? {} : newStylesObj;
             }
 
             spa.console.info("External styles to be loaded [cache:" + (spaRVOptions.dataStylesCache) + "] along with view container [" + viewContainerId + "] => " + JSON.stringify(vStyles));
-            var vStylesNames = _.keys(vStyles), fullStylePath;
+            var vStylesNames = _keys(vStyles), fullStylePath;
 
             spa.console.group("spaLoadingStyles");
-            _.each(vStylesNames, function (styleId) {
+            _each(vStylesNames, function (styleId) {
               fullStylePath = _getFullPath4Component(vStyles[styleId], rCompName);
               spaAjaxRequestsQue = spa.loadStyle(styleId, fullStylePath, spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
             });
@@ -5699,10 +6138,10 @@
                   //Get Validated using SPA.API
                   spa.console.info('Validating Data');
                   var fnDataValidate = _renderOption('dataValidate', 'validate');
-                  if (fnDataValidate && (_.isString(fnDataValidate))) {
-                    fnDataValidate = spa.findSafe(window, fnDataValidate);
+                  if (fnDataValidate && (_isStr(fnDataValidate))) {
+                    fnDataValidate = _find(window, fnDataValidate);
                   }
-                  if (fnDataValidate && _.isFunction(fnDataValidate)) {
+                  if (fnDataValidate && _isFn(fnDataValidate)) {
                     isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
                   } else {
                     isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
@@ -5715,20 +6154,20 @@
                   var fnDataPreProcessAsync = _renderOption('dataPreProcessAsync', 'preProcessAsync')
                     , fnDataPreProcessAsyncResponse;
 
-                  if (fnDataPreProcessAsync && (_.isString(fnDataPreProcessAsync))) { fnDataPreProcessAsync = spa.findSafe(window, fnDataPreProcessAsync); }
+                  if (fnDataPreProcessAsync && (_isStr(fnDataPreProcessAsync))) { fnDataPreProcessAsync = _find(window, fnDataPreProcessAsync); }
                   retValue['modelOriginal'] = $.extend({}, initialTemplateData);
                   retValue['model'] = initialTemplateData;
-                  if (fnDataPreProcessAsync && _.isFunction(fnDataPreProcessAsync)) {
+                  if (fnDataPreProcessAsync && _isFn(fnDataPreProcessAsync)) {
                     isPreProcessed = true;
                     var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
 
                     fnDataPreProcessAsyncResponse = fnDataPreProcessAsync.call(dataProcessContext, initialTemplateData);
-                    isPreProcessed = (!spa.is(fnDataPreProcessAsyncResponse, 'undefined'));
+                    isPreProcessed = (!_isUndef(fnDataPreProcessAsyncResponse));
                     if (!isPreProcessed) fnDataPreProcessAsyncResponse = [];
                     if (isPreProcessed) {
-                      isSinlgeAsyncPreProcess = (!spa.is(fnDataPreProcessAsyncResponse, 'array'))
-                                                || (spa.is(fnDataPreProcessAsyncResponse, 'array') && fnDataPreProcessAsyncResponse.length==1);
-                      if (!spa.is(fnDataPreProcessAsyncResponse, 'array')) {
+                      isSinlgeAsyncPreProcess = (!_isArr(fnDataPreProcessAsyncResponse))
+                                                || (_isArr(fnDataPreProcessAsyncResponse) && fnDataPreProcessAsyncResponse.length==1);
+                      if (!_isArr(fnDataPreProcessAsyncResponse)) {
                         fnDataPreProcessAsyncResponse = [fnDataPreProcessAsyncResponse];
                       }
                     }
@@ -5743,15 +6182,15 @@
                     if (isPreProcessed) {
                       spa.console.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
                       if (isSinlgeAsyncPreProcess && (dataPreProcessAsyncRes.length > 1) && (dataPreProcessAsyncRes[1] == 'success') ){
-                        //&& (spa.is(dataPreProcessAsyncRes[0], 'string')) && ((/\s*\{/).test(dataPreProcessAsyncRes[0])) ){
+                        //&& (_isStr(dataPreProcessAsyncRes[0])) && ((/\s*\{/).test(dataPreProcessAsyncRes[0])) ){
                         //if only 1 ajax request with JSON String as response
-                        dataPreProcessAsyncRes[0] = spa.toJSON(dataPreProcessAsyncRes[0]);
+                        dataPreProcessAsyncRes[0] = _toObj(dataPreProcessAsyncRes[0]);
                         dataPreProcessAsyncRes.splice(1);
                       } else {
                         //multiple ajax in preProcess
-                        _.each(dataPreProcessAsyncRes, function(apiRes, idx) {
-                          if ( apiRes && spa.is(apiRes, 'array')  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
-                            dataPreProcessAsyncRes[idx] = spa.toJSON(apiRes[0]);
+                        _each(dataPreProcessAsyncRes, function(apiRes, idx) {
+                          if ( apiRes && _isArr(apiRes)  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
+                            dataPreProcessAsyncRes[idx] = _toObj(apiRes[0]);
                           }
                         });
                       }
@@ -5759,40 +6198,40 @@
                     }
 
                     var fnDataProcess = _renderOption('dataProcess', 'process'), finalTemplateData;
-                    if (fnDataProcess && (_.isString(fnDataProcess))) {
-                      fnDataProcess = spa.findSafe(window, fnDataProcess);
+                    if (fnDataProcess && (_isStr(fnDataProcess))) {
+                      fnDataProcess = _find(window, fnDataProcess);
                     }
                     retValue['modelOriginal'] = $.extend({}, initialTemplateData);
                     retValue['model'] = initialTemplateData;
-                    if (fnDataProcess && _.isFunction(fnDataProcess)) {
+                    if (fnDataProcess && _isFn(fnDataProcess)) {
                       var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
                       dataPreProcessAsyncRes.unshift(initialTemplateData);
                       finalTemplateData = fnDataProcess.apply(dataProcessContext, dataPreProcessAsyncRes);
                     } else if (isPreProcessed) {
                       spa.console.warn(rCompName,'.dataPreProcessAsync without dataProcess. Merging responses.');
                       dataPreProcessAsyncRes.unshift(initialTemplateData);
-                      _.merge.apply(_, dataPreProcessAsyncRes);
+                      _mergeDeep.apply(_, dataPreProcessAsyncRes);
                     }
 
-                    retValue['model'] = (spa.is(finalTemplateData, 'undefined'))? initialTemplateData : finalTemplateData;
-                    if (!_.isObject(retValue['model'])) {
+                    retValue['model'] = (_isUndef(finalTemplateData))? initialTemplateData : finalTemplateData;
+                    if (!_isObj(retValue['model'])) {
                       retValue['model'] = retValue['modelOriginal'];
                     }
                     spa.console.log(rCompName, 'Final Template Data:', retValue['model']);
 
                     { if (rCompName) {
-                        if ((is(app, 'object')) && app.hasOwnProperty(rCompName)) {
-                          var compLocOrApiData = _.merge({}, (is(retValue['model'], 'object')? retValue['model'] : {'_noname' : retValue['model']}) );
+                        if ((_isObj(app)) && app.hasOwnProperty(rCompName)) {
+                          var compLocOrApiData = _mergeDeep({}, (_isObj(retValue['model'])? retValue['model'] : {'_noname' : retValue['model']}) );
                           if (compLocOrApiData.hasOwnProperty('spaComponent')) {
                             app[rCompName]['$data'] = {};
                           } else {
-                            app[rCompName]['$data'] = (spaRVOptions.extend$data)? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, compLocOrApiData) : {};
+                            app[rCompName]['$data'] = (spaRVOptions.extend$data)? _mergeDeep({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, compLocOrApiData) : {};
                           }
                           app[rCompName]['__global__']= window || {};
                         }
 
-                        retValue['model']['_this']  = _.merge({}, spa.findSafe(window, 'app.'+rCompName, {}));
-                        retValue['model']['_this_'] = _.merge({}, (spa.components[rCompName] || {}), uOptions);
+                        retValue['model']['_this']  = _mergeDeep({}, _find(window, 'app.'+rCompName, {}));
+                        retValue['model']['_this_'] = _mergeDeep({}, (spa.components[rCompName] || {}), uOptions);
                       }
                       retValue['model']['_global_'] = window || {};
 
@@ -5816,7 +6255,7 @@
                       //for values
                       var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
                       if (!spaRVOptions.skipDataBind && componentRefsV) {
-                        _.forEach(componentRefsV, function(cRef){
+                        _each(componentRefsV, function(cRef){
                           templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
                             cRef.replace(/{\s*\$this|{\s*\@\$/g, '_global_.app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
                         });
@@ -5825,17 +6264,19 @@
                       //for reference
                       var componentRefs = templateContentToBindAndRender.match(/({\s*\$(.*?)\s*})/g);
                       if (!spaRVOptions.skipDataBind && componentRefs) {
-                        _.forEach(componentRefs, function(cRef){
+                        _each(componentRefs, function(cRef){
                           templateContentToBindAndRender = templateContentToBindAndRender.replace((new RegExp(cRef.replace(/\$/, '\\$'), 'g')),
                             cRef.replace(/{\s*\$this|{\s*\$/g, 'app.').replace(/}/, '.').replace(/\s/g, '').replace(/\.\./, '.'+(rCompName||'')+'.'));
                         });
                       }
 
                       compiledTemplate = templateContentToBindAndRender;
-                      spa.console.log("Template Source:", templateContentToBindAndRender);
+                      spa.console.groupCollapsed('Template Source ...');
+                      spa.console.log(templateContentToBindAndRender);
+                      spa.console.groupEnd('Template Source ...');
                       spa.console.log("DATA for Template:", spaViewModel);
                       var skipSpaBind, spaBindData;
-                      if (!spa.isBlank(spaViewModel)) {
+                      if (!_isBlank(spaViewModel)) {
                         if (spaRVOptions.skipDataBind) {
                           spa.console.log('Skipped Data Binding.');
                         } else {
@@ -5849,7 +6290,7 @@
                             if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
                               templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
                               spa.console.log('TemplateBeforeBind', templateContentToBindAndRender);
-                              var data4SpaTemplate = is(spaViewModel, 'object')? _.merge({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                              var data4SpaTemplate = _isObj(spaViewModel)? _mergeDeep({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                               spa.console.log('SPA built-in binding ... ...', data4SpaTemplate);
                               templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
                               templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
@@ -5861,10 +6302,12 @@
 
                           if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
                             if ((typeof Handlebars != "undefined") && Handlebars) {
-                              spa.console.log("Data bind using handlebars.js.", templateContentToBindAndRender);
+                              spa.console.groupCollapsed("Data bind using handlebars on Template ...");
+                              spa.console.log(templateContentToBindAndRender);
+                              spa.console.groupEnd("Data bind using handlebars on Template ...");
                               try{
                                 var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
-                                var data4Template = is(spaViewModel, 'object')? _.merge({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                                var data4Template = _isObj(spaViewModel)? _mergeDeep({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                                 spaBindData = data4Template;
                                 if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
                                 compiledTemplate = preCompiledTemplate(data4Template);
@@ -5879,13 +6322,15 @@
 
                         }
                       }
-                      spa.console.log("Template Compiled:", compiledTemplate);
+                      spa.console.groupCollapsed("Compiled Template ...");
+                      spa.console.log(compiledTemplate);
+                      spa.console.groupEnd("Compiled Template ...");
 
                       doDeepRender = false;
                       retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
                       //Callback Function's context
-                      var renderCallbackContext = rCompName? _.merge({}, (app[rCompName] || {}), { __prop__: _.merge({}, (uOptions||{}) ) }) : {};
+                      var renderCallbackContext = rCompName? _mergeDeep({}, (app[rCompName] || {}), { __prop__: _mergeDeep({}, (uOptions||{}) ) }) : {};
                       if (renderCallbackContext['__prop__'] && renderCallbackContext['__prop__']['data']) {
                         delete renderCallbackContext['__prop__']['data']['_global_'];
                         delete renderCallbackContext['__prop__']['data']['_this_'];
@@ -5905,8 +6350,8 @@
                       if (fnBeforeRender){
                         var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
                         fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
-                        if (!spa.is(fnBeforeRenderRes, 'undefined')) {
-                          switch (spa.of(fnBeforeRenderRes)) {
+                        if (!_isUndef(fnBeforeRenderRes)) {
+                          switch (_of(fnBeforeRenderRes)) {
                             case 'string' :
                               retValue.view = fnBeforeRenderRes;
                               break;
@@ -5961,7 +6406,7 @@
                         $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
                         _$renderCountUpdate(rCompName);
                         spa.console.info("Render: SUCCESS");
-                        var rhKeys = _.keys(spa.renderHistory);
+                        var rhKeys = _keys(spa.renderHistory);
                         var rhLen = rhKeys.length;
                         if (rhLen > spa.renderHistoryMax) {
                           $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
@@ -6000,7 +6445,7 @@
                         if (spaRVOptions.dataRenderCallback) {
                           _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
                         }
-                        var isCallbackDisabled = (_.isString(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
+                        var isCallbackDisabled = (_isStr(_fnCallbackAfterRender) && _fnCallbackAfterRender.equalsIgnoreCase("off"));
                         spa.console.info("Processing callback: " + _fnCallbackAfterRender);
 
                         if (!isCallbackDisabled) {
@@ -6032,7 +6477,7 @@
                     }
                   });
                 }  else { //NOT a valid Data
-                  if ( spa.is(app.api['onResError'], 'function') ) {
+                  if ( _isFn(app.api['onResError']) ) {
                     app.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
                   } else {
                     spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
@@ -6065,7 +6510,7 @@
     var xEvent;
     var isBubbles    = true;
     var isCancelable = true;
-    if (spa.isIE) {
+    if (isIE) {
       xEvent = document.createEvent('Event');
       xEvent.initEvent(eName, isBubbles, isCancelable);
     } else {
@@ -6146,7 +6591,7 @@
   spa.initElementsIn = _initSpaElements;
 
   function _initFormValidation(el){
-    var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = spa.findSafe(spa, '_validate.defaults.offline', true);
+    var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = _find(spa, '_validate.defaults.offline', true);
 
     if ($el.length == 1) {
       formId  = $el.attr('id') || '';
@@ -6194,7 +6639,7 @@
         , xssValidationMsg  = (xssValidation.msg || '').trim();
 
       if ( /msg\s*:/g.test(vXssInAttr) ) {
-        xssValidationMsg = spa.toJSON(vXssInAttr)['msg'];
+        xssValidationMsg = _toObj(vXssInAttr)['msg'];
         if (xssValidationMsg) {
           vXssInAttr = 'on';
         } else {
@@ -6277,18 +6722,18 @@
   // spa.runOnceOnRenderFunctions = [spa.routeCurLocHash];
   // spa.runOnceOnRender = function(){
   //   spa.console.info("Render Complete.");
-  //   if ((spa.runOnceOnRenderFunctions && !_.isEmpty(spa.runOnceOnRenderFunctions)) || (spa.finallyOnRender && !_.isEmpty(spa.finallyOnRender)) ) {
+  //   if ((spa.runOnceOnRenderFunctions && !_isEmpty(spa.runOnceOnRenderFunctions)) || (spa.finallyOnRender && !_isEmpty(spa.finallyOnRender)) ) {
   //     if (!spa.runOnceOnRenderFunctions) spa.runOnceOnRenderFunctions = [];
-  //     if (!_.isArray(spa.runOnceOnRenderFunctions)) {
+  //     if (!_isArr(spa.runOnceOnRenderFunctions)) {
   //       spa.runOnceOnRenderFunctions = [spa.runOnceOnRenderFunctions];
   //     }
-  //     if (_.isArray(spa.runOnceOnRenderFunctions)) {
+  //     if (_isArr(spa.runOnceOnRenderFunctions)) {
   //       if (spa.finallyOnRender) {
-  //         if (!_.isArray(spa.finallyOnRender)){ spa.finallyOnRender = [spa.finallyOnRender]; }
+  //         if (!_isArr(spa.finallyOnRender)){ spa.finallyOnRender = [spa.finallyOnRender]; }
   //         spa.runOnceOnRenderFunctions = spa.runOnceOnRenderFunctions.concat(spa.finallyOnRender);
   //       }
-  //       _.each(spa.runOnceOnRenderFunctions, function(fn){
-  //         if (_.isFunction(fn)) fn();
+  //       _each(spa.runOnceOnRenderFunctions, function(fn){
+  //         if (_isFn(fn)) fn();
   //       });
   //     }
   //     spa.finallyOnRender = spa.runOnceOnRenderFunctions = undefined;
@@ -6298,7 +6743,7 @@
   /* Internal wrapper for jQuery.spaRender */
   spa.setElIdIfNot = function(el) {
     var $el = $(el);
-    if (spa.isBlank($el.attr("id"))) {
+    if (_isBlank($el.attr("id"))) {
       $el.attr("id", ("_el_" + (spa.now()) + "_" + spa.rand(1000, 9999)));
     }
     return ($el.attr("id"));
@@ -6306,7 +6751,7 @@
   function __renderView(obj, opt) {
     var retValue;
     var viewContainerId = spa.setElIdIfNot(obj);
-    if ((opt) && (!$.isEmptyObject(opt))) {
+    if ((opt) && (!_isEmptyObj(opt))) {
       retValue = spa.render("#" + viewContainerId, opt);
     }
     else {
@@ -6395,21 +6840,21 @@
       return _isSpaNavAllowed(this);
     },
     disable: function(disable){
-      if ((!!disable) || spa.is(disable, 'undefined')) {
+      if ((!!disable) || _isUndef(disable)) {
         return this.css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
       } else {
         return this.enable(true);
       }
     },
     enable: function(enable){
-      if ((!!enable) || spa.is(enable, 'undefined')) {
+      if ((!!enable) || _isUndef(enable)) {
         return this.css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
       } else {
         return this.disable(true);
       }
     },
     value:function(newValue, eventAfterUpdate){
-      if (spa.is(newValue, 'undefined')) {
+      if (_isUndef(newValue)) {
         return this.val();
       } else {
         this.each(function(){
@@ -6419,7 +6864,7 @@
       }
     },
     htm:function(newValue){
-      if (spa.is(newValue, 'undefined')) {
+      if (_isUndef(newValue)) {
         return this.html();
       } else {
         this.each(function(){
@@ -6431,10 +6876,10 @@
     dataJSON:function(key, newValue, overWrite){
       var curElData;
       if (arguments.length) {
-        curElData = spa.toJSON(this.data(key));
-        curElData = spa.is(curElData, 'object')? curElData : {};
-        if (!spa.is(newValue, 'undefined')) {
-          curElData = overWrite? newValue : (_.merge(curElData, newValue));
+        curElData = _toObj(this.data(key));
+        curElData = _isObj(curElData)? curElData : {};
+        if (!_isUndef(newValue)) {
+          curElData = overWrite? newValue : (_mergeDeep(curElData, newValue));
           var curElDataStr = JSON.stringify(curElData);
           var keyDashed = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
           this.attr("data-"+keyDashed, curElDataStr).data(key, curElDataStr);
@@ -6496,7 +6941,7 @@
       } else if ($form.length==1) {
         var formId = '#'+$form.attr('id'), elType = ($form.prop('tagName')||'').toUpperCase();
         if ('FORM' == elType) {
-          if (spa.is(elFilter,'string')) {
+          if (_isStr(elFilter)) {
             var elIDs = $form.find(elFilter).map(function(){ return this.id; }).get().join();
             vResponse = spa.validateForm(formId, elIDs, showMsg, validateAll);
           } else {
@@ -6553,14 +6998,14 @@
       var apiUrl = (spa.api.urls[apiKey] || apiKey)
         , isStaticUrl = apiUrl.beginsWithStr('!') || spa.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || spa.api.forceParamValuesInMockUrls
-        , paramsInUrl = _.uniq(apiUrl.extractStrBetweenIn('{', '}'))
+        , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
         , pKey, pValue;
 
-      if (!spa.isBlank(paramsInUrl)) {
-        _.each(paramsInUrl, function(param){
+      if (!_isBlank(paramsInUrl)) {
+        _each(paramsInUrl, function(param){
           pKey   = param.replace(/[{}<>]/g, '');
           if (pKey) {
-            pValue = spa.findSafe(urlReplaceKeyValues, pKey, urlReplaceKeyValues['_undefined']);
+            pValue = _find(urlReplaceKeyValues, pKey, urlReplaceKeyValues['_undefined']);
             pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? pValue : ('_'+pKey)) : pValue);
             apiUrl = apiUrl.replace(new RegExp(param.replace(/([^a-zA-Z0-9])/g,'\\$1'), 'g'), pValue);
           }
@@ -6585,18 +7030,18 @@
     },
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
-      var defAjaxOptions = spa.findSafe(window, 'app.api.ajaxOptions', {});
-      var apiErroHandle = (spa.is(ajaxOptions, 'object') && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : (app.api['onError'] || spa.api.onReqError);
+      var defAjaxOptions = _find(window, 'app.api.ajaxOptions', {});
+      var apiErroHandle = (_isObj(ajaxOptions) && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : (app.api['onError'] || spa.api.onReqError);
 
       ajaxOptions = $.extend({}, defAjaxOptions, ajaxOptions,  {
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
-          axResponse = (_.isString(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? spa.toJSON(axResponse) : axResponse;
+          axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
           if (spa.api['isCallSuccess'](axResponse)) {
             ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
           else {
-            if ( spa.is(app.api['onResError'], 'function') ) {
+            if ( _isFn(app.api['onResError']) ) {
               app.api.onResError.call(this, axResponse, textStatus, jqXHR);
             } else {
               spa.api.onResError.call(this, axResponse, textStatus, jqXHR);
@@ -6613,20 +7058,20 @@
         ajaxOptions['contentType'] = 'application/json';
       }
 
-      if (ajaxOptions['data'] && spa.is(ajaxOptions['data'], 'object') && ajaxOptions['stringifyPayload']) {
+      if (ajaxOptions['data'] && _isObj(ajaxOptions['data']) && ajaxOptions['stringifyPayload']) {
         delete ajaxOptions['stringifyPayload'];
         ajaxOptions['data'] = JSON.stringify(ajaxOptions['data']);
       }
 
       if (ajaxOptions['defaultPayload']) {
-        var reqPayloadType = spa.of(ajaxOptions['data'])
+        var reqPayloadType = _of(ajaxOptions['data'])
           , defaultPayload = ajaxOptions['defaultPayload']
-          , defaultPayloadX = (spa.is(defaultPayload, 'function')? defaultPayload(reqPayload) : (spa.is(defaultPayload, 'object')? _.merge({}, defaultPayload) : defaultPayload))
-          , reqPayload = (reqPayloadType == 'string')? spa.toJSON(ajaxOptions['data']) : ajaxOptions['data'];
+          , defaultPayloadX = (_isFn(defaultPayload)? defaultPayload(reqPayload) : (_isObj(defaultPayload)? _mergeDeep({}, defaultPayload) : defaultPayload))
+          , reqPayload = (reqPayloadType == 'string')? _toObj(ajaxOptions['data']) : ajaxOptions['data'];
 
-        if (spa.is(defaultPayloadX, 'object')) {
-          var finalReqPayload = (spa.is(reqPayload, 'object'))? _.merge({}, defaultPayloadX, reqPayload) : defaultPayloadX;
-          if (!spa.isBlank(finalReqPayload) && (reqPayloadType == 'string')) {
+        if (_isObj(defaultPayloadX)) {
+          var finalReqPayload = (_isObj(reqPayload))? _mergeDeep({}, defaultPayloadX, reqPayload) : defaultPayloadX;
+          if (!_isBlank(finalReqPayload) && (reqPayloadType == 'string')) {
             finalReqPayload = JSON.stringify(finalReqPayload);
           }
           ajaxOptions['data'] = finalReqPayload;
@@ -6643,15 +7088,15 @@
     },
     _params2AxOptions : function(){
       var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true }, hasPayLoad, axOverrideOptions, hasSuccessFn;
-      _.each(arguments, function(arg){
+      _each(arguments, function(arg){
         switch(true){ //NOTE: DON'T CHANGE THE ORDER
-          case (_.isString(arg))  : oKey='url';
+          case (_isStr(arg))  : oKey='url';
             if (axOptions['url']) {
               hasPayLoad = true;
               oKey='data';
             }
             break;
-          case (spa.is(arg, 'function')):
+          case (_isFn(arg)):
             if (!hasSuccessFn) {
               hasSuccessFn = true;
               oKey='_success';
@@ -6659,8 +7104,8 @@
               oKey='error';
             }
             break;
-          case (_.isBoolean(arg)) : oKey='async'; break;
-          case (_.isObject(arg))  :
+          case (_isBool(arg)) : oKey='async'; break;
+          case (_isObj(arg))  :
             if ( hasPayLoad || arg.__hasPrimaryKeys('ajaxOptions|dataUrlParams') ) {
               oKey='axOptions';
               axOverrideOptions = arg.hasOwnProperty('ajaxOptions')? arg['ajaxOptions'] : arg;
@@ -6681,7 +7126,7 @@
           }
           delete axOverrideOptions['dataUrlParams'];
         }
-        _.merge(axOptions, axOverrideOptions);
+        _mergeDeep(axOptions, axOverrideOptions);
       }
       spa.console.log('API ajax options >>');
       spa.console.log(axOptions);
@@ -6702,9 +7147,9 @@
     mix : function(){
       var apiQue=[], fnWhenDone = arguments[arguments.length-1];
       for(var i=0; i<arguments.length; i++){
-        if (spa.is(arguments[i], 'array')) {
+        if (_isArr(arguments[i])) {
           apiQue = apiQue.concat(arguments[i]);
-        } else if (!spa.is(arguments[i], 'function')) {
+        } else if (!_isFn(arguments[i])) {
           apiQue.push(arguments[i]);
         }
       }
@@ -6714,18 +7159,18 @@
 
         if ((apiQue.length==1) && (apiResponses.length > 1) && (apiResponses[1] == 'success') ){
           //if only 1 ajax request with success response
-          apiResponses[0] = spa.toJSON(apiResponses[0]);
+          apiResponses[0] = _toObj(apiResponses[0]);
           apiResponses.splice(1); //remove 2nd and 3d arguments 'success' and jqXHR
         } else {
           //multiple ajax requests
-          _.each(apiResponses, function(apiRes, idx) {
-            if ( apiRes && spa.is(apiRes, 'array')  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
-              apiResponses[idx] = spa.toJSON(apiRes[0]);
+          _each(apiResponses, function(apiRes, idx) {
+            if ( apiRes && _isArr(apiRes)  && (apiRes.length > 1) && (apiRes[1] == 'success') ) {
+              apiResponses[idx] = _toObj(apiRes[0]);
             }
           });
         }
 
-        if (fnWhenDone && spa.is(fnWhenDone, 'function')) {
+        if (fnWhenDone && _isFn(fnWhenDone)) {
           fnWhenDone.apply(undefined, apiResponses);
         }
       });
@@ -6759,11 +7204,11 @@
     //   if (uLang) {
     //     if (spa.i18n.onLangChange) {
     //       var fnOnLangChange = spa.i18n.onLangChange,
-    //           nLang = (spa.is(fnOnLangChange,'function'))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
-    //       uLang = (spa.is(nLang, 'string'))? nLang : uLang;
+    //           nLang = (_isFn(fnOnLangChange))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
+    //       uLang = (_isStr(nLang))? nLang : uLang;
     //     }
     //     $('html').attr('lang', uLang.replace('_', '-'));
-    //     spa.i18n.setLanguage(uLang, _.merge({}, spa.defaults.lang, spa.findSafe(window, 'app.conf.lang', {}), spa.findSafe(window, 'app.lang', {}), (options||{}) ));
+    //     spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
     //   }
     // }
     $(document).on("click", "[data-i18n-lang]", function() {
@@ -6813,15 +7258,15 @@
 
   function _isLiveApiUrl(apiUrl, liveApiUrls){
     var retValue = '',
-        liveApiPrefix = liveApiUrls || spa.findSafe(window, 'app.api.liveApiPrefix', ''),
+        liveApiPrefix = liveApiUrls || _find(window, 'app.api.liveApiPrefix', ''),
         isMockUrl = apiUrl.beginsWithStr('!');
 
     apiUrl = apiUrl.trimLeftStr('!');
     if (liveApiPrefix) {
       var liveApiPrefixLst = [], i=0, len=0, liveApiPrefixX;
-      if (spa.is(liveApiPrefix, 'string')) {
+      if (_isStr(liveApiPrefix)) {
         liveApiPrefixLst = liveApiPrefix.split(',');
-      } else if (spa.is(liveApiPrefix, 'array')) {
+      } else if (_isArr(liveApiPrefix)) {
         liveApiPrefixLst = liveApiPrefix;
       }
       len=liveApiPrefixLst.length;
@@ -6840,16 +7285,16 @@
   }
 
   function _ajaxSetReqHeaders(req, options){
-    var reqHeaders = spa.findSafe(window, 'app.api.reqHeaders');
-    var reqHeadersToSend = (is(reqHeaders, 'function'))? reqHeaders(req, options) : reqHeaders;
-    if (is(reqHeadersToSend, 'object')) {
-      _.forEach(Object.keys(reqHeadersToSend), function(reqHeadKey){
+    var reqHeaders = _find(window, 'app.api.reqHeaders');
+    var reqHeadersToSend = (_isFn(reqHeaders))? reqHeaders(req, options) : reqHeaders;
+    if (_isObj(reqHeadersToSend)) {
+      _each(_keys(reqHeadersToSend), function(reqHeadKey){
         req.setRequestHeader(reqHeadKey, reqHeadersToSend[reqHeadKey]);
       });
-    } else if (is(reqHeadersToSend, 'string')) {
+    } else if (_isStr(reqHeadersToSend)) {
       if (_isLiveApiUrl(options.url)) {
         options['data'] = options['data'] || '';
-        options['data'] += (spa.isBlank(options['data'])? '':'&') + reqHeadersToSend;
+        options['data'] += (_isBlank(options['data'])? '':'&') + reqHeadersToSend;
       } else {
         req.setRequestHeader('reqHeadersInLiveUrl', reqHeadersToSend);
       }
@@ -6862,8 +7307,6 @@
     return !isFullPath;
   }
 
-  function _isFn() { return (typeof arguments[0] === 'function'); }
-  function _isObj() { return (typeof arguments[0] === 'object'); }
   function _ajax( options ){
 
     var axOptions = {
@@ -6896,7 +7339,7 @@
         axHeaders = {};
 
     // updating axOptions
-    Object.keys(options || {}).forEach(function(oKey){
+    _keys(options || {}).forEach(function(oKey){
       axOptions[oKey] = options[oKey];
     });
 
@@ -6907,7 +7350,7 @@
       axOptions.headers = axOptions.headers.call(undefined, axOptions);
     }
     if (_isObj(axOptions.headers)) {
-      Object.keys(axOptions.headers).forEach(function(oKey){
+      _keys(axOptions.headers).forEach(function(oKey){
         axHeaders[oKey] = axOptions.headers[oKey];
       });
     }
@@ -6934,7 +7377,7 @@
 
     var onReadyStateChange;
 
-    Object.keys(axOptions).forEach(function(oKey){
+    _keys(axOptions).forEach(function(oKey){
       var eName = oKey.toLowerCase();
       if ((eName === 'onreadystatechange') && (_isFn(axOptions[oKey]))) {
         onReadyStateChange = axOptions[oKey];
@@ -7012,7 +7455,7 @@
       }
 
       // Set Request Headers
-      Object.keys(axHeaders).forEach(function(oKey){
+      _keys(axHeaders).forEach(function(oKey){
         xhr.setRequestHeader(oKey, axHeaders[oKey]);
       });
 
@@ -7029,14 +7472,14 @@
 
     return xhr;
   }
-  spa.ajax = _ajax;
+  //spa.ajax = _ajax;
 
-  function _mockSysTest() {
+  function _testMockSys() {
     if (app['api']) {
       _ajax({url: _mockFinalUrl(), method:'HEAD', error:function(){
-          var mockBaseUrlExternal = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '';
+          var mockBaseUrlExternal = _find(app, 'api.mockBaseUrl') || _find(spa, 'api.mockBaseUrl') || '';
           var mockBaseUrl  = ((mockBaseUrlExternal || location.origin).trimRightStr('/')) + '/',
-              mockRootFldr = mockBaseUrlExternal? '' : ((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
+              mockRootFldr = mockBaseUrlExternal? '' : ((_find(app, 'api.mockRootFolder') || _find(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
               newMockAddress = prompt('Enter Mock Root Address: http[s]://server.address[:port]/root-folder', mockBaseUrl+mockRootFldr);
           if (newMockAddress) {
             var rootIndex = newMockAddress.indexOf('/', 8),
@@ -7044,12 +7487,12 @@
                 newMockRootFldr = (rootIndex > 0)? newMockAddress.substr(rootIndex+1) : '';
             app.api['mockBaseUrl']    = (newMockBaseUrl == location.origin)? '' : newMockBaseUrl;
             app.api['mockRootFolder'] = newMockRootFldr;
-            _mockSysTest();
+            _testMockSys();
           }
         }});
     }
   }
-  spa.mockSysTest = _mockSysTest;
+  spa.testMockSys = _testMockSys;
 
   function _mockFinalUrl( liveUrl, reqMethod, liveApiPrefixStr ){
     liveUrl          = liveUrl || '/';
@@ -7067,9 +7510,9 @@
     }
 
     var finalMockUrl = '',
-        mockBaseUrl  = spa.findSafe(app, 'api.mockBaseUrl') || spa.findSafe(spa, 'api.mockBaseUrl') || '',
-        mockRootFldr = mockBaseUrl? '' : (((spa.findSafe(app, 'api.mockRootFolder') || spa.findSafe(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/'),
-        mockDataFile = spa.findSafe(app, 'api.mockDataFile') || spa.findSafe(spa, 'api.mockDataFile') || '',
+        mockBaseUrl  = _find(app, 'api.mockBaseUrl') || _find(spa, 'api.mockBaseUrl') || '',
+        mockRootFldr = mockBaseUrl? '' : (((_find(app, 'api.mockRootFolder') || _find(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/'),
+        mockDataFile = _find(app, 'api.mockDataFile') || _find(spa, 'api.mockDataFile') || '',
         finalMockUrl = (liveUrl||'').replace(/[\{\}]/g,'').replace(RegExp('(.*)(/*)'+(liveApiPrefixStr.trimLeftStr('/'))), mockRootFldr).replace(/(\/)*\?/, reqMethod+'/'+mockDataFile+'?').replace(/\?$/, '');
 
     if (mockBaseUrl) {
@@ -7093,7 +7536,7 @@
     var actualUrl = options.url, isMockReq;
 
     //any request Header to send?
-    var reqHeaders = spa.findSafe(window, 'app.api.reqHeaders');
+    var reqHeaders = _find(window, 'app.api.reqHeaders');
     if (reqHeaders) {
       options['beforeSend'] = function(req) {
         _ajaxSetReqHeaders(req, options);
@@ -7123,7 +7566,7 @@
           if ( regExUrlParams.test(actualUrl) ) {
             spa.console.log('URL has undefined params >>', actualUrl, options.data);
             try {
-              urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
+              urlParamsData = (_isStr(options.data))? JSON.parse(options.data) : options.data;
               actualUrl = spa.api.url(actualUrl.replace(/{{/g,'{').replace(/}}/g,'}'), urlParamsData);
             } catch(e){}
             spa.console.log('Updated URL>>', actualUrl);
@@ -7151,7 +7594,7 @@
     if ( regExUrlParams.test(options.url) ) {
       spa.console.log('URL has undefined params>', options.url, options.data);
       try {
-        urlParamsData = (spa.is(options.data, 'string'))? JSON.parse(options.data) : options.data;
+        urlParamsData = (_isStr(options.data))? JSON.parse(options.data) : options.data;
         options.url = spa.api.url((options.url).replace(/{</g,'{').replace(/>}/g,'}'), urlParamsData);
       } catch(e){}
     }
@@ -7166,26 +7609,26 @@
     //Global defaultPayload
     var defaultPayloadGlobal  = app.api['defaultPayload'] || spa.api['defaultPayload'];
     if (defaultPayloadGlobal) {
-      var reqPayloadType  = spa.of(options['data'])
-        , reqPayload      = (reqPayloadType == 'string')? spa.toJSON(options['data']) : options['data']
+      var reqPayloadType  = _of(options['data'])
+        , reqPayload      = (reqPayloadType == 'string')? _toObj(options['data']) : options['data']
         , defaultPayloadFnRes, finalReqPayload;
 
-      if (spa.is(defaultPayloadGlobal, 'function')) {
+      if (_isFn(defaultPayloadGlobal)) {
         defaultPayloadFnRes = defaultPayloadGlobal.call(options, reqPayload, options);
-        if (spa.is(defaultPayloadFnRes, 'object')) {
+        if (_isObj(defaultPayloadFnRes)) {
           finalReqPayload = JSON.parse(JSON.stringify( defaultPayloadFnRes ));
-          if (!spa.isBlank(finalReqPayload)) {
+          if (!_isBlank(finalReqPayload)) {
             options['data'] = (reqPayloadType == 'string')? JSON.stringify(finalReqPayload) : finalReqPayload;
           }
         }
       } else {
-        if (spa.is(defaultPayloadGlobal, 'object|array')) {
+        if (_is(defaultPayloadGlobal, 'object|array')) {
           finalReqPayload = JSON.parse(JSON.stringify( defaultPayloadGlobal ));
         } else {
           finalReqPayload = defaultPayloadGlobal;
         }
-        finalReqPayload = (spa.is(finalReqPayload, 'object|array') && spa.is(reqPayload, 'object|array'))? _.merge({}, finalReqPayload, reqPayload) : finalReqPayload;
-        options['data'] = (!spa.isBlank(finalReqPayload) && (reqPayloadType == 'string'))? JSON.stringify(finalReqPayload) : finalReqPayload;
+        finalReqPayload = (_is(finalReqPayload, 'object|array') && _is(reqPayload, 'object|array'))? _mergeDeep({}, finalReqPayload, reqPayload) : finalReqPayload;
+        options['data'] = (!_isBlank(finalReqPayload) && (reqPayloadType == 'string'))? JSON.stringify(finalReqPayload) : finalReqPayload;
       }
     }
 
@@ -7193,16 +7636,16 @@
       spa.ajaxPreProcess(options, orgOptions, jqXHR);
     }
 
-    if (spa.isBlank( options['data'] ) || (spa.is(options['data'], 'string') && !(/[a-z0-9]/i.test(options['data'])))) {
+    if (_isBlank( options['data'] ) || (_isStr(options['data']) && !(/[a-z0-9]/i.test(options['data'])))) {
       spa.console.log( 'REMVOING EMPTY PAYLOAD' );
       delete options['data'];
     }
     if (isMockReq) {
-      var payLoadInMock = spa.is(options['data'], 'string')? options['data'] : JSON.stringify(options['data']);
-      if (payLoadInMock && spa.is(payLoadInMock, 'string') && payLoadInMock.length > 6144) {
+      var payLoadInMock = _isStr(options['data'])? options['data'] : JSON.stringify(options['data']);
+      if (payLoadInMock && _isStr(payLoadInMock) && payLoadInMock.length > 6144) {
         payLoadInMock = 'LAREGE-PAYLOAD-WITH-CHAR-LENGTH:'+(payLoadInMock.length);
       }
-      options['headers'] = _.merge({}, options['headers'], {
+      options['headers'] = _mergeDeep({}, options['headers'], {
             'Z-Live-URL': actualUrl
           , 'Z-Payload': payLoadInMock
         });
@@ -7217,7 +7660,7 @@
   var _PubSub = {
     pub: function(eventName, data, onAllOk, onAnyFail){
       var eventData, isFailed;
-      if (spa.is(data, 'function')) {
+      if (_isFn(data)) {
         onAnyFail = arguments[2];
         onAllOk   = arguments[1];
       } else {
@@ -7225,7 +7668,7 @@
       }
 
       var subCount=0, fn2Call, fnResponse, retValue=[];
-      _.each(_PubSubQue[eventName], function(sub){
+      _each(_PubSubQue[eventName], function(sub){
         try{
           subCount++;
           fn2Call = sub.fn;
@@ -7234,7 +7677,7 @@
             fnResponse = fn2Call.call(eventData||{}, eventName, eventData, onAllOk, onAnyFail);
           }
           retValue.push({id: ''+(sub.name || subCount), response: fnResponse});
-          if (!isFailed && spa.is(fnResponse, 'boolean')){
+          if (!isFailed && _isBool(fnResponse)){
             isFailed = !fnResponse;
           }
         } catch(e){
@@ -7243,11 +7686,11 @@
         }
       });
       if (isFailed) {
-        if (onAnyFail && spa.is(onAnyFail, 'function')) {
+        if (onAnyFail && _isFn(onAnyFail)) {
           onAnyFail(retValue);
         }
       } else {
-        if (onAllOk && spa.is(onAllOk, 'function')) {
+        if (onAllOk && _isFn(onAllOk)) {
           onAllOk(retValue);
         }
       }
@@ -7311,16 +7754,16 @@
   function _initRoutesDefaults(){
     _prevUrlHash = spa.urlHashFull( _urlHashBase );
 
-    _urlHashBase        = (spa.findSafe(spa, 'defaults.routes.base', '')            || '#').trim();
-    _blockNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV').trim();
+    _urlHashBase        = (_find(spa, 'defaults.routes.base', '')            || '#').trim();
+    _blockNavClassName  = (_find(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV').trim();
     _blockNavClass      = ('.'+_blockNavClassName);
-    _allowNavClassName  = (spa.findSafe(spa, 'defaults.routes.className.allow', '') || 'ALLOW-SPA-NAV').trim();
-    _hideNavClassName   = (spa.findSafe(spa, 'defaults.routes.className.hide', '')  || 'HIDE-SPA-NAV').trim();
+    _allowNavClassName  = (_find(spa, 'defaults.routes.className.allow', '') || 'ALLOW-SPA-NAV').trim();
+    _hideNavClassName   = (_find(spa, 'defaults.routes.className.hide', '')  || 'HIDE-SPA-NAV').trim();
     //_hideNavClass       = ('.'+_hideNavClassName);
-    _attrSpaRoute       = (spa.findSafe(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route').trim();
-    _attrSpaRouteParams = (spa.findSafe(spa, 'defaults.routes.attr.params', '')     || 'data-spa-route-params').trim();
+    _attrSpaRoute       = (_find(spa, 'defaults.routes.attr.route', '')      || 'data-spa-route').trim();
+    _attrSpaRouteParams = (_find(spa, 'defaults.routes.attr.params', '')     || 'data-spa-route-params').trim();
     _routeByHref        = (_attrSpaRoute.equalsIgnoreCase('href'));
-    _attrOnNavAway      = (spa.findSafe(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway').trim();
+    _attrOnNavAway      = (_find(spa, 'defaults.routes.attr.onNavAway', '')  || 'onNavAway').trim();
 
     _hideNav = $('body').hasClass( _hideNavClassName );
   }
@@ -7396,7 +7839,7 @@
     if (spa.onReload) {
       fnRes = spa.onReload();
     }
-    switch(spa.of(fnRes)) {
+    switch(_of(fnRes)) {
       case 'boolean':
         if (!fnRes) {
           i18nMsgKey = 'spa.message.on.window.reload';
@@ -7438,8 +7881,8 @@
           $navAwayTarget.trigger('click');
         }
       } else {
-        navAwayFn = spa.findSafe(window, onNavAway.split('(')[0].split(';')[0] );
-        if (navAwayFn && spa.is(navAwayFn, 'function')) {
+        navAwayFn = _find(window, onNavAway.split('(')[0].split(';')[0] );
+        if (navAwayFn && _isFn(navAwayFn)) {
           navAwayFn.call($container, toUrl, $container, $byEl);
         }
       }
@@ -7457,7 +7900,7 @@
 
   function _ctrlBrwowserNav(){
     window.onpageshow   = _onpageshow;
-    if (spa.isIE) {
+    if (isIE) {
       window.onhashchange = _onPopStateChange;
     } else {
       window.onpopstate   = _onPopStateChange;
@@ -7495,14 +7938,14 @@
   function _processDynHash(dynRouteHash, eventAfterProcess){
     var isDynamicHash = (dynRouteHash.indexOf(':')>=0)
       , e2Trigger = eventAfterProcess;
-    if (spa.is(eventAfterProcess, 'boolean')) { e2Trigger = eventAfterProcess? 'click' : ''; }
+    if (_isBool(eventAfterProcess)) { e2Trigger = eventAfterProcess? 'click' : ''; }
 
     if (isDynamicHash) {
       //console.log('In _processDynHash', arguments, JSON.stringify(_dynHashProcessed));
       var dynamicHashKey = isDynamicHash? (dynRouteHash.split(':')[0]) : '';
       var routeStoreData = {}, pKey, pVal;
       var dynParamsArr = (dynRouteHash.indexOf('&')>0)? dynRouteHash.split('&') : ((dynRouteHash.indexOf(',')>0)? dynRouteHash.split(',') : [dynRouteHash]);
-      _.each(dynParamsArr, function(keyValue){
+      _each(dynParamsArr, function(keyValue){
         pKey = (keyValue).split(':')[0];
         pVal = keyValue.getRightStr(':');
         routeStoreData[ pKey ] = decodeURIComponent( pVal );
@@ -7511,20 +7954,20 @@
       var $routeStoreEl = $('['+(_attrSpaRoute)+'*="/'+dynamicHashKey+':"]['+_attrSpaRouteParams+']');
       var routeStoreSpec = ($routeStoreEl.attr(_attrSpaRouteParams) || '').trim();
       //console.log($routeStoreEl, routeStoreSpec);
-      isDynamicHash = !spa.isBlank(routeStoreSpec);
+      isDynamicHash = !_isBlank(routeStoreSpec);
       if (isDynamicHash) {
         _dynHashProcessed.push(dynRouteHash);
-        var routeStoreSpecObj = spa.toJSON(routeStoreSpec);
+        var routeStoreSpecObj = _toObj(routeStoreSpec);
         //console.log('specObj:', routeStoreSpecObj);
-        _.each(routeStoreSpecObj, function(elSelector, key){
+        _each(routeStoreSpecObj, function(elSelector, key){
           elSelector = elSelector.trim();
           if ((/(^app\.(.)+\.)|(^\$)|(^\#)/).test(elSelector)) {
             spa.setElValue(elSelector, routeStoreData[key]);
 
           } else if (( /^fn:/i ).test(elSelector)) {
             var fn2Exec = ((elSelector.split(' ')[0]).getRightStr(':').trim()).split('(')[0];
-            fn2Exec = (fn2Exec)? spa.findSafe(window, fn2Exec) : '';
-            if (fn2Exec && spa.is(fn2Exec, 'function')) {
+            fn2Exec = (fn2Exec)? _find(window, fn2Exec) : '';
+            if (fn2Exec && _isFn(fn2Exec)) {
               fn2Exec( key, routeStoreData[key] );
             } else {
               console.warn('Not a function', elSelector);
@@ -7558,7 +8001,7 @@
   function _triggerNextHash( reset ){
     //console.log('Finding next hash ...', reset);
     if (reset) _initAutoRoute();
-    _onAutoRoute = spa.is(reset, 'undefined')? _onAutoRoute : reset;
+    _onAutoRoute = _isUndef(reset)? _onAutoRoute : reset;
     var hashList = spa.urlHash([], _urlHashBase), lastHashIndex = hashList.length-1, curHashName, isLastHash, prevHash;
 
     if (_maxAutoRoute<0) _onAutoRoute = false;
@@ -7744,16 +8187,16 @@
 
     var routeStoreSpec = ($routeEl.attr(_attrSpaRouteParams) || '').trim();
     if (routeStoreSpec) {
-      var routeStoreSpecObj = spa.toJSON(routeStoreSpec), paramValue;
-      _.each(routeStoreSpecObj, function(elSelector, key){
+      var routeStoreSpecObj = _toObj(routeStoreSpec), paramValue;
+      _each(routeStoreSpecObj, function(elSelector, key){
         paramValue = elSelector;
         if ((/(^app\.(.)+\.)|(^\$)|(^\#)/).test(elSelector.trim())) {
           paramValue = spa.getElValue(elSelector);
 
         } else if (( /^fn:/i ).test(elSelector.trim())) {
           var fn2Exec = ((elSelector.split(' ')[0]).getRightStr(':').trim()).split('(')[0];
-          fn2Exec = (fn2Exec)? spa.findSafe(window, fn2Exec) : '';
-          if (fn2Exec && spa.is(fn2Exec, 'function')) {
+          fn2Exec = (fn2Exec)? _find(window, fn2Exec) : '';
+          if (fn2Exec && _isFn(fn2Exec)) {
             paramValue = fn2Exec( key );
           } else {
             console.warn('Not a function', elSelector);
@@ -7774,7 +8217,7 @@
 
     //console.log('RouteDir:', routeDir);
     if (routeDir == '^') {
-      if (spa.isBlank(spaRoutePath)) {
+      if (_isBlank(spaRoutePath)) {
         update(routeData.substr(1));
       } else {
         e.preventDefault();
@@ -8137,9 +8580,9 @@
   function _getBindKeyOf(el, keyOf){
     var bindSpecStr = el.getAttribute('data-bind'), bindSpec, bindKeyFn, bindKey = '';
     if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
-    bindSpec = spa.toJSON(bindSpecStr || '{}');
-    if (bindSpec && !$.isEmptyObject(bindSpec)) {
-      _.some(_.keys(bindSpec), function (attrSpec) {
+    bindSpec = _toObj(bindSpecStr || '{}');
+    if (bindSpec && !_isEmptyObj(bindSpec)) {
+      _some(_keys(bindSpec), function (attrSpec) {
         if ((!bindKey) && (new RegExp(keyOf, 'i')).test(attrSpec)) {
           bindKeyFn = bindSpec[attrSpec].split('|');
           bindKey   = bindKeyFn.shift().trim();
@@ -8160,7 +8603,7 @@
     var bindKey =_getBindKeyOf(el, 'value|$');
     spa.setSimpleObjProperty(bindData, bindKey, elValue);
     if (is2WayBind) {
-      _.merge(spa.$data(cName), bindData);
+      _mergeDeep(spa.$data(cName), bindData);
       app[cName]['is$DataUpdated'] = spa.components[cName]['is$DataUpdated'] = true;
     }
     spa.bindData($component, bindData, '[data-bind*="'+bindKey+'"]:not(.DATA-MODEL-CHANGE-SRC)', true);
@@ -8247,37 +8690,37 @@
       var fnRes = fn.apply(undefined, fnArg)
         , argLen = fnArg.length
         , nextFn = (argLen)? fnArg[argLen-1] : '';
-      if (nextFn && spa.is(nextFn, 'function')) nextFn(fnRes);
+      if (nextFn && _isFn(nextFn)) nextFn(fnRes);
     }
     setTimeout(fnAsyc, 0);
   };
 
   function _initApiUrls(){
-    _appApiInitialized = !!(Object.keys(app['api']).length);
+    _appApiInitialized = !!(_keys(app['api']).length);
     if (_appApiInitialized) spa.console.log('Initializing app.api');
 
-    var appApiBaseUrl = spa.findSafe(window, 'app.api.baseUrl');
-    if (!spa.isBlank(appApiBaseUrl)) {
+    var appApiBaseUrl = _find(window, 'app.api.baseUrl');
+    if (!_isBlank(appApiBaseUrl)) {
       spa.api.baseUrl = appApiBaseUrl;
     }
 
-    var appApiUrls = spa.findSafe(window, 'app.api.urls');
-    if (spa.isBlank(spa.api.urls) && !spa.isBlank(appApiUrls)) {
+    var appApiUrls = _find(window, 'app.api.urls');
+    if (_isBlank(spa.api.urls) && !_isBlank(appApiUrls)) {
       spa.api.urls = app.api.urls;
     }
 
-    if (!spa.isBlank(spa.api.urls)) {
-      var liveApiPrefix = spa.findSafe(window, 'app.api.liveApiPrefix|app.api.mockRootAtPaths');
-      if (!spa.isBlank(liveApiPrefix)) {
-        var apiContextList = is(liveApiPrefix, 'array')? liveApiPrefix : (''+liveApiPrefix).split(',')
+    if (!_isBlank(spa.api.urls)) {
+      var liveApiPrefix = _find(window, 'app.api.liveApiPrefix|app.api.mockRootAtPaths');
+      if (!_isBlank(liveApiPrefix)) {
+        var apiContextList = _isArr(liveApiPrefix)? liveApiPrefix : (''+liveApiPrefix).split(',')
           , contextMode, urlMode;
 
-        _.each(apiContextList, function(apiContext, idx){
+        _each(apiContextList, function(apiContext, idx){
           apiContext = apiContext.trim();
           contextMode = apiContext[0];
           if (contextMode == '!' || contextMode == '~') {
             apiContext = apiContext.substr(1);
-            _.each(spa.api.urls, function(url, key){
+            _each(spa.api.urls, function(url, key){
               urlMode = url[0];
               if ( (!(urlMode == '!' || urlMode == '~'))
                 && ((url.indexOf(apiContext) == 0) || (url.indexOf('/'+apiContext) > 0)) ) {
@@ -8330,14 +8773,14 @@
       , elBody = $body[0]
       , dataInBody = $body.data();
 
-    if (!spa.isBlank(dataInBody)) {
-      dataInBody['spaDefaults'] = spa.toJSON(elBody.getAttribute('data-spa-defaults') || {});
+    if (!_isBlank(dataInBody)) {
+      dataInBody['spaDefaults'] = _toObj(elBody.getAttribute('data-spa-defaults') || {});
 
-      _.each(Object.keys(spa.defaults), function(spaDefaultsKey){
+      _each(_keys(spa.defaults), function(spaDefaultsKey){
         if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
           defaultsInTag = dataInBody.spaDefaults[spaDefaultsKey] || dataInBody[ 'spaDefaults'+(spaDefaultsKey.toTitleCase()) ];
-          if (!spa.isBlank(defaultsInTag)){
-            _.merge(spa.defaults[spaDefaultsKey], spa.toJSON(defaultsInTag));
+          if (!_isBlank(defaultsInTag)){
+            _mergeDeep(spa.defaults[spaDefaultsKey], _toObj(defaultsInTag));
           }
         }
       });
