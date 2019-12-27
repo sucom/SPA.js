@@ -198,215 +198,287 @@
   //   window.onhashchange = undefined;
   // };
 
-  /* **********************Date prototypes*********************** */
-  /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
-   *
-   * now.yyyymmdd()    => '20100301'
-   * now.yyyymmdd('/') => '2010/03/01'
-   * now.yyyymmdd('-') => '2010-03-01'
-   */
-  Date.prototype.yyyymmdd = function(sep) {
-    var mm = this.getMonth() + 1, dd = this.getDate();
-    return ([this.getFullYear(),
-            (mm>9 ? '' : '0') + mm,
-            (dd>9 ? '' : '0') + dd
-           ].join(sep||''));
-  };
-  /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
-   *
-   * now.hhmmss()    => '102030'
-   * now.hhmmss(':') => '10:20:30'
-   * now.hhmmss('-') => '10-20-30'
-   */
-  Date.prototype.hhmmss = function(sep) {
-    var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
-    return ([(hh>9 ? '' : '0') + hh,
-             (mm>9 ? '' : '0') + mm,
-             (ss>9 ? '' : '0') + ss
-           ].join(sep||''));
-  };
-
-  /* **********************String prototypes*********************** */
-  /* "   some string   ".trimLeftStr()    ==> "some string   "
-   * "+++some string+++".trimLeftStr('+') ==> "some string+++"
-   */
-  String.prototype.trimLeftStr = function (tStr) {
-    return ((''+this).replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
-  };
-
-  /* "   some string   ".trimRightStr()    ==> "   some string"
-   * "+++some string+++".trimRightStr('+') ==> "+++some string"
-   */
-  String.prototype.trimRightStr = function (tStr) {
-    return ((''+this).replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
-  };
-
-  /* "   some string   ".trimStr()    ==> "some string"
-   * "+++some string+++".trimStr('+') ==> "some string"
-   */
-  String.prototype.trimStr = function (tStr) {
-    return (''+this).trimLeftStr(tStr).trimRightStr(tStr);
-  };
-
-  String.prototype.getLeftStr = function (fromIndex) {
-    if (typeof fromIndex === 'string') {
-      fromIndex = (''+this).indexOf(fromIndex);
-    }
-    return (fromIndex)? (''+this).substr(0, fromIndex) : '';
-  };
-
-  String.prototype.getRightStr = function (fromIndex) {
-    var sLen = 1;
-    if (typeof fromIndex === 'string') {
-      sLen = fromIndex.length;
-      fromIndex = (''+this).indexOf(fromIndex);
-    }
-    return (fromIndex<0)? '' : (''+this).substr(fromIndex+sLen);
-  };
-
-  String.prototype.isBlankStr = function () {
-    return ((''+this).trimStr() == "");
-  };
-
-  String.prototype.ifBlankStr = function (forNullStr, forNotNullStr) {
-    forNullStr    = (typeof forNullStr === "undefined")? '' : forNullStr;
-    forNotNullStr = (typeof forNotNullStr === "undefined")? ((''+this).trimStr()) : forNotNullStr;
-    return ((''+this).isBlankStr() ? ( forNullStr ) : ( forNotNullStr ) );
-  };
-
-  String.prototype.isNumberStr = function () {
-    var inStr = (''+this).trim(), nonNumStr = ((inStr.replace(/[0-9]/g, "").replace('.','')).trimStr()), sign = inStr[0];
-    return (inStr && ((nonNumStr.length == 0) || ((nonNumStr.length == 1) && ((sign=='+') || (sign=='-')))));
-  };
-
-  String.prototype.normalizeStr = function () {
-    return (''+this).trimStr().replace(/\s+/g, ' ');
-  };
-
-  String.prototype.beginsWithStr = function (str, i) {
-    i = (i) ? 'i' : '';
-    var re = new RegExp('^' + str, i);
-    return ((''+this).normalizeStr().match(re)) ? true : false;
-  };
-
-  String.prototype.beginsWithStrIgnoreCase = function (str) {
-    var re = new RegExp('^' + str, 'i');
-    return ((''+this).normalizeStr().match(re)) ? true : false;
-  };
-
-  String.prototype.endsWithStr = function (str, i) {
-    i = (i) ? 'i' : '';
-    var re = new RegExp(str + '$', i);
-    return ((''+this).normalizeStr().match(re)) ? true : false;
-  };
-
-  String.prototype.endsWithStrIgnoreCase = function (str) {
-    var re = new RegExp(str + '$', 'i');
-    return ((''+this).normalizeStr().match(re)) ? true : false;
-  };
-
-  String.prototype.containsStr = function (str, i) {
-    i = (i) ? 'gi' : 'g';
-    var re = new RegExp('' + str, i);
-    return ((re).test((''+this)));
-  };
-
-  String.prototype.containsStrIgnoreCase = function (str) {
-    var re = new RegExp('' + str, 'gi');
-    return ((re).test((''+this)));
-  };
-
-  String.prototype.equals = function (arg) {
-    return ((''+this) == arg);
-  };
-
-  String.prototype.equalsIgnoreCase = function (arg) {
-    return ((String((''+this).toLowerCase()) == (String(arg)).toLowerCase()));
-  };
-
-  String.prototype.toProperCase = function (normalizeSrc) {
-    return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
-      return $1.toUpperCase();
-    }));
-  };
-
-  String.prototype.toTitleCase = function (normalizeSrc) {
-    return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
-      return $1.toUpperCase();
-    }));
-  };
-
-  String.prototype.capitalize = function () {
-    return ((''+this).charAt(0).toUpperCase()) + ((''+this).slice(1));
-  };
-
-  String.prototype.unCapitalize = function () {
-    return ((''+this).charAt(0).toLowerCase()) + ((''+this).slice(1));
-  };
-
-  function _sanitizeHTML(str) {
-    var sBoxEl = document.createElement('div');
-    sBoxEl.textContent = str;
-    return sBoxEl.innerHTML;
-  }
-  String.prototype.sanitizeHTML = function(){
-    return _sanitizeHTML(''+this);
-  };
-  spa.sanitizeHTML = _sanitizeHTML;
-
-  function _sanitizeScript(str) {
-    return (''+str).replace(/<\s*\/+\s*(\bscript\b)/gi, '&lt;/script&gt;</pre')
-              .replace(/<\s*(\bscript\b)/gi, '<pre>&lt;script');
-  }
-  String.prototype.sanitizeScript = function(){
-    return _sanitizeScript(''+this);
-  };
-  spa.sanitizeScript = _sanitizeScript;
-
-  function _sanitizeXSS(str) {
-    return _sanitizeScript(str).replace(/\s+on([a-z])\s*=/gi, ' on=').replace(/javascript:/gi,'js:');
-  }
-  String.prototype.sanitizeXSS = function(){
-    return _sanitizeXSS(''+this);
-  };
-  spa.sanitizeXSS = _sanitizeXSS;
-
-  String.prototype.splitToArray = String.prototype.toArray = function (splitBy) {
-    return _isBlank((''+this)) ? [] : ((''+this).split(splitBy));
-  };
-
-  function _getMatchStr(str){
-    switch(str){
-      case '{': return '}';
-      case '[': return ']';
-      case '<': return '>';
-      default: return str;
-    }
+  if (Date.prototype) {
+    /* **********************Date prototypes*********************** */
+    /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
+     *
+     * now.yyyymmdd()    => '20100301'
+     * now.yyyymmdd('/') => '2010/03/01'
+     * now.yyyymmdd('-') => '2010-03-01'
+     */
+    Date.prototype.yyyymmdd = function(sep) {
+      var mm = this.getMonth() + 1, dd = this.getDate();
+      return ([this.getFullYear(),
+              (mm>9 ? '' : '0') + mm,
+              (dd>9 ? '' : '0') + dd
+             ].join(sep||''));
+    };
+    /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
+     *
+     * now.hhmmss()    => '102030'
+     * now.hhmmss(':') => '10:20:30'
+     * now.hhmmss('-') => '10-20-30'
+     */
+    Date.prototype.hhmmss = function(sep) {
+      var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
+      return ([(hh>9 ? '' : '0') + hh,
+               (mm>9 ? '' : '0') + mm,
+               (ss>9 ? '' : '0') + ss
+             ].join(sep||''));
+    };
   }
 
-  String.prototype.extractStrBetweenIn = function (bS, eS, unique) {
-    if (!bS) {
-      bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
-      bS = (bS)? bS[0] : '';
-    }
-    eS = eS || _getMatchStr(bS);
-    var retArr = (''+this).match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
-    if (unique && !_isBlank(retArr)) retArr = retArr.__unique();
-    return retArr;
-  };
 
-  String.prototype.extractStrBetweenEx = function (bS, eS, unique) {
-    if (!bS) {
-      bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
-      bS = (bS)? bS[0] : '';
+  if (String.prototype) {
+    /* **********************String prototypes*********************** */
+    /* "   some string   ".trimLeftStr()    ==> "some string   "
+     * "+++some string+++".trimLeftStr('+') ==> "some string+++"
+     */
+    String.prototype.trimLeftStr = function (tStr) {
+      return ((''+this).replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
+    };
+
+    /* "   some string   ".trimRightStr()    ==> "   some string"
+     * "+++some string+++".trimRightStr('+') ==> "+++some string"
+     */
+    String.prototype.trimRightStr = function (tStr) {
+      return ((''+this).replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
+    };
+
+    /* "   some string   ".trimStr()    ==> "some string"
+     * "+++some string+++".trimStr('+') ==> "some string"
+     */
+    String.prototype.trimStr = function (tStr) {
+      return (''+this).trimLeftStr(tStr).trimRightStr(tStr);
+    };
+
+    String.prototype.getLeftStr = function (fromIndex) {
+      if (typeof fromIndex === 'string') {
+        fromIndex = (''+this).indexOf(fromIndex);
+      }
+      return (fromIndex)? (''+this).substr(0, fromIndex) : '';
+    };
+
+    String.prototype.getRightStr = function (fromIndex) {
+      var sLen = 1;
+      if (typeof fromIndex === 'string') {
+        sLen = fromIndex.length;
+        fromIndex = (''+this).indexOf(fromIndex);
+      }
+      return (fromIndex<0)? '' : (''+this).substr(fromIndex+sLen);
+    };
+
+    String.prototype.isBlankStr = function () {
+      return ((''+this).trimStr() == "");
+    };
+
+    String.prototype.ifBlankStr = function (forNullStr, forNotNullStr) {
+      forNullStr    = (typeof forNullStr === "undefined")? '' : forNullStr;
+      forNotNullStr = (typeof forNotNullStr === "undefined")? ((''+this).trimStr()) : forNotNullStr;
+      return ((''+this).isBlankStr() ? ( forNullStr ) : ( forNotNullStr ) );
+    };
+
+    String.prototype.isNumberStr = function () {
+      var inStr = (''+this).trim(), nonNumStr = ((inStr.replace(/[0-9]/g, "").replace('.','')).trimStr()), sign = inStr[0];
+      return (inStr && ((nonNumStr.length == 0) || ((nonNumStr.length == 1) && ((sign=='+') || (sign=='-')))));
+    };
+
+    String.prototype.normalizeStr = function () {
+      return (''+this).trimStr().replace(/\s+/g, ' ');
+    };
+
+    String.prototype.beginsWithStr = function (str, i) {
+      i = (i) ? 'i' : '';
+      var re = new RegExp('^' + str, i);
+      return ((''+this).normalizeStr().match(re)) ? true : false;
+    };
+
+    String.prototype.beginsWithStrIgnoreCase = function (str) {
+      var re = new RegExp('^' + str, 'i');
+      return ((''+this).normalizeStr().match(re)) ? true : false;
+    };
+
+    String.prototype.endsWithStr = function (str, i) {
+      i = (i) ? 'i' : '';
+      var re = new RegExp(str + '$', i);
+      return ((''+this).normalizeStr().match(re)) ? true : false;
+    };
+
+    String.prototype.endsWithStrIgnoreCase = function (str) {
+      var re = new RegExp(str + '$', 'i');
+      return ((''+this).normalizeStr().match(re)) ? true : false;
+    };
+
+    String.prototype.containsStr = function (str, i) {
+      i = (i) ? 'gi' : 'g';
+      var re = new RegExp('' + str, i);
+      return ((re).test((''+this)));
+    };
+
+    String.prototype.containsStrIgnoreCase = function (str) {
+      var re = new RegExp('' + str, 'gi');
+      return ((re).test((''+this)));
+    };
+
+    String.prototype.equals = function (arg) {
+      return ((''+this) == arg);
+    };
+
+    String.prototype.equalsIgnoreCase = function (arg) {
+      return ((String((''+this).toLowerCase()) == (String(arg)).toLowerCase()));
+    };
+
+    String.prototype.toProperCase = function (normalizeSrc) {
+      return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
+        return $1.toUpperCase();
+      }));
+    };
+
+    String.prototype.toTitleCase = function (normalizeSrc) {
+      return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
+        return $1.toUpperCase();
+      }));
+    };
+
+    String.prototype.capitalize = function () {
+      return ((''+this).charAt(0).toUpperCase()) + ((''+this).slice(1));
+    };
+
+    String.prototype.unCapitalize = function () {
+      return ((''+this).charAt(0).toLowerCase()) + ((''+this).slice(1));
+    };
+
+    function _sanitizeHTML(str) {
+      var sBoxEl = document.createElement('div');
+      sBoxEl.textContent = str;
+      return sBoxEl.innerHTML;
     }
-    eS = eS || _getMatchStr(bS);
-    var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
-    var retArr = ((''+this).match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
-        return x.replace(rx,'');
+    String.prototype.sanitizeHTML = function(){
+      return _sanitizeHTML(''+this);
+    };
+    spa.sanitizeHTML = _sanitizeHTML;
+
+    function _sanitizeScript(str) {
+      return (''+str).replace(/<\s*\/+\s*(\bscript\b)/gi, '&lt;/script&gt;</pre')
+                .replace(/<\s*(\bscript\b)/gi, '<pre>&lt;script');
+    }
+    String.prototype.sanitizeScript = function(){
+      return _sanitizeScript(''+this);
+    };
+    spa.sanitizeScript = _sanitizeScript;
+
+    function _sanitizeXSS(str) {
+      return _sanitizeScript(str).replace(/\s+on([a-z])\s*=/gi, ' on=').replace(/javascript:/gi,'js:');
+    }
+    String.prototype.sanitizeXSS = function(){
+      return _sanitizeXSS(''+this);
+    };
+    spa.sanitizeXSS = _sanitizeXSS;
+
+    /*
+     * ''.split()        ==> [""]
+     * ''.splitToArray() ==> []
+     */
+    String.prototype.splitToArray = String.prototype.toArray = function (splitBy) {
+      return _isBlank((''+this)) ? [] : ((''+this).split(splitBy));
+    };
+
+    function _getMatchStr(str){
+      switch(str){
+        case '{': return '}';
+        case '[': return ']';
+        case '<': return '>';
+        default: return str;
+      }
+    }
+
+    String.prototype.extractStrBetweenIn = function (bS, eS, unique) {
+      if (!bS) {
+        bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
+        bS = (bS)? bS[0] : '';
+      }
+      eS = eS || _getMatchStr(bS);
+      var retArr = (''+this).match(RegExp('\\'+bS+'([^\\'+bS+'\\'+eS+'].*?)\\'+eS, 'g')) || [];
+      if (unique && !_isBlank(retArr)) retArr = retArr.__unique();
+      return retArr;
+    };
+
+    String.prototype.extractStrBetweenEx = function (bS, eS, unique) {
+      if (!bS) {
+        bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
+        bS = (bS)? bS[0] : '';
+      }
+      eS = eS || _getMatchStr(bS);
+      var rxStr = '\\'+bS+'\\'+eS, rx = new RegExp('['+rxStr+']', 'g');
+      var retArr = ((''+this).match(new RegExp('\\'+bS+'([^'+rxStr+'].*?)\\'+eS, 'g')) || []).map(function(x){
+          return x.replace(rx,'');
+        });
+      if (unique && !_isBlank(retArr)) retArr = retArr.__unique();
+      return retArr;
+    };
+
+    String.prototype.toNative = function(){
+      return _strToNative(''+this);
+    };
+
+    String.prototype.toBoolean = function () {
+      var retValue = true;
+      switch ((''+this).trimStr().toLowerCase()) {
+        case          '':
+        case         '0':
+        case        '-0':
+        case       'nan':
+        case      'null':
+        case     'false':
+        case 'undefined':
+          retValue = false;
+          break;
+      }
+
+      if (retValue) retValue = (!(''+this).trimStr().beginsWithStr('-'));
+      return ( retValue );
+    };
+
+    /*
+     * String.padStr([padString: String = " "], length: Integer=1, [type: Integer = 0]): String
+     * Returns: the string with a padString padded on the left, right or both sides.
+     * length: amount of characters that the string must have
+     * padString: string that will be concatenated
+     * type: specifies the side where the concatenation will happen, where: -1 = left, 1 = right and 0 = both sides
+     */
+    String.prototype.padStr = function (s, l, t) {
+      s = s || '';
+      l = l || 1;
+      t = t || 2;
+      for (var ps = "", i = 0; i < l; i++) {
+        ps += s;
+      }
+      return (((t === -1 || t === 2) ? ps : "") + (''+this) + ((t === 1 || t === 2) ? ps : ""));
+    };
+
+    String.prototype.toObj = String.prototype.toObject = String.prototype.toJSON = function () {
+      return _toObj(''+this);
+    };
+
+    /*
+     * 'Name: {name}, Age: {age}'.bindData({name:'Test', Age:18}) ==> 'Name: Test, Age: 18'
+     *
+     * 'Name: <name>, Age: <age>'.bindData({name:'Test', Age:18}, '<', '>') ==> 'Name: Test, Age: 18'
+     */
+    String.prototype.bindData = String.prototype.bindWith = function (data) {
+      return _bindData(''+this, data);
+    };
+  }
+
+  function _bindData(xMsg, data, bStr, eStr){
+    xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
+    var varList = spa.extractStrBetweenEx(xMsg, bStr, eStr, true);
+    if (xMsg && !_isBlank(varList) && _isObj(data)) {
+      _each(varList, function(key){
+        xMsg = xMsg.replace((new RegExp(bStr+'\\s*('+(key.trim())+')\\s*'+eStr, 'g')), _find(data, key, ''));
       });
-    if (unique && !_isBlank(retArr)) retArr = retArr.__unique();
-    return retArr;
+    }
+    return xMsg;
   };
 
   function _strToNative(srcStr){
@@ -440,9 +512,7 @@
       default: return srcStr;
     }
   }
-  String.prototype.toNative = function(){
-    return _strToNative(''+this);
-  };
+
   spa.strToNative = _strToNative;
 
   //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
@@ -463,6 +533,14 @@
     return (srcStr||'').extractStrBetweenEx(bS, eS, unique);
   };
 
+  /*
+   * spa.strToArray('')         ==> [""]
+   * spa.strToArray('abcdef')   ==> ["abcdef"]
+   * spa.strToArray(['abcdef']) ==> ["abcdef"]
+   *
+   * @param {String} srcStr
+   * @returns {Array}
+   */
   spa.strToArray = function(srcStr) {
     if (typeof srcStr == 'string') {
       srcStr = [srcStr];
@@ -528,55 +606,7 @@
     }
     return jsonObj;
   }
-  String.prototype.toJSON = function () {
-    return _toObj(''+this);
-  };
   spa.toJSON = spa.toObj =_toObj;
-
-  String.prototype.toBoolean = function () {
-    var retValue = true;
-    switch ((''+this).trimStr().toLowerCase()) {
-      case          '':
-      case         '0':
-      case        '-0':
-      case       'nan':
-      case      'null':
-      case     'false':
-      case 'undefined':
-        retValue = false;
-        break;
-    }
-
-    if (retValue) retValue = (!(''+this).trimStr().beginsWithStr('-'));
-    return ( retValue );
-  };
-
-  Boolean.prototype.toValue = function (tValue, fValue) {
-    if (typeof tValue == "undefined") tValue = true;
-    if (typeof fValue == "undefined") fValue = false;
-    return (((''+this).valueOf()) ? (tValue) : (fValue));
-  };
-
-  Boolean.prototype.toHtml = function (tElId, fElId) {
-    return $(((''+this).valueOf()) ? tElId : fElId).html();
-  };
-
-  /*
-   * String.padStr([padString: String = " "], length: Integer=1, [type: Integer = 0]): String
-   * Returns: the string with a padString padded on the left, right or both sides.
-   * length: amount of characters that the string must have
-   * padString: string that will be concatenated
-   * type: specifies the side where the concatenation will happen, where: -1 = left, 1 = right and 0 = both sides
-   */
-  String.prototype.padStr = function (s, l, t) {
-      s = s || '';
-      l = l || 1;
-      t = t || 2;
-      for (var ps = "", i = 0; i < l; i++) {
-        ps += s;
-      }
-      return (((t === -1 || t === 2) ? ps : "") + (''+this) + ((t === 1 || t === 2) ? ps : ""));
-    };
 
   spa.lastSplitResult = [];
   spa.getOnSplit = spa.pickOnSplit = function (str, delimiter, pickIndex) {
@@ -753,30 +783,17 @@
     return ( _isBlank(src) ? (replaceWithIfBlank) : (replaceWithIfNotBlank) );
   };
 
-  function __finalValue(srcVal) {
-    var retVal = srcVal, fnContext = arguments[1], fnArgs = Array.prototype.slice.call(arguments, 2);
-    if (_isStr(retVal)) {
-      if (retVal.indexOf('(')>0) { //function
-        retVal = retVal.getLeftStr('(');
-      }
-      retVal = _find(window, (retVal.trim()), undefined);
-    }
-    if (_isFn(retVal) && (arguments.length>1)) {
-      retVal = retVal.apply(fnContext, fnArgs);
-    }
-    return retVal;
-  }
-
   /* now: Browser's current timestamp */
-  spa.now = function () {
+  function _now() {
     return ("" + ((new Date()).getTime()));
-  };
-
+  }
   /* year: Browser's current year +/- N */
-  spa.year = function (n) {
+  function _year(n) {
     n = n || 0;
     return ((new Date()).getFullYear() + (spa.toInt(n)));
-  };
+  }
+  spa.now = _now;
+  spa.year = _year;
 
   //approx memory size
   spa.sizeOf = function _sizeOf(obj, format) {
@@ -871,10 +888,10 @@
       rStep = "" + (rSpec[1].split(":"))[1];
     }
     if (rangeB.indexOf("Y") >= 0) {
-      rangeB = spa.year((rangeB.split(/[^0-9+-]/))[1]);
+      rangeB = _year((rangeB.split(/[^0-9+-]/))[1]);
     }
     if (rangeE.indexOf("Y") >= 0) {
-      rangeE = spa.year((rangeE.split(/[^0-9+-]/))[1]);
+      rangeE = _year((rangeE.split(/[^0-9+-]/))[1]);
     }
     var rB = spa.toInt(rangeB)
       , rE = spa.toInt(rangeE)
@@ -986,9 +1003,7 @@
     }
   };
 
-
-
-  spa.swapClass = spa.swapObjClass = function (objIDs, removeClass, addClass) {
+  spa.swapClass = function (objIDs, removeClass, addClass) {
     $(objIDs).removeClass(removeClass);
     $(objIDs).addClass(addClass);
   };
@@ -1066,14 +1081,14 @@
   spa.optionsSelectedValues = function (objId, delimiter) {
     objId = (objId.beginsWithStr("#") ? "" : "#") + objId;
     delimiter = delimiter || ",";
-    return ($.map(($(objId + " option:selected")), function (option) {
+    return (_map(($(objId + " option:selected")), function (option) {
       return (option.value);
     }).join(delimiter));
   };
   spa.optionsSelectedTexts = function (objId, delimiter) {
     objId = (objId.beginsWithStr("#") ? "" : "#") + objId;
     delimiter = delimiter || ",";
-    return ($.map(($(objId + " option:selected")), function (option) {
+    return (_map(($(objId + " option:selected")), function (option) {
       return (option.text);
     }).join(delimiter));
   };
@@ -1312,13 +1327,6 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
-  spa.htmlEncode = function (value) {
-    return $('<div/>').text(value).html();
-  };
-  spa.htmlDecode = function (value) {
-    return $('<div/>').html(value).text();
-  };
-
   spa.appendToObj = function(xObj, oKey, oValue) {
     if (_hasKey(xObj, oKey)) {
       if (!_isArr(xObj[oKey])) {
@@ -1341,14 +1349,14 @@
     var xObj = obj, oKey;
     var oKeys = (( (keyNameStr.indexOf('.')>=0) || (keyNameStr == keyNameStr.toUpperCase()) )? keyNameStr.split('.') :  keyNameStr.split(/(?=[A-Z])/)), arrNameIndx, arrName, arrIdx;
     /*Default: camelCase | TitleCase if ALL UPPERCASE split by . */
-    var keyIdentifier = $.trim(keyNameStr.replace(/[0-9A-Za-z\[\]\?\*\_]/g, ""));
+    var keyIdentifier = (keyNameStr.replace(/[0-9A-Za-z\[\]\?\*\_]/g, "")).trim();
     if (keyIdentifier && (keyIdentifier != "")) {
       oKeys = keyNameStr.split(keyIdentifier[0]);
     }
     var keyFullPath='';
     while (oKeys.length > 1) {
       oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
-      if ($.trim(oKey) != "") {
+      if (!_isBlank(oKey)) {
         keyFullPath += oKey.replace(/[\?\[\]\*\_]/g,'');
         if ((oKey.indexOf('[')>0) && (oKey.indexOf(']') == oKey.length-1)) {//isArray
           arrNameIndx = oKey.substring(0,oKey.length-1).replace(/\[/g, '.').split('.');
@@ -1384,7 +1392,7 @@
     var oKeys = keyNameStr.split('.');
     while (oKeys.length > 1) {
       oKey = spa.parseKeyStr(oKeys.shift(), false);
-      if ($.trim(oKey) != "") {
+      if (!_isBlank(oKey)) {
         if (typeof xObj[oKey] == "undefined") xObj[oKey] = {};
         xObj = xObj[oKey];
       }
@@ -1587,7 +1595,7 @@
         break;
 
       case "SELECT":
-        elValue = $.map(($(el).find("option:selected")), function (option) {
+        elValue = _map(($(el).find("option:selected")), function (option) {
           return (option.value);
         }).join(",");
         break;
@@ -1696,7 +1704,7 @@
   }
   spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = _toQueryString;
 
-  $.fn.serializeUncheckedCheckboxes = function (appendTo) {
+  function _serializeUncheckedCheckboxes(appendTo) {
     var $chkBox, unchkvalue, keyName, keyValue
       , toJSON = (typeof appendTo == "object")
       , retObj = (toJSON) ? appendTo : {}
@@ -1715,7 +1723,8 @@
       }
     });
     return ((toJSON) ? retObj : retStr);
-  };
+  }
+  $.fn.serializeUncheckedCheckboxes = _serializeUncheckedCheckboxes;
   spa.serializeUncheckedCheckboxes = function (formSelector, appendTo) {
     return $(formSelector).serializeUncheckedCheckboxes(appendTo);
   };
@@ -1725,7 +1734,7 @@
    * keyNameToLowerCase: converts form element names to its correponding lowercase obj's attribute
    * obj: Optional; creates/returns new JSON if not provided; overwrite & append attributes on the given obj if provided
    * */
-  $.fn.serializeFormToJSON = $.fn.serializeFormToObject = function (obj, keyNameToLowerCase, strPrefixToIgnore) {
+  function _serializeFormToObject(obj, keyNameToLowerCase, strPrefixToIgnore) {
     var a = this.serializeArray()
       , $fmData = $(this).data()
       , o = (typeof obj === "object") ? obj : {}
@@ -1735,7 +1744,7 @@
       , oKeyName, oKeyValue;
     arrayIndexPointsToMap = {};
     if (strPrefixToIgnore) kParse = strPrefixToIgnore;
-    $.each(a, function () {
+    _each(a, function () {
       oKeyName = (kParse) ? (this.name).replace(kParse, "") : this.name;
       o = spa.setObjProperty(o, oKeyName,  (toNative? ((this.value).toNative()) : this.value), c);
     });
@@ -1756,19 +1765,20 @@
     });
 
     return o;
-  };
+  }
+  $.fn.serializeFormToJSON = $.fn.serializeFormToObject = _serializeFormToObject;
   spa.serializeFormToJSON = spa.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
     return $(formSelector).serializeFormToJSON(obj, keyNameToLowerCase, strPrefixToIgnore);
   };
 
-  $.fn.serializeFormToSimpleJSON = $.fn.serializeFormToSimpleObject = function (obj, includeDisabledElements) {
+  function _serializeFormToSimpleObject(obj, includeDisabledElements) {
     var a = this.serializeArray()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : (includeDisabledElements || false)
       , oKeyStr, oGrpStr
       , oKeyName, oKeyValue;
 
-    $.each(a, function () {
+    _each(a, function () {
       spa.appendToObj(o, this.name, this.value);
     });
     if (c) {
@@ -1793,192 +1803,199 @@
       }
     });
     return o;
-  };
+  }
+  $.fn.serializeFormToSimpleJSON = $.fn.serializeFormToSimpleObject = _serializeFormToSimpleObject;
   spa.serializeFormToSimpleJSON = spa.serializeFormToSimpleObject = function (formSelector, obj, includeDisabledElements) {
     return $(formSelector).serializeFormToSimpleJSON(obj, includeDisabledElements);
   };
 
-  /* find(jsonObject, 'key1.key2.key3[0].key4'); */
-  function _find(objSrc, pathStr, forUndefined) {
-    if (is(objSrc, 'window|array|object|function|global') && pathStr) {
-      var pathList = _map(pathStr.split('|'), function(path){ return path.trim(); } );
-      pathStr = pathList.shift();
-      var nxtPath = pathList.join('|');
+  /* Object Utilities */
+  if (1) {
+    /* find(jsonObject, 'key1.key2.key3[0].key4'); */
+    function _find(objSrc, pathStr, forUndefined) {
+      if (is(objSrc, 'window|array|object|function|global') && pathStr) {
+        var pathList = _map(pathStr.split('|'), function(path){ return path.trim(); } );
+        pathStr = pathList.shift();
+        var nxtPath = pathList.join('|');
 
-      var unDef, retValue, isWildKey = (pathStr.indexOf('*') >= 0);
-      if (isWildKey) {
-        retValue = (function(xObj, xKey) {
-                      var xValue;
-                      if ((typeof xObj == 'object') || (typeof xObj == 'function')) {
-                        if (xObj.hasOwnProperty(xKey)) {
-                          xValue = xObj[xKey];
-                        } else {
-                          var oKeys = _keys(xObj), idx=0;
-                          while ( _isUndef(xValue) && (idx < oKeys.length) ) {
-                            xValue = arguments.callee( xObj[ oKeys[idx++] ], xKey );
+        var unDef, retValue, isWildKey = (pathStr.indexOf('*') >= 0);
+        if (isWildKey) {
+          retValue = (function(xObj, xKey) {
+                        var xValue;
+                        if ((typeof xObj == 'object') || (typeof xObj == 'function')) {
+                          if (xObj.hasOwnProperty(xKey)) {
+                            xValue = xObj[xKey];
+                          } else {
+                            var oKeys = _keys(xObj), idx=0;
+                            while ( _isUndef(xValue) && (idx < oKeys.length) ) {
+                              xValue = arguments.callee( xObj[ oKeys[idx++] ], xKey );
+                            }
                           }
                         }
-                      }
-                      return xValue;
-                    }(objSrc, pathStr.replace(/\*/g, '')));
-      } else {
-        var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length;
-        for (retValue = objSrc; i < len; i++) {
-          if (is(retValue, 'object|window|function|global')) {
-            retValue = retValue[ path[i].trim() ];
-          } else if (_isArr(retValue)) {
-            retValue = retValue[ spa.toInt(path[i]) ];
+                        return xValue;
+                      }(objSrc, pathStr.replace(/\*/g, '')));
+        } else {
+          var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length;
+          for (retValue = objSrc; i < len; i++) {
+            if (is(retValue, 'object|window|function|global')) {
+              retValue = retValue[ path[i].trim() ];
+            } else if (_isArr(retValue)) {
+              retValue = retValue[ spa.toInt(path[i]) ];
+            } else {
+              retValue = unDef;
+              break;
+            }
+          }
+        }
+
+        if (_isUndef(retValue)) {
+          if (nxtPath) {
+            return _find(objSrc, nxtPath, forUndefined);
           } else {
-            retValue = unDef;
+            return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+          }
+        } else {
+          return retValue;
+        }
+
+      } else {
+        if (arguments.length == 3) {
+          return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+        } else {
+          return objSrc;
+        }
+      }
+    }
+
+    function _hasKey(obj, path) {
+      if (arguments.length < 2) return false;
+      if ((typeof obj === 'object') && (typeof path === 'string') && (!/[\.\[\]\/\|\&\,]/g.test(path))) {
+        return obj.hasOwnProperty(path.trim());
+      } else {
+        var tObj = obj, retValue = false;
+        try {
+          retValue = _isValidEvalStr(path)? (typeof _find(tObj, path) != "undefined") : false;
+        } catch(e){
+          console.warn("Key["+path+"] error in object.\n" + e.stack);
+        }
+        return retValue;
+      }
+    }
+    function _isObjHasKeys(obj, propNames, deep){
+
+      function checkForAll(obj, propNames){
+        var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = true, hasKey;
+        for(var i=0;i<pKeys.length; i++) {
+          pKey = pKeys[i].trim();
+          if (pKey) {
+            pKeysCount++;
+            hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)))? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
+            retValue = retValue && hasKey;
+          }
+        }
+
+        return pKeysCount && retValue;
+      }
+
+      function checkForAny(obj, propNames){
+        var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = false, hasKey;
+        for(var i=0;i<pKeys.length; i++) {
+          pKey = pKeys[i].trim();
+          if (pKey) {
+            pKeysCount++;
+            hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)) )? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
+            retValue = retValue || hasKey;
+          }
+          if (retValue) break;
+        }
+
+        return pKeysCount && retValue;
+      }
+
+      var retValue = false;
+      if (_isObj(obj)){
+        if (propNames){
+          propNames =  ''+propNames;
+          switch(true) {
+            case (propNames.indexOf('&')>0) : retValue = checkForAll(obj, propNames.replace(/\&/g, ','));
+            break;
+            case (propNames.indexOf('|')>0) : retValue = checkForAny(obj, propNames.replace(/\|/g, ','));
+            break;
+            default: retValue = checkForAll(obj, propNames);
             break;
           }
         }
       }
 
-      if (_isUndef(retValue)) {
-        if (nxtPath) {
-          return _find(objSrc, nxtPath, forUndefined);
-        } else {
-          return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
-        }
-      } else {
-        return retValue;
-      }
-
-    } else {
-      if (arguments.length == 3) {
-        return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
-      } else {
-        return objSrc;
-      }
-    }
-  }
-  spa.findSafe = spa.findInObj = spa.findInObject = spa.findIn = spa.find = _find;
-
-  function _hasKey(obj, path) {
-    if (arguments.length < 2) return false;
-    if ((typeof obj === 'object') && (typeof path === 'string') && (!/[\.\[\]\/\|\&\,]/g.test(path))) {
-      return obj.hasOwnProperty(path.trim());
-    } else {
-      var tObj = obj, retValue = false;
-      try {
-        retValue = _isValidEvalStr(path)? (typeof _find(tObj, path) != "undefined") : false;
-      } catch(e){
-        console.warn("Key["+path+"] error in object.\n" + e.stack);
-      }
       return retValue;
     }
-  }
-  function _isObjHasKeys(obj, propNames, deep){
-
-    function checkForAll(obj, propNames){
-      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = true, hasKey;
-      for(var i=0;i<pKeys.length; i++) {
-        pKey = pKeys[i].trim();
-        if (pKey) {
-          pKeysCount++;
-          hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)))? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
-          retValue = retValue && hasKey;
-        }
-      }
-
-      return pKeysCount && retValue;
+    function _keys( xObj ) {
+      var xObjKeys = [];
+      try {
+        xObjKeys = Object.keys(xObj);
+      } catch(e){};
+      return xObjKeys;
+    }
+    function _spa_hasKeys(obj, propNames){
+      return _isObjHasKeys(obj, propNames, true);
+    }
+    function _spa_hasPrimaryKeys(obj, propNames){
+      return _isObjHasKeys(obj, propNames);
     }
 
-    function checkForAny(obj, propNames){
-      var pKeys = propNames.split(','), pKey = '', pKeysCount = 0, retValue = false, hasKey;
-      for(var i=0;i<pKeys.length; i++) {
-        pKey = pKeys[i].trim();
-        if (pKey) {
-          pKeysCount++;
-          hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)) )? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
-          retValue = retValue || hasKey;
-        }
-        if (retValue) break;
+    /*Get All keys like X-Path with dot and [] notations */
+    function _keysDottedAll(a) {
+      var objKeys = _keysDotted(a);
+      if (objKeys && !_isEmpty(objKeys)) {
+        objKeys = spa.toDottedPath(objKeys.join(",")).split(",");
       }
-
-      return pKeysCount && retValue;
+      return objKeys;
     }
-
-    var retValue = false;
-    if (_isObj(obj)){
-      if (propNames){
-        propNames =  ''+propNames;
-        switch(true) {
-          case (propNames.indexOf('&')>0) : retValue = checkForAll(obj, propNames.replace(/\&/g, ','));
-          break;
-          case (propNames.indexOf('|')>0) : retValue = checkForAny(obj, propNames.replace(/\|/g, ','));
-          break;
-          default: retValue = checkForAll(obj, propNames);
-          break;
+    function _keysDotted(a) {
+      a = a || {};
+      var list = [], xConnectorB, xConnectorE, curKey;
+      (function (o, r) {
+        r = r || '';
+        if (typeof o != 'object') {
+          return true;
         }
-      }
+        for (var c in o) {
+          curKey = r.substring(1);
+          xConnectorB = (_isNumStr(c)) ? "[" : ".";
+          xConnectorE = (((curKey) && (xConnectorB == "[")) ? "]" : "");
+          if (arguments.callee(o[c], r + xConnectorB + c + xConnectorE)) {
+            list.push((curKey) + (((curKey) ? xConnectorB : "")) + c + (xConnectorE));
+          }
+        }
+        return false;
+      })(a);
+      return list;
     }
+    function _keysCamelCase(a) {
+      return (_map(_keysDotted(a), function (name) {
+        var newName = (name).replace(/\./g, " ").toProperCase().replace(/ /g, "");
+        return (newName[0].toLowerCase() + newName.substring(1));
+      }));
+    }
+    function _keysTitleCase(a) {
+      return (_map(_keysDotted(a), function (name) {
+        return ((name).replace(/\./g, " ").toProperCase().replace(/ /g, ""));
+      }));
+    }
+    function _keysLodash(a) {
+      return (_map(_keysDotted(a), function (name) {
+        return ((name).replace(/\./g, "_"));
+      }));
+    }
+  }
 
-    return retValue;
-  }
-  function _keys( xObj ) {
-    var xObjKeys = [];
-    try {
-      xObjKeys = Object.keys(xObj);
-    } catch(e){};
-    return xObjKeys;
-  }
-  function _spa_hasKeys(obj, propNames){
-    return _isObjHasKeys(obj, propNames, true);
-  }
-  function _spa_hasPrimaryKeys(obj, propNames){
-    return _isObjHasKeys(obj, propNames);
-  }
+  spa.findSafe = spa.findInObj = spa.findInObject = spa.findIn = spa.find = _find;
+
   spa.keys           = _keys;
   spa.has            = spa.hasKey = _hasKey;
   spa.hasKeys        = _spa_hasKeys;
   spa.hasPrimaryKeys = _spa_hasPrimaryKeys;
 
-  /*Get All keys like X-Path with dot and [] notations */
-  function _keysDottedAll(a) {
-    var objKeys = _keysDotted(a);
-    if (objKeys && !_isEmpty(objKeys)) {
-      objKeys = spa.toDottedPath(objKeys.join(",")).split(",");
-    }
-    return objKeys;
-  }
-  function _keysDotted(a) {
-    a = a || {};
-    var list = [], xConnectorB, xConnectorE, curKey;
-    (function (o, r) {
-      r = r || '';
-      if (typeof o != 'object') {
-        return true;
-      }
-      for (var c in o) {
-        curKey = r.substring(1);
-        xConnectorB = (_isNumStr(c)) ? "[" : ".";
-        xConnectorE = (((curKey) && (xConnectorB == "[")) ? "]" : "");
-        if (arguments.callee(o[c], r + xConnectorB + c + xConnectorE)) {
-          list.push((curKey) + (((curKey) ? xConnectorB : "")) + c + (xConnectorE));
-        }
-      }
-      return false;
-    })(a);
-    return list;
-  }
-  function _keysCamelCase(a) {
-    return (_map(_keysDotted(a), function (name) {
-      var newName = (name).replace(/\./g, " ").toProperCase().replace(/ /g, "");
-      return (newName[0].toLowerCase() + newName.substring(1));
-    }));
-  }
-  function _keysTitleCase(a) {
-    return (_map(_keysDotted(a), function (name) {
-      return ((name).replace(/\./g, " ").toProperCase().replace(/ /g, ""));
-    }));
-  }
-  function _keysLodash(a) {
-    return (_map(_keysDotted(a), function (name) {
-      return ((name).replace(/\./g, "_"));
-    }));
-  }
   spa.keysDottedAll = _keysDottedAll;
   spa.keysDotted    = _keysDotted;
   spa.keysCamelCase = _keysCamelCase ;
@@ -1986,348 +2003,348 @@
   spa.keys_         = _keysLodash;
 
   /* Array/Object Iterators */
-  function _each(xArr, fn) {
-    if (_isArrLike(xArr)) {
-      for(var i=0; i<xArr.length; i++) {
-        fn.call(xArr[i], xArr[i], i, xArr);
-      }
-    } else {
-      _keys(xArr).forEach(function(key){
-        fn.call(xArr[key], xArr[key], key, xArr);
-      });
-    }
-  }
-  function _map(xArr, fn) {
-    var retArr = [];
-    if (_isArrLike(xArr)) {
-      for(var i=0; i<xArr.length; i++) {
-        retArr.push( fn.call(xArr[i], xArr[i], i, xArr) );
-      }
-    } else {
-      _keys(xArr).forEach(function(key){
-        retArr.push( fn.call(xArr[key], xArr[key], key, xArr) );
-      });
-    }
-    return retArr;
-  }
-  function _every(xArr, fn) {
-    var retValue = true;
-    if (_isArrLike(xArr)) {
-      for(var i=0, xLen = xArr.length; (retValue && i<xLen); i++) {
-        retValue = !!fn.call(xArr[i], xArr[i], i, xArr);
-      }
-    } else {
-      var oKeys = _keys(xArr), key;
-      for(var i=0, xLen = oKeys.length; (retValue && i<xLen); i++) {
-        key = oKeys[i];
-        retValue = !!fn.call(xArr[key], xArr[key], key, xArr);
+  if (1) {
+    function _each(xArr, fn) {
+      if (_isArrLike(xArr)) {
+        for(var i=0; i<xArr.length; i++) {
+          fn.call(xArr[i], xArr[i], i, xArr);
+        }
+      } else {
+        _keys(xArr).forEach(function(key){
+          fn.call(xArr[key], xArr[key], key, xArr);
+        });
       }
     }
-    return retValue;
-  }
-  function _some(xArr, fn) {
-    var retValue = false;
-    if (_isArrLike(xArr)) {
-      for(var i=0, xLen = xArr.length; i<xLen; i++) {
-        retValue = !!fn.call(xArr[i], xArr[i], i, xArr);
-        if (retValue) break;
+    function _map(xArr, fn) {
+      var retArr = [];
+      if (_isArrLike(xArr)) {
+        for(var i=0; i<xArr.length; i++) {
+          retArr.push( fn.call(xArr[i], xArr[i], i, xArr) );
+        }
+      } else {
+        _keys(xArr).forEach(function(key){
+          retArr.push( fn.call(xArr[key], xArr[key], key, xArr) );
+        });
       }
-    } else {
-      var oKeys = _keys(xArr), key;
-      for(var i=0, xLen = oKeys.length; i<xLen; i++) {
-        key = oKeys[i];
-        retValue = !!fn.call(xArr[key], xArr[key], key, xArr);
-        if (retValue) break;
-      }
+      return retArr;
     }
-    return retValue;
-  }
-  function _filter(xArr, fn) {
-    var retArr = [];
-    if (_isArrLike(xArr)) {
-      for(var i=0; i<xArr.length; i++) {
-        (!fn.call(xArr[i], xArr[i], i, xArr))? '' : retArr.push( xArr[i] );
-      }
-    } else {
-      _keys(xArr).forEach(function(key){
-        (!fn.call(xArr[key], xArr[key], key, xArr))? '' : retArr.push( xArr[key] );
-      });
-    }
-    return retArr;
-  }
-
-  function _removeOn(xArr, fn) {
-    var removedItems = [];
-    if (_isArrLike(xArr)) {
-      for(var i=0; i<xArr.length; i++) {
-        if (fn.call(xArr[i], xArr[i], i, xArr)) {
-          removedItems.push( xArr.splice(i--,1)[0] );
+    function _every(xArr, fn) {
+      var retValue = true;
+      if (_isArrLike(xArr)) {
+        for(var i=0, xLen = xArr.length; (retValue && i<xLen); i++) {
+          retValue = !!fn.call(xArr[i], xArr[i], i, xArr);
+        }
+      } else {
+        var oKeys = _keys(xArr), key;
+        for(var i=0, xLen = oKeys.length; (retValue && i<xLen); i++) {
+          key = oKeys[i];
+          retValue = !!fn.call(xArr[key], xArr[key], key, xArr);
         }
       }
-    } else {
-      _keys(xArr).forEach(function(key){
-        if (fn.call(xArr[key], xArr[key], key, xArr)) {
-          removedItems.push(xArr[key]);
-          delete xArr[key];
-        }
-      });
+      return retValue;
     }
-    return removedItems;
-  }
-
-  function _sortBy(xArr, key) {
-    if (_isArrLike(xArr) && key) {
-      return xArr.sort(function(a, b){
-        var aValue = (_isNumStr(a[key]))? (a[key]*1) : a[key];
-        var bValue = (_isNumStr(b[key]))? (b[key]*1) : b[key];
-        var aType = typeof aValue;
-        var bType = typeof bValue;
-        var retValue = 0;
-        if ((aType === 'string') && (bType === 'string')) {
-          aValue = aValue.toUpperCase();
-          bValue = bValue.toUpperCase();
-          if (aValue < bValue) {
-            retValue = -1;
+    function _some(xArr, fn) {
+      var retValue = false;
+      if (_isArrLike(xArr)) {
+        for(var i=0, xLen = xArr.length; i<xLen; i++) {
+          retValue = !!fn.call(xArr[i], xArr[i], i, xArr);
+          if (retValue) break;
+        }
+      } else {
+        var oKeys = _keys(xArr), key;
+        for(var i=0, xLen = oKeys.length; i<xLen; i++) {
+          key = oKeys[i];
+          retValue = !!fn.call(xArr[key], xArr[key], key, xArr);
+          if (retValue) break;
+        }
+      }
+      return retValue;
+    }
+    function _filter(xArr, fn) {
+      var retArr = [];
+      if (_isArrLike(xArr)) {
+        for(var i=0; i<xArr.length; i++) {
+          (!fn.call(xArr[i], xArr[i], i, xArr))? '' : retArr.push( xArr[i] );
+        }
+      } else {
+        _keys(xArr).forEach(function(key){
+          (!fn.call(xArr[key], xArr[key], key, xArr))? '' : retArr.push( xArr[key] );
+        });
+      }
+      return retArr;
+    }
+    function _removeOn(xArr, fn) {
+      var removedItems = [];
+      if (_isArrLike(xArr)) {
+        for(var i=0; i<xArr.length; i++) {
+          if (fn.call(xArr[i], xArr[i], i, xArr)) {
+            removedItems.push( xArr.splice(i--,1)[0] );
           }
-          if (aValue > bValue) {
-            retValue = 1;
-          }
-        } else if ((aType === 'number') && (bType === 'number')) {
-          retValue = aValue - bValue;
         }
-        return retValue;
-      });
-    } else {
-      return xArr;
-    }
-  }
-
-  function _zipObj(keyArr, valArr) {
-    var retObj = {};
-    if (_isArrLike(keyArr) && _isArrLike(valArr)) {
-      for(var i=0; i<keyArr.length; i++) {
-        retObj[keyArr[i]] = valArr[i];
-      }
-    }
-    return retObj;
-  }
-
-  function _uniq(xArr) {
-    return _filter(xArr, function(item, idx){
-      return (xArr.indexOf(item) == idx);
-    });
-  }
-
-  function _omit(xObj, omitKeys) {
-    var retObj = {};
-    if (_isArrLike(omitKeys) && omitKeys.length) {
-      if (_isObj(xObj)) {
-        _each(_keys(xObj), function(key){
-          if (omitKeys.indexOf(key) < 0) {
-            retObj[key] = xObj[key];
+      } else {
+        _keys(xArr).forEach(function(key){
+          if (fn.call(xArr[key], xArr[key], key, xArr)) {
+            removedItems.push(xArr[key]);
+            delete xArr[key];
           }
         });
       }
+      return removedItems;
+    }
+    function _sortBy(xArr, key) {
+      if (_isArrLike(xArr) && key) {
+        return xArr.sort(function(a, b){
+          var aValue = (_isNumStr(a[key]))? (a[key]*1) : a[key];
+          var bValue = (_isNumStr(b[key]))? (b[key]*1) : b[key];
+          var aType = typeof aValue;
+          var bType = typeof bValue;
+          var retValue = 0;
+          if ((aType === 'string') && (bType === 'string')) {
+            aValue = aValue.toUpperCase();
+            bValue = bValue.toUpperCase();
+            if (aValue < bValue) {
+              retValue = -1;
+            }
+            if (aValue > bValue) {
+              retValue = 1;
+            }
+          } else if ((aType === 'number') && (bType === 'number')) {
+            retValue = aValue - bValue;
+          }
+          return retValue;
+        });
+      } else {
+        return xArr;
+      }
+    }
+    function _zipObj(keyArr, valArr) {
+      var retObj = {};
+      if (_isArrLike(keyArr) && _isArrLike(valArr)) {
+        for(var i=0; i<keyArr.length; i++) {
+          retObj[keyArr[i]] = valArr[i];
+        }
+      }
       return retObj;
-    } else {
-      return xObj;
     }
-  }
-
-  // simple compress
-  function _compress(s) {
-    var dict = {};
-    var data = (s + '').split('');
-    var out = [];
-    var currChar;
-    var phrase = data[0];
-    var code = 256;
-    for (var i=1; i<data.length; i++) {
-      currChar=data[i];
-      if (dict[phrase + currChar] != null) {
-        phrase += currChar;
-      }
-      else {
-        out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-        dict[phrase + currChar] = code;
-        code++;
-        phrase=currChar;
+    function _uniq(xArr) {
+      return _filter(xArr, function(item, idx){
+        return (xArr.indexOf(item) == idx);
+      });
+    }
+    function _omit(xObj, omitKeys) {
+      var retObj = {};
+      if (_isArrLike(omitKeys) && omitKeys.length) {
+        if (_isObj(xObj)) {
+          _each(_keys(xObj), function(key){
+            if (omitKeys.indexOf(key) < 0) {
+              retObj[key] = xObj[key];
+            }
+          });
+        }
+        return retObj;
+      } else {
+        return xObj;
       }
     }
-    out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-    for (var i=0; i<out.length; i++) {
-      out[i] = String.fromCharCode(out[i]);
+    // simple compress
+    function _compress(s) {
+      var dict = {};
+      var data = (s + '').split('');
+      var out = [];
+      var currChar;
+      var phrase = data[0];
+      var code = 256;
+      for (var i=1; i<data.length; i++) {
+        currChar=data[i];
+        if (dict[phrase + currChar] != null) {
+          phrase += currChar;
+        }
+        else {
+          out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+          dict[phrase + currChar] = code;
+          code++;
+          phrase=currChar;
+        }
+      }
+      out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+      for (var i=0; i<out.length; i++) {
+        out[i] = String.fromCharCode(out[i]);
+      }
+      return out.join('');
     }
-    return out.join('');
-  }
+    function _getSignature(input, keyPrefix) {
+      keyPrefix = keyPrefix || '';
 
-  function _getSignature(input, keyPrefix) {
-    keyPrefix = keyPrefix || '';
+      var xSign = keyPrefix;
+      var inputType = typeof input;
 
-    var xSign = keyPrefix;
-    var inputType = typeof input;
-
-    if (inputType === 'object') {
-      var oKeys = Object.keys(input).sort();
-      for(var z = 0; z < oKeys.length; z++)
-        xSign += _getSignature(input[ oKeys[z] ], oKeys[z]);
-    } else if (inputType === 'function') {
-      var fnName = input['name'];
-      if (!fnName || fnName === keyPrefix) {
-        var fnDef = input.toString();
-        fnName = (/function(.*?)\(/.exec(fnDef)[1]).trim();
-        if (fnName) {
-          xSign += 'F'+fnName;
+      if (inputType === 'object') {
+        var oKeys = Object.keys(input).sort();
+        for(var z = 0; z < oKeys.length; z++)
+          xSign += _getSignature(input[ oKeys[z] ], oKeys[z]);
+      } else if (inputType === 'function') {
+        var fnName = input['name'];
+        if (!fnName || fnName === keyPrefix) {
+          var fnDef = input.toString();
+          fnName = (/function(.*?)\(/.exec(fnDef)[1]).trim();
+          if (fnName) {
+            xSign += 'F'+fnName;
+          } else {
+            xSign += fnDef;
+          }
         } else {
-          xSign += fnDef;
+          xSign += 'F'+fnName;
         }
       } else {
-        xSign += 'F'+fnName;
+        xSign += input;
       }
-    } else {
-      xSign += input;
+
+      return xSign;
     }
-
-    return xSign;
-  }
-
-  function _getSign(input) {
-    return _compress(_getSignature(input)
-        .replace(/\s/g,'_')
-        .replace(/\"/g,'d')
-        .replace(/\'/g,'s')
-        .replace(/\\/g,'b')
-        .replace(/\//g,'f')
-        .replace(/function/g,'Fn'));
-  }
-
-  function _union() {
-    var oCollection = {}, xArr;
-    for(var i=0; i < arguments.length; i++){
-      xArr = arguments[i];
-      if (_isArrLike(xArr)) {
-        for (var j = 0; j < xArr.length; j++)
-          oCollection[_getSign(xArr[j])] = xArr[j];
-      } else {
-        oCollection[_getSign(xArr)] = xArr;
+    function _getSign(input) {
+      return _compress(_getSignature(input)
+          .replace(/\s/g,'_')
+          .replace(/\"/g,'d')
+          .replace(/\'/g,'s')
+          .replace(/\\/g,'b')
+          .replace(/\//g,'f')
+          .replace(/function/g,'Fn'));
+    }
+    function _union() {
+      var oCollection = {}, xArr;
+      for(var i=0; i < arguments.length; i++){
+        xArr = arguments[i];
+        if (_isArrLike(xArr)) {
+          for (var j = 0; j < xArr.length; j++)
+            oCollection[_getSign(xArr[j])] = xArr[j];
+        } else {
+          oCollection[_getSign(xArr)] = xArr;
+        }
       }
+      _log.log('>>union-collection[keys, obj, src]:', _keys(oCollection), oCollection, arguments);
+      var unionArr = [], oKey;
+      for (oKey in oCollection) {
+        if (oCollection.hasOwnProperty(oKey))
+          unionArr.push(oCollection[oKey]);
+      }
+      oCollection = null;
+      return unionArr;
     }
-    _log.log('>>union-collection[keys, obj, src]:', _keys(oCollection), oCollection, arguments);
-    var unionArr = [], oKey;
-    for (oKey in oCollection) {
-      if (oCollection.hasOwnProperty(oKey))
-        unionArr.push(oCollection[oKey]);
-    }
-    oCollection = null;
-    return unionArr;
-  }
-
-  function _indexOf(xArr, mObj){
-    var retValue = -1;
-    if (_isArrLike(xArr) && xArr.length && _isObj(mObj)) {
-      var mKeys = _keys(mObj), isMatch, srcV, desV;
-      if (mKeys.length) {
-        for(var i=0; i<xArr.length; i++) {
-          for(var j=0; j<mKeys.length; j++){
-            srcV = mObj[ mKeys[j] ];
-            desV = xArr[i][ mKeys[j] ];
-            isMatch = (srcV === desV);
-            if (!isMatch) {
+    function _indexOf(xArr, mObj){
+      var retValue = -1;
+      if (_isArrLike(xArr) && xArr.length && _isObj(mObj)) {
+        var mKeys = _keys(mObj), isMatch, srcV, desV;
+        if (mKeys.length) {
+          for(var i=0; i<xArr.length; i++) {
+            for(var j=0; j<mKeys.length; j++){
+              srcV = mObj[ mKeys[j] ];
+              desV = xArr[i][ mKeys[j] ];
+              isMatch = (srcV === desV);
+              if (!isMatch) {
+                break;
+              }
+            }
+            if (isMatch) {
+              retValue = i;
               break;
             }
           }
-          if (isMatch) {
-            retValue = i;
-            break;
-          }
         }
       }
+      return retValue;
     }
-    return retValue;
-  }
+    function _extend () {
+      var targetObj = ((arguments.length)? arguments[0] : {}) || {};
 
-  function _extend () {
-    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
-
-    if (arguments.length) {
-      for (var i = 0, nxtObj; (i < arguments.length); i++) {
-        nxtObj = arguments[i];
-        if (_isObj(nxtObj)) {
-          for (var key in nxtObj) {
-            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
-              targetObj[key] = nxtObj[key];
-            }
-          }
-        } else if (_isArr(nxtObj)) {
-          targetObj = _mergeArray.call(null, targetObj, nxtObj);
-        }
-      }
-    }
-
-    return targetObj;
-  }
-
-  function _mergeDeep () {
-    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
-
-    if (arguments.length) {
-      for (var i = 0, nxtObj; (i < arguments.length); i++) {
-        nxtObj = arguments[i];
-        if (_isObj(nxtObj)) {
-          for (var key in nxtObj) {
-            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
-              if (_isObj(nxtObj[key])) {
-                targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
-              } else if (_isArr(nxtObj[key])) {
-                if (nxtObj[key].length) {
-                  targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
-                } else {
-                  targetObj[key] = [];
-                }
-              } else {
+      if (arguments.length) {
+        for (var i = 0, nxtObj; (i < arguments.length); i++) {
+          nxtObj = arguments[i];
+          if (_isObj(nxtObj)) {
+            for (var key in nxtObj) {
+              if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
                 targetObj[key] = nxtObj[key];
               }
             }
+          } else if (_isArr(nxtObj)) {
+            targetObj = _mergeArray.call(null, targetObj, nxtObj);
           }
-        } else if (_isArr(nxtObj)) {
-          targetObj = _mergeArray.call(null, targetObj, nxtObj);
         }
       }
+
+      return targetObj;
     }
+    function _mergeDeep () {
+      var targetObj = ((arguments.length)? arguments[0] : {}) || {};
 
-    return targetObj;
-  }
-  function _mergeArray () {
-    var targetArr = ((arguments.length)? arguments[0] : []) || [];
+      if (arguments.length) {
+        for (var i = 0, nxtObj; (i < arguments.length); i++) {
+          nxtObj = arguments[i];
+          if (_isObj(nxtObj)) {
+            for (var key in nxtObj) {
+              if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+                if (_isObj(nxtObj[key])) {
+                  targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
+                } else if (_isArr(nxtObj[key])) {
+                  if (nxtObj[key].length) {
+                    targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
+                  } else {
+                    targetObj[key] = [];
+                  }
+                } else {
+                  targetObj[key] = nxtObj[key];
+                }
+              }
+            }
+          } else if (_isArr(nxtObj)) {
+            targetObj = _mergeArray.call(null, targetObj, nxtObj);
+          }
+        }
+      }
 
-    if (arguments.length) {
-      for (var i = 0, nxtArr; (i < arguments.length); i++) {
-        nxtArr = arguments[i];
-        if (_isArr(nxtArr)) {
-          for (var aIdx = 0; aIdx < nxtArr.length; aIdx++) {
-            if (_isUndef(targetArr[aIdx])) {
-              targetArr[aIdx] = nxtArr[aIdx];
-            } else {
-              switch (_of(nxtArr[aIdx])) {
-                case 'object':
-                  targetArr[aIdx] = _mergeDeep(targetArr[aIdx], nxtArr[aIdx]);
-                  break;
-                case 'array' :
-                  targetArr[aIdx] = _mergeArray(targetArr[aIdx], nxtArr[aIdx]);
-                  break;
-                default:
-                  targetArr[aIdx] = nxtArr[aIdx];
-                  break;
+      return targetObj;
+    }
+    function _mergeArray () {
+      var targetArr = ((arguments.length)? arguments[0] : []) || [];
+
+      if (arguments.length) {
+        for (var i = 0, nxtArr; (i < arguments.length); i++) {
+          nxtArr = arguments[i];
+          if (_isArr(nxtArr)) {
+            for (var aIdx = 0; aIdx < nxtArr.length; aIdx++) {
+              if (_isUndef(targetArr[aIdx])) {
+                targetArr[aIdx] = nxtArr[aIdx];
+              } else {
+                switch (_of(nxtArr[aIdx])) {
+                  case 'object':
+                    targetArr[aIdx] = _mergeDeep(targetArr[aIdx], nxtArr[aIdx]);
+                    break;
+                  case 'array' :
+                    targetArr[aIdx] = _mergeArray(targetArr[aIdx], nxtArr[aIdx]);
+                    break;
+                  default:
+                    targetArr[aIdx] = nxtArr[aIdx];
+                    break;
+                }
               }
             }
           }
         }
       }
+
+      return targetArr;
     }
-
-    return targetArr;
+    function _last(xArray, n) {
+      var retValue;
+      if (_isArrLike(xArray) && xArray.length>0) {
+        if (typeof n === 'number' && n > 1) {
+          retValue = xArray.slice(-1*n);
+        } else {
+          retValue = xArray[xArray.length-1];
+        }
+      }
+      return retValue;
+    }
   }
-
   spa.map      = _map;
   spa.uniq     = _uniq;
   spa.omit     = _omit;
@@ -2342,18 +2359,6 @@
   spa.indexOf  = _indexOf;
   spa.extend   = _extend;
   spa.merge    = _mergeDeep;
-
-  function _last(xArray, n) {
-    var retValue;
-    if (_isArrLike(xArray) && xArray.length>0) {
-      if (typeof n === 'number' && n > 1) {
-        retValue = xArray.slice(-1*n);
-      } else {
-        retValue = xArray[xArray.length-1];
-      }
-    }
-    return retValue;
-  }
 
   Object.defineProperties(Array.prototype, {
     '__now' : {
@@ -2588,7 +2593,7 @@
   function _ajaxScriptHandle( responseText ) {
     if (responseText.trim()) {
       var xScript = document.createElement( "script" );
-      xScript.setAttribute( 'id', 'js-'+spa.now() );
+      xScript.setAttribute( 'id', 'js-'+_now() );
       if (spa.defaults.csp.nonce) {
         xScript.setAttribute( 'nonce', spa.defaults.csp.nonce );
       }
@@ -2609,7 +2614,8 @@
       return rawResponse;
     }
   });
-  $.cachedScript = function (url, options) {
+
+  function _cachedScript(url, options) {
     _log.log('Ajax for script:',url, 'options:',options);
     /* allow user to set any option except for dataType and url */
     url = _getFullPath4Component(url, (options? options['spaComponent'] : '') );
@@ -2623,14 +2629,13 @@
     if (!options.hasOwnProperty('dataType')) {
       options['dataType'] = 'javascript';
     }
-    options = $.extend(options, {
+    options = _extend(options, {
       url: url
     });
     _log.info("Loading Script('" + url + "') ...");
     return $.ajax(options);
-  };
-
-  $.cachedStyle = function (styleId, url, options) {
+  }
+  function _cachedStyle(styleId, url, options) {
     /* allow user to set any option except for dataType and url */
     var $styleContainerEl = $('#'+styleId, 'head');
     options = options || {};
@@ -2642,7 +2647,7 @@
       options['cache'] = spa.defaults.components.offline; //1st load from the server
     }
 
-    options = $.extend(options, {
+    options = _extend(options, {
       dataType: "text",
       url: url,
       success: function (cssStyles) {
@@ -2653,7 +2658,7 @@
     });
     _log.info("Loading style('" + url + "') ... ");
     return $.ajax(options);
-  };
+  }
 
   /* Add Script Tag */
   spa.addScriptTag = function (scriptId, scriptSrc) {
@@ -2708,7 +2713,7 @@
       }
       else { /* load script script-URL */
         tAjaxRequests.push(
-          $.cachedScript(scriptPath, xOptions).done(function (script, textStatus) {
+          _cachedScript(scriptPath, xOptions).done(function (script, textStatus) {
             _log.info("Loaded script [" + scriptId + "] from [" + scriptPath + "]. STATUS: " + textStatus);
           })
         );
@@ -2749,7 +2754,7 @@
       var ajaxQ = [];
       _each(scriptsLst, function(scriptPath) {
         ajaxQ.push(
-          $.cachedScript(scriptPath).done(function (script, textStatus) {
+          _cachedScript(scriptPath).done(function (script, textStatus) {
             _log.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
           }).fail(function(){
             _log.info("Failed Loading script from [" + scriptPath + "].");
@@ -2779,7 +2784,7 @@
           scriptPath = scriptPath.substr(1);
         }
         _log.info("Load script from   [" + scriptPath + "], cache:",scriptCache);
-        $.cachedScript(scriptPath, {cache: scriptCache}).done(function() {
+        _cachedScript(scriptPath, {cache: scriptCache}).done(function() {
           _log.info("Loaded script from [" + scriptPath + "]");
           spa.loadScriptsSync(scriptsLst, onDone, onFail);
         }).fail(function(){
@@ -2813,7 +2818,7 @@
       if (getCss) {
         //1st load from the server
         tAjaxRequests.push(
-          $.cachedStyle(styleId, stylePath, {cache: spa.defaults.components.offline}).done(function (style, textStatus) {
+          _cachedStyle(styleId, stylePath, {cache: spa.defaults.components.offline}).done(function (style, textStatus) {
             _log.info("Loaded style [" + styleId + "] from [" + stylePath + "]. STATUS: " + textStatus);
           })
         );
@@ -3042,7 +3047,7 @@
     if ($.i18n) {
       $.i18n.map = {}; //empty dictionary before loading lang file
       lang = (lang || spa.i18n.browserLang()).replace(/-/g, "_");
-      i18nSettings = $.extend(spa.i18n.settings, i18nSettings);
+      i18nSettings = _extend(spa.i18n.settings, i18nSettings);
       $.i18n.properties({
         name: i18nSettings.name,
         language: lang,
@@ -3087,43 +3092,33 @@
   };
 
   spa.i18n.value = function(i18nKey) {
-    i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
-    if (i18nKey.beginsWithStrIgnoreCase('@')) {
-      i18nKey = ((i18nKey.substr(1)).trim());
-      i18nKey = _find(window, i18nKey, i18nKey);
-    }
-    return _i18nValue(i18nKey);
+    if ($.i18n || window['Liferay']) {
+      i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
+      if (i18nKey.beginsWithStrIgnoreCase('@')) {
+        i18nKey = ((i18nKey.substr(1)).trim());
+        i18nKey = _find(window, i18nKey, i18nKey);
+      }
+      return _i18nValue(i18nKey);
 
-    function _i18nValue(iKey){
-      var retStr = iKey;
-      try {
-        retStr = (''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : $.i18n.prop(iKey))).trim();
-        if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
-          retStr = _stripEnds(retStr);
+      function _i18nValue(iKey){
+        var retStr = iKey;
+        try {
+          retStr = (''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : $.i18n.prop(iKey))).trim();
+          if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
+            retStr = _stripEnds(retStr);
+          }
+        } catch(e){
+          console.warn('i18n lookup error:', e);
         }
-      } catch(e){
-        console.warn('i18n lookup error:' + e.stack);
-      }
-      return retStr;
+        return retStr;
 
-      function _stripEnds(Str) {
-        return Str.substring(1, Str.length-1);
+        function _stripEnds(Str) {
+          return Str.substring(1, Str.length-1);
+        }
       }
+    } else {
+      _log.info('jQ-spa.i18n module not found. Skipping i18n value lookup.');
     }
-  };
-
-  spa.strBindData = function(xMsg, data, bStr, eStr){
-    xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
-    var varList = spa.extractStrBetweenEx(xMsg, bStr, eStr, true);
-    if (xMsg && !_isBlank(varList) && _isObj(data)) {
-      _each(varList, function(key){
-        xMsg = xMsg.replace((new RegExp(bStr+'\\s*('+(key.trim())+')\\s*'+eStr, 'g')), _find(data, key, ''));
-      });
-    }
-    return xMsg;
-  };
-  String.prototype.bindData = function (data) {
-    return spa.strBindData(''+this, data);
   };
 
   spa.i18n.text = function (i18nKey, data) {
@@ -3247,21 +3242,6 @@
       return $('#i18nSpaRunTime').html();
     }
   };
-
-  /* Extend to jQuery as
-   *
-   * $("el-selector").i18n('i18n.key')
-   *
-   * */
-  $.fn.extend({
-    i18n: function (opt) {
-      this.each(function () {
-        if (opt) $(this).attr('data-i18n', opt).data('i18n', opt);
-        spa.i18n.apply(this);
-      });
-      return this;
-    }
-  });
 
   function _pipeSort(inVal, reverse) {
     var retValue = inVal;
@@ -3433,7 +3413,7 @@
     }
 
     function _templateDynId(type, key) {
-      return ['_runTimeTemplate',type,compName,(key.replace(/[^a-z0-9]/gi,'_')),(spa.now())].join('_');
+      return ['_runTimeTemplate',type,compName,(key.replace(/[^a-z0-9]/gi,'_')),(_now())].join('_');
     }
     function _inlineTemplate(templateId, template) {
       if (!spa.compiledTemplates4DataBind.hasOwnProperty(tmplStoreName)) {
@@ -3891,7 +3871,7 @@
       resetElDefaultInContext: true,
       keysMap: {}
     };
-    $.extend(fillOptions, options);
+    _extend(fillOptions, options);
 
     if (!ready2Fill) { //make Ajax call to load remote data and apply....
 
@@ -4266,7 +4246,7 @@
 
     if (_isObj(componentNameFull)) {
       options = _mergeDeep({}, componentNameFull);
-      componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
+      componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+_now());
       options['componentName'] = componentNameFull;
       componentName = componentNameFull;
     }
@@ -4424,7 +4404,7 @@
 
     if (_isObj(componentName)) {
       options = _mergeDeep({}, componentName);
-      componentName = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
+      componentName = options['name'] || options['componentName'] || ('spaComponent'+_now());
       options['componentName'] = componentName;
     }
 
@@ -4453,11 +4433,11 @@
         if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.onRender', renderCallback: 'app.'+componentName+'.renderCallback'};
         if (spa.components[componentName]) {
           if (options['__prop__']) {
-            _mergeDeep(spa.components[componentName], $.extend({},options['__prop__']));
+            _mergeDeep(spa.components[componentName], _extend({},options['__prop__']));
           }
           options['__prop__'] = spa.components[componentName];
         }
-        $.extend(window.app[componentName], options);
+        _extend(window.app[componentName], options);
         window['$$'+componentName] = window.app[componentName];
       }
     } else {
@@ -4769,6 +4749,21 @@
     _log.info(options);
     spa.$render(componentName, options);
   };
+
+  function __finalValue(srcVal) {
+    var retVal = srcVal, fnContext = arguments[1], fnArgs = Array.prototype.slice.call(arguments, 2);
+    if (_isStr(retVal)) {
+      if (retVal.indexOf('(')>0) { //function
+        retVal = retVal.getLeftStr('(');
+      }
+      retVal = _find(window, (retVal.trim()), undefined);
+    }
+    if (_isFn(retVal) && (arguments.length>1)) {
+      retVal = retVal.apply(fnContext, fnArgs);
+    }
+    return retVal;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////
   spa.renderComponent = spa.$render = function (componentNameFull, options) {
     options = options || {};
@@ -4781,7 +4776,7 @@
 
     if (_isObj(componentNameFull)) {
       options = _mergeDeep({}, componentNameFull);
-      componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+spa.now());
+      componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+_now());
       options['componentName'] = componentNameFull;
       componentName = componentNameFull;
     }
@@ -4904,12 +4899,12 @@
           }
           _log.info('render-options: spa.components['+componentName+']');
           _log.info(spa.components[componentName]);
-          var renderOptions = (options && options['saveOptions'])?  spa.components[componentName] : $.extend({}, spa.components[componentName]);
+          var renderOptions = (options && options['saveOptions'])?  spa.components[componentName] : _extend({}, spa.components[componentName]);
           if (options) {
             if (!options.hasOwnProperty('mountComponent')) {
               delete renderOptions['mountComponent'];
             }
-            $.extend(renderOptions, options);
+            _extend(renderOptions, options);
             _log.info('Extended> render-options: spa.components['+componentName+']');
             _log.info(renderOptions);
           }
@@ -4963,7 +4958,7 @@
       //load component's base prop from .(min.)js
       if (_cScriptFile) {
         _log.info("Attempt to load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"]"); //1st load from server
-        $.cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:spa.defaults.components.offline}).done(noop)
+        _cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:spa.defaults.components.offline}).done(noop)
           .fail(function(){
             _log.info("Attempt to Load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"] has FAILED. Not to worry. Continuing to render with default properties.");
             _parseComp();
@@ -5353,7 +5348,7 @@
         viewContainerId = (oldTarget? '#' : '')+oldTarget;
         if (!viewContainerId) {
           console.warn('Render target is missing.');
-          viewContainerId = "dynRender_"+spa.now()+"_"+(spa.rand(1000, 9999));
+          viewContainerId = "dynRender_"+_now()+"_"+(spa.rand(1000, 9999));
         }
       }
       spa.render(viewContainerId, uOptions);
@@ -5552,7 +5547,7 @@
 //      spaRenderId = spaRVOptions.dataRenderId;
 //    }
     var spaRenderId = _renderOption('dataRenderId', 'renderId');
-    retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (spa.now()) + (spa.rand(1000, 9999)))));
+    retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (_now()) + (spa.rand(1000, 9999)))));
 
 //    var targetRenderMode = ("" + $(viewContainerId).data("renderMode")).replace(/undefined/, "");
 //    if (!_isBlank(spaRVOptions.dataRenderMode)) {
@@ -6156,11 +6151,11 @@
                     , fnDataPreProcessAsyncResponse;
 
                   if (fnDataPreProcessAsync && (_isStr(fnDataPreProcessAsync))) { fnDataPreProcessAsync = _find(window, fnDataPreProcessAsync); }
-                  retValue['modelOriginal'] = $.extend({}, initialTemplateData);
+                  retValue['modelOriginal'] = _extend({}, initialTemplateData);
                   retValue['model'] = initialTemplateData;
                   if (fnDataPreProcessAsync && _isFn(fnDataPreProcessAsync)) {
                     isPreProcessed = true;
-                    var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
+                    var dataProcessContext = _extend({}, (app[rCompName] || {}), (uOptions || {}));
 
                     fnDataPreProcessAsyncResponse = fnDataPreProcessAsync.call(dataProcessContext, initialTemplateData);
                     isPreProcessed = (!_isUndef(fnDataPreProcessAsyncResponse));
@@ -6202,10 +6197,10 @@
                     if (fnDataProcess && (_isStr(fnDataProcess))) {
                       fnDataProcess = _find(window, fnDataProcess);
                     }
-                    retValue['modelOriginal'] = $.extend({}, initialTemplateData);
+                    retValue['modelOriginal'] = _extend({}, initialTemplateData);
                     retValue['model'] = initialTemplateData;
                     if (fnDataProcess && _isFn(fnDataProcess)) {
-                      var dataProcessContext = $.extend({}, (app[rCompName] || {}), (uOptions || {}));
+                      var dataProcessContext = _extend({}, (app[rCompName] || {}), (uOptions || {}));
                       dataPreProcessAsyncRes.unshift(initialTemplateData);
                       finalTemplateData = fnDataProcess.apply(dataProcessContext, dataPreProcessAsyncRes);
                     } else if (isPreProcessed) {
@@ -6410,11 +6405,11 @@
                         var rhKeys = _keys(spa.renderHistory);
                         var rhLen = rhKeys.length;
                         if (rhLen > spa.renderHistoryMax) {
-                          $.each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
+                          _each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
                             delete spa.renderHistory[key];
                           });
                         }
-                        retValue.cron = "" + spa.now();
+                        retValue.cron = "" + _now();
                         if (spa.renderHistoryMax>0) {
                           spa.renderHistory[retValue.id] = retValue;
                         }
@@ -6597,7 +6592,7 @@
     if ($el.length == 1) {
       formId  = $el.attr('id') || '';
       if (!formId) {
-        formId = $el.attr('name') || ('spaForm'+spa.now());
+        formId = $el.attr('name') || ('spaForm'+_now());
         $el.attr('id', formId);
       }
       $elData = $el.data();
@@ -6696,62 +6691,16 @@
     }
   }
 
-  //ToBeRemoved
-  // spa.hasAutoRoutes = function(routeHash, operator){
-  //   var elSelector = "[data-sparoute-default]"+(routeHash? "[href"+(operator?operator:"")+"='"+routeHash+"']" : "");
-  //   return ($(elSelector).length > 0);
-  // };
-  // spa.routeCurLocHashAttemptDelaySec = 3;
-  // spa.routeCurLocHashAttempt=0;
-  // spa.routeCurLocHash = function(){
-  //   var curLocHash = (spa.getLocHash()||"").ifBlankStr(spa.routesOptions.defaultPageRoute);
-  //   if (isSpaHashRouteOn && curLocHash && !spa.hasAutoRoutes(curLocHash)) {
-  //     _log.info("Route current url-hash.");
-  //     if (!spa.route(curLocHash)) {
-  //       _log.warn("Current url-hash-route <"+curLocHash+"> FAILED and will try after "+spa.routeCurLocHashAttemptDelaySec+"sec.");
-  //       if (spa.routeCurLocHashAttempt < 5) {
-  //         spa.routeCurLocHashAttempt++;
-  //         setTimeout(spa.routeCurLocHash, (spa.routeCurLocHashAttemptDelaySec*1000));
-  //       } else {
-  //         _log.error("5 attempts to route current url-hash failed. Aborting further attempts.");
-  //       }
-  //     }
-  //   }
-  // };
-
-  // spa.finallyOnRender = [];
-  // spa.runOnceOnRenderFunctions = [spa.routeCurLocHash];
-  // spa.runOnceOnRender = function(){
-  //   _log.info("Render Complete.");
-  //   if ((spa.runOnceOnRenderFunctions && !_isEmpty(spa.runOnceOnRenderFunctions)) || (spa.finallyOnRender && !_isEmpty(spa.finallyOnRender)) ) {
-  //     if (!spa.runOnceOnRenderFunctions) spa.runOnceOnRenderFunctions = [];
-  //     if (!_isArr(spa.runOnceOnRenderFunctions)) {
-  //       spa.runOnceOnRenderFunctions = [spa.runOnceOnRenderFunctions];
-  //     }
-  //     if (_isArr(spa.runOnceOnRenderFunctions)) {
-  //       if (spa.finallyOnRender) {
-  //         if (!_isArr(spa.finallyOnRender)){ spa.finallyOnRender = [spa.finallyOnRender]; }
-  //         spa.runOnceOnRenderFunctions = spa.runOnceOnRenderFunctions.concat(spa.finallyOnRender);
-  //       }
-  //       _each(spa.runOnceOnRenderFunctions, function(fn){
-  //         if (_isFn(fn)) fn();
-  //       });
-  //     }
-  //     spa.finallyOnRender = spa.runOnceOnRenderFunctions = undefined;
-  //   }
-  // };
-
-  /* Internal wrapper for jQuery.spaRender */
-  spa.setElIdIfNot = function(el) {
+  function _setElIdIfNot(el) {
     var $el = $(el);
     if (_isBlank($el.attr("id"))) {
-      $el.attr("id", ("_el_" + (spa.now()) + "_" + spa.rand(1000, 9999)));
+      $el.attr("id", ("_el_" + (_now()) + "_" + spa.rand(1000, 9999)));
     }
     return ($el.attr("id"));
-  };
+  }
   function __renderView(obj, opt) {
     var retValue;
-    var viewContainerId = spa.setElIdIfNot(obj);
+    var viewContainerId = _setElIdIfNot(obj);
     if ((opt) && (!_isEmptyObj(opt))) {
       retValue = spa.render("#" + viewContainerId, opt);
     }
@@ -6781,31 +6730,21 @@
     return regex.test($(elem)[attr.method](attr.property));
   };
 
-
-  /* Extend to jQuery as
-   *
-   * $("#viewContainer").spaRender({})
-   *
-   * OR
-   *
-   * $.spaRender("#viewContainer", {})
-   *
-   * */
+  //Extend jQuery for Util Functions
   $.fn.extend({
+    /* $("el-selector").i18n('i18n.key') */
+    i18n: function (opt) {
+      this.each(function () {
+        if (opt) $(this).attr('data-i18n', opt).data('i18n', opt);
+        spa.i18n.apply(this);
+      });
+      return this;
+    },
     spaRender: function (opt) {
       this.each(function () {
         __renderView(this, opt);
       });
-    }
-  });
-  $.extend({
-    spaRender: function (obj, opt) {
-      $(obj).spaRender(opt);
-    }
-  });
-
-  //Extend jQuery for Util Functions
-  $.fn.extend({
+    },
     renameAttr: function(oldName, newName){
       this.each(function(){
         this.setAttribute(newName, this.getAttribute(oldName));
@@ -7034,7 +6973,7 @@
       var defAjaxOptions = _find(window, 'app.api.ajaxOptions', {});
       var apiErroHandle = (_isObj(ajaxOptions) && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : (app.api['onError'] || spa.api.onReqError);
 
-      ajaxOptions = $.extend({}, defAjaxOptions, ajaxOptions,  {
+      ajaxOptions = _extend({}, defAjaxOptions, ajaxOptions,  {
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
@@ -7137,13 +7076,13 @@
       return spa.api._call(spa.api._params2AxOptions.apply(undefined, arguments));
     },
     post: function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
+      return spa.api._call(_extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
     },
     put : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
+      return spa.api._call(_extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
     },
     del : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call($.extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
+      return spa.api._call(_extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
     },
     mix : function(){
       var apiQue=[], fnWhenDone = arguments[arguments.length-1];
@@ -7816,7 +7755,7 @@
     _blockBrowserNav();
   }
 
-  var _skipUrlChangeOn = 'x'+spa.now();
+  var _skipUrlChangeOn = 'x'+_now();
   function _onPopStateChange(e){
     _routeSpaUrlOnHashChange();
 
@@ -8533,22 +8472,6 @@
   } catch(e){
     console.warn('No Access to localStorage.', e);
   }
-
-
-//  spa.sesStore = {
-//    set: function(storeKey, storeValue){
-//      sessionStorage.setItem(storeKey, JSON.stringify(storeValue));
-//    },
-//    get: function(storeKey){
-//      return JSON.parse(sessionStorage.getItem(storeKey));
-//    },
-//    remove: function(storeKey){
-//      sessionStorage.removeItem(storeKey);
-//    },
-//    clear: function(){
-//      sessionStorage.clear();
-//    }
-//  };
 
   function _routeReloadUrl(compName){
     var redirUrl = (spa.sesStore.get('_spaReloadUrl')||'').trim();
