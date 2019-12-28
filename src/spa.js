@@ -67,7 +67,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC9';
+  spa.VERSION = '2.75.0';
 
   // Creating new app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
