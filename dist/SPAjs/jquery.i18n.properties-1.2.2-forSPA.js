@@ -547,4 +547,4 @@
     return cbSplit(this, separator, limit);
   };
 
-})(jQuery);
+})($);
