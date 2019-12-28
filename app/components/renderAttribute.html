@@ -34,4 +34,22 @@
     </script>
   </section>
 
+  <h3>To include server-side rendered html portion</h3>
+  <h6>(from v2.75.0+)</h6>
+  <section>
+    <p>It's similar but not exact to <mark>iframe</mark> tag. So, the resulting content should not contain
+      <strong>&lt;html&gt;</strong>, <strong>&lt;head&gt;</strong> and <strong>&lt;body&gt;</strong> tags.</p>
+
+    <i>using &lt;<mark>spa-html</mark>&gt; tag</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <spa-html src="full/path/to/html/portion.html"></spa-html>
+    </script>
+
+    <i>using &lt;<mark>x-html</mark>&gt; tag</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <x-html src="full/path/to/html/portion.html"></x-html>
+    </script>
+
+  </section>
+
 </div>
