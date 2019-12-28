@@ -67,7 +67,7 @@
   win.spa = win.__ = win._$ = spa;
 
   /* Current version. */
-  spa.VERSION = '2.75.0-RC8';
+  spa.VERSION = '2.75.0-RC9';
 
   // Creating new app scope
   var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
@@ -1704,6 +1704,7 @@
   }
   spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = _toQueryString;
 
+  /* as jQ extension see $.fn.extend below */
   function _serializeUncheckedCheckboxes(appendTo) {
     var $chkBox, unchkvalue, keyName, keyValue
       , toJSON = (typeof appendTo == "object")
@@ -1724,7 +1725,6 @@
     });
     return ((toJSON) ? retObj : retStr);
   }
-  $.fn.serializeUncheckedCheckboxes = _serializeUncheckedCheckboxes;
   spa.serializeUncheckedCheckboxes = function (formSelector, appendTo) {
     return $(formSelector).serializeUncheckedCheckboxes(appendTo);
   };
@@ -1734,6 +1734,7 @@
    * keyNameToLowerCase: converts form element names to its correponding lowercase obj's attribute
    * obj: Optional; creates/returns new JSON if not provided; overwrite & append attributes on the given obj if provided
    * */
+  /* as jQ extension see $.fn.extend below */
   function _serializeFormToObject(obj, keyNameToLowerCase, strPrefixToIgnore) {
     var a = this.serializeArray()
       , $fmData = $(this).data()
@@ -1766,11 +1767,11 @@
 
     return o;
   }
-  $.fn.serializeFormToJSON = $.fn.serializeFormToObject = _serializeFormToObject;
   spa.serializeFormToJSON = spa.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
     return $(formSelector).serializeFormToJSON(obj, keyNameToLowerCase, strPrefixToIgnore);
   };
 
+  /* as jQ extension see $.fn.extend below */
   function _serializeFormToSimpleObject(obj, includeDisabledElements) {
     var a = this.serializeArray()
       , o = (typeof obj === "object") ? obj : {}
@@ -1804,7 +1805,6 @@
     });
     return o;
   }
-  $.fn.serializeFormToSimpleJSON = $.fn.serializeFormToSimpleObject = _serializeFormToSimpleObject;
   spa.serializeFormToSimpleJSON = spa.serializeFormToSimpleObject = function (formSelector, obj, includeDisabledElements) {
     return $(formSelector).serializeFormToSimpleJSON(obj, includeDisabledElements);
   };
@@ -6710,28 +6710,14 @@
     return retValue;
   }
 
-  spa.Foundation = {'autoReflow': false};
-  spa.reflowFoundation = function(context) {
-    if (("Foundation" in window) && (spa.Foundation.autoReflow)) $(context || document).foundation('reflow');
-  };
-
-  /* regex support on jQuery selector
-   * http://james.padolsey.com/javascript/regex-selector-for-jquery/
-   * */
-  $.expr[':'].regex = function (elem, index, match) {
-    var matchParams = match[3].split(','),
-      validLabels = /^(data|css):/,
-      attr = {
-        method: matchParams[0].match(validLabels) ? matchParams[0].split(':')[0] : 'attr',
-        property: matchParams.shift().replace(validLabels, '')
-      },
-      regexFlags = 'ig',
-      regex = new RegExp(matchParams.join('').replace(/^\s+|\s+$/g, ''), regexFlags);
-    return regex.test($(elem)[attr.method](attr.property));
-  };
-
-  //Extend jQuery for Util Functions
+  //Extend jQuery for custom utils
   $.fn.extend({
+    serializeUncheckedCheckboxes : _serializeUncheckedCheckboxes,
+    serializeFormToJSON          : _serializeFormToObject,
+    serializeFormToObject        : _serializeFormToObject,
+    serializeFormToSimpleJSON    : _serializeFormToSimpleObject,
+    serializeFormToSimpleObject  : _serializeFormToSimpleObject,
+
     /* $("el-selector").i18n('i18n.key') */
     i18n: function (opt) {
       this.each(function () {
@@ -7151,47 +7137,50 @@
     //     spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
     //   }
     // }
-    $(document).on("click", "[data-i18n-lang]", function() {
-      var elData = $(this).data(),
-          selLangCode  = (elData['i18nLang']||''),
-          selLangCode_ = (elData['i18nLang']||'').replace('-', '_'),
-          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_;
-      _setLang(selLangCode_, { callback: function(){
-        var langClassType = '-', $langSelElement = $('[data-i18n-lang]:first');
-        if ($langSelElement.length) {
-          langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
-        }
-        $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
-        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
-        $('[data-i18n-lang]').removeClass('active');
-        $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
-        spa.i18n.apply('.lang-text');
-      }});
-    });
 
-    var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
-    if (defaultLang) {
-      if (initialLang == '*') {
-        initialLang = spa.i18n.browserLang();
-        if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
-          initialLang = initialLang.getLeftStr(2).toLowerCase();
-          var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
-          for (var i=0; i<supportedLangs.length; i++){
-            supportedLang = (supportedLangs[i] || '').trim();
-            if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
-              matchLang = supportedLang;
-              break;
-            }
+    if ($.i18n) {
+      $(document).on("click", "[data-i18n-lang]", function() {
+        var elData = $(this).data(),
+            selLangCode  = (elData['i18nLang']||''),
+            selLangCode_ = (elData['i18nLang']||'').replace('-', '_'),
+            i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_;
+        _setLang(selLangCode_, { callback: function(){
+          var langClassType = '-', $langSelElement = $('[data-i18n-lang]:first');
+          if ($langSelElement.length) {
+            langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
           }
-          initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
-        }
-      }
+          $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
+          $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
+          $('[data-i18n-lang]').removeClass('active');
+          $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
+          spa.i18n.apply('.lang-text');
+        }});
+      });
 
-      if (initialLang) {
-        _setLang(initialLang, {}, true);
-        setTimeout(function(){
-          spa.i18n.displayLang();
-        }, 500);
+      var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
+      if (defaultLang) {
+        if (initialLang == '*') {
+          initialLang = spa.i18n.browserLang();
+          if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
+            initialLang = initialLang.getLeftStr(2).toLowerCase();
+            var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
+            for (var i=0; i<supportedLangs.length; i++){
+              supportedLang = (supportedLangs[i] || '').trim();
+              if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
+                matchLang = supportedLang;
+                break;
+              }
+            }
+            initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
+          }
+        }
+
+        if (initialLang) {
+          _setLang(initialLang, {}, true);
+          setTimeout(function(){
+            spa.i18n.displayLang();
+          }, 500);
+        }
       }
     }
   }
@@ -8559,9 +8548,6 @@
   spa.initDataBind = _initDataBind;
 
   function _init_SPA_DOM_(scope) {
-    /*Reflow Foundation*/
-    spa.reflowFoundation(scope);
-
     /*init KeyTracking*/
     _initKeyTracking('', scope);
 
@@ -8657,7 +8643,6 @@
         app.api['liveApiPrefix'] = apiContextList;
         delete app.api.mockRootAtPaths;
       }
-
     }
   }
 
