@@ -1,9 +1,4 @@
 /*@license SPA.js (Form Validation Extension) [MIT]*/
-/*
-* SPA.js Validation Extension
-* Author: Kumar
-* */
-
 spa['_validateDefaults'] = {
     required    : 'Required'
   , digits      : 'Digits'
