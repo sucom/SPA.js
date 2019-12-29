@@ -31,46 +31,27 @@
  * ===========================================================================
  */
 
-/* SPA begins */
-
-/* Avoid 'console' errors in browsers that lack a console */
 (function() {
-  var method;
-  var methods = [
-      'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
-      'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
-      'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd',
-      'timeStamp', 'trace', 'warn'
-  ];
-  var length = methods.length;
-  var console = (window.console = window.console || {});
-  while (length--) {
-    method = methods[length];
-    //Only stub undefined methods.
-    if (!console[method]) {
-      console[method] = function(){};
-    }
-  }
+  var _VERSION = '2.75.1';
 
-  if (!('none' in window)) window['none'] = '';
-  if (!('noop' in window)) window['noop'] = function(){};
-}());
-
-(function() {
   /* Establish the win object, `window` in the browser */
   var win = this;
 
-  /* Create new */
+  /* Create SPA */
   var spa = function(){};
-
-  /* Expose spa to window with alias */
+  /* Expose to global with alias */
   win.spa = win.__ = win._$ = spa;
 
-  /* Current version. */
-  spa.VERSION = '2.75.0';
+  /* *************** SPA begins *************** */
+  spa.VERSION = _VERSION;
+
+  var _objProto = Object.prototype;
+  var _arrProto = Array.prototype;
+  var _strProto = String.prototype;
+  var _dtProto  = Date.prototype;
 
   // Creating new app scope
-  var appVarType = Object.prototype.toString.call(window['app']).slice(8,-1).toLowerCase();
+  var appVarType = _objProto.toString.call(window['app']).slice(8,-1).toLowerCase();
   if (window['app'] && (/^html(.*)element$/i.test(appVarType))) { //HTML Element id="app"
     window['app'] = {api:{}};
   }
@@ -107,19 +88,40 @@
   function noop(){};
   spa.noop = noop;
 
-  /* *************** SPA begins *************** */
+  /* Avoid 'console' errors in browsers that lack a console */
+  (function() {
+    var method;
+    var methods = [
+        'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
+        'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
+        'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd',
+        'timeStamp', 'trace', 'warn'
+    ];
+    var length = methods.length;
+    var console = (window.console = window.console || {});
+    while (length--) {
+      method = methods[length];
+      //Only stub undefined methods.
+      if (!console[method]) {
+        console[method] = function(){};
+      }
+    }
+
+    if (!('none' in window)) window['none'] = '';
+    if (!('noop' in window)) window['noop'] = function(){};
+  }());
+
   var _appApiInitialized;
   var _reservedObjKeys = 'hasOwnProperty,prototype,__proto__'.split(',');
   function _isReservedKey (key) {
     return (_reservedObjKeys.indexOf(key) > -1);
   }
   function _hasOwnProp (xObj, xKey) {
-    return Object.prototype.hasOwnProperty.call(xObj, xKey);
+    return _objProto.hasOwnProperty.call(xObj, xKey);
   }
-  function _argsToArr(){
-    return Array.prototype.slice.call(arguments[0]);
+  function _argsToArr( fromX ){
+    return _arrProto.slice.call( fromX );
   }
-  spa.argsToArr = _argsToArr;
 
   spa.debug = false;
   spa['debugger'] = {
@@ -168,37 +170,7 @@
   spa.onUrlHashChange;
   spa.onReload;
 
-  //ToBeRemoved
-  /*Flag for URL Hash Routing*/
-  //win.isSpaHashRouteOn=false;
-  //ToBeRemoved
-  /* spa route management internal functions */
-  // function _initWindowOnHashChange(){
-  //   if ('onhashchange' in window) {
-  //     isSpaHashRouteOn = true;
-  //     _log.info("Registering HashRouting Listener");
-  //     window.onhashchange = function () {
-  //       /* ocEvent
-  //        .oldURL : "http://dev.semantic-test.com/ui/home.html#user/changePassword"
-  //        .newURL : "http://dev.semantic-test.com/ui/home.html#user/profile"
-  //        .timeStamp : 1443191735330
-  //        .type:"hashchange"
-  //        */
-  //       var cHash = window.location.hash;
-  //       _log.info("onHashChange: "+cHash);
-  //       if (cHash) {
-  //         spa.route(cHash);
-  //       } else if (spa.routesOptions.defaultPageRoute) {
-  //         spa.route(spa.routesOptions.defaultPageRoute);
-  //       }
-  //     };
-  //   }
-  // };
-  // function _stopWindowOnHashChange(){
-  //   window.onhashchange = undefined;
-  // };
-
-  if (Date.prototype) {
+  if (_dtProto) {
     /* **********************Date prototypes*********************** */
     /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
      *
@@ -206,7 +178,7 @@
      * now.yyyymmdd('/') => '2010/03/01'
      * now.yyyymmdd('-') => '2010-03-01'
      */
-    Date.prototype.yyyymmdd = function(sep) {
+    _dtProto.yyyymmdd = function(sep) {
       var mm = this.getMonth() + 1, dd = this.getDate();
       return ([this.getFullYear(),
               (mm>9 ? '' : '0') + mm,
@@ -219,7 +191,7 @@
      * now.hhmmss(':') => '10:20:30'
      * now.hhmmss('-') => '10-20-30'
      */
-    Date.prototype.hhmmss = function(sep) {
+    _dtProto.hhmmss = function(sep) {
       var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
       return ([(hh>9 ? '' : '0') + hh,
                (mm>9 ? '' : '0') + mm,
@@ -228,38 +200,37 @@
     };
   }
 
-
-  if (String.prototype) {
+  if (_strProto) {
     /* **********************String prototypes*********************** */
     /* "   some string   ".trimLeftStr()    ==> "some string   "
      * "+++some string+++".trimLeftStr('+') ==> "some string+++"
      */
-    String.prototype.trimLeftStr = function (tStr) {
+    _strProto.trimLeftStr = function (tStr) {
       return ((''+this).replace(new RegExp("^[" + (tStr || "\\s")+"]+", "g"), ""));
     };
 
     /* "   some string   ".trimRightStr()    ==> "   some string"
      * "+++some string+++".trimRightStr('+') ==> "+++some string"
      */
-    String.prototype.trimRightStr = function (tStr) {
+    _strProto.trimRightStr = function (tStr) {
       return ((''+this).replace(new RegExp("["+ (tStr || "\\s") + "]+$", "g"), ""));
     };
 
     /* "   some string   ".trimStr()    ==> "some string"
      * "+++some string+++".trimStr('+') ==> "some string"
      */
-    String.prototype.trimStr = function (tStr) {
+    _strProto.trimStr = function (tStr) {
       return (''+this).trimLeftStr(tStr).trimRightStr(tStr);
     };
 
-    String.prototype.getLeftStr = function (fromIndex) {
+    _strProto.getLeftStr = function (fromIndex) {
       if (typeof fromIndex === 'string') {
         fromIndex = (''+this).indexOf(fromIndex);
       }
       return (fromIndex)? (''+this).substr(0, fromIndex) : '';
     };
 
-    String.prototype.getRightStr = function (fromIndex) {
+    _strProto.getRightStr = function (fromIndex) {
       var sLen = 1;
       if (typeof fromIndex === 'string') {
         sLen = fromIndex.length;
@@ -268,83 +239,83 @@
       return (fromIndex<0)? '' : (''+this).substr(fromIndex+sLen);
     };
 
-    String.prototype.isBlankStr = function () {
+    _strProto.isBlankStr = function () {
       return ((''+this).trimStr() == "");
     };
 
-    String.prototype.ifBlankStr = function (forNullStr, forNotNullStr) {
+    _strProto.ifBlankStr = function (forNullStr, forNotNullStr) {
       forNullStr    = (typeof forNullStr === "undefined")? '' : forNullStr;
       forNotNullStr = (typeof forNotNullStr === "undefined")? ((''+this).trimStr()) : forNotNullStr;
       return ((''+this).isBlankStr() ? ( forNullStr ) : ( forNotNullStr ) );
     };
 
-    String.prototype.isNumberStr = function () {
+    _strProto.isNumberStr = function () {
       var inStr = (''+this).trim(), nonNumStr = ((inStr.replace(/[0-9]/g, "").replace('.','')).trimStr()), sign = inStr[0];
       return (inStr && ((nonNumStr.length == 0) || ((nonNumStr.length == 1) && ((sign=='+') || (sign=='-')))));
     };
 
-    String.prototype.normalizeStr = function () {
+    _strProto.normalizeStr = function () {
       return (''+this).trimStr().replace(/\s+/g, ' ');
     };
 
-    String.prototype.beginsWithStr = function (str, i) {
+    _strProto.beginsWithStr = function (str, i) {
       i = (i) ? 'i' : '';
       var re = new RegExp('^' + str, i);
       return ((''+this).normalizeStr().match(re)) ? true : false;
     };
 
-    String.prototype.beginsWithStrIgnoreCase = function (str) {
+    _strProto.beginsWithStrIgnoreCase = function (str) {
       var re = new RegExp('^' + str, 'i');
       return ((''+this).normalizeStr().match(re)) ? true : false;
     };
 
-    String.prototype.endsWithStr = function (str, i) {
+    _strProto.endsWithStr = function (str, i) {
       i = (i) ? 'i' : '';
       var re = new RegExp(str + '$', i);
       return ((''+this).normalizeStr().match(re)) ? true : false;
     };
 
-    String.prototype.endsWithStrIgnoreCase = function (str) {
+    _strProto.endsWithStrIgnoreCase = function (str) {
       var re = new RegExp(str + '$', 'i');
       return ((''+this).normalizeStr().match(re)) ? true : false;
     };
 
-    String.prototype.containsStr = function (str, i) {
+    _strProto.containsStr = function (str, i) {
       i = (i) ? 'gi' : 'g';
       var re = new RegExp('' + str, i);
       return ((re).test((''+this)));
     };
 
-    String.prototype.containsStrIgnoreCase = function (str) {
+    _strProto.containsStrIgnoreCase = function (str) {
       var re = new RegExp('' + str, 'gi');
       return ((re).test((''+this)));
     };
 
-    String.prototype.equals = function (arg) {
+    _strProto.equals = function (arg) {
       return ((''+this) == arg);
     };
 
-    String.prototype.equalsIgnoreCase = function (arg) {
+    _strProto.equalsIgnoreCase = function (arg) {
       return ((String((''+this).toLowerCase()) == (String(arg)).toLowerCase()));
     };
 
-    String.prototype.toProperCase = function (normalizeSrc) {
+    _strProto.toProperCase = function (normalizeSrc) {
       return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
         return $1.toUpperCase();
       }));
     };
 
-    String.prototype.toTitleCase = function (normalizeSrc) {
+    _strProto.toTitleCase = function (normalizeSrc) {
       return ( (((typeof normalizeSrc == "undefined") ||  normalizeSrc)? ((''+this).normalizeStr()) : (''+this)).toLowerCase().replace(/^(.)|\s(.)/g, function ($1) {
         return $1.toUpperCase();
       }));
     };
 
-    String.prototype.capitalize = function () {
+    _strProto.capitalize = function () {
       return ((''+this).charAt(0).toUpperCase()) + ((''+this).slice(1));
     };
 
-    String.prototype.unCapitalize = function () {
+    _strProto.unCapitalize = function () {
       return ((''+this).charAt(0).toLowerCase()) + ((''+this).slice(1));
     };
 
@@ -353,7 +324,7 @@
       sBoxEl.textContent = str;
       return sBoxEl.innerHTML;
     }
-    String.prototype.sanitizeHTML = function(){
+    _strProto.sanitizeHTML = function(){
       return _sanitizeHTML(''+this);
     };
     spa.sanitizeHTML = _sanitizeHTML;
@@ -362,7 +333,7 @@
       return (''+str).replace(/<\s*\/+\s*(\bscript\b)/gi, '&lt;/script&gt;</pre')
                 .replace(/<\s*(\bscript\b)/gi, '<pre>&lt;script');
     }
-    String.prototype.sanitizeScript = function(){
+    _strProto.sanitizeScript = function(){
       return _sanitizeScript(''+this);
     };
     spa.sanitizeScript = _sanitizeScript;
@@ -370,7 +341,7 @@
     function _sanitizeXSS(str) {
       return _sanitizeScript(str).replace(/\s+on([a-z])\s*=/gi, ' on=').replace(/javascript:/gi,'js:');
     }
-    String.prototype.sanitizeXSS = function(){
+    _strProto.sanitizeXSS = function(){
       return _sanitizeXSS(''+this);
     };
     spa.sanitizeXSS = _sanitizeXSS;
@@ -379,7 +350,7 @@
      * ''.split()        ==> [""]
      * ''.splitToArray() ==> []
      */
-    String.prototype.splitToArray = String.prototype.toArray = function (splitBy) {
+    _strProto.splitToArray = _strProto.toArray = function (splitBy) {
       return _isBlank((''+this)) ? [] : ((''+this).split(splitBy));
     };
 
@@ -392,7 +363,7 @@
       }
     }
 
-    String.prototype.extractStrBetweenIn = function (bS, eS, unique) {
+    _strProto.extractStrBetweenIn = function (bS, eS, unique) {
       if (!bS) {
         bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
         bS = (bS)? bS[0] : '';
@@ -403,7 +374,7 @@
       return retArr;
     };
 
-    String.prototype.extractStrBetweenEx = function (bS, eS, unique) {
+    _strProto.extractStrBetweenEx = function (bS, eS, unique) {
       if (!bS) {
         bS = (''+this).match(/[^a-z0-9\:\.\/\\]/i);
         bS = (bS)? bS[0] : '';
@@ -417,11 +388,11 @@
       return retArr;
     };
 
-    String.prototype.toNative = function(){
+    _strProto.toNative = function(){
       return _strToNative(''+this);
     };
 
-    String.prototype.toBoolean = function () {
+    _strProto.toBoolean = function () {
       var retValue = true;
       switch ((''+this).trimStr().toLowerCase()) {
         case          '':
@@ -446,7 +417,7 @@
      * padString: string that will be concatenated
      * type: specifies the side where the concatenation will happen, where: -1 = left, 1 = right and 0 = both sides
      */
-    String.prototype.padStr = function (s, l, t) {
+    _strProto.padStr = function (s, l, t) {
       s = s || '';
       l = l || 1;
       t = t || 2;
@@ -456,7 +427,7 @@
       return (((t === -1 || t === 2) ? ps : "") + (''+this) + ((t === 1 || t === 2) ? ps : ""));
     };
 
-    String.prototype.toObj = String.prototype.toObject = String.prototype.toJSON = function () {
+    _strProto.toObj = _strProto.toObject = _strProto.toJSON = function () {
       return _toObj(''+this);
     };
 
@@ -465,10 +436,11 @@
      *
      * 'Name: <name>, Age: <age>'.bindData({name:'Test', Age:18}, '<', '>') ==> 'Name: Test, Age: 18'
      */
-    String.prototype.bindData = String.prototype.bindWith = function (data) {
+    _strProto.bindData = _strProto.bindWith = function (data) {
       return _bindData(''+this, data);
     };
   }
+
 
   function _bindData(xMsg, data, bStr, eStr){
     xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
@@ -619,7 +591,7 @@
 
   /* isXYZ */
   function _of(x) {
-    return (Object.prototype.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
+    return (_objProto.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
   }
   function _is(x, type) {
     return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
@@ -809,7 +781,7 @@
           case 'boolean':
             bytes += 4; break;
           case 'object':
-            var objClass = Object.prototype.toString.call(obj).slice(8, -1);
+            var objClass = _objProto.toString.call(obj).slice(8, -1);
             if(objClass === 'Object' || objClass === 'Array') {
               for(var key in obj) {
                 if(!obj.hasOwnProperty(key)) continue;
@@ -955,6 +927,7 @@
     });
   }
 
+  /* old dom element ops begins */
   spa.getDocObj = function (objId) {
     var jqSelector = ((typeof objId) == "object") ? objId : ((objId.beginsWithStr("#") ? "" : "#") + objId);
     return ( $(jqSelector).get(0) );
@@ -1293,6 +1266,7 @@
       return this.value;
     }).get().join(delimiter));
   };
+  /* old dom element ops ends */
 
   spa.sleep = function (sec) {
     var dt = new Date();
@@ -1429,7 +1403,7 @@
    *
    */
   function _extract(){
-    var args = Array.prototype.slice.call(arguments);
+    var args = _arrProto.slice.call(arguments);
     try {
       if (!_isObj(args[0])) args.unshift({});
       if (_isStr(args[1])) args[1] = args[1].split(',');
@@ -1995,12 +1969,11 @@
   spa.has            = spa.hasKey = _hasKey;
   spa.hasKeys        = _spa_hasKeys;
   spa.hasPrimaryKeys = _spa_hasPrimaryKeys;
-
-  spa.keysDottedAll = _keysDottedAll;
-  spa.keysDotted    = _keysDotted;
-  spa.keysCamelCase = _keysCamelCase ;
-  spa.keysTitleCase = _keysTitleCase;
-  spa.keys_         = _keysLodash;
+  spa.keysDottedAll  = _keysDottedAll;
+  spa.keysDotted     = _keysDotted;
+  spa.keysCamelCase  = _keysCamelCase ;
+  spa.keysTitleCase  = _keysTitleCase;
+  spa.keys_          = _keysLodash;
 
   /* Array/Object Iterators */
   if (1) {
@@ -2360,22 +2333,17 @@
   spa.extend   = _extend;
   spa.merge    = _mergeDeep;
 
-  Object.defineProperties(Array.prototype, {
+  Object.defineProperties(_arrProto, {
     '__now' : {
       value : function(){
         return JSON.parse(JSON.stringify(this));
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__clone': {
       value : function(){
         return JSON.parse(JSON.stringify(this));
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
-
     '__toObject': {
       value : function(valAsKey){
         var retObj = {};
@@ -2383,18 +2351,14 @@
           (valAsKey)? retObj[ item ] = index : retObj[ index ] = item;
         });
         return retObj;
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__unique': {
       value: function() {
         return this.filter(function (value, index, self) {
           return self.indexOf(value) === index;
         });
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__rotate': {
       value: function(times) {
@@ -2405,37 +2369,8 @@
           while (times++) this.unshift( this.pop() );
         }
         return this;
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
-
-    '__isFirst': {
-      value: function(value, ignoreCase) {
-        var firstArrValue = this[0];
-        if (ignoreCase) {
-          firstArrValue = firstArrValue.toLowerCase();
-          value = value.toLowerCase();
-        }
-        return (firstArrValue == value);
-      },
-      enumerable : false,
-      configurable: false
-    },
-
-    '__isLast': {
-      value: function(value, ignoreCase) {
-        var lastArrValue = this[this.length-1];
-        if (ignoreCase) {
-          lastArrValue = lastArrValue.toLowerCase();
-          value = value.toLowerCase();
-        }
-        return (lastArrValue == value);
-      },
-      enumerable : false,
-      configurable: false
-    },
-
     '__has': {
       value: function(value, options) { //options = 'i' | 'b/^' | 'e/$' | 'c/*' | '==' | '<' | '<=' | '>' | '>='
         var retValue; options = (options || '').trim();
@@ -2472,107 +2407,77 @@
           retValue = (this.indexOf(value)>=0);
         }
         return retValue;
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
-
     '__last': {
       value: function(n) {
         return _last(this, n);
-      },
-      enumerable : false,
-      configurable: false
+      }
     }
-
   });
 
-  Object.defineProperties(Object.prototype, {
+  Object.defineProperties(_objProto, {
     '__now' : {
       value : function(){
         return JSON.parse(JSON.stringify(this));
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__clone': {
       value: function _obj_clone(){
         return JSON.parse(JSON.stringify(this));
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__keys': {
       value: function _obj_keys(deep){
         return (deep)? _keysDotted(this) : Object.keys(this);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__keysAll': {
       value: function _obj_keysAll(){
         return _keysDotted(this);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__hasKey' : {
       value: function _obj_hasKey(key) {
         return spa.hasKey(this, key);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__hasKeys' : {
       value: function _obj_hasKeys(keys) {
         return _isObjHasKeys(this, keys, true);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__hasPrimaryKeys': {
       value: function _obj_hasPrimaryKeys(keys){
         return _isObjHasKeys(this, keys);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__valueOf' : {
       value: function _obj_getValueOf(path, ifUndefined) {
         return _find(this, path, ifUndefined);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__merge': {
       value: function _obj_merge(){
-        Array.prototype.unshift.call(arguments, this);
+        _arrProto.unshift.call(arguments, this);
         return _mergeDeep.apply(undefined, arguments);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__stringify': {
       value: function(){
         return JSON.stringify(this);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__toQueryString': {
       value: function(){
         return spa.toQueryString(this);
-      },
-      enumerable : false,
-      configurable: false
+      }
     },
     '__extract': {
       value: function(){
-        Array.prototype.unshift.call(arguments, this);
+        _arrProto.unshift.call(arguments, this);
         return spa.extract.apply(this, arguments);
-      },
-      enumerable : false,
-      configurable: false
+      }
     }
   });
 
@@ -4751,7 +4656,7 @@
   };
 
   function __finalValue(srcVal) {
-    var retVal = srcVal, fnContext = arguments[1], fnArgs = Array.prototype.slice.call(arguments, 2);
+    var retVal = srcVal, fnContext = arguments[1], fnArgs = _arrProto.slice.call(arguments, 2);
     if (_isStr(retVal)) {
       if (retVal.indexOf('(')>0) { //function
         retVal = retVal.getLeftStr('(');
@@ -6174,7 +6079,7 @@
                 if (isValidData) {
                   $.when.apply($, _dataPreProcessAsync() ).done(function(){
 
-                    var dataPreProcessAsyncRes = Array.prototype.slice.call(arguments);
+                    var dataPreProcessAsyncRes = _arrProto.slice.call(arguments);
                     if (isPreProcessed) {
                       _log.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
                       if (isSinlgeAsyncPreProcess && (dataPreProcessAsyncRes.length > 1) && (dataPreProcessAsyncRes[1] == 'success') ){
@@ -7081,7 +6986,7 @@
       }
 
       return $.when.apply($, apiQue).done(function(){
-        var apiResponses = Array.prototype.slice.call( arguments );
+        var apiResponses = _arrProto.slice.call( arguments );
 
         if ((apiQue.length==1) && (apiResponses.length > 1) && (apiResponses[1] == 'success') ){
           //if only 1 ajax request with success response
@@ -7118,7 +7023,7 @@
       if ($el.length) {
         $el.addClass('active');
         langClassType = ($($el[0]).data('i18nLang') || '').replace(/[a-z]/gi,'');
-        $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' '));
+        $('.lang-icon').removeClass(_arrProto.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' '));
       }
       $('.lang-icon').addClass( (langClassType=='-')? selLangCode : selLangCode_ );
       spa.i18n.apply('.lang-text');
@@ -7150,7 +7055,7 @@
             langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
           }
           $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
-          $('.lang-icon').removeClass(Array.prototype.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
+          $('.lang-icon').removeClass(_arrProto.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
           $('[data-i18n-lang]').removeClass('active');
           $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
           spa.i18n.apply('.lang-text');
@@ -8358,7 +8263,7 @@
 
       function _all() {
         var filter = arguments.length;
-        var filterKeys = Array.prototype.slice.call(arguments).map(function (x) {
+        var filterKeys = _arrProto.slice.call(arguments).map(function (x) {
           return ('' + x).trim();
         });
         var retObj = {};
@@ -8376,7 +8281,7 @@
         }
         function _removeItems(){
           if (arguments.length) {
-            Array.prototype.slice.call(arguments).forEach(function( rKey ){
+            _arrProto.slice.call(arguments).forEach(function( rKey ){
               xStorage.removeItem( rKey );
             });
           }
@@ -8402,7 +8307,7 @@
       function _clear() {
         var filter = arguments.length;
         if (filter) {
-          var filterKeys = Array.prototype.slice.call(arguments).map(function (x) {
+          var filterKeys = _arrProto.slice.call(arguments).map(function (x) {
             return ('' + x).trim();
           });
           Object.keys(xStorage).forEach(function (key) {
@@ -8416,7 +8321,7 @@
       }
 
       function _type(tOf) {
-        var _typeOf = Object.prototype.toString.call(tOf).split(' ')[1].toLowerCase().replace(/\]$/gi, '');
+        var _typeOf = _objProto.toString.call(tOf).split(' ')[1].toLowerCase().replace(/\]$/gi, '');
         return (arguments.length == 2) ? (('' + arguments[1]).toLowerCase().indexOf(_typeOf) > -1) : _typeOf;
       }
 
@@ -8595,7 +8500,7 @@
    * spa.async(fn, param1, param2, param3, callbackFn)
    */
   spa.async = function(fn){
-    var fnArg = Array.prototype.slice.call(arguments, 1);
+    var fnArg = _arrProto.slice.call(arguments, 1);
     function fnAsyc(){
       var fnRes = fn.apply(undefined, fnArg)
         , argLen = fnArg.length
