@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.75.1';
+  var _VERSION = '2.75.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this;
@@ -4151,7 +4151,7 @@
 
     if (_isObj(componentNameFull)) {
       options = _mergeDeep({}, componentNameFull);
-      componentNameFull = options['name'] || options['componentName'] || ('spaComponent'+_now());
+      componentNameFull = (options['name'] || options['componentName'] || ('spaComponent'+_now())).trim().trimLeftStr('/').trimLeftStr('_');
       options['componentName'] = componentNameFull;
       componentName = componentNameFull;
     }
@@ -4160,6 +4160,10 @@
       console.error('Invalid ComponentName:', componentName);
       return;
     }
+
+    componentNameFull = componentNameFull.trim().trimLeftStr('/').trimLeftStr('_');
+    componentName = componentNameFull;
+
     if (reservedCompNames.indexOf(componentName)>=0) {
       console.error('Invalid component name '+componentName+'. Cannot create Reserved components:'+ (reservedCompNames.join()) );
       return;
@@ -4309,12 +4313,12 @@
 
     if (_isObj(componentName)) {
       options = _mergeDeep({}, componentName);
-      componentName = options['name'] || options['componentName'] || ('spaComponent'+_now());
+      componentName = (options['name'] || options['componentName'] || ('spaComponent'+_now())).trim().trimLeftStr('/').trimLeftStr('_');
       options['componentName'] = componentName;
     }
 
     if (_isStr(componentName) && componentName) {
-      componentName = componentName.trim();
+      componentName = componentName.trim().trimLeftStr('/').trimLeftStr('_');
       if (componentName) {
         if (reservedCompNames.indexOf(componentName)>=0) {
           console.error('Invalid component name '+componentName+'. Cannot extend Reserved components: '+ (reservedCompNames.join()) );
@@ -4756,11 +4760,10 @@
       return;
     }
 
-
     //Render SPA Component
     var isChildComponent = (/[^a-z0-9]/gi).test(componentNameFull); //childComponentIndicator
     if (isChildComponent) {
-      componentName = componentNameFull.replace(/[\s\$]/g, '').replace(/[^a-z0-9]/gi, '_');
+      componentName = componentNameFull.replace(/[\s\$]/g, '').replace(/[^a-z0-9]/gi, '_').trimLeftStr('_');
     }
 
     var tmplId = '_rtt_'+componentName, tmplBody = '';
