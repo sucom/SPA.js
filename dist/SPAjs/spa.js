@@ -1,4 +1,4 @@
-/**@license SPA.js (core) [MIT]*/
+/*@license SPA.js (core) [MIT]*/
 /* ============================================================================
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
@@ -32,15 +32,21 @@
  */
 
 (function() {
-  var _VERSION = '2.75.2';
+  var _VERSION = '2.76.0';
 
   /* Establish the win object, `window` in the browser */
-  var win = this;
+  var win = this, _doc = document;
 
   /* Create SPA */
   var spa = function(){};
   /* Expose to global with alias */
   win.spa = win.__ = win._$ = spa;
+
+  // jQ Shortcuts (TOBE replaced sooner or later)
+  var $ajax = $.ajax
+    , $when = $.when
+    , $ajaxSetup = $.ajaxSetup
+    , $ajaxPrefilter = $.ajaxPrefilter;
 
   /* *************** SPA begins *************** */
   spa.VERSION = _VERSION;
@@ -440,7 +446,6 @@
       return _bindData(''+this, data);
     };
   }
-
 
   function _bindData(xMsg, data, bStr, eStr){
     xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
@@ -1678,7 +1683,7 @@
   }
   spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = _toQueryString;
 
-  /* as jQ extension see $.fn.extend below */
+  /* as jQ extension see $fnEx below */
   function _serializeUncheckedCheckboxes(appendTo) {
     var $chkBox, unchkvalue, keyName, keyValue
       , toJSON = (typeof appendTo == "object")
@@ -1708,7 +1713,7 @@
    * keyNameToLowerCase: converts form element names to its correponding lowercase obj's attribute
    * obj: Optional; creates/returns new JSON if not provided; overwrite & append attributes on the given obj if provided
    * */
-  /* as jQ extension see $.fn.extend below */
+  /* as jQ extension see $fnEx below */
   function _serializeFormToObject(obj, keyNameToLowerCase, strPrefixToIgnore) {
     var a = this.serializeArray()
       , $fmData = $(this).data()
@@ -1745,7 +1750,7 @@
     return $(formSelector).serializeFormToJSON(obj, keyNameToLowerCase, strPrefixToIgnore);
   };
 
-  /* as jQ extension see $.fn.extend below */
+  /* as jQ extension see $fnEx below */
   function _serializeFormToSimpleObject(obj, includeDisabledElements) {
     var a = this.serializeArray()
       , o = (typeof obj === "object") ? obj : {}
@@ -2506,7 +2511,7 @@
       document.head.appendChild( xScript ).parentNode.removeChild( xScript );
     }
   }
-  $.ajaxSetup({
+  $ajaxSetup({
     converters: {
       "text javascript": function(){},
       "text spaComponent": function(){}
@@ -2538,7 +2543,7 @@
       url: url
     });
     _log.info("Loading Script('" + url + "') ...");
-    return $.ajax(options);
+    return $ajax(options);
   }
   function _cachedStyle(styleId, url, options) {
     /* allow user to set any option except for dataType and url */
@@ -2562,7 +2567,7 @@
       }
     });
     _log.info("Loading style('" + url + "') ... ");
-    return $.ajax(options);
+    return $ajax(options);
   }
 
   /* Add Script Tag */
@@ -2667,7 +2672,7 @@
         );
       });
 
-      $.when.apply($, ajaxQ)
+      $when.apply($, ajaxQ)
         .then(function(){
           spa.renderUtils.runCallbackFn(onDone);
         })
@@ -2795,7 +2800,7 @@
         }
         _log.info(">>>>>>>>>> Making New Template Request");
 
-        var axTemplateRequest = $.ajax({
+        var axTemplateRequest = $ajax({
           url: tmplPath,
           method: axMethod,
           headers : tmplAxOptions['headers'],
@@ -2933,102 +2938,217 @@
   };
 
   /* i18n support */
-  spa.i18n = {};
+  var _i18nStore = {};
+  var _i18nLoaded;
+
+  spa.i18n = _i18nTextValue;
   spa.i18n.loaded = false;
   spa.i18n.settings = {
     name: 'Language',
     path: 'language/',
-    ext: '.txt',
-    encoding: 'UTF-8',
-    cache: true,
-    async: true,
-    mode: 'map',
-    callback: null
-  };
-  spa.i18n.browserLang = function(){
-    return (navigator)? (navigator.language || navigator.userLanguage || 'en_US') : 'en_US';
-  };
-  spa.i18n.setLanguage = function (lang, i18nSettings) {
-    if ($.i18n) {
-      $.i18n.map = {}; //empty dictionary before loading lang file
-      lang = (lang || spa.i18n.browserLang()).replace(/-/g, "_");
-      i18nSettings = _extend(spa.i18n.settings, i18nSettings);
-      $.i18n.properties({
-        name: i18nSettings.name,
-        language: lang,
-        path: i18nSettings.path,
-        ext: i18nSettings.ext,
-        encoding: i18nSettings.encoding,
-        cache: i18nSettings.cache,
-        async: i18nSettings.async,
-        mode: i18nSettings.mode,
-        callback: function () {
-          if (!_isElementExist('#i18nSpaRunTime')) {
-            $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
-          }
-          $.i18n.loaded = (typeof $.i18n.loaded == "undefined") ? (!_isEmptyObj($.i18n.map)) : $.i18n.loaded;
-          spa.i18n.loaded = spa.i18n.loaded || $.i18n.loaded;
-          if ((lang.length > 1) && (!$.i18n.loaded)) {
-            _log.warn("Error Loading Language File [" + lang + "]. Loading default.");
-            spa.i18n.setLanguage("_", i18nSettings);
-          }
-          spa.i18n.apply();
-          if (i18nSettings.callback) {
-            i18nSettings.callback($.i18n.loaded);
-          }
-        }
-      });
-    }
+    ext: '.txt'
   };
 
-  function _setLang(uLang, options, isAuto) {
-    if (uLang) {
-      if (spa.i18n.onLangChange) {
-        var fnOnLangChange = spa.i18n.onLangChange,
-            nLang = (_isFn(fnOnLangChange))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
-        uLang = (_isStr(nLang))? nLang : uLang;
-      }
-      $('html').attr('lang', uLang.replace('_', '-'));
-      spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
+  /* Ensure language code is in the format aa_AA. */
+  function _normalizeLanguageCode(lang) {
+    if (!lang || lang.length < 2) {
+      lang = (navigator.languages) ? navigator.languages[0]
+                                        : (navigator.language || navigator.userLanguage /* IE */ || 'en');
     }
+    lang = lang.toLowerCase().replace(/-/,"_"); // some browsers report language as en-US instead of en_US
+    if (lang.length > 3) {
+      lang = lang.substring(0, 3) + lang.substring(3).toUpperCase();
+    }
+    return lang;
   }
-  spa.i18n.setLang = function(lang, i18nSettings){
-    _setLang(lang, i18nSettings);
-  };
 
-  spa.i18n.value = function(i18nKey) {
-    if ($.i18n || window['Liferay']) {
-      i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
-      if (i18nKey.beginsWithStrIgnoreCase('@')) {
-        i18nKey = ((i18nKey.substr(1)).trim());
-        i18nKey = _find(window, i18nKey, i18nKey);
-      }
-      return _i18nValue(i18nKey);
+  function _init_i18n_Lang(settings) {
+    // set up settings
+    var defaults = {
+      language: '',
+      name: 'Language',
+      path: 'language/',
+      ext: '.txt',
+      cache: true,
+      async: true,
+      callback: null
+    };
+    settings = _extend(defaults, settings);
 
-      function _i18nValue(iKey){
-        var retStr = iKey;
-        try {
-          retStr = (''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : $.i18n.prop(iKey))).trim();
-          if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
-            retStr = _stripEnds(retStr);
-          }
-        } catch(e){
-          console.warn('i18n lookup error:', e);
-        }
-        return retStr;
+    _i18nStore = {}; //clear previous dictionary
 
-        function _stripEnds(Str) {
-          return Str.substring(1, Str.length-1);
-        }
-      }
-    } else {
-      _log.info('jQ-spa.i18n module not found. Skipping i18n value lookup.');
+    // Try to ensure that we have minimum a two letter language code
+    var langCode     = _normalizeLanguageCode(settings.language)
+      , langFilePath = settings.path + settings.name
+      , langExt      = settings.ext || '.properties'
+      , langFileFullPath = langFilePath + langExt;
+
+    if (langCode.length >= 5) {
+      // 1. with country code (eg, Language_en_US.properties)
+      langFileFullPath = langFilePath + '_' + (langCode.substring(0, 5)) + langExt;
+    } else if (langCode.length >= 2) {
+      langFileFullPath =
+      // 2. without country code (eg, Language_pt.properties)
+      langFileFullPath = langFilePath + '_' + (langCode.substring(0, 2)) + langExt;
     }
-  };
+    _loadAndParseLangFile(langFileFullPath, settings);
+  }
 
-  spa.i18n.text = function (i18nKey, data) {
+  function _loadAndParseLangFile(filename, settings) {
+    $ajax({
+      url: filename,
+      async: settings.async,
+      cache: settings.cache,
+      dataType: 'text',
+      success: function (data) {
+        _parseLangFile(data);
+        if (settings.callback) {
+          settings.callback();
+        }
+      },
+      error: function () {
+        console.log('Failed to download language file: ' + filename);
+        if (settings.callback) {
+          settings.callback();
+        }
+      }
+    });
+  }
+
+  /* unicode ('\u00e3') to char */
+  function unicodeToChar(str) {
+    // unescape unicode codes
+    var codes = [];
+    var code = parseInt(str.substr(2), 16);
+    if (code >= 0 && code < Math.pow(2, 16)) {
+      codes.push(code);
+    }
+    // convert codes to text
+    var unescaped = '';
+    for (var i = 0; i < codes.length; ++i) {
+      unescaped += String.fromCharCode(codes[i]);
+    }
+    return unescaped;
+  }
+
+  function _parseLangFile(data) {
+    var parameters = data.split(/\n/);
+    var unicodeRE = /(\\u.{4})/ig;
+    for (var i = 0; i < parameters.length; i++) {
+      parameters[i] = parameters[i].replace(/^\s\s*/, '').replace(/\s\s*$/, ''); // trim
+      if (parameters[i].length > 0 && parameters[i].match("^#") != "#") { // skip comments
+        var pair = parameters[i].split('=');
+        if (pair.length > 0) {
+          /** Process key & value */
+          var name = decodeURI(pair[0]).replace(/^\s\s*/, '').replace(/\s\s*$/, ''); // trim
+          var value = pair.length == 1 ? "" : pair[1];
+          // process multi-line values
+          while (value.match(/\\$/) == "\\") {
+            value = value.substring(0, value.length - 1);
+            value += parameters[++i].replace(/\s\s*$/, ''); // right trim
+          }
+          // Put values with embedded '='s back together
+          for (var s = 2; s < pair.length; s++) {
+            value += '=' + pair[s];
+          }
+          value = value.replace(/^\s\s*/, '').replace(/\s\s*$/, ''); // trim
+
+          // handle unicode chars possibly left out
+          var unicodeMatches = value.match(unicodeRE);
+          if (unicodeMatches) {
+            for (var u = 0; u < unicodeMatches.length; u++) {
+              value = value.replace(unicodeMatches[u], unicodeToChar(unicodeMatches[u]));
+            }
+          }
+
+          // add to store
+          _i18nStore[name] = value;
+
+        } // END: if(pair.length > 0)
+      } // END: skip comments
+    }
+    _i18nLoaded = true;
+  }
+
+  function _i18nRaw(key /* Add parameters as function arguments as necessary  */) {
+    var value = _i18nStore[key];
+    if (value == null)
+      return '[' + key + ']';
+
+    var i, j;
+    if (typeof(value) == 'string') {
+      // Handle escape characters.
+      i = 0;
+      while ((i = value.indexOf('\\', i)) != -1) {
+        if (value.charAt(i + 1) == 't')
+          value = value.substring(0, i) + '\t' + value.substring((i++) + 2); // tab
+        else if (value.charAt(i + 1) == 'r')
+          value = value.substring(0, i) + '\r' + value.substring((i++) + 2); // return
+        else if (value.charAt(i + 1) == 'n')
+          value = value.substring(0, i) + '\n' + value.substring((i++) + 2); // line feed
+        else if (value.charAt(i + 1) == 'f')
+          value = value.substring(0, i) + '\f' + value.substring((i++) + 2); // form feed
+        else if (value.charAt(i + 1) == '\\')
+          value = value.substring(0, i) + '\\' + value.substring((i++) + 2); // \
+        else
+          value = value.substring(0, i) + value.substring(i + 1); // Quietly drop the character
+      }
+
+      // Handle Quotes
+      i = 0;
+      while (i < value.length) {
+        if (value.charAt(i) == '\'') {
+          // Handle quotes
+          if (i == value.length - 1)
+            value = value.substring(0, i); // Silently drop the trailing quote
+          else if (value.charAt(i + 1) == '\'')
+            value = value.substring(0, i) + value.substring(++i); // Escaped quote
+          else {
+            // Quoted string
+            j = i + 2;
+            while ((j = value.indexOf('\'', j)) != -1) {
+              if (j == value.length - 1 || value.charAt(j + 1) != '\'') {
+                // Found start and end quotes. Remove them
+                value = value.substring(0, i) + value.substring(i + 1, j) + value.substring(j + 1);
+                i = j - 1;
+                break;
+              }
+              else {
+                // Found a double quote, reduce to a single quote.
+                value = value.substring(0, j) + value.substring(++j);
+              }
+            }
+
+            if (j == -1) {
+              // There is no end quote. Drop the start quote
+              value = value.substring(0, i) + value.substring(i + 1);
+            }
+          }
+        }
+        else
+          i++;
+      }
+    }
+
+    if (value.length == 0)
+      return "";
+    if (value.length == 1 && typeof(value[0]) == "string")
+      return value[0];
+
+    var str = "";
+    for (i = 0; i < value.length; i++) {
+      if (typeof(value[i]) == "string")
+        str += value[i];
+      else
+        str += "{" + value[i] + "}";
+    }
+    return str;
+
+  }
+
+  function _i18nTextValue(i18nKey, data) {
     var dMessage = spa.i18n.value(i18nKey);
-    if (data && _isObj(data)) {
+    if (data && _is(data, 'object|array') ) {
       var msgParamValue = "", msgParamValueTrim="";
       _each(_keys(data), function (key) {
         msgParamValue = ""+data[key]; msgParamValueTrim = msgParamValue.trim();
@@ -3060,7 +3180,84 @@
     }
 
     return parseMessage(dMessage);
+  }
+  spa.i18n.browserLang = function(){
+    return (navigator)? (navigator.language || navigator.userLanguage || 'en_US') : 'en_US';
   };
+  spa.i18n.setLanguage = function (lang, i18nSettings) {
+    lang = (lang || spa.i18n.browserLang()).replace(/-/g, "_");
+    i18nSettings = _extend(spa.i18n.settings, i18nSettings);
+    _init_i18n_Lang({
+      language: lang,
+      name: i18nSettings.name,
+      path: i18nSettings.path,
+      ext: i18nSettings.ext,
+      cache: i18nSettings.cache,
+      async: i18nSettings.async,
+      callback: function () {
+        if (!_isElementExist('#i18nSpaRunTime')) {
+          $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
+        }
+        _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(__i18nStore)) : _i18nLoaded;
+        spa.i18n.loaded = spa.i18n.loaded || _i18nLoaded;
+        if ((lang.length > 1) && (!_i18nLoaded)) {
+          _log.warn("Error Loading Language File [" + lang + "]. Loading default.");
+          spa.i18n.setLanguage("_", i18nSettings);
+        }
+        spa.i18n.apply();
+        if (i18nSettings.callback) {
+          i18nSettings.callback(_i18nLoaded);
+        }
+      }
+    });
+  };
+
+  function _setLang(uLang, options, isAuto) {
+    if (uLang) {
+      if (spa.i18n.onLangChange) {
+        var fnOnLangChange = spa.i18n.onLangChange,
+            nLang = (_isFn(fnOnLangChange))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
+        uLang = (_isStr(nLang))? nLang : uLang;
+      }
+      $('html').attr('lang', uLang.replace('_', '-'));
+      spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
+    }
+  }
+  spa.i18n.setLang = function(lang, i18nSettings){
+    _setLang(lang, i18nSettings);
+  };
+
+  spa.i18n.value = function(i18nKey) {
+    if (spa.i18n.loaded || window['Liferay']) {
+      i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
+      if (i18nKey.beginsWithStrIgnoreCase('@')) {
+        i18nKey = ((i18nKey.substr(1)).trim());
+        i18nKey = _find(window, i18nKey, i18nKey);
+      }
+      return _i18nValue(i18nKey);
+
+      function _i18nValue(iKey){
+        var retStr = iKey;
+        try {
+          retStr = (''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : _i18nRaw(iKey))).trim();
+          if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
+            retStr = _stripEnds(retStr);
+          }
+        } catch(e){
+          console.warn('i18n lookup error:', e);
+        }
+        return retStr;
+
+        function _stripEnds(Str) {
+          return Str.substring(1, Str.length-1);
+        }
+      }
+    } else {
+      _log.info('jQ-spa.i18n module not found. Skipping i18n value lookup.');
+    }
+  };
+
+  spa.i18n.text = _i18nTextValue;
 
   spa.i18n.update = function(elSelector, i18nKeySpec, apply){
     i18nKeySpec = i18nKeySpec || '';
@@ -3124,7 +3321,7 @@
         if (i18nSpec && !_isEmptyObj(i18nSpec)) {
           _each(_keys(i18nSpec), function (attrSpec) {
             var i18nKey = i18nSpec[attrSpec];
-            var i18nValue = spa.i18n.text(i18nKey, i18nData); //$.i18n.prop(i18nKey);
+            var i18nValue = spa.i18n.text(i18nKey, i18nData);
             _each(attrSpec.split("_"), function (attribute) {
               switch (attribute.toLowerCase()) {
                 case "html":
@@ -3781,7 +3978,7 @@
     if (!ready2Fill) { //make Ajax call to load remote data and apply....
 
       /*wait till this data loads*/
-      $.ajax({
+      $ajax({
         url: data,
         method: (''+(fillOptions.method || 'GET')).toUpperCase(),
         data: fillOptions.dataParams,
@@ -5647,7 +5844,7 @@
                   }
 
                   spaAjaxRequestsQue.push(
-                    $.ajax({
+                    $ajax({
                       url: apiDataUrl,
                       method : (''+(dataApi['method'] || 'GET')).toUpperCase(),
                       headers: ((_isFn(dataAjaxReqHeaders))? dataAjaxReqHeaders() : dataAjaxReqHeaders),
@@ -5832,7 +6029,7 @@
                   }
                 }
               };
-            spaAjaxRequestsQue.push( $.ajax(axOptions) );
+            spaAjaxRequestsQue.push( $ajax(axOptions) );
           }
         }
       }
@@ -6029,7 +6226,7 @@
           _log.groupEnd("spaLoadingViewStyles");
           /* Load Styles Ends */
 
-          $.when.apply($, spaAjaxRequestsQue)
+          $when.apply($, spaAjaxRequestsQue)
             .then(function () {
 
               _log.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
@@ -6080,7 +6277,7 @@
                 }
 
                 if (isValidData) {
-                  $.when.apply($, _dataPreProcessAsync() ).done(function(){
+                  $when.apply($, _dataPreProcessAsync() ).done(function(){
 
                     var dataPreProcessAsyncRes = _arrProto.slice.call(arguments);
                     if (isPreProcessed) {
@@ -6800,6 +6997,7 @@
     }
   });
 
+
   spa.initDataValidation = function () {
     _log.log("include validate framework lib (spa-validate.js) to use this feature!");
   };
@@ -6918,7 +7116,7 @@
 
       if (app['debug'] || spa['debug']) console.info(['API(ajax) call with options', ajaxOptions]);
 
-      return $.ajax(ajaxOptions);
+      return $ajax(ajaxOptions);
     },
     _params2AxOptions : function(){
       var oKey, axOptions = {method:'GET', url:'', data:{}, _success:function(){}, async: true }, hasPayLoad, axOverrideOptions, hasSuccessFn;
@@ -6988,7 +7186,7 @@
         }
       }
 
-      return $.when.apply($, apiQue).done(function(){
+      return $when.apply($, apiQue).done(function(){
         var apiResponses = _arrProto.slice.call( arguments );
 
         if ((apiQue.length==1) && (apiResponses.length > 1) && (apiResponses[1] == 'success') ){
@@ -7046,51 +7244,50 @@
     //   }
     // }
 
-    if ($.i18n) {
-      $(document).on("click", "[data-i18n-lang]", function() {
-        var elData = $(this).data(),
-            selLangCode  = (elData['i18nLang']||''),
-            selLangCode_ = (elData['i18nLang']||'').replace('-', '_'),
-            i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_;
-        _setLang(selLangCode_, { callback: function(){
-          var langClassType = '-', $langSelElement = $('[data-i18n-lang]:first');
-          if ($langSelElement.length) {
-            langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
-          }
-          $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
-          $('.lang-icon').removeClass(_arrProto.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
-          $('[data-i18n-lang]').removeClass('active');
-          $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
-          spa.i18n.apply('.lang-text');
-        }});
-      });
-
-      var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
-      if (defaultLang) {
-        if (initialLang == '*') {
-          initialLang = spa.i18n.browserLang();
-          if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
-            initialLang = initialLang.getLeftStr(2).toLowerCase();
-            var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
-            for (var i=0; i<supportedLangs.length; i++){
-              supportedLang = (supportedLangs[i] || '').trim();
-              if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
-                matchLang = supportedLang;
-                break;
-              }
-            }
-            initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
-          }
+    $(document).on("click", "[data-i18n-lang]", function() {
+      var elData = $(this).data(),
+          selLangCode  = (elData['i18nLang']||''),
+          selLangCode_ = (elData['i18nLang']||'').replace('-', '_'),
+          i18nKey = ($('body').attr('i18n-lang-key-prefix') || 'lang.name.')+selLangCode_;
+      _setLang(selLangCode_, { callback: function(){
+        var langClassType = '-', $langSelElement = $('[data-i18n-lang]:first');
+        if ($langSelElement.length) {
+          langClassType = ($langSelElement.data('i18nLang') || '').replace(/[a-z]/gi,'');
         }
+        $('.lang-text').attr('data-i18n', i18nKey).data('i18n', i18nKey);
+        $('.lang-icon').removeClass(_arrProto.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
+        $('[data-i18n-lang]').removeClass('active');
+        $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
+        spa.i18n.apply('.lang-text');
+      }});
+    });
 
-        if (initialLang) {
-          _setLang(initialLang, {}, true);
-          setTimeout(function(){
-            spa.i18n.displayLang();
-          }, 500);
+    var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
+    if (defaultLang) {
+      if (initialLang == '*') {
+        initialLang = spa.i18n.browserLang();
+        if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
+          initialLang = initialLang.getLeftStr(2).toLowerCase();
+          var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
+          for (var i=0; i<supportedLangs.length; i++){
+            supportedLang = (supportedLangs[i] || '').trim();
+            if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
+              matchLang = supportedLang;
+              break;
+            }
+          }
+          initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
         }
       }
+
+      if (initialLang) {
+        _setLang(initialLang, {}, true);
+        setTimeout(function(){
+          spa.i18n.displayLang();
+        }, 500);
+      }
     }
+
   }
 
   function _isLiveApiUrl(apiUrl, liveApiUrls){
@@ -8571,18 +8768,17 @@
         spa.defaults.set(compDefaults);
       }
 
-      $.when( _init_SPA_() ).done(function(){
+      $when( _init_SPA_() ).done(function(){
         /*SPA Init Complete - run_once*/
-        $.when( runSpaEvent('onInitComplete') ).done(function(){
+        $when( runSpaEvent('onInitComplete') ).done(function(){
           /*SPA onReady - run_once*/
-          $.when( runSpaEvent('onReady') ).done( spa.renderComponentsInHtml );
+          $when( runSpaEvent('onReady') ).done( spa.renderComponentsInHtml );
         });
       });
     }
 
-    $.when( runSpaEvent('onInit') ).done( initSpaModules );
+    $when( runSpaEvent('onInit') ).done( initSpaModules );
   }
-  //spa.start = _initSpaApp;
 
   function _initSpaDefaults(){
     var defaultsInTag
@@ -8607,18 +8803,26 @@
     _initApiUrls(); //need to run on 1st Component renderCallback as well
   }
 
-  $(document).ready(function(){
+  function _beginSPA(){
     //Read spa.defaults from body
     _initSpaDefaults();
 
     /*onLoad Set spa.debugger on|off using URL param*/
     spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
     /* ajaxPrefilter */
-    $.ajaxPrefilter(_ajaxPrefilter);
+    $ajaxPrefilter(_ajaxPrefilter);
 
     _initSpaApp();
 
-  });
+    _log.info("Initialized SPA.");
+  }
+
+  //onDocumentReady
+  if ( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) ) {
+    _beginSPA();
+  } else {
+    _doc.addEventListener('DOMContentLoaded', _beginSPA);
+  }
 
 })();
-spa.console.info("spa loaded.");
+spa.console.info("SPA.js loaded.");
