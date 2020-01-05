@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.76.0';
+  var _VERSION = '2.76.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -2263,11 +2263,7 @@
                 if (_isObj(nxtObj[key])) {
                   targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
                 } else if (_isArr(nxtObj[key])) {
-                  if (nxtObj[key].length) {
-                    targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
-                  } else {
-                    targetObj[key] = [];
-                  }
+                  targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
                 } else {
                   targetObj[key] = nxtObj[key];
                 }
@@ -2298,6 +2294,8 @@
                     break;
                   case 'array' :
                     targetArr[aIdx] = _mergeArray(targetArr[aIdx], nxtArr[aIdx]);
+                    break;
+                  case 'undefined' : //Skip
                     break;
                   default:
                     targetArr[aIdx] = nxtArr[aIdx];
