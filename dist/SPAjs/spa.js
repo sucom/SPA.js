@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.76.1';
+  var _VERSION = '2.77.0-RC1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -42,11 +42,18 @@
   /* Expose to global with alias */
   win.spa = win.__ = win._$ = spa;
 
-  // jQ Shortcuts (TOBE replaced sooner or later)
-  var $ajax = $.ajax
-    , $when = $.when
-    , $ajaxSetup = $.ajaxSetup
-    , $ajaxPrefilter = $.ajaxPrefilter;
+  var xhrLib = ($['ajax'] && $)  || spaXHR;
+  var $when  = xhrLib.when;
+  var $ajax  = xhrLib.ajax;
+  var $ajaxQ = xhrLib.when;
+  var $ajaxSetup = xhrLib.ajaxSetup;
+  var $ajaxPrefilter = xhrLib.ajaxPrefilter;
+  if ($ && !$['ajax']) { // extending jQ-slim
+    $.ajax  = $ajax;
+    $.ajaxQ = $ajaxQ;
+    $.ajaxSetup = $ajaxSetup;
+    $.ajaxPrefilter = $ajaxPrefilter;
+  }
 
   /* *************** SPA begins *************** */
   spa.VERSION = _VERSION;
@@ -2510,14 +2517,18 @@
     }
   }
   $ajaxSetup({
+    dataParsers : {
+      javascript: false,
+      spacomponent: false
+    },
     converters: {
       "text javascript": function(){},
       "text spaComponent": function(){}
     },
     dataFilter: function (rawResponse, dataType) {
-      if (dataType === 'javascript' || dataType === 'spaComponent') {
+      var dataTypeLc = (dataType||'').toLowerCase();
+      if (dataTypeLc === 'javascript' || dataTypeLc === 'spacomponent') {
         _ajaxScriptHandle(rawResponse);
-        rawResponse = '';
       }
       return rawResponse;
     }
@@ -2670,7 +2681,7 @@
         );
       });
 
-      $when.apply($, ajaxQ)
+      $ajaxQ.apply($, ajaxQ)
         .then(function(){
           spa.renderUtils.runCallbackFn(onDone);
         })
@@ -2999,9 +3010,11 @@
       cache: settings.cache,
       dataType: 'text',
       success: function (data) {
-        _parseLangFile(data);
-        if (settings.callback) {
-          settings.callback();
+        if (data) {
+          _parseLangFile(data);
+          if (settings.callback) {
+            settings.callback();
+          }
         }
       },
       error: function () {
@@ -5986,6 +5999,7 @@
                 cache: spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache'],
                 dataType: spaRVOptions.dataType || _find(window, 'app.api.ajaxOptions.dataType', 'text'),
                 success: function (result) {
+                  spa.console.log('API response:', result);
                   var oResult = _isStr(result)? _toObj(''+result, 'data') : result,
                       validateData = _renderOption('dataValidate', 'validate');
 
@@ -6158,7 +6172,7 @@
 
           var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
 
-          _log.info("External Data/Templates Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
+          _log.info("External Data/Templates Loading Status: ", spaAjaxRequestsQue);
           _log.groupEnd("spaLoadingTemplates");
 
           _log.info("Render TemplateID: "+vTemplate2RenderID);
@@ -6224,7 +6238,7 @@
           _log.groupEnd("spaLoadingViewStyles");
           /* Load Styles Ends */
 
-          $when.apply($, spaAjaxRequestsQue)
+          $ajaxQ.apply($, spaAjaxRequestsQue)
             .then(function () {
 
               _log.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
@@ -6275,8 +6289,7 @@
                 }
 
                 if (isValidData) {
-                  $when.apply($, _dataPreProcessAsync() ).done(function(){
-
+                  $ajaxQ.apply($, _dataPreProcessAsync() ).done(function(){
                     var dataPreProcessAsyncRes = _arrProto.slice.call(arguments);
                     if (isPreProcessed) {
                       _log.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
@@ -7183,8 +7196,7 @@
           apiQue.push(arguments[i]);
         }
       }
-
-      return $when.apply($, apiQue).done(function(){
+      return $ajaxQ.apply($, apiQue).done(function(){
         var apiResponses = _arrProto.slice.call( arguments );
 
         if ((apiQue.length==1) && (apiResponses.length > 1) && (apiResponses[1] == 'success') ){
@@ -7586,8 +7598,8 @@
         options.url = (_isRelativePath(actualUrl.trimLeftStr('~'))? (spa.api.baseUrl||'') : '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
         if (spa.api.baseUrl) options['crossDomain'] = true;
       } else {
-        var reqMethod = ('/'+options['type'].toUpperCase()).replace('/GET', '');
-        options['type'] = 'GET'; //force GET for mock URLs
+        var reqMethod = ('/'+(options['method'] || options['type']).toUpperCase()).replace('/GET', '');
+        options['type'] = options['method'] = 'GET'; //force GET for mock URLs
         liveApiPrefixStr = _isLiveApiUrl(actualUrl);
         actualUrl = actualUrl.trimLeftStr('!');
         if (liveApiPrefixStr) {
