@@ -1,5 +1,5 @@
 /*@license SPA.js (XHR) [MIT]*/
-var spaXHR = (function(_gContext, exportTo){
+(function(_gContext){
 
   var _objProto  = Object.prototype;
   var _arrProto  = Array.prototype;
@@ -40,6 +40,7 @@ var spaXHR = (function(_gContext, exportTo){
    *
    * @param {Function} targetClass
    * @param {Object} protoObj
+   * @param {boolean} enumerable
    *
    * @returns {Function} targetFn
    */
@@ -56,186 +57,200 @@ var spaXHR = (function(_gContext, exportTo){
     return targetClass;
   }
 
+  var _strExtract   = spa.extractStrBetweenIn;
+  var _is           = spa.is;
+  var _isStr        = spa.isString;
+  var _isArr        = spa.isArray;
+  var _isObj        = spa.isObject;
+  var _isObjLike    = spa.isObjectLike;
+  var _isFn         = spa.isFunction;
+  var _isUndef      = spa.isUndefined;
+  var _extend       = spa.extend;
+  var _mergeDeep    = spa.merge;
+  var _findInX      = spa.find;
+
+
   /* Util functions */
-  function _strExtract (srcStr, bS, eS, includeStr) {
-    var retArr = String(srcStr).match(RegExp('\\' + bS + '([^\\' + bS + '\\' + eS + '].*?)\\' + eS, 'g')) || [];
-    if (!includeStr && retArr.length) {
-      var bIdx = bS.length;
-      var eIdx = (-1) * eS.length;
-      retArr = retArr.map(function (x) {
-        return x.slice(bIdx, eIdx);
-      });
-    }
-    return retArr;
-  }
-  function _unique ( srcArr ) {
-    return srcArr.filter(function (value, index, self) {
-      return self.indexOf(value) === index;
-    });
-  }
+//  function _strExtract (srcStr, bS, eS, includeStr) {
+//    var retArr = String(srcStr).match(RegExp('\\' + bS + '([^\\' + bS + '\\' + eS + '].*?)\\' + eS, 'g')) || [];
+//    if (!includeStr && retArr.length) {
+//      var bIdx = bS.length;
+//      var eIdx = (-1) * eS.length;
+//      retArr = retArr.map(function (x) {
+//        return x.slice(bIdx, eIdx);
+//      });
+//    }
+//    return retArr;
+//  }
+//  function _unique ( srcArr ) {
+//    return srcArr.filter(function (value, index, self) {
+//      return self.indexOf(value) === index;
+//    });
+//  }
+//
+//  function _of (x) {
+//    return (_objProto.toString.call(x)).slice(8,-1).toLowerCase();
+//  }
+//  function _is (x, type) {
+//    return ((''+type).toLowerCase().indexOf(_of(x)) >= 0);
+//  }
+//  function _isStr (x) {
+//    return _is(x, 'string');
+//  }
+//  function _isArr ( x ) {
+//    return _is(x, 'array');
+//  }
+//  function _isObj ( x ) {
+//    return _is(x, 'object');
+//  }
+//  function _isObjLike ( x ) {
+//    return (typeof x === 'object' || typeof x === 'function');
+//  }
+//  function _isFn (x) {
+//    return _is(x, 'function');
+//  }
+//  function _isUndef ( x ) {
+//    return _is(x, 'undefined');
+//  }
+//
+//  function _extend () {
+//    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
+//
+//    if (arguments.length) {
+//      for (var i = 0, nxtObj; (i < arguments.length); i++) {
+//        nxtObj = arguments[i];
+//        if (_isObj(nxtObj)) {
+//          for (var key in nxtObj) {
+//            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+//              targetObj[key] = nxtObj[key];
+//            }
+//          }
+//        } else if (_isArr(nxtObj)) {
+//          targetObj = _mergeArray.call(null, targetObj, nxtObj);
+//        }
+//      }
+//    }
+//
+//    return targetObj;
+//  }
+//  function _mergeDeep () {
+//    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
+//
+//    if (arguments.length) {
+//      for (var i = 0, nxtObj; (i < arguments.length); i++) {
+//        nxtObj = arguments[i];
+//        if (_isObj(nxtObj)) {
+//          for (var key in nxtObj) {
+//            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+//              if (_isObj(nxtObj[key])) {
+//                targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
+//              } else if (_isArr(nxtObj[key])) {
+//                targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
+//              } else {
+//                targetObj[key] = nxtObj[key];
+//              }
+//            }
+//          }
+//        } else if (_isArr(nxtObj)) {
+//          targetObj = _mergeArray.call(null, targetObj, nxtObj);
+//        }
+//      }
+//    }
+//
+//    return targetObj;
+//  }
+//  function _mergeArray () {
+//    var targetArr = ((arguments.length)? arguments[0] : []) || [];
+//
+//    if (arguments.length) {
+//      for (var i = 0, nxtArr; (i < arguments.length); i++) {
+//        nxtArr = arguments[i];
+//        if (_isArr(nxtArr)) {
+//          for (var aIdx = 0; aIdx < nxtArr.length; aIdx++) {
+//            if (_isUndef(targetArr[aIdx])) {
+//              targetArr[aIdx] = nxtArr[aIdx];
+//            } else {
+//              switch (_of(nxtArr[aIdx])) {
+//                case 'object':
+//                  targetArr[aIdx] = _mergeDeep(targetArr[aIdx], nxtArr[aIdx]);
+//                  break;
+//                case 'array' :
+//                  targetArr[aIdx] = _mergeArray(targetArr[aIdx], nxtArr[aIdx]);
+//                  break;
+//                case 'undefined' : //Skip
+//                  break;
+//                default:
+//                  targetArr[aIdx] = nxtArr[aIdx];
+//                  break;
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//
+//    return targetArr;
+//  }
+//  function _toDottedPath (strPath) {
+//    return ((strPath || '').trim()
+//      .replace(/]|\s+/g, '')
+//      .replace(/(\[)|(\\)|(\/)/g, '.')
+//      .replace(/(\.+)/g, '.')
+//      .replace(/^[.]+|[.]+$/g, ''));
+//  }
+//  function _findInX (objSrc, pathStr, ifUndefined) {
+//    if ((arguments.length > 1) && _isObjLike(objSrc) && String(pathStr)) {
+//      var pathList = pathStr.split('|').map(function (path) { return path.trim(); });
+//      pathStr = pathList.shift();
+//      var nxtPath = pathList.join('|');
+//      var unDef;
+//      var retValue;
+//      var isWildKey = (pathStr.indexOf('*') >= 0);
+//
+//      if (isWildKey) {
+//        retValue = (function (xObj, xKey) {
+//          var xValue;
+//          if (_isObjLike(xObj)) {
+//            if (_hasOwnProp(xObj, xKey)) {
+//              xValue = xObj[xKey];
+//            } else {
+//              var oKeys = Object.keys(xObj);
+//              var idx = 0;
+//              while (_isUndef(xValue) && (idx < oKeys.length)) {
+//                xValue = arguments.callee(xObj[oKeys[idx++]], xKey);
+//              }
+//            }
+//          }
+//          return xValue;
+//        }(objSrc, pathStr.replace(/\*/g, '')));
+//
+//      } else {
+//        var i = 0;
+//        var pathArr = _toDottedPath(pathStr).split('.');
+//        for (retValue = objSrc; ((retValue !== unDef) && (i < pathArr.length)); i++) {
+//          retValue = (_isObjLike(retValue)) ? retValue[pathArr[i]] : unDef;
+//        }
+//      }
+//
+//      if (_isUndef(retValue)) {
+//        if (nxtPath) {
+//          return _findInX(objSrc, nxtPath, ifUndefined);
+//        } else {
+//          return (_isFn(ifUndefined)) ? ifUndefined.call(objSrc, objSrc, pathStr) : ifUndefined;
+//        }
+//      } else {
+//        return retValue;
+//      }
+//    } else {
+//      if (arguments.length === 3) {
+//        return (_isFn(ifUndefined)) ? ifUndefined.call(objSrc, objSrc, pathStr) : ifUndefined;
+//      } else {
+//        return objSrc;
+//      }
+//    }
+//  }
 
-  function _of (x) {
-    return (_objProto.toString.call(x)).slice(8,-1).toLowerCase();
-  }
-  function _is (x, type) {
-    return ((''+type).toLowerCase().indexOf(_of(x)) >= 0);
-  }
-  function _isStr (x) {
-    return _is(x, 'string');
-  }
-  function _isArr ( x ) {
-    return _is(x, 'array');
-  }
-  function _isObj ( x ) {
-    return _is(x, 'object');
-  }
-  function _isObjLike ( x ) {
-    return (typeof x === 'object' || typeof x === 'function');
-  }
-  function _isFn (x) {
-    return _is(x, 'function');
-  }
-  function _isUndef ( x ) {
-    return _is(x, 'undefined');
-  }
-
-  function _extend () {
-    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
-
-    if (arguments.length) {
-      for (var i = 0, nxtObj; (i < arguments.length); i++) {
-        nxtObj = arguments[i];
-        if (_isObj(nxtObj)) {
-          for (var key in nxtObj) {
-            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
-              targetObj[key] = nxtObj[key];
-            }
-          }
-        } else if (_isArr(nxtObj)) {
-          targetObj = _mergeArray.call(null, targetObj, nxtObj);
-        }
-      }
-    }
-
-    return targetObj;
-  }
-  function _mergeDeep () {
-    var targetObj = ((arguments.length)? arguments[0] : {}) || {};
-
-    if (arguments.length) {
-      for (var i = 0, nxtObj; (i < arguments.length); i++) {
-        nxtObj = arguments[i];
-        if (_isObj(nxtObj)) {
-          for (var key in nxtObj) {
-            if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
-              if (_isObj(nxtObj[key])) {
-                targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
-              } else if (_isArr(nxtObj[key])) {
-                targetObj[key] = _mergeArray(targetObj[key], nxtObj[key]);
-              } else {
-                targetObj[key] = nxtObj[key];
-              }
-            }
-          }
-        } else if (_isArr(nxtObj)) {
-          targetObj = _mergeArray.call(null, targetObj, nxtObj);
-        }
-      }
-    }
-
-    return targetObj;
-  }
-  function _mergeArray () {
-    var targetArr = ((arguments.length)? arguments[0] : []) || [];
-
-    if (arguments.length) {
-      for (var i = 0, nxtArr; (i < arguments.length); i++) {
-        nxtArr = arguments[i];
-        if (_isArr(nxtArr)) {
-          for (var aIdx = 0; aIdx < nxtArr.length; aIdx++) {
-            if (_isUndef(targetArr[aIdx])) {
-              targetArr[aIdx] = nxtArr[aIdx];
-            } else {
-              switch (_of(nxtArr[aIdx])) {
-                case 'object':
-                  targetArr[aIdx] = _mergeDeep(targetArr[aIdx], nxtArr[aIdx]);
-                  break;
-                case 'array' :
-                  targetArr[aIdx] = _mergeArray(targetArr[aIdx], nxtArr[aIdx]);
-                  break;
-                case 'undefined' : //Skip
-                  break;
-                default:
-                  targetArr[aIdx] = nxtArr[aIdx];
-                  break;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return targetArr;
-  }
-  function _toDottedPath (strPath) {
-    return ((strPath || '').trim()
-      .replace(/]|\s+/g, '')
-      .replace(/(\[)|(\\)|(\/)/g, '.')
-      .replace(/(\.+)/g, '.')
-      .replace(/^[.]+|[.]+$/g, ''));
-  }
-  function _findInX (objSrc, pathStr, ifUndefined) {
-    if ((arguments.length > 1) && _isObjLike(objSrc) && String(pathStr)) {
-      var pathList = pathStr.split('|').map(function (path) { return path.trim(); });
-      pathStr = pathList.shift();
-      var nxtPath = pathList.join('|');
-      var unDef;
-      var retValue;
-      var isWildKey = (pathStr.indexOf('*') >= 0);
-
-      if (isWildKey) {
-        retValue = (function (xObj, xKey) {
-          var xValue;
-          if (_isObjLike(xObj)) {
-            if (_hasOwnProp(xObj, xKey)) {
-              xValue = xObj[xKey];
-            } else {
-              var oKeys = Object.keys(xObj);
-              var idx = 0;
-              while (_isUndef(xValue) && (idx < oKeys.length)) {
-                xValue = arguments.callee(xObj[oKeys[idx++]], xKey);
-              }
-            }
-          }
-          return xValue;
-        }(objSrc, pathStr.replace(/\*/g, '')));
-
-      } else {
-        var i = 0;
-        var pathArr = _toDottedPath(pathStr).split('.');
-        for (retValue = objSrc; ((retValue !== unDef) && (i < pathArr.length)); i++) {
-          retValue = (_isObjLike(retValue)) ? retValue[pathArr[i]] : unDef;
-        }
-      }
-
-      if (_isUndef(retValue)) {
-        if (nxtPath) {
-          return _findInX(objSrc, nxtPath, ifUndefined);
-        } else {
-          return (_isFn(ifUndefined)) ? ifUndefined.call(objSrc, objSrc, pathStr) : ifUndefined;
-        }
-      } else {
-        return retValue;
-      }
-    } else {
-      if (arguments.length === 3) {
-        return (_isFn(ifUndefined)) ? ifUndefined.call(objSrc, objSrc, pathStr) : ifUndefined;
-      } else {
-        return objSrc;
-      }
-    }
-  }
-
+  // ---------------------------------------------------------
   function _isSimple (xObjArr) {
     var retValue = true;
     if (typeof xObjArr === 'object') {
@@ -389,7 +404,7 @@ var spaXHR = (function(_gContext, exportTo){
           if (thisPromise.isPending) {
             complete.call(thisPromise, !!fn, [fn]);
           }
-        }, (deferTime || _defaultDeferTime))
+        }, (deferTime || _defaultDeferTime));
       }
     }, _defaultDeferTime);
 
@@ -804,7 +819,7 @@ var spaXHR = (function(_gContext, exportTo){
     styleNode.setAttribute( 'id', 'css-'+((new Date()).getTime()));
     styleNode.setAttribute( 'type', 'text/css');
     styleNode.appendChild(styleText);
-    document.head.appendChild( styleNode )
+    document.head.appendChild( styleNode );
     return srcCss;
   }
   function _jsonParser ( srcStr ) {
@@ -854,6 +869,8 @@ var spaXHR = (function(_gContext, exportTo){
 
   /* URL Processing for any parameter replacement with object */
   /**
+   * @param {string} url
+   *
    * @example
    * xhr.url( '//127.0.0.1:1001/service-api/auth' )
    *         ==> '//127.0.0.1:1001/service-api/auth'
@@ -887,7 +904,7 @@ var spaXHR = (function(_gContext, exportTo){
 
     urlParamsDataCollection = _mergeDeep.apply(null, urlParamsDataCollection);
     if (Object.keys(urlParamsDataCollection).length && (finalUrl.indexOf('{') > -1)) {
-      urlParams = _unique(_strExtract(finalUrl, '{', '}', true));
+      urlParams = _strExtract(finalUrl, '{', '}', true);
       urlParams.forEach(function (param) {
         pKey     = param.replace(/[{}<>]/g, '');
         pValue   = _findInX(urlParamsDataCollection, pKey, urlParamsDataCollection['_undefined']);
@@ -1099,7 +1116,7 @@ var spaXHR = (function(_gContext, exportTo){
           }
         }
         if (!_isUndef(dataFilterResponse)) {
-          xhrResponse = dataFilterResponse
+          xhrResponse = dataFilterResponse;
         }
 
         if (axResType === 'json') {
@@ -1274,28 +1291,11 @@ var spaXHR = (function(_gContext, exportTo){
     defer: _xhrQ,
     ajaxSetup: _setupGlobalXHRDefaults,
     ajaxPrefilter: _setupPreFilter
-  }
+  };
   function xhrLib() {
     return _xhrQ.apply(_gContext, _argsToArr(arguments));
   }
   _fnProps(xhrLib, exportMethods);
-
-//  if (exportTo) {
-//    if (_isUndef(_gContext[exportTo])) {
-//      _gContext[exportTo] = xhrLib;
-//    } else {
-//      if (_isFn(_gContext[exportTo])) {
-//        _fnProps(_gContext[exportTo], exportMethods);
-//      } else if (_isObj(_gContext[exportTo])) {
-//        Object.keys().forEach(function (xKey) {
-//          _gContext[exportTo][xKey] = exportMethods[xKey];
-//        });
-//      } else {
-//        console.error( exportTo+' already in use!');
-//      }
-//    }
-//  }
   //------------------------
-
-  return xhrLib;
+  _gContext['spaXHR'] = xhrLib;
 })(this);
