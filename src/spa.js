@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.77.0-RC1';
+  var _VERSION = '2.77.0-RC2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -42,18 +42,18 @@
   /* Expose to global with alias */
   win.spa = win.__ = win._$ = spa;
 
-  var xhrLib = ($['ajax'] && $)  || spaXHR;
-  var $when  = xhrLib.when;
-  var $ajax  = xhrLib.ajax;
-  var $ajaxQ = xhrLib.when;
-  var $ajaxSetup = xhrLib.ajaxSetup;
-  var $ajaxPrefilter = xhrLib.ajaxPrefilter;
-  if ($ && !$['ajax']) { // extending jQ-slim
-    $.ajax  = $ajax;
-    $.ajaxQ = $ajaxQ;
-    $.ajaxSetup = $ajaxSetup;
-    $.ajaxPrefilter = $ajaxPrefilter;
-  }
+//  var xhrLib = ($['ajax'] && $)  || spaXHR;
+//  var $when  = xhrLib.when;
+//  var $ajax  = xhrLib.ajax;
+//  var $ajaxQ = xhrLib.when;
+//  var $ajaxSetup = xhrLib.ajaxSetup;
+//  var $ajaxPrefilter = xhrLib.ajaxPrefilter;
+//  if ($ && !$['ajax']) { // extending jQ-slim
+//    $.ajax  = $ajax;
+//    $.ajaxQ = $ajaxQ;
+//    $.ajaxSetup = $ajaxSetup;
+//    $.ajaxPrefilter = $ajaxPrefilter;
+//  }
 
   /* *************** SPA begins *************** */
   spa.VERSION = _VERSION;
@@ -621,6 +621,9 @@
   function _isObj ( x ) {
     return _is(x, 'object');
   }
+  function _isObjLike ( x ) {
+    return ((typeof x == 'object') || (typeof x == 'function'));
+  }
   function _isStr ( x ) {
     return _is(x, 'string');
   }
@@ -697,8 +700,10 @@
   spa.isBoolean      = _isBool;
   spa.isFunction     = _isFn;
   spa.isObject       = _isObj;
+  spa.isObjectLike   = _isObjLike;
   spa.isString       = _isStr;
   spa.isNumber       = _isNum;
+  spa.isUndefined    = _isUndef;
   spa.isEmptyObject  = _isEmptyObj;
   spa.isElementExist = _isElementExist;
   spa.isBlank  = spa.isEmpty = _isEmpty = _isBlank;
@@ -1594,6 +1599,21 @@
         elValue = escHTML? $(el).text() : $(el).html();
         break;
     }
+    if (_isBlank(elValue) && el.hasAttribute('data-default')) {
+      var defValue = el.getAttribute('data-default')||'';
+      if (defValue[0]==='@') {
+        defValue = _find(win, defValue.replace(/^[@\s]+/, ''), ''); //trimLeft @ and find in window
+        if (_isFn(defValue)) {
+          defValue = defValue.call(el, el);
+          if (_isUndef(defValue)) {
+            defValue = '';
+          }
+        }
+      } else if (defValue[1]==='@') {
+        defValue = defValue.trim();
+      }
+      elValue = defValue;
+    }
     return elValue;
   };
 
@@ -1722,7 +1742,7 @@
    * */
   /* as jQ extension see $fnEx below */
   function _serializeFormToObject(obj, keyNameToLowerCase, strPrefixToIgnore) {
-    var a = this.serializeArray()
+    var a = this.serializeToArray()
       , $fmData = $(this).data()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : (keyNameToLowerCase || false)
@@ -1759,7 +1779,7 @@
 
   /* as jQ extension see $fnEx below */
   function _serializeFormToSimpleObject(obj, includeDisabledElements) {
-    var a = this.serializeArray()
+    var a = this.serializeToArray()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : (includeDisabledElements || false)
       , oKeyStr, oGrpStr
@@ -1798,8 +1818,8 @@
   /* Object Utilities */
   if (1) {
     /* find(jsonObject, 'key1.key2.key3[0].key4'); */
-    function _find(objSrc, pathStr, forUndefined) {
-      if (is(objSrc, 'window|array|object|function|global') && pathStr) {
+    function _find(objSrc, pathStr, ifUndefined) {
+      if (_isObjLike(objSrc) && pathStr) {
         var pathList = _map(pathStr.split('|'), function(path){ return path.trim(); } );
         pathStr = pathList.shift();
         var nxtPath = pathList.join('|');
@@ -1808,7 +1828,7 @@
         if (isWildKey) {
           retValue = (function(xObj, xKey) {
                         var xValue;
-                        if ((typeof xObj == 'object') || (typeof xObj == 'function')) {
+                        if (_isObjLike(xObj)) {
                           if (xObj.hasOwnProperty(xKey)) {
                             xValue = xObj[xKey];
                           } else {
@@ -1823,10 +1843,10 @@
         } else {
           var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length;
           for (retValue = objSrc; i < len; i++) {
-            if (is(retValue, 'object|window|function|global')) {
-              retValue = retValue[ path[i].trim() ];
-            } else if (_isArr(retValue)) {
+            if (_isArr(retValue)) {
               retValue = retValue[ spa.toInt(path[i]) ];
+            } else if (_isObjLike(retValue)) {
+              retValue = retValue[ path[i].trim() ];
             } else {
               retValue = unDef;
               break;
@@ -1836,9 +1856,9 @@
 
         if (_isUndef(retValue)) {
           if (nxtPath) {
-            return _find(objSrc, nxtPath, forUndefined);
+            return _find(objSrc, nxtPath, ifUndefined);
           } else {
-            return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+            return (_isFn(ifUndefined))? ifUndefined.call(objSrc, objSrc, pathStr) : ifUndefined;
           }
         } else {
           return retValue;
@@ -1846,7 +1866,7 @@
 
       } else {
         if (arguments.length == 3) {
-          return (_isFn(forUndefined))? forUndefined.call(objSrc, objSrc, pathStr) : forUndefined;
+          return (_isFn(ifUndefined))? ifUndefined.call(objSrc, objSrc, pathStr) : ifUndefined;
         } else {
           return objSrc;
         }
@@ -2516,23 +2536,6 @@
       document.head.appendChild( xScript ).parentNode.removeChild( xScript );
     }
   }
-  $ajaxSetup({
-    dataParsers : {
-      javascript: false,
-      spacomponent: false
-    },
-    converters: {
-      "text javascript": function(){},
-      "text spaComponent": function(){}
-    },
-    dataFilter: function (rawResponse, dataType) {
-      var dataTypeLc = (dataType||'').toLowerCase();
-      if (dataTypeLc === 'javascript' || dataTypeLc === 'spacomponent') {
-        _ajaxScriptHandle(rawResponse);
-      }
-      return rawResponse;
-    }
-  });
 
   function _cachedScript(url, options) {
     _log.log('Ajax for script:',url, 'options:',options);
@@ -6826,8 +6829,41 @@
     return retValue;
   }
 
+  var
+	  rCRLF = /\r?\n/g,
+    rsubmittable = /^(?:input|select|textarea|keygen)/i,
+	  rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+    rcheckableType = ( /^(?:checkbox|radio)$/i );
+	function _jQserializeArray() {
+		return this.map( function() {
+			// Can add propHook for "elements" to filter or add form elements
+			var elements = $.prop( this, "elements" );
+			return elements ? $.makeArray( elements ) : this;
+		} )
+		.filter( function() {
+			var type = this.type;
+			// Use .is( ":disabled" ) so that fieldset[disabled] works
+			return this.name && !$( this ).is( ":disabled" ) &&
+				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( type ) &&
+				( this.checked || !rcheckableType.test( type ) );
+		} )
+		.map( function( i, elem ) {
+      var val = spa.getElValue(elem); //$( this ).val();
+			if ( val == null ) {
+				return null;
+			}
+			if ( Array.isArray( val ) ) {
+				return _map( val, function( val ) {
+					return { name: elem.name, value: _isStr(val)? val.replace( rCRLF, "\r\n" ) : val };
+				} );
+			}
+			return { name: elem.name, value: _isStr(val)? val.replace( rCRLF, "\r\n" ) : val };
+		} ).get();
+	}
+
   //Extend jQuery for custom utils
   $.fn.extend({
+    serializeToArray             : _jQserializeArray,
     serializeUncheckedCheckboxes : _serializeUncheckedCheckboxes,
     serializeFormToJSON          : _serializeFormToObject,
     serializeFormToObject        : _serializeFormToObject,
@@ -7351,192 +7387,190 @@
     return !isFullPath;
   }
 
-  function _ajax( options ){
-
-    var axOptions = {
-      url: '',
-      responseType: 'json', // text, html, css, csv, xml, json, pdf, zip
-      async: true,
-      cache: false,
-      method: 'GET',    // GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS, TRACE
-      headers: {},      // {key: 'value'} or function which returns {key: 'value'}
-      auth: null,       // { user: '', pwd: ''},
-      timeout: 0,       // 0=No Timeout; in milliseconds
-      success: null,    // function(response, statusCode, XHR){}
-      error: null,      // function(statusCode, statusText, XHR){}
-      finally: null     // function(response, statusCode, XHR){}
-
-      //data:
-      //onAbort:            function(XHR, event){}
-      //onError:            function(XHR, event){}
-      //onLoad:             function(XHR, event){}
-      //onLoadEnd:          function(XHR, event){}
-      //onLoadStart:        function(XHR, event){}
-      //onProgress:         function(XHR, event){}
-      //onReadyStateChange: function(XHR, event){}
-      //onTimeout:          function(XHR, event){}
-    };
-
-    var contentTypes = {TEXT:'text/plain', HTML:'text/html', CSS:'text/css', CSV:'text/csv', XML:'text/xml', JSON:'application/json', PDF:'application/pdf', ZIP:'application/zip' },
-        axResType = axOptions.responseType.toUpperCase(),
-        contentType = contentTypes[ axResType ] || axOptions.responseType,
-        axHeaders = {};
-
-    // updating axOptions
-    _keys(options || {}).forEach(function(oKey){
-      axOptions[oKey] = options[oKey];
-    });
-
-    axOptions.method = axOptions.method.toUpperCase();
-
-    // Set Headers
-    if (_isFn(axOptions.headers)) {
-      axOptions.headers = axOptions.headers.call(undefined, axOptions);
-    }
-    if (_isObj(axOptions.headers)) {
-      _keys(axOptions.headers).forEach(function(oKey){
-        axHeaders[oKey] = axOptions.headers[oKey];
-      });
-    }
-
-    if (contentType) {
-      axHeaders['Content-Type'] = contentType;
-    }
-    axHeaders['Cache-Control'] = axOptions.cache? 'max-age=86400000' : 'no-cache, no-store, must-revalidate, max-age=0';
-    axHeaders['Expires']       = axOptions.cache? ((new Date( (new Date()).setDate( (new Date()).getDate() + 1 ) )).toUTCString()) : '0';
-    if (!axOptions.cache) {
-      axHeaders['Pragma'] = 'no-cache';
-    }
-
-    //----------------------------------------------------------------------
-    // Create new HTTP Request Object
-    var xhr = new XMLHttpRequest(), axData;
-
-    xhr['requestOptions'] = axOptions;
-
-    // Setup timeout
-    if (axOptions.timeout) {
-      xhr.timeout   = axOptions.timeout;
-    }
-
-    var onReadyStateChange;
-
-    _keys(axOptions).forEach(function(oKey){
-      var eName = oKey.toLowerCase();
-      if ((eName === 'onreadystatechange') && (_isFn(axOptions[oKey]))) {
-        onReadyStateChange = axOptions[oKey];
-      } else if ((eName.indexOf('on') === 0) && (_isFn(axOptions[oKey]))) {
-        xhr[eName] = function(e){
-          axOptions[oKey].call(axOptions, xhr, e);
-        };
-      }
-    });
-
-    // Setup our listener to process request state changes
-    xhr.onreadystatechange = function (e) {
-
-        if (onReadyStateChange) {
-          onReadyStateChange.call(axOptions, xhr, e);
-        }
-
-        // Only run if the request is complete
-        if (xhr.readyState !== 4) return;
-
-        var xhrResponse = xhr.responseText;
-
-        // Process our return data
-        if (xhr.status >= 200 && xhr.status < 300) {
-          if (axResType === 'JSON') {
-            try {
-              if (xhrResponse) {
-                xhrResponse = JSON.parse(xhrResponse);
-              }
-            } catch(e) {
-              xhrResponse = xhr.responseText;
-              console.warn('Invalid JSON response.', xhrResponse, xhr, e);
-            }
-          }
-          // This will run when the request is successful
-          if (_isFn(axOptions.success)) {
-            axOptions.success.call(axOptions, xhrResponse, xhr.status, xhr);
-          }
-        } else {
-            // This will run when it's not
-            if (_isFn(axOptions.error)) {
-              axOptions.error.call(axOptions, xhr.status, xhr.statusText, xhr);
-            }
-        }
-
-        // This will run always
-        if (_isFn(axOptions.finally)) {
-          axOptions.finally.call(axOptions, xhrResponse, xhr.status, xhr);
-        }
-
-    };
-
-    if (axOptions.hasOwnProperty('data') && axOptions.method === 'GET') {
-      axData = (_isObj(axOptions['data']))? _toQueryString(axOptions['data']) : (''+axOptions['data']);
-      if (axData) {
-        axOptions.url += ((axOptions.url.indexOf('?') < 0)? '?' : ((/\?$|\&$/.test(axOptions.url))? '' : '&')) + axData;
-      }
-    }
-
-    // Open request
-    // The first argument is the post type (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
-    // The second argument is the endpoint URL
-    // The third arugment is async: true/false
-    try {
-      if (axOptions.auth && (_isObj(axOptions.auth))) {
-        if (axOptions.auth.hasOwnProperty('user')) {
-          if (axOptions.auth.hasOwnProperty('pwd')) {
-            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user, axOptions.auth.pwd);
-          } else {
-            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user);
-          }
-        }
-      } else {
-        xhr.open(axOptions.method, axOptions.url, axOptions.async);
-      }
-
-      // Set Request Headers
-      _keys(axHeaders).forEach(function(oKey){
-        xhr.setRequestHeader(oKey, axHeaders[oKey]);
-      });
-
-      // Send Payload
-      if ((axOptions.method !== 'GET') && axOptions.hasOwnProperty('data')) {
-        axData = (_isObj(axOptions['data']))? JSON.stringify(axOptions['data']) : axOptions['data'];
-        xhr.send( axData );
-      } else {
-        xhr.send();
-      }
-    }catch(e){
-      console.warn('Ajax-Exception', xhr, e);
-    }
-
-    return xhr;
-  }
-  //spa.ajax = _ajax;
-
-  function _testMockSys() {
-    if (app['api']) {
-      _ajax({url: _mockFinalUrl(), method:'HEAD', error:function(){
-          var mockBaseUrlExternal = _find(app, 'api.mockBaseUrl') || _find(spa, 'api.mockBaseUrl') || '';
-          var mockBaseUrl  = ((mockBaseUrlExternal || location.origin).trimRightStr('/')) + '/',
-              mockRootFldr = mockBaseUrlExternal? '' : ((_find(app, 'api.mockRootFolder') || _find(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
-              newMockAddress = prompt('Enter Mock Root Address: http[s]://server.address[:port]/root-folder', mockBaseUrl+mockRootFldr);
-          if (newMockAddress) {
-            var rootIndex = newMockAddress.indexOf('/', 8),
-                newMockBaseUrl  = (rootIndex > 0)? newMockAddress.slice(0, rootIndex) : newMockAddress,
-                newMockRootFldr = (rootIndex > 0)? newMockAddress.substr(rootIndex+1) : '';
-            app.api['mockBaseUrl']    = (newMockBaseUrl == location.origin)? '' : newMockBaseUrl;
-            app.api['mockRootFolder'] = newMockRootFldr;
-            _testMockSys();
-          }
-        }});
-    }
-  }
-  spa.testMockSys = _testMockSys;
+//  function _xhrReq( options ){
+//
+//    var axOptions = {
+//      url: '',
+//      responseType: 'json', // text, html, css, csv, xml, json, pdf, zip
+//      async: true,
+//      cache: false,
+//      method: 'GET',    // GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS, TRACE
+//      headers: {},      // {key: 'value'} or function which returns {key: 'value'}
+//      auth: null,       // { user: '', pwd: ''},
+//      timeout: 0,       // 0=No Timeout; in milliseconds
+//      success: null,    // function(response, statusCode, XHR){}
+//      error: null,      // function(statusCode, statusText, XHR){}
+//      finally: null     // function(response, statusCode, XHR){}
+//
+//      //data:
+//      //onAbort:            function(XHR, event){}
+//      //onError:            function(XHR, event){}
+//      //onLoad:             function(XHR, event){}
+//      //onLoadEnd:          function(XHR, event){}
+//      //onLoadStart:        function(XHR, event){}
+//      //onProgress:         function(XHR, event){}
+//      //onReadyStateChange: function(XHR, event){}
+//      //onTimeout:          function(XHR, event){}
+//    };
+//
+//    var contentTypes = {TEXT:'text/plain', HTML:'text/html', CSS:'text/css', CSV:'text/csv', XML:'text/xml', JSON:'application/json', PDF:'application/pdf', ZIP:'application/zip' },
+//        axResType = axOptions.responseType.toUpperCase(),
+//        contentType = contentTypes[ axResType ] || axOptions.responseType,
+//        axHeaders = {};
+//
+//    // updating axOptions
+//    _keys(options || {}).forEach(function(oKey){
+//      axOptions[oKey] = options[oKey];
+//    });
+//
+//    axOptions.method = axOptions.method.toUpperCase();
+//
+//    // Set Headers
+//    if (_isFn(axOptions.headers)) {
+//      axOptions.headers = axOptions.headers.call(undefined, axOptions);
+//    }
+//    if (_isObj(axOptions.headers)) {
+//      _keys(axOptions.headers).forEach(function(oKey){
+//        axHeaders[oKey] = axOptions.headers[oKey];
+//      });
+//    }
+//
+//    if (contentType) {
+//      axHeaders['Content-Type'] = contentType;
+//    }
+//    axHeaders['Cache-Control'] = axOptions.cache? 'max-age=86400000' : 'no-cache, no-store, must-revalidate, max-age=0';
+//    axHeaders['Expires']       = axOptions.cache? ((new Date( (new Date()).setDate( (new Date()).getDate() + 1 ) )).toUTCString()) : '0';
+//    if (!axOptions.cache) {
+//      axHeaders['Pragma'] = 'no-cache';
+//    }
+//
+//    //----------------------------------------------------------------------
+//    // Create new HTTP Request Object
+//    var xhr = new XMLHttpRequest(), axData;
+//
+//    xhr['requestOptions'] = axOptions;
+//
+//    // Setup timeout
+//    if (axOptions.timeout) {
+//      xhr.timeout   = axOptions.timeout;
+//    }
+//
+//    var onReadyStateChange;
+//
+//    _keys(axOptions).forEach(function(oKey){
+//      var eName = oKey.toLowerCase();
+//      if ((eName === 'onreadystatechange') && (_isFn(axOptions[oKey]))) {
+//        onReadyStateChange = axOptions[oKey];
+//      } else if ((eName.indexOf('on') === 0) && (_isFn(axOptions[oKey]))) {
+//        xhr[eName] = function(e){
+//          axOptions[oKey].call(axOptions, xhr, e);
+//        };
+//      }
+//    });
+//
+//    // Setup our listener to process request state changes
+//    xhr.onreadystatechange = function (e) {
+//
+//        if (onReadyStateChange) {
+//          onReadyStateChange.call(axOptions, xhr, e);
+//        }
+//
+//        // Only run if the request is complete
+//        if (xhr.readyState !== 4) return;
+//
+//        var xhrResponse = xhr.responseText;
+//
+//        // Process our return data
+//        if (xhr.status >= 200 && xhr.status < 300) {
+//          if (axResType === 'JSON') {
+//            try {
+//              if (xhrResponse) {
+//                xhrResponse = JSON.parse(xhrResponse);
+//              }
+//            } catch(e) {
+//              xhrResponse = xhr.responseText;
+//              console.warn('Invalid JSON response.', xhrResponse, xhr, e);
+//            }
+//          }
+//          // This will run when the request is successful
+//          if (_isFn(axOptions.success)) {
+//            axOptions.success.call(axOptions, xhrResponse, xhr.status, xhr);
+//          }
+//        } else {
+//            // This will run when it's not
+//            if (_isFn(axOptions.error)) {
+//              axOptions.error.call(axOptions, xhr.status, xhr.statusText, xhr);
+//            }
+//        }
+//
+//        // This will run always
+//        if (_isFn(axOptions.finally)) {
+//          axOptions.finally.call(axOptions, xhrResponse, xhr.status, xhr);
+//        }
+//
+//    };
+//
+//    if (axOptions.hasOwnProperty('data') && axOptions.method === 'GET') {
+//      axData = (_isObj(axOptions['data']))? _toQueryString(axOptions['data']) : (''+axOptions['data']);
+//      if (axData) {
+//        axOptions.url += ((axOptions.url.indexOf('?') < 0)? '?' : ((/\?$|\&$/.test(axOptions.url))? '' : '&')) + axData;
+//      }
+//    }
+//
+//    // Open request
+//    // The first argument is the post type (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+//    // The second argument is the endpoint URL
+//    // The third arugment is async: true/false
+//    try {
+//      if (axOptions.auth && (_isObj(axOptions.auth))) {
+//        if (axOptions.auth.hasOwnProperty('user')) {
+//          if (axOptions.auth.hasOwnProperty('pwd')) {
+//            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user, axOptions.auth.pwd);
+//          } else {
+//            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user);
+//          }
+//        }
+//      } else {
+//        xhr.open(axOptions.method, axOptions.url, axOptions.async);
+//      }
+//
+//      // Set Request Headers
+//      _keys(axHeaders).forEach(function(oKey){
+//        xhr.setRequestHeader(oKey, axHeaders[oKey]);
+//      });
+//
+//      // Send Payload
+//      if ((axOptions.method !== 'GET') && axOptions.hasOwnProperty('data')) {
+//        axData = (_isObj(axOptions['data']))? JSON.stringify(axOptions['data']) : axOptions['data'];
+//        xhr.send( axData );
+//      } else {
+//        xhr.send();
+//      }
+//    }catch(e){
+//      console.warn('Ajax-Exception', xhr, e);
+//    }
+//
+//    return xhr;
+//  }
+//  function _testMockSys() {
+//    if (app['api']) {
+//      _xhrReq({url: _mockFinalUrl(), method:'HEAD', error:function(){
+//          var mockBaseUrlExternal = _find(app, 'api.mockBaseUrl') || _find(spa, 'api.mockBaseUrl') || '';
+//          var mockBaseUrl  = ((mockBaseUrlExternal || location.origin).trimRightStr('/')) + '/',
+//              mockRootFldr = mockBaseUrlExternal? '' : ((_find(app, 'api.mockRootFolder') || _find(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
+//              newMockAddress = prompt('Enter Mock Root Address: http[s]://server.address[:port]/root-folder', mockBaseUrl+mockRootFldr);
+//          if (newMockAddress) {
+//            var rootIndex = newMockAddress.indexOf('/', 8),
+//                newMockBaseUrl  = (rootIndex > 0)? newMockAddress.slice(0, rootIndex) : newMockAddress,
+//                newMockRootFldr = (rootIndex > 0)? newMockAddress.substr(rootIndex+1) : '';
+//            app.api['mockBaseUrl']    = (newMockBaseUrl == location.origin)? '' : newMockBaseUrl;
+//            app.api['mockRootFolder'] = newMockRootFldr;
+//            _testMockSys();
+//          }
+//        }});
+//    }
+//  }
+//  spa.testMockSys = _testMockSys;
 
   function _mockFinalUrl( liveUrl, reqMethod, liveApiPrefixStr ){
     liveUrl          = liveUrl || '/';
@@ -8813,18 +8847,61 @@
     _initApiUrls(); //need to run on 1st Component renderCallback as well
   }
 
+  var xhrLib, $when, $ajax, $ajaxQ, $ajaxSetup, $ajaxPrefilter;
+  function _initXHR(){
+    xhrLib = ($['ajax'] && $)  || spaXHR;
+    if (xhrLib) {
+      $when  = xhrLib.when;
+      $ajax  = xhrLib.ajax;
+      $ajaxQ = xhrLib.when;
+      $ajaxSetup = xhrLib.ajaxSetup;
+      $ajaxPrefilter = xhrLib.ajaxPrefilter;
+      if ($ && !$['ajax']) { // extending jQ-slim
+        $.ajax  = $ajax;
+        $.ajaxQ = $ajaxQ;
+        $.ajaxSetup = $ajaxSetup;
+        $.ajaxPrefilter = $ajaxPrefilter;
+      }
+
+      $ajaxSetup({
+        dataParsers : {
+          javascript: false,
+          spacomponent: false
+        },
+        converters: {
+          "text javascript": function(){},
+          "text spaComponent": function(){}
+        },
+        dataFilter: function (rawResponse, dataType) {
+          var dataTypeLc = (dataType||'').toLowerCase();
+          if (dataTypeLc === 'javascript' || dataTypeLc === 'spacomponent') {
+            _ajaxScriptHandle(rawResponse);
+          }
+          return rawResponse;
+        }
+      });
+    }
+  }
+
   function _beginSPA(){
-    //Read spa.defaults from body
-    _initSpaDefaults();
+    //init xhrLib
+    _initXHR();
 
-    /*onLoad Set spa.debugger on|off using URL param*/
-    spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
-    /* ajaxPrefilter */
-    $ajaxPrefilter(_ajaxPrefilter);
+    if (xhrLib) {
+      //Read spa.defaults from body
+      _initSpaDefaults();
 
-    _initSpaApp();
+      /*onLoad Set spa.debugger on|off using URL param*/
+      spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
+      /* ajaxPrefilter */
+      $ajaxPrefilter(_ajaxPrefilter);
 
-    _log.info("Initialized SPA.");
+      _initSpaApp();
+
+      _log.info("Initialized SPA.");
+    } else {
+      console.error('Could not find XHR(ajax) module. Use jQuery Full version or include spaXHR module.');
+    }
   }
 
   //onDocumentReady
