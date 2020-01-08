@@ -1,4 +1,4 @@
-/*@license SPA.js (XHR) [MIT]*/
+/*@license SPA.js (XHR/ajax) [MIT]*/
 (function(_gContext){
 
   var _objProto  = Object.prototype;

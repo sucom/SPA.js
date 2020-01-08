@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.77.0-RC2';
+  var _VERSION = '2.77.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
