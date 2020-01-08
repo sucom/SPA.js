@@ -30,8 +30,8 @@
 
  * ===========================================================================
  */
-;(function(){
-    var _Array_ = Array.prototype;
+(function(){
+  var __Array = Array.prototype;
 
   /**
    *
@@ -193,7 +193,7 @@
     }
 
     //extract injected handlebars options in param and process
-    var options = _Array_.splice.call(arguments, arguments.length - 1, 1)[0],
+    var options = __Array.splice.call(arguments, arguments.length - 1, 1)[0],
       _rootData = options['data']['root'] || {},
       isBlock   = (options.hasOwnProperty('fn') || options.hasOwnProperty('inverse')),
       isIfCall  = (options['name'] == ':if'),
@@ -259,7 +259,7 @@
         return (ifConditions.indexOf(str) >= 0);
       },
 
-      mainArgs = _Array_.slice.call(arguments);
+      mainArgs = __Array.slice.call(arguments);
 
     //isConditionBlock
     for (var i = 0; i < mainArgs.length; i++) {
@@ -312,7 +312,7 @@
     }
 
     function process() {
-      var procArgs = _Array_.slice.call(arguments),
+      var procArgs = __Array.slice.call(arguments),
         retValues,
         done;
 
@@ -839,8 +839,8 @@
   }
 
   function _fnCall() {
-    var helperOptions = _Array_.pop.call(arguments),
-        fnName  = _Array_.shift.call(arguments),
+    var helperOptions = __Array.pop.call(arguments),
+        fnName  = __Array.shift.call(arguments),
         fn2call = getFunction(fnName),
         fnContextName, fnContext, fnCallResponse;
 
@@ -1271,7 +1271,7 @@
   }
 
   function _join(){
-    var helperOptions  = _Array_.pop.call(arguments),
+    var helperOptions  = __Array.pop.call(arguments),
         joinResult;
 
     function append(arg) {
@@ -1328,7 +1328,7 @@
       }
     }
 
-    _Array_.forEach.call(arguments, function(arg){
+    __Array.forEach.call(arguments, function(arg){
       append(arg);
     });
     if (isBlockCall(helperOptions)) {
@@ -1339,9 +1339,9 @@
   }
 
   function _joinWith(){
-    var helperOptions   = _Array_.pop.call(arguments),
-        joinWithStr = _Array_.shift.call(arguments),
-        joinResult  = _Array_.join.call(arguments, joinWithStr);
+    var helperOptions   = __Array.pop.call(arguments),
+        joinWithStr = __Array.shift.call(arguments),
+        joinResult  = __Array.join.call(arguments, joinWithStr);
     if (isBlockCall(helperOptions)) {
       return helperOptions.fn(joinResult);
     } else {
@@ -1350,10 +1350,10 @@
   }
 
   function _jsonify(){
-    var helperOptions = _Array_.pop.call(arguments),
-        jsonStr   = _Array_.shift.call(arguments),
+    var helperOptions = __Array.pop.call(arguments),
+        jsonStr   = __Array.shift.call(arguments),
         jsonObj   = {},
-        jsonArgs  = _Array_.splice.call(arguments,0);
+        jsonArgs  = __Array.splice.call(arguments,0);
 
     if (is(jsonStr, 'string')) {
       _splitString(jsonStr, ';').forEach(function(optKeyVal){
@@ -1455,8 +1455,8 @@
   }
 
   function _jsonParse() {
-    var helperOptions  = _Array_.pop.call(arguments),
-        jsonStr = Array_.shift.call(arguments),
+    var helperOptions  = __Array.pop.call(arguments),
+        jsonStr = __Array.shift.call(arguments),
         jsonObj = {};
 
     if (is(jsonStr, 'string')) {
@@ -1476,7 +1476,7 @@
   }
 
   function _console() {
-    var helperOptions = _Array_.pop.call(arguments),
+    var helperOptions = __Array.pop.call(arguments),
         cType = _unCapitalize(helperOptions.name.replace(/:console/g, ''));
     if ((cType == 'time') && arguments.length) {
       console.log.apply(undefined, arguments);
@@ -1616,7 +1616,6 @@
       ':ifDefined'     : _isDefined,
       ':ifUndefined'   : _isUndefined,
       ':bytesToSize'   : _bytesToSize
-
     });
   }
 
