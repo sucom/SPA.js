@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Application Title</title>
+    <link rel="stylesheet" href="app/styles/app-style.css">
   </head>
   <body>
 
@@ -14,12 +15,8 @@
     <script src="//cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"          ></script>
     <script src="//cdn.jsdelivr.net/npm/handlebars/dist/handlebars.min.js"  ></script>
     <script src="//cdn.jsdelivr.net/gh/sucom/SPA.js/dist/spa-bundle.min.js" ></script>
-
-    <script>
-      spa.onReady = function () {
-        spa.$render('home', {target: '#containerHome'});
-      };
-    </script>
+    <script src="app/scripts/app.js"    ></script>
+    <script src="app/scripts/appApi.js" ></script>
 
   </body>
 </html>
