@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.77.0';
+  var _VERSION = '2.77.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -584,7 +584,7 @@
     var jsonObj = {};
     try {
       // _evStr
-      jsonObj = (!_isStr(str) && _isObj(str)) ? str : ( _isBlank(str) ? null : (Function('"use strict";return (' + thisStr + ')')()) );
+      jsonObj = (!_isStr(str) && (typeof str === 'object')) ? str : ( _isBlank(str) ? null : (Function('"use strict";return (' + thisStr + ')')()) );
     } catch(e){
       console.error('Error JSON Parse: Invalid String >> "'+str+'"\n>> ' + (e.stack.substring(0, e.stack.indexOf('\n'))) );
     }
@@ -5744,7 +5744,7 @@
     }
     /* Load Scripts Ends */
 
-    _log.log('component [',rCompName,'] scripts:', vScriptsList);
+    _log.log('Loading component [',rCompName,'] scripts:', vScriptsList);
     spa.loadScriptsSync(vScriptsList, function _onScriptsLoadComplete(){
       /*Wait till scripts are loaded before proceed*/
       _log.info("External Scripts Loaded.");
