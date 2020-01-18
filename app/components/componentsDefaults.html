@@ -37,44 +37,64 @@ spa.defaults.set( { components: {
     </p>
 
     <blockquote>
-      <p>NOTE: Initialize global default settings immediately after spa.js bundle load.</p>
-
-      <script type="text/code" class="code trim" data-lang="html" data-title="index.html">
-        <!DOCTYPE html>
-        <html>
-          <_head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>MyApp</title>
-          </_head>
-          <_body>
-
-          <div data-spa-component="main"></div>
-
-          <_script src="xlib/jquery/jquery.min.js"        ></_script>
-          <_script src="xlib/handlebars/handlebars.min.js"></_script>
-          <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
-
-          <_script>
-            spa.onInit = function() {
-
-              //to change single default property
-              spa.defaults.set( 'components.templateExt', '.jsp' );
-
-              //to change multiple default properties
-              spa.defaults.set( { components: {
-                                    templateExt:'.jsp',
-                                    rootPath:'Components/',
-                                    inFolder:false}
-                                } );
-            }
-          </_script>
-
-          </_body>
-        </html>
-        </script>
-
+      NOTE: Initialize global default settings immediately after spa.js bundle load.
     </blockquote>
 
+    <script type="text/code" class="code trim" data-lang="html" data-title="index.html">
+      <!DOCTYPE html>
+      <html>
+        <_head>
+          ...
+          <title>MyApp</title>
+        </_head>
+        <_body>
+
+        <div data-spa-component="main"></div>
+
+        <_script src="xlib/jquery/jquery.min.js"        ></_script>
+        <_script src="xlib/handlebars/handlebars.min.js"></_script>
+        <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
+
+        <_script>
+          spa.onInit = function() {
+
+            //to change single default property
+            spa.defaults.set( 'components.templateExt', '.jsp' );
+
+            //to change multiple default properties
+            spa.defaults.set( { components: {
+                                  templateExt:'.jsp',
+                                  rootPath:'Components/',
+                                  inFolder:false}
+                              } );
+          }
+        </_script>
+
+        </_body>
+      </html>
+    </script>
+
+    <blockquote>
+      Also, the <mark>components</mark> defaults can be set using data-attribute of body tag as shown below.
+    </blockquote>
+    <script type="text/code" class="code trim" data-lang="html" data-title="index.html">
+      <!DOCTYPE html>
+      <html>
+        <_head>
+          ...
+          <title>MyApp</title>
+        </_head>
+        <_body data-spa-defaults-components="templateExt:'.jsp', inFolder:false">
+
+        <div data-spa-component="main"></div>
+
+        <_script src="xlib/jquery/jquery.min.js"        ></_script>
+        <_script src="xlib/handlebars/handlebars.min.js"></_script>
+        <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
+
+        </_body>
+      </html>
+    </script>
 
   </section>
 
