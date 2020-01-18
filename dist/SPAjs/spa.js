@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.77.1';
+  var _VERSION = '2.77.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -6679,9 +6679,9 @@
   }
   function _initSpaElements(scope){
     var $context  = $(scope||'body')
-      , $forms    = $context.find('form:not([onsubmit])')
+      , $forms    = $context.find('form:not([action]):not([method]):not([onsubmit])')
       , hrefNonRouteFilter = _routeByHref? '.no-spa-route' : ''
-      , $aLinksEx = $context.find('a[href]:not([href^="#"]):not([href^="javascript:"]):not([target])'+hrefNonRouteFilter)
+      , $aLinksEx = $context.find('a[href*="//"]:not([target])'+hrefNonRouteFilter)
       , $aLinksIn = $context.find('a:not([href]):not(.no-link)')
       , $clickEls = $context.find('[onclick]:not(:input):not(['+(_attrSpaRoute)+']):not([onclickthis])');
 
@@ -6693,7 +6693,7 @@
     //Fix a tags
     $aLinksEx.filter(function(){
       return !$(this).closest('pre').length;
-    }).attr('target', '_blank').addClass('spa-external-link'); //set target for external links
+    }).attr('target', '_blank').attr('rel', 'noopener noreferrer').addClass('spa-external-link'); //set target for external links
     $aLinksIn.filter(function(){
       return !$(this).closest('pre').length;
     }).attr('href', 'javascript:;').addClass('spa-link'); //disable href for internal links
