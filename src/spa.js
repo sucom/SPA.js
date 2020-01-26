@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.77.2';
+  var _VERSION = '2.78.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -4350,8 +4350,87 @@
     return options;
   }
 
+  function _onDomReady(fn) {
+    if ( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) ) {
+      fn();
+    } else {
+      _doc.addEventListener('DOMContentLoaded', fn);
+    }
+  }
+  function __$refresh( options ) {
+    var cName = this.__name__;
+    _onDomReady(function(){
+      spa.refreshComponent(cName, options);
+    });
+    return this;
+  }
+  function __$render( options ) {
+    var cName = this.__name__;
+    _onDomReady(function(){
+      spa.renderComponent(cName, options);
+    });
+    return this;
+  }
+  function __$show( options ) {
+    var cName = this.__name__;
+    _onDomReady(function(){
+      spa.showComponent(cName, options);
+    });
+    return this;
+  }
+  function __$hide() {
+    var cName = this.__name__;
+    _onDomReady(function(){
+      spa.hideComponent(cName);
+    });
+    return this;
+  }
+  function __$enable() {
+    var cName = this.__name__;
+    _onDomReady(function(){
+      spa.enableComponent(cName);
+    });
+    return this;
+  }
+  function __$disable() {
+    var cName = this.__name__;
+    _onDomReady(function(){
+      spa.disableComponent(cName);
+    });
+    return this;
+  }
+  function __$remove() {
+    return spa.removeComponent(this.__name__);
+  }
+  function __$destroy() {
+    return spa.destroyComponent(this.__name__);
+  }
+  var SPAComponentProto = {
+    render    : __$render,
+    refresh   : __$refresh,
+    show      : __$show,
+    hide      : __$hide,
+    enable    : __$enable,
+    disable   : __$disable,
+    remove    : __$remove,
+    destroy   : __$destroy,
+    render$   : __$render,
+    refresh$  : __$refresh,
+    show$     : __$show,
+    hide$     : __$hide,
+    enable$   : __$enable,
+    disable$  : __$disable,
+    remove$   : __$remove,
+    destroy$  : __$destroy
+  };
+  function SPAComponent(cName){
+    this.__name__ = cName;
+  }
+  SPAComponent.prototype = SPAComponentProto;
+
   var reservedCompNames = 'api,debug,lang';
   spa.component = spa.$ = spa.registerComponent = function(componentNameFull, options) {
+
     var req2Create = !!options, componentName = componentNameFull;
     options = options || {};
 
@@ -4376,7 +4455,7 @@
     componentName = componentNameFull;
 
     if (reservedCompNames.indexOf(componentName)>=0) {
-      console.error('Invalid component name '+componentName+'. Cannot create Reserved components:'+ (reservedCompNames.join()) );
+      console.error('Invalid component name "'+componentName+'". Cannot create a component with these names: '+ (reservedCompNames) );
       return;
     }
 
@@ -4437,8 +4516,20 @@
           });
           baseProperties['renderCallback'] = 'app.'+componentName+'.renderCallback';
 
+          // override data with dataUrl
+          if (baseProperties && baseProperties['data'] && _isObj(baseProperties['data']) && baseProperties['dataUrl']) {
+            if (_isObj(baseProperties['dataDefaults'])) {
+              baseProperties['dataDefaults'] = _mergeDeep({}, baseProperties['dataDefaults'], baseProperties['data']);
+            } else {
+              baseProperties['dataDefaults'] = baseProperties['data'];
+            }
+            delete baseProperties['data'];
+          }
+
           spa.components[componentName] = baseProperties;
           spa.extendComponent(componentNameFull, options);
+
+          return window.app[componentName] || (new SPAComponent(componentNameFull));
 
         } else {
           //Req to get DOM
@@ -4545,7 +4636,7 @@
         }
 
         window['app'] = window['app'] || {};
-        window.app[componentName] = window.app[componentName] || {};
+        window.app[componentName] = window.app[componentName] || (new SPAComponent(componentName));
         if (options && _isFn(options)) {
           options = options.call(spa.components[componentName] || {});
         }
@@ -4886,6 +4977,15 @@
 
   //////////////////////////////////////////////////////////////////////////////////
   spa.renderComponent = spa.$render = function (componentNameFull, options) {
+
+    if (!( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) )) {
+      _log.info('DOM NOT Ready. will render component ['+componentNameFull+'] on DOM Ready.');
+      _doc.addEventListener('DOMContentLoaded', function(){
+        spa.renderComponent(componentNameFull, options);
+      });
+      return;
+    }
+
     options = options || {};
     if (!componentNameFull) {
       console.error('Missing ComponentName to render.');
@@ -6027,15 +6127,15 @@
                   //if (!_isBlank(spaRVOptions.dataUrlErrorHandle)) {
                   //  fnOnDataUrlErrorHandle = "" + spaRVOptions.dataUrlErrorHandle;
                   //}
-                  var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle');
-                  if (_isBlank(fnOnDataUrlErrorHandle)){
+                  var fnOnDataUrlErrorHandle = _renderOption('dataUrlErrorHandle', 'urlErrorHandle') || spaRVOptions['onDataUrlError'] || spaRVOptions['onError'];
+                  if (!fnOnDataUrlErrorHandle) {
                     if ( _isFn(app.api['onError']) ) {
                       app.api.onError.call(this, jqXHR, textStatus, errorThrown);
                     } else {
                       spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                     }
                   } else {
-                    var _xErrFn_ = _find(window, fnOnDataUrlErrorHandle);
+                    var _xErrFn_ = _isStr(fnOnDataUrlErrorHandle)? _find(window, fnOnDataUrlErrorHandle) : fnOnDataUrlErrorHandle;
                     if (_isFn(_xErrFn_)) {
                       _xErrFn_.call(this, jqXHR, textStatus, errorThrown);
                     } else {
@@ -6052,7 +6152,8 @@
       _log.log({o: spaTemplateModelData});
       _log.groupEnd("spaDataModel");
 
-      if (dataFound) { /* Load Templates */
+      /* Load Templates */
+      if (dataFound) {
 
         //var vTemplate2RenderInTag = ("" + $(viewContainerId).data("template")).replace(/undefined/, "") || ("" + $(viewContainerId).data("html")).replace(/undefined/, "");
         //var vTemplatesList = (""+ $(viewContainerId).data("templates")).replace(/undefined/, "") || (""+ $(viewContainerId).data("htmls")).replace(/undefined/, "");
