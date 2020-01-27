@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.78.0';
+  var _VERSION = '2.78.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -2779,6 +2779,7 @@
   spa.loadTemplate = function (tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions) {
     tmplId = tmplId.replace(/#/g, "");
     tmplPath = (tmplPath.ifBlankStr("inline")).trimStr();
+    tmplPath = ((tmplPath==='.') || (tmplPath==='#'))? 'inline' : tmplPath;
     templateType = templateType || "x-template";
     viewContainerId = viewContainerId || "#DummyInlineTemplateContainer";
     tAjaxRequests = tAjaxRequests || [];
@@ -4317,8 +4318,12 @@
     if (options && _isObj(options)  && spa.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
       if (options.hasOwnProperty('template')) {
         var givenTemplate = options['template'].trim();
-        var isContainerId = (givenTemplate.beginsWithStr('#') && !givenTemplate.containsStr(' '));
-        if (!isContainerId) {
+        var isContainerId = ((givenTemplate.beginsWithStr('#') && !givenTemplate.containsStr(' ')) || ((givenTemplate=='inline') || (givenTemplate=='.')));
+        if (isContainerId) {
+          if ((givenTemplate=='inline') || (givenTemplate=='.') || (givenTemplate=='#')) {
+            options['templateUrl'] = 'inline';
+          }
+        } else {
           options['templateStr'] = options['template'];
         }
       }
