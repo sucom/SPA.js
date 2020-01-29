@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.78.2';
+  var _VERSION = '2.78.3';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -6366,7 +6366,7 @@
                   if (fnDataValidate && _isFn(fnDataValidate)) {
                     isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
                   } else {
-                    isValidData = (spa.api['isCallSuccess'].call(this, spaTemplateModelData[viewDataModelName]));
+                    isValidData = (spa.api['isCallSuccess'].call(this, spaTemplateModelData[viewDataModelName], this));
                   }
                 }
 
@@ -7222,7 +7222,7 @@
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
-          if (spa.api['isCallSuccess'].call(this, axResponse)) {
+          if (spa.api['isCallSuccess'].call(this, axResponse, this)) {
             ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
           else {
