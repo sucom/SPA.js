@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.78.1';
+  var _VERSION = '2.78.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -6366,7 +6366,7 @@
                   if (fnDataValidate && _isFn(fnDataValidate)) {
                     isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
                   } else {
-                    isValidData = (spa.api['isCallSuccess'](spaTemplateModelData[viewDataModelName]));
+                    isValidData = (spa.api['isCallSuccess'].call(this, spaTemplateModelData[viewDataModelName]));
                   }
                 }
 
@@ -7222,7 +7222,7 @@
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
-          if (spa.api['isCallSuccess'](axResponse)) {
+          if (spa.api['isCallSuccess'].call(this, axResponse)) {
             ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
           else {
@@ -8953,7 +8953,7 @@
     _initApiUrls(); //need to run on 1st Component renderCallback as well
   }
 
-  var xhrLib, $when, $ajax, $ajaxQ, $ajaxSetup, $ajaxPrefilter;
+  var xhrLib, $when, $ajax = ($ && $['ajax']) || (spaXHR && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
   function _initXHR(){
     xhrLib = ($['ajax'] && $)  || spaXHR;
     if (xhrLib) {
