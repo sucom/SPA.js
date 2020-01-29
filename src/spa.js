@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.78.3';
+  var _VERSION = '2.78.4';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document;
@@ -8953,7 +8953,7 @@
     _initApiUrls(); //need to run on 1st Component renderCallback as well
   }
 
-  var xhrLib, $when, $ajax = ($ && $['ajax']) || (spaXHR && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
+  var xhrLib, $when, $ajax = (win['$'] && $['ajax']) || (win['spaXHR'] && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
   function _initXHR(){
     xhrLib = ($['ajax'] && $)  || spaXHR;
     if (xhrLib) {
@@ -9011,11 +9011,13 @@
   }
 
   //onDocumentReady
-  if ( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) ) {
-    _beginSPA();
-  } else {
-    _doc.addEventListener('DOMContentLoaded', _beginSPA);
-  }
+  $(function(){
+    if ( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) ) {
+      _beginSPA();
+    } else {
+      _doc.addEventListener('DOMContentLoaded', _beginSPA);
+    }
+  });
 
 })();
 spa.console.info("SPA.js loaded.");
