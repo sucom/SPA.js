@@ -32,15 +32,15 @@
  */
 
 (function() {
-  var _VERSION = '2.78.4';
+  var _VERSION = '2.79.0';
 
   /* Establish the win object, `window` in the browser */
-  var win = this, _doc = document;
+  var win = this, _doc = document, isSPAReady;
 
   /* Create SPA */
-  var spa = function(){};
+  var xsr = function(){};
   /* Expose to global with alias */
-  win.spa = win.__ = win._$ = spa;
+  win.spa = win.xsr = win.__ = win._$ = xsr;
 
 //  var xhrLib = ($['ajax'] && $)  || spaXHR;
 //  var $when  = xhrLib.when;
@@ -56,7 +56,7 @@
 //  }
 
   /* *************** SPA begins *************** */
-  spa.VERSION = _VERSION;
+  xsr.VERSION = _VERSION;
 
   var _objProto = Object.prototype;
   var _arrProto = Array.prototype;
@@ -94,12 +94,12 @@
 
   var isIE = (document['documentMode'] || ieVer)
     , isNonIE = !isIE;
-  spa.isIE = isIE;
-  spa.isNonIE = isNonIE;
+  xsr.isIE = isIE;
+  xsr.isNonIE = isNonIE;
 
   /*No Operation: a dummy function*/
   function noop(){};
-  spa.noop = noop;
+  xsr.noop = noop;
 
   /* Avoid 'console' errors in browsers that lack a console */
   (function() {
@@ -136,15 +136,15 @@
     return _arrProto.slice.call( fromX );
   }
 
-  spa.debug = false;
-  spa['debugger'] = {
-      on:function(){ spa.debug = true; }
-    , off:function(){ spa.debug = false; }
-    , toggle:function() { spa.debug = !spa.debug; }
+  xsr.debug = false;
+  xsr['debugger'] = {
+      on:function(){ xsr.debug = true; }
+    , off:function(){ xsr.debug = false; }
+    , toggle:function() { xsr.debug = !xsr.debug; }
   };
   /*Internal console out*/
   function cOut(consoleType, args){
-    if (spa.debug && console[consoleType]) {
+    if (xsr.debug && console[consoleType]) {
       console[consoleType].apply(null, args);
     }
   }
@@ -172,16 +172,16 @@
     , 'trace'         : function(){ cOut('trace',          _argsToArr(arguments)); }
     , 'warn'          : function(){ cOut('warn',           _argsToArr(arguments)); }
   };
-  spa['console'] = _log;
+  xsr['console'] = _log;
 
   /* event handler for window.onhashchange */
-  spa.ajaxPreProcess;
-  spa.onInit;
-  spa.onInitComplete;
-  spa.onReady;
-  spa.onUrlChange;
-  spa.onUrlHashChange;
-  spa.onReload;
+  xsr.ajaxPreProcess;
+  xsr.onInit;
+  xsr.onInitComplete;
+  xsr.onReady;
+  xsr.onUrlChange;
+  xsr.onUrlHashChange;
+  xsr.onReload;
 
   if (_dtProto) {
     /* **********************Date prototypes*********************** */
@@ -340,7 +340,7 @@
     _strProto.sanitizeHTML = function(){
       return _sanitizeHTML(''+this);
     };
-    spa.sanitizeHTML = _sanitizeHTML;
+    xsr.sanitizeHTML = _sanitizeHTML;
 
     function _sanitizeScript(str) {
       return (''+str).replace(/<\s*\/+\s*(\bscript\b)/gi, '&lt;/script&gt;</pre')
@@ -349,7 +349,7 @@
     _strProto.sanitizeScript = function(){
       return _sanitizeScript(''+this);
     };
-    spa.sanitizeScript = _sanitizeScript;
+    xsr.sanitizeScript = _sanitizeScript;
 
     function _sanitizeXSS(str) {
       return _sanitizeScript(str).replace(/\s+on([a-z])\s*=/gi, ' on=').replace(/javascript:/gi,'js:');
@@ -357,7 +357,7 @@
     _strProto.sanitizeXSS = function(){
       return _sanitizeXSS(''+this);
     };
-    spa.sanitizeXSS = _sanitizeXSS;
+    xsr.sanitizeXSS = _sanitizeXSS;
 
     /*
      * ''.split()        ==> [""]
@@ -456,7 +456,7 @@
 
   function _bindData(xMsg, data, bStr, eStr){
     xMsg = (''+xMsg); bStr = bStr || '{'; eStr = eStr || '}';
-    var varList = spa.extractStrBetweenEx(xMsg, bStr, eStr, true);
+    var varList = xsr.extractStrBetweenEx(xMsg, bStr, eStr, true);
     if (xMsg && !_isBlank(varList) && _isObj(data)) {
       _each(varList, function(key){
         xMsg = xMsg.replace((new RegExp(bStr+'\\s*('+(key.trim())+')\\s*'+eStr, 'g')), _find(data, key, ''));
@@ -497,14 +497,14 @@
     }
   }
 
-  spa.strToNative = _strToNative;
+  xsr.strToNative = _strToNative;
 
   //srcStr: 'some/string/with/params/{param1}/{param2}/{param3}/{param1}'
   //bS: '{'
   //eS: '}'
   //unique: false ==> ['{param1}','{param2}','{param3}','{param1}']
   //unique: true  ==> ['{param1}','{param2}','{param3}']
-  spa.extractStrBetweenIn = function (srcStr, bS, eS, unique){
+  xsr.extractStrBetweenIn = function (srcStr, bS, eS, unique){
     return (srcStr||'').extractStrBetweenIn(bS, eS, unique);
   };
 
@@ -513,28 +513,28 @@
   //eS: '}'
   //unique: false ==> ['param1','param2','param3','param1']
   //unique: true  ==> ['param1','param2','param3']
-  spa.extractStrBetweenEx = function (srcStr, bS, eS, unique){
+  xsr.extractStrBetweenEx = function (srcStr, bS, eS, unique){
     return (srcStr||'').extractStrBetweenEx(bS, eS, unique);
   };
 
   /*
-   * spa.strToArray('')         ==> [""]
-   * spa.strToArray('abcdef')   ==> ["abcdef"]
-   * spa.strToArray(['abcdef']) ==> ["abcdef"]
+   * xsr.strToArray('')         ==> [""]
+   * xsr.strToArray('abcdef')   ==> ["abcdef"]
+   * xsr.strToArray(['abcdef']) ==> ["abcdef"]
    *
    * @param {String} srcStr
    * @returns {Array}
    */
-  spa.strToArray = function(srcStr) {
+  xsr.strToArray = function(srcStr) {
     if (typeof srcStr == 'string') {
       srcStr = [srcStr];
     }
     return srcStr;
   };
 
-  spa.jsonDataSanityCheck;
+  xsr.jsonDataSanityCheck;
   function _isValidEvalStr(str){
-    if (!spa.jsonDataSanityCheck) return true;
+    if (!xsr.jsonDataSanityCheck) return true;
     var idxOfB = str.indexOf('(');
     if ( (idxOfB>=0) && (str.indexOf(')', idxOfB)>idxOfB) ){
       console.warn('Insecured String with braces():', str);
@@ -590,15 +590,15 @@
     }
     return jsonObj;
   }
-  spa.toJSON = spa.toObj =_toObj;
+  xsr.toJSON = xsr.toObj =_toObj;
 
-  spa.lastSplitResult = [];
-  spa.getOnSplit = spa.pickOnSplit = function (str, delimiter, pickIndex) {
-    spa.lastSplitResult = str.split(delimiter);
-    return (spa.getOnLastSplit(pickIndex));
+  xsr.lastSplitResult = [];
+  xsr.getOnSplit = xsr.pickOnSplit = function (str, delimiter, pickIndex) {
+    xsr.lastSplitResult = str.split(delimiter);
+    return (xsr.getOnLastSplit(pickIndex));
   };
-  spa.getOnLastSplit = spa.pickOnLastSplit = function (pickIndex) {
-    return ((pickIndex < 0) ? (_last(spa.lastSplitResult)) : (spa.lastSplitResult[pickIndex]));
+  xsr.getOnLastSplit = xsr.pickOnLastSplit = function (pickIndex) {
+    return ((pickIndex < 0) ? (_last(xsr.lastSplitResult)) : (xsr.lastSplitResult[pickIndex]));
   };
 
   /* isXYZ */
@@ -692,23 +692,23 @@
     return (!_isEmptyObj($(elSelector).get()));
   }
 
-  // Export through spa
-  spa.of = of = _of;
-  spa.is = is = _is;
-  spa.isArray        = _isArr;
-  spa.isArrayLike    = _isArrLike;
-  spa.isBoolean      = _isBool;
-  spa.isFunction     = _isFn;
-  spa.isObject       = _isObj;
-  spa.isObjectLike   = _isObjLike;
-  spa.isString       = _isStr;
-  spa.isNumber       = _isNum;
-  spa.isUndefined    = _isUndef;
-  spa.isEmptyObject  = _isEmptyObj;
-  spa.isElementExist = _isElementExist;
-  spa.isBlank  = spa.isEmpty = _isEmpty = _isBlank;
+  // Export through xsr
+  xsr.of = of = _of;
+  xsr.is = is = _is;
+  xsr.isArray        = _isArr;
+  xsr.isArrayLike    = _isArrLike;
+  xsr.isBoolean      = _isBool;
+  xsr.isFunction     = _isFn;
+  xsr.isObject       = _isObj;
+  xsr.isObjectLike   = _isObjLike;
+  xsr.isString       = _isStr;
+  xsr.isNumber       = _isNum;
+  xsr.isUndefined    = _isUndef;
+  xsr.isEmptyObject  = _isEmptyObj;
+  xsr.isElementExist = _isElementExist;
+  xsr.isBlank  = xsr.isEmpty = _isEmpty = _isBlank;
 
-  spa.toBoolean = function (str) {
+  xsr.toBoolean = function (str) {
     var retValue = true;
     switch (("" + str).trimStr().toLowerCase()) {
       case          "":
@@ -724,13 +724,13 @@
     return ( retValue );
   };
 
-  spa.toInt = function (str) {
+  xsr.toInt = function (str) {
     str = ("" + str).replace(/[^+-0123456789.]/g, "");
     str = _isBlank(str) ? "0" : ((str.indexOf(".") >= 0) ? str.substring(0, str.indexOf(".")) : str);
     return (parseInt(str * 1, 10));
   };
 
-  spa.toFloat = function (str) {
+  xsr.toFloat = function (str) {
     str = ("" + str).replace(/[^+-0123456789.]/g, "");
     str = _isBlank(str) ? "0" : str;
     return (parseFloat(str * (1.0)));
@@ -743,30 +743,30 @@
     }
     return (retValue);
   };
-  spa.toStr = _toStr;
+  xsr.toStr = _toStr;
 
   /*Tobe Removed: replaced with toStr*/
-  spa.toString = function (obj) {
-    _log.warn("spa.toString is deprecated. use spa.toStr instead.");
+  xsr.toString = function (obj) {
+    _log.warn("xsr.toString is deprecated. use xsr.toStr instead.");
     return _toStr(obj);
   };
 
-  spa.dotToX = function (dottedName, X) {
+  xsr.dotToX = function (dottedName, X) {
     return ((dottedName).replace(/\./g, X));
   };
-  spa.dotToCamelCase = function (dottedName) {
+  xsr.dotToCamelCase = function (dottedName) {
     var newName = (dottedName).replace(/\./g, " ").toProperCase().replace(/ /g, "");
     return (newName[0].toLowerCase() + newName.substring(1));
   };
-  spa.dotToTitleCase = function (dottedName) {
+  xsr.dotToTitleCase = function (dottedName) {
     return ((dottedName).replace(/\./g, " ").toProperCase().replace(/ /g, ""));
   };
 
-  spa.toDottedPath = function(srcStr){
+  xsr.toDottedPath = function(srcStr){
     return ((srcStr||"").trim().replace(/]/g,'').replace(/(\[)|(\\)|(\/)/g,'.').replace(/(\.+)/g,'.').trimStr("\\."));
   };
 
-  spa.ifBlank = spa.ifEmpty = spa.ifNull = function (src, replaceWithIfBlank, replaceWithIfNotBlank) {
+  xsr.ifBlank = xsr.ifEmpty = xsr.ifNull = function (src, replaceWithIfBlank, replaceWithIfNotBlank) {
     replaceWithIfBlank = ("" + (replaceWithIfBlank || "")).trimStr();
     replaceWithIfNotBlank = (typeof replaceWithIfNotBlank === "undefined")? (("" + src).trimStr()) : replaceWithIfNotBlank;
     return ( _isBlank(src) ? (replaceWithIfBlank) : (replaceWithIfNotBlank) );
@@ -779,13 +779,13 @@
   /* year: Browser's current year +/- N */
   function _year(n) {
     n = n || 0;
-    return ((new Date()).getFullYear() + (spa.toInt(n)));
+    return ((new Date()).getFullYear() + (xsr.toInt(n)));
   }
-  spa.now = _now;
-  spa.year = _year;
+  xsr.now = _now;
+  xsr.year = _year;
 
   //approx memory size
-  spa.sizeOf = function _sizeOf(obj, format) {
+  xsr.sizeOf = function _sizeOf(obj, format) {
     var bytes = 0;
 
     function sizeOf(obj) {
@@ -840,9 +840,9 @@
     return result;
   }
 
-  /*String to Array; spa.range("N1..N2:STEP")
+  /*String to Array; xsr.range("N1..N2:STEP")
    * y-N..y+N : y=CurrentYear*/
-  spa.range = function () {
+  xsr.range = function () {
     var argLen = arguments.length;
     if (!argLen || ((argLen === 1) && (''+arguments[0]).trim() === '0')) return [];
 
@@ -882,13 +882,13 @@
     if (rangeE.indexOf("Y") >= 0) {
       rangeE = _year((rangeE.split(/[^0-9+-]/))[1]);
     }
-    var rB = spa.toInt(rangeB)
-      , rE = spa.toInt(rangeE)
-      , rS = spa.toInt(rStep);
+    var rB = xsr.toInt(rangeB)
+      , rE = xsr.toInt(rangeE)
+      , rS = xsr.toInt(rStep);
     return (rangeB > rangeE) ? ((_range(rE, (rB) + 1, rS)).reverse()) : (_range(rB, (rE) + 1, rS));
   };
 
-  spa.checkAndPreventKey = function (e, disableKeys) {
+  xsr.checkAndPreventKey = function (e, disableKeys) {
     if (!disableKeys) disableKeys = "";
     var withShiftKey = (disableKeys.indexOf("+shift") >= 0)
       , keyCode  = ""+e.keyCode
@@ -900,19 +900,19 @@
     return retValue;
   };
 
-  spa._trackAndControlKey = function (e) {
+  xsr._trackAndControlKey = function (e) {
     var keyElement = e.currentTarget
       , $keyElement = $(keyElement)
       , disableKeys = (""+$keyElement.data("disableKeys")).toLowerCase();
       //, keyCode = ""+e.keyCode, withShiftKey = (disableKeys.indexOf("+shift") >= 0);
-    spa.checkAndPreventKey(e, disableKeys);
+    xsr.checkAndPreventKey(e, disableKeys);
 
     var changeFocusNext = (!_isBlank(("" + $keyElement.data("focusNext")).replace(/undefined/, "").toLowerCase()));
     var changeFocusPrev = (!_isBlank(("" + $keyElement.data("focusBack")).replace(/undefined/, "").toLowerCase()));
-    if (changeFocusNext && (spa.checkAndPreventKey(e, "9"))) {
+    if (changeFocusNext && (xsr.checkAndPreventKey(e, "9"))) {
       $($keyElement.data("focusNext")).get(0).focus();
     }
-    if (changeFocusPrev && (spa.checkAndPreventKey(e, "9,+shift"))) {
+    if (changeFocusPrev && (xsr.checkAndPreventKey(e, "9,+shift"))) {
       $($keyElement.data("focusBack")).get(0).focus();
     }
   };
@@ -922,12 +922,12 @@
       , $elementsToTrackKeys = $( ((arguments.length==2 && arguments[1])? arguments[1] : 'body') ).find(elementsToTrackKeys);
     _log.info("Finding Key-Tracking for element(s): " + elementsToTrackKeys);
     $elementsToTrackKeys.each(function (index, element) {
-      $(element).keydown(spa._trackAndControlKey);
+      $(element).keydown(xsr._trackAndControlKey);
       _log.info("SPA is tracking keys on element:");
       _log.info(element);
     });
   }
-  spa.initKeyTracking = _initKeyTracking;
+  xsr.initKeyTracking = _initKeyTracking;
 
   var keyPauseTimer;
   function _initKeyPauseEvent(scope){
@@ -945,16 +945,16 @@
   }
 
   /* old dom element ops begins */
-  spa.getDocObj = function (objId) {
+  xsr.getDocObj = function (objId) {
     var jqSelector = ((typeof objId) == "object") ? objId : ((objId.beginsWithStr("#") ? "" : "#") + objId);
     return ( $(jqSelector).get(0) );
   };
-  spa.getDocObjs = function (objId) {
+  xsr.getDocObjs = function (objId) {
     var jqSelector = (objId.beginsWithStr("#") ? "" : "#") + objId;
     return ( $(jqSelector).get() );
   };
 
-  spa.hasCssRule = function(cssSelectors){
+  xsr.hasCssRule = function(cssSelectors){
     var foundClass = false;
     if (cssSelectors) {
       cssSelectors = cssSelectors.split(',');
@@ -969,7 +969,7 @@
     }
     return foundClass;
   };
-  spa.getCssRule = function(cssSelector){
+  xsr.getCssRule = function(cssSelector){
     var foundClass, retStyle;
     if (cssSelector) {
       for(var i = 0; i < document.styleSheets.length; i++) {
@@ -985,22 +985,22 @@
   };
 
   /* setFocus: */
-  spa.setFocus = function (objId, isSelect) {
-    var oFocus = spa.getDocObj(objId);
+  xsr.setFocus = function (objId, isSelect) {
+    var oFocus = xsr.getDocObj(objId);
     if (oFocus) {
       oFocus.focus();
       if (isSelect) oFocus.select();
     }
   };
 
-  spa.swapClass = function (objIDs, removeClass, addClass) {
+  xsr.swapClass = function (objIDs, removeClass, addClass) {
     $(objIDs).removeClass(removeClass);
     $(objIDs).addClass(addClass);
   };
 
   /* docObjValue: returns oldValue; sets newValue if provided */
-  spa.docObjValue = function (objId, newValue) {
-    var reqObj = spa.getDocObj(objId);
+  xsr.docObjValue = function (objId, newValue) {
+    var reqObj = xsr.getDocObj(objId);
     var retValue = "";
     if (reqObj) {
       retValue = reqObj.value;
@@ -1013,9 +1013,9 @@
 
   /* <select> tag related */
   /* get options Selected Index : Get / Set by Index*/
-  spa.optionSelectedIndex = function (objId, newSelIdx) {
+  xsr.optionSelectedIndex = function (objId, newSelIdx) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       retValue = oLstObj.selectedIndex;
       if (arguments.length === 2) {
@@ -1025,9 +1025,9 @@
     return (retValue);
   };
   /* get options Index : for value */
-  spa.optionIndexOfValue = function (objId, optValue) {
+  xsr.optionIndexOfValue = function (objId, optValue) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       for (var i = 0; i < oLstObj.length; i++) {
         if (("" + optValue).equalsIgnoreCase(oLstObj.options[i].value)) {
@@ -1039,9 +1039,9 @@
     return (retValue);
   };
   /* get options Index : for Text */
-  spa.optionIndexOfText = function (objId, optText) {
+  xsr.optionIndexOfText = function (objId, optText) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       for (var i = 0; i < oLstObj.length; i++) {
         if (optText.equalsIgnoreCase(oLstObj.options[i].text)) {
@@ -1053,9 +1053,9 @@
     return (retValue);
   };
   /* get options Index : for value begins with */
-  spa.optionIndexOfValueBeginsWith = function (objId, optValue) {
+  xsr.optionIndexOfValueBeginsWith = function (objId, optValue) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       for (var i = 0; i < oLstObj.length; i++) {
         if ((oLstObj.options[i].value).beginsWithStrIgnoreCase(optValue)) {
@@ -1068,14 +1068,14 @@
   };
 
   /*Get Value / Text for selected Index*/
-  spa.optionsSelectedValues = function (objId, delimiter) {
+  xsr.optionsSelectedValues = function (objId, delimiter) {
     objId = (objId.beginsWithStr("#") ? "" : "#") + objId;
     delimiter = delimiter || ",";
     return (_map(($(objId + " option:selected")), function (option) {
       return (option.value);
     }).join(delimiter));
   };
-  spa.optionsSelectedTexts = function (objId, delimiter) {
+  xsr.optionsSelectedTexts = function (objId, delimiter) {
     objId = (objId.beginsWithStr("#") ? "" : "#") + objId;
     delimiter = delimiter || ",";
     return (_map(($(objId + " option:selected")), function (option) {
@@ -1084,17 +1084,17 @@
   };
 
   /*Get Value / Text for given Index*/
-  spa.optionValueOfIndex = function (objId, sIndex) {
+  xsr.optionValueOfIndex = function (objId, sIndex) {
     var retValue = "";
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if ((oLstObj) && (sIndex >= 0) && (sIndex < oLstObj.length)) {
       retValue = oLstObj.options[sIndex].value;
     }
     return (retValue);
   };
-  spa.optionTextOfIndex = function (objId, sIndex) {
+  xsr.optionTextOfIndex = function (objId, sIndex) {
     var retValue = "";
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if ((oLstObj) && (sIndex >= 0) && (sIndex < oLstObj.length)) {
       retValue = oLstObj.options[sIndex].text;
     }
@@ -1102,28 +1102,28 @@
   };
 
   /*Set Selected options for Value*/
-  spa.selectOptionForValue = function (objId, selValue) {
+  xsr.selectOptionForValue = function (objId, selValue) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
-      retValue = spa.optionIndexOfValue(objId, selValue);
+      retValue = xsr.optionIndexOfValue(objId, selValue);
       oLstObj.selectedIndex = retValue;
     }
     return (retValue);
   };
-  spa.selectOptionForValueBeginsWith = function (objId, selValue) {
+  xsr.selectOptionForValueBeginsWith = function (objId, selValue) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
-      retValue = spa.optionIndexOfValueBeginsWith(objId, selValue);
+      retValue = xsr.optionIndexOfValueBeginsWith(objId, selValue);
       oLstObj.selectedIndex = retValue;
     }
     return (retValue);
   };
-  spa.selectOptionsForValues = function (objId, selValues, valDelimitChar) {
+  xsr.selectOptionsForValues = function (objId, selValues, valDelimitChar) {
     valDelimitChar = valDelimitChar || ",";
     selValues = (valDelimitChar + selValues + valDelimitChar).toLowerCase();
-    var oLstObj = spa.getDocObj(objId), optValue;
+    var oLstObj = xsr.getDocObj(objId), optValue;
     if (oLstObj) {
       for (var i = 0; i < oLstObj.length; i++) {
         optValue = (valDelimitChar + (oLstObj.options[i].value) + valDelimitChar).toLowerCase();
@@ -1131,25 +1131,25 @@
       }
     }
   };
-  spa.selectOptionForText = function (objId, selText) {
+  xsr.selectOptionForText = function (objId, selText) {
     var retValue = -1;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
-      retValue = spa.optionIndexOfText(objId, selText);
+      retValue = xsr.optionIndexOfText(objId, selText);
       oLstObj.selectedIndex = retValue;
     }
     return (retValue);
   };
-  spa.selectOptionsAll = function (objId) {
-    var oLstObj = spa.getDocObj(objId);
+  xsr.selectOptionsAll = function (objId) {
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       for (var i = 0; i < oLstObj.length; i++) {
         oLstObj.options[i].selected = true;
       }
     }
   };
-  spa.selectOptionsNone = function (objId) {
-    var oLstObj = spa.getDocObj(objId);
+  xsr.selectOptionsNone = function (objId) {
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       for (var i = 0; i < oLstObj.length; i++) {
         oLstObj.options[i].selected = false;
@@ -1157,39 +1157,39 @@
     }
   };
   /*Add / Remove Options*/
-  spa.optionsReduceToLength = function (objID, nLen) {
+  xsr.optionsReduceToLength = function (objID, nLen) {
     nLen = nLen || 0;
-    var oSelOptList = spa.getDocObj(objID);
+    var oSelOptList = xsr.getDocObj(objID);
     if (oSelOptList) {
-      spa.selectOptionsNone(objID);
+      xsr.selectOptionsNone(objID);
       oSelOptList.length = nLen;
     }
   };
-  spa.optionsRemoveAll = function (objID) {
-    spa.optionsReduceToLength(objID, 0);
+  xsr.optionsRemoveAll = function (objID) {
+    xsr.optionsReduceToLength(objID, 0);
   };
-  spa.optionRemoveForIndex = function (objId, optIndex) {
+  xsr.optionRemoveForIndex = function (objId, optIndex) {
     objId = (objId.beginsWithStr("#") ? "" : "#") + objId;
-    var oLstObj = spa.getDocObj(objId);
+    var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       if (("" + optIndex).equalsIgnoreCase("first")) optIndex = 0;
       if (("" + optIndex).equalsIgnoreCase("last")) optIndex = (oLstObj.length - 1);
       oLstObj.remove(optIndex);
     }
   };
-  spa.optionRemoveForValue = function (objId, optValue) {
-    spa.optionRemoveForIndex(objId, spa.optionIndexOfValue(objId, optValue));
+  xsr.optionRemoveForValue = function (objId, optValue) {
+    xsr.optionRemoveForIndex(objId, xsr.optionIndexOfValue(objId, optValue));
   };
-  spa.optionRemoveForText = function (objId, optText) {
-    spa.optionRemoveForIndex(objId, spa.optionIndexOfText(objId, optText));
+  xsr.optionRemoveForText = function (objId, optText) {
+    xsr.optionRemoveForIndex(objId, xsr.optionIndexOfText(objId, optText));
   };
-  spa.optionRemoveForValueBeginsWith = function (objId, optValueBeginsWith) {
-    spa.optionRemoveForIndex(objId, spa.optionIndexOfValueBeginsWith(objId, optValueBeginsWith));
+  xsr.optionRemoveForValueBeginsWith = function (objId, optValueBeginsWith) {
+    xsr.optionRemoveForIndex(objId, xsr.optionIndexOfValueBeginsWith(objId, optValueBeginsWith));
   };
 
-  spa.optionAppend = function (objID, optValue, optText, appendAtIndex) {
+  xsr.optionAppend = function (objID, optValue, optText, appendAtIndex) {
     var retValue = -1;
-    var oSelOptList = spa.getDocObj(objID);
+    var oSelOptList = xsr.getDocObj(objID);
     if (oSelOptList) {
       if (typeof appendAtIndex == "undefined") {
         var nOptPos = oSelOptList.length;
@@ -1207,7 +1207,7 @@
   };
 
   /*
-   * Usage: spa.optionsLoad(elSelector, list, beginsAt, sortBy)
+   * Usage: xsr.optionsLoad(elSelector, list, beginsAt, sortBy)
    * elSelector = "#SelectElementID"; //jQuery selector by ID
    * list = [ 0, 1, ... ]; //Number Array
    * list = ["optValue0", "optValue1", ... ]; //String Array
@@ -1215,19 +1215,19 @@
    * beginsAt = -1 => Add to existing list; 0=> reset to 0; n=> reset to n; before Load
    * sortBy = 0=> NO Sort; 1=> SortBy Key; 2=> SortBy Text;
    */
-  spa.optionsLoad = function (elSelector, list, beginsAt, sortBy) {
+  xsr.optionsLoad = function (elSelector, list, beginsAt, sortBy) {
     var sortByAttr = ["", "key", "value"];
     beginsAt = beginsAt || 0;
     sortBy = sortBy || 0;
     if ((_isStr(list)) && (list.indexOf("..") > 0)) {
-      list = spa.range(list);
+      list = xsr.range(list);
     }
     if (beginsAt >= 0) {
-      spa.optionsReduceToLength(elSelector, beginsAt);
+      xsr.optionsReduceToLength(elSelector, beginsAt);
     }
     if (_isArr(list)) {
       _each(list, function (opt) {
-        spa.optionAppend(elSelector, opt, opt);
+        xsr.optionAppend(elSelector, opt, opt);
       });
     }
     else {
@@ -1238,12 +1238,12 @@
         }
         var listSorted = _sortBy(listArray, sortByAttr[sortBy]);
         _each(listSorted, function (opt) {
-          spa.optionAppend(elSelector, opt.key, opt.value);
+          xsr.optionAppend(elSelector, opt.key, opt.value);
         });
       }
       else {
         _each(list, function (value, key) {
-          spa.optionAppend(elSelector, key, value);
+          xsr.optionAppend(elSelector, key, value);
         });
       }
     }
@@ -1251,9 +1251,9 @@
 
   /* Radio & Checkbox related */
   /* checkedState: returns old Checked State {true|false}; sets newState {true | false} if provided */
-  spa.checkedState = function (objId, newState) {
+  xsr.checkedState = function (objId, newState) {
     var retValue = false
-      , objChk = spa.getDocObj(objId);
+      , objChk = xsr.getDocObj(objId);
     if (objChk) {
       retValue = objChk.checked;
       if (arguments.length === 2) {
@@ -1262,22 +1262,22 @@
     }
     return (retValue);
   };
-  spa.isChecked = function (elScope, eName) {
+  xsr.isChecked = function (elScope, eName) {
     return (($(elScope).find("input[name=" + eName + "]:checked").length) > 0);
   };
-  spa.radioSelectedValue = function (elScope, rName) {
+  xsr.radioSelectedValue = function (elScope, rName) {
     var retValue = ($(elScope).find("input[name=" + rName + "]:checked").val());
     return (retValue ? retValue : "");
   };
-  spa.radioClearSelection = function (elScope, rName) {
+  xsr.radioClearSelection = function (elScope, rName) {
     ($(elScope).find("input[name=" + rName + "]:checked").attr("checked", false));
   };
-  spa.radioSelectForValue = function (elScope, rName, sValue) {
+  xsr.radioSelectForValue = function (elScope, rName, sValue) {
     $(elScope).find("input[name=" + rName + "]:radio").each(function(el) {
       el.checked = ((el.value).equalsIgnoreCase(sValue));
     });
   };
-  spa.checkboxCheckedValues = function (elScope, cbName, delimiter) {
+  xsr.checkboxCheckedValues = function (elScope, cbName, delimiter) {
     delimiter = delimiter || ",";
     return ($(elScope).find("input[name=" + cbName + "]:checked").map(function () {
       return this.value;
@@ -1285,15 +1285,15 @@
   };
   /* old dom element ops ends */
 
-  spa.sleep = function (sec) {
+  xsr.sleep = function (sec) {
     var dt = new Date();
     dt.setTime(dt.getTime() + (sec * 1000));
     while (new Date().getTime() < dt.getTime());
   };
 
   /*Tobe removed;*/
-  spa.filterJSON = function (jsonData, xFilter) {
-    console.warn('spa.filterJSON has been removed. please use alternate filter.');
+  xsr.filterJSON = function (jsonData, xFilter) {
+    console.warn('xsr.filterJSON has been removed. please use alternate filter.');
     //    return $(jsonData).filter(function (index, item) {
     //      for (var i in xFilter) {
     //        if (!item[i].toString().match(xFilter[i])) return null;
@@ -1303,7 +1303,7 @@
   };
 
   /* randomPassword: Random Password for requested length */
-  spa.randomPassword = function (passLen, passStr) {
+  xsr.randomPassword = function (passLen, passStr) {
     var chars = passStr || "9a8b77C8D9E8dkfhseidF7G6H5QJ3c6d5e4f32L3M4N5P6Qg2h3i4j5kV6W5X4Y3Z26m7n8p9q8r7s6t5u4v3w2x3y4z5A6BK7R8S9T8U7";
     var pass = "";
     for (var x = 0; x < (passLen || 8); x++) {
@@ -1314,11 +1314,11 @@
   };
 
   /* rand: Random number between min - max */
-  spa.rand = function (min, max) {
+  xsr.rand = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
-  spa.appendToObj = function(xObj, oKey, oValue) {
+  xsr.appendToObj = function(xObj, oKey, oValue) {
     if (_hasKey(xObj, oKey)) {
       if (!_isArr(xObj[oKey])) {
         xObj[oKey] = [xObj[oKey]];
@@ -1329,12 +1329,12 @@
     }
   };
 
-  spa.parseKeyStr = function (keyName, changeToLowerCase) {
+  xsr.parseKeyStr = function (keyName, changeToLowerCase) {
     return ((changeToLowerCase ? keyName.toLowerCase() : keyName).replace(/[^_0-9A-Za-z\$\[\]\?\*\-]/g, ""));
   };
 
   var arrayIndexPointsToMap = {};
-  spa.setObjProperty = function (obj, keyNameStr, propValue, keyToLowerCase) {
+  xsr.setObjProperty = function (obj, keyNameStr, propValue, keyToLowerCase) {
     keyNameStr = ('' + keyNameStr);
     keyToLowerCase = keyToLowerCase || false;
     var xObj = obj, oKey;
@@ -1346,7 +1346,7 @@
     }
     var keyFullPath='';
     while (oKeys.length > 1) {
-      oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
+      oKey = xsr.parseKeyStr(oKeys.shift(), keyToLowerCase);
       if (!_isBlank(oKey)) {
         keyFullPath += oKey.replace(/[\?\[\]\*\_]/g,'');
         if ((oKey.indexOf('[')>0) && (oKey.indexOf(']') == oKey.length-1)) {//isArray
@@ -1371,33 +1371,33 @@
         }
       }
     }
-    oKey = spa.parseKeyStr(oKeys.shift(), keyToLowerCase);
-    spa.appendToObj(xObj, oKey, propValue);
+    oKey = xsr.parseKeyStr(oKeys.shift(), keyToLowerCase);
+    xsr.appendToObj(xObj, oKey, propValue);
 
     return obj;
   };
 
-  spa.setSimpleObjProperty = function (obj, keyNameStr, propValue) {
+  xsr.setSimpleObjProperty = function (obj, keyNameStr, propValue) {
     keyNameStr = ('' + keyNameStr);
     var xObj = obj, oKey;
     var oKeys = keyNameStr.split('.');
     while (oKeys.length > 1) {
-      oKey = spa.parseKeyStr(oKeys.shift(), false);
+      oKey = xsr.parseKeyStr(oKeys.shift(), false);
       if (!_isBlank(oKey)) {
         if (typeof xObj[oKey] == "undefined") xObj[oKey] = {};
         xObj = xObj[oKey];
       }
     }
-    oKey = spa.parseKeyStr(oKeys.shift(), false);
+    oKey = xsr.parseKeyStr(oKeys.shift(), false);
     xObj[oKey] = propValue;
 
     return obj;
   };
 
-  spa.objProp = spa.objProperty = spa.objectProp = spa.objectProperty = function(){
+  xsr.objProp = xsr.objProperty = xsr.objectProp = xsr.objectProperty = function(){
     var obj=arguments[0], keyNameStr=arguments[1], propValue=arguments[2];
     if (arguments.length == 3) {
-      return spa.setSimpleObjProperty(obj, keyNameStr, propValue);
+      return xsr.setSimpleObjProperty(obj, keyNameStr, propValue);
     } else if (arguments.length == 2) {
       return _find(obj, keyNameStr);
     } else {
@@ -1406,8 +1406,8 @@
   };
 
   /*
-   * spa.extract(destObj, mapKeys, srcObj1, srcObj2, srcObj3)
-   * spa.extract(mapKeys, srcObj1, srcObj2, srcObj3)
+   * xsr.extract(destObj, mapKeys, srcObj1, srcObj2, srcObj3)
+   * xsr.extract(mapKeys, srcObj1, srcObj2, srcObj3)
    *
    * mapKeys = [ 'mapKeySpec1', 'mapKeySpec2', 'mapKeySpec3', ... ]
    * mapKeys = 'mapKeySpec1, mapKeySpec2, mapKeySpec3, ...'
@@ -1447,7 +1447,7 @@
           if (srcKey) {
             mapSpec = srcKey+':'+mapSpec;
           } else {
-            _mergeDeep(dstObj, srcObjs[ spa.toInt(mapSpec) ]);
+            _mergeDeep(dstObj, srcObjs[ xsr.toInt(mapSpec) ]);
             skipExtract = true;
           }
         }
@@ -1455,7 +1455,7 @@
         if (!skipExtract) {
           mapSpecArr = mapSpec.split(':');
           dstKey = (mapSpecArr[0]||'').trim();
-          srcIdx = spa.toInt((mapSpecArr[1]||'').split('.')[0]);
+          srcIdx = xsr.toInt((mapSpecArr[1]||'').split('.')[0]);
           srcKey =  ((mapSpecArr[1]||'').getRightStr('.') || '').trim();
           if (!dstKey) dstKey = srcKey;
           dstVal = srcKey? _find(srcObjs[srcIdx], srcKey) : (srcIdx? srcObjs[srcIdx] : {});
@@ -1477,14 +1477,14 @@
                 break;
             }
           }
-          spa.setSimpleObjProperty(dstObj, dstKey, dstVal);
+          xsr.setSimpleObjProperty(dstObj, dstKey, dstVal);
         }
       }
     });
 
     return dstObj;
   }
-  spa.extract = _extract;
+  xsr.extract = _extract;
 
   function _$qrySelector(selector) {
     if (_isStr(selector)) {
@@ -1498,7 +1498,7 @@
       } else if (rootSelector.beginsWithStr('\\$')) {
         compName  = rootSelector.substr(1);
         if (compName.indexOf(':')>0) {
-          compIndex = spa.toInt(compName.getRightStr(':').trim());
+          compIndex = xsr.toInt(compName.getRightStr(':').trim());
           compName = compName.getLeftStr(':');
           selectors[0] = ('[data-rendered-component="'+compName+'"]:eq('+compIndex+')');
         } else {
@@ -1510,7 +1510,7 @@
     return selector;
   }
 
-  spa.setElValue = function (el, elValue) {
+  xsr.setElValue = function (el, elValue) {
     var $el = $(_$qrySelector(el)); el = $el.get(0);
     switch ((el.tagName).toUpperCase()) {
       case "INPUT":
@@ -1546,7 +1546,7 @@
         break;
 
       case "SELECT":
-        spa.selectOptionForValue(el, elValue);
+        xsr.selectOptionForValue(el, elValue);
         if ($el.isEnabled()) $el.trigger('change');
         break;
 
@@ -1556,7 +1556,7 @@
         break;
 
       default:
-        $el.html( spa.sanitizeXSS(elValue) );
+        $el.html( xsr.sanitizeXSS(elValue) );
         $el.val(elValue);
         if ($el.isEnabled()) $el.trigger('keyup');
         break;
@@ -1564,7 +1564,7 @@
 
   };
 
-  spa.getElValue = function (el, escHTML) {
+  xsr.getElValue = function (el, escHTML) {
     el = $(_$qrySelector(el)).get(0);
     if (!el) return;
     var elValue, unchkvalue, chkedValue;
@@ -1617,7 +1617,7 @@
     return elValue;
   };
 
-  spa.serialize = function(scope, context, escHTML){
+  xsr.serialize = function(scope, context, escHTML){
     if (_isBool(scope)) { //making scope optional
       escHTML = scope;
       scope = '';
@@ -1633,7 +1633,7 @@
       $elData = $(el).data();
       keyName = el.name || $elData['serialize'];
       escElHTML = $elData['serializeType']? ($elData['serializeType'].equalsIgnoreCase('text')) : escHTML;
-      elValue = spa.getElValue(el, escElHTML);
+      elValue = xsr.getElValue(el, escElHTML);
 
       if (!retObj.hasOwnProperty(keyName)) {
         retObj[keyName] = elValue;
@@ -1650,25 +1650,25 @@
     return retObj;
   };
 
-  spa.serializeToQueryString = function(scope, context){
-    return spa.toQueryString(spa.serialize(scope, context));
+  xsr.serializeToQueryString = function(scope, context){
+    return xsr.toQueryString(xsr.serialize(scope, context));
   };
 
-  spa.serializeDisabled = function (formSelector) {
+  xsr.serializeDisabled = function (formSelector) {
     var retValue = "";
     $(formSelector).find("[disabled][name]").each(function () {
-      retValue += ((retValue) ? '&' : '') + $(this).attr('name') + '=' + spa.getElValue(this);
+      retValue += ((retValue) ? '&' : '') + $(this).attr('name') + '=' + xsr.getElValue(this);
     });
     return retValue;
   };
 
   /*
-   * spa.serializeForms(formSelector, includeDisabledElements)
+   * xsr.serializeForms(formSelector, includeDisabledElements)
    * @formSelector {string} jQuery form selector #Form1,#Form2...
    * @includeDisabledElements {boolean} true | false [default:false]
    * @returns {string} param1=value1&param2=value2...
    */
-  spa.serializeForms = function (formSelector, includeDisabledElements) {
+  xsr.serializeForms = function (formSelector, includeDisabledElements) {
     var disabledElementsKeyValues, unchkvalue, retValue = $(formSelector).serialize();
 
     //include unchecked checkboxes
@@ -1678,13 +1678,13 @@
     });
 
     if (includeDisabledElements) {
-      disabledElementsKeyValues = spa.serializeDisabled(formSelector);
+      disabledElementsKeyValues = xsr.serializeDisabled(formSelector);
       retValue += ((retValue && disabledElementsKeyValues) ? '&' : '') + disabledElementsKeyValues;
     }
     return retValue;
   };
 
-  spa.queryStringToJson = spa.queryStringToObject = function (qStr) {
+  xsr.queryStringToJson = xsr.queryStringToObject = function (qStr) {
     var retValue = {}, qStringWithParams = (qStr || location.search), qIndex = ('' + qStringWithParams).indexOf('?'), ampIndex = ('' + qStringWithParams).indexOf('&');
     if (qStringWithParams && (qStringWithParams.length > 0) && (qIndex >= 0) && ((qIndex == 0) || (ampIndex > qIndex))) {
       qStringWithParams = qStringWithParams.substring(qIndex + 1);
@@ -1692,7 +1692,7 @@
     _each((qStringWithParams.split('&')), function (nvp) {
       nvp = nvp.split('=');
       if (nvp[0]) {
-        spa.appendToObj(retValue, nvp[0], decodeURIComponent(nvp[1] || ''));
+        xsr.appendToObj(retValue, nvp[0], decodeURIComponent(nvp[1] || ''));
       }
     });
     return retValue;
@@ -1708,7 +1708,7 @@
       return [str, delimiter, key, '=', val].join('');
     }, '')) : '';
   }
-  spa.toQueryString = spa.ObjectToQueryString = spa.objectToQueryString = spa.JsonToQueryString = spa.jsonToQueryString = _toQueryString;
+  xsr.toQueryString = xsr.ObjectToQueryString = xsr.objectToQueryString = xsr.JsonToQueryString = xsr.jsonToQueryString = _toQueryString;
 
   /* as jQ extension see $fnEx below */
   function _serializeUncheckedCheckboxes(appendTo) {
@@ -1723,7 +1723,7 @@
       unchkvalue = $chkBox.data("unchecked");
       keyValue = ((typeof unchkvalue === 'undefined') ? '' : unchkvalue);
       if (toJSON) {
-        spa.appendToObj(retObj, keyName, keyValue);
+        xsr.appendToObj(retObj, keyName, keyValue);
       }
       else {
         retStr += ((retStr) ? '&' : '') + keyName + '=' + keyValue;
@@ -1731,7 +1731,7 @@
     });
     return ((toJSON) ? retObj : retStr);
   }
-  spa.serializeUncheckedCheckboxes = function (formSelector, appendTo) {
+  xsr.serializeUncheckedCheckboxes = function (formSelector, appendTo) {
     return $(formSelector).serializeUncheckedCheckboxes(appendTo);
   };
 
@@ -1753,7 +1753,7 @@
     if (strPrefixToIgnore) kParse = strPrefixToIgnore;
     _each(a, function () {
       oKeyName = (kParse) ? (this.name).replace(kParse, "") : this.name;
-      o = spa.setObjProperty(o, oKeyName,  (toNative? ((this.value).toNative()) : this.value), c);
+      o = xsr.setObjProperty(o, oKeyName,  (toNative? ((this.value).toNative()) : this.value), c);
     });
 
     //include unchecked checkboxes
@@ -1767,13 +1767,13 @@
         }
         oKeyValue = '' + ((typeof oKeyValue == 'undefined') ? '' : oKeyValue);
 
-        o = spa.setObjProperty(o, oKeyName, (toNative? (oKeyValue.toNative()) : oKeyValue), c);
+        o = xsr.setObjProperty(o, oKeyName, (toNative? (oKeyValue.toNative()) : oKeyValue), c);
       }
     });
 
     return o;
   }
-  spa.serializeFormToJSON = spa.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
+  xsr.serializeFormToJSON = xsr.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
     return $(formSelector).serializeFormToJSON(obj, keyNameToLowerCase, strPrefixToIgnore);
   };
 
@@ -1786,11 +1786,11 @@
       , oKeyName, oKeyValue;
 
     _each(a, function () {
-      spa.appendToObj(o, this.name, this.value);
+      xsr.appendToObj(o, this.name, this.value);
     });
     if (c) {
       $(this).find("[disabled][name]").each(function () {
-        spa.appendToObj(o, this.name, spa.getElValue(this));
+        xsr.appendToObj(o, this.name, xsr.getElValue(this));
       });
     }
     //include unchecked checkboxes
@@ -1798,7 +1798,7 @@
       oKeyName = $(this).attr('name');
       oKeyValue = $(this).data("unchecked");
       oKeyValue = '' + ((typeof oKeyValue == 'undefined') ? '' : oKeyValue);
-      spa.appendToObj(o, oKeyName, oKeyValue);
+      xsr.appendToObj(o, oKeyName, oKeyValue);
     });
 
     $(this).find("[data-to-json-group][name]").each(function () {
@@ -1806,12 +1806,12 @@
       oGrpStr = $(this).data("toJsonGroup");
       if (oGrpStr) {
         if (!o[oGrpStr]) o[oGrpStr] = {};
-        spa.appendToObj(o[oGrpStr], oKeyStr, spa.getElValue(this));
+        xsr.appendToObj(o[oGrpStr], oKeyStr, xsr.getElValue(this));
       }
     });
     return o;
   }
-  spa.serializeFormToSimpleJSON = spa.serializeFormToSimpleObject = function (formSelector, obj, includeDisabledElements) {
+  xsr.serializeFormToSimpleJSON = xsr.serializeFormToSimpleObject = function (formSelector, obj, includeDisabledElements) {
     return $(formSelector).serializeFormToSimpleJSON(obj, includeDisabledElements);
   };
 
@@ -1841,10 +1841,10 @@
                         return xValue;
                       }(objSrc, pathStr.replace(/\*/g, '')));
         } else {
-          var i = 0, path = spa.toDottedPath(pathStr).split('.'), len = path.length;
+          var i = 0, path = xsr.toDottedPath(pathStr).split('.'), len = path.length;
           for (retValue = objSrc; i < len; i++) {
             if (_isArr(retValue)) {
-              retValue = retValue[ spa.toInt(path[i]) ];
+              retValue = retValue[ xsr.toInt(path[i]) ];
             } else if (_isObjLike(retValue)) {
               retValue = retValue[ path[i].trim() ];
             } else {
@@ -1895,7 +1895,7 @@
           pKey = pKeys[i].trim();
           if (pKey) {
             pKeysCount++;
-            hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)))? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
+            hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)))? xsr.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
             retValue = retValue && hasKey;
           }
         }
@@ -1909,7 +1909,7 @@
           pKey = pKeys[i].trim();
           if (pKey) {
             pKeysCount++;
-            hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)) )? spa.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
+            hasKey = (deep && ((pKey.indexOf('.')>0) || (pKey.indexOf('[')>0)) )? xsr.hasKey(obj, pKey) : obj.hasOwnProperty(pKey);
             retValue = retValue || hasKey;
           }
           if (retValue) break;
@@ -1953,7 +1953,7 @@
     function _keysDottedAll(a) {
       var objKeys = _keysDotted(a);
       if (objKeys && !_isEmpty(objKeys)) {
-        objKeys = spa.toDottedPath(objKeys.join(",")).split(",");
+        objKeys = xsr.toDottedPath(objKeys.join(",")).split(",");
       }
       return objKeys;
     }
@@ -1995,17 +1995,17 @@
     }
   }
 
-  spa.findSafe = spa.findInObj = spa.findInObject = spa.findIn = spa.find = _find;
+  xsr.findSafe = xsr.findInObj = xsr.findInObject = xsr.findIn = xsr.find = _find;
 
-  spa.keys           = _keys;
-  spa.has            = spa.hasKey = _hasKey;
-  spa.hasKeys        = _spa_hasKeys;
-  spa.hasPrimaryKeys = _spa_hasPrimaryKeys;
-  spa.keysDottedAll  = _keysDottedAll;
-  spa.keysDotted     = _keysDotted;
-  spa.keysCamelCase  = _keysCamelCase ;
-  spa.keysTitleCase  = _keysTitleCase;
-  spa.keys_          = _keysLodash;
+  xsr.keys           = _keys;
+  xsr.has            = xsr.hasKey = _hasKey;
+  xsr.hasKeys        = _spa_hasKeys;
+  xsr.hasPrimaryKeys = _spa_hasPrimaryKeys;
+  xsr.keysDottedAll  = _keysDottedAll;
+  xsr.keysDotted     = _keysDotted;
+  xsr.keysCamelCase  = _keysCamelCase ;
+  xsr.keysTitleCase  = _keysTitleCase;
+  xsr.keys_          = _keysLodash;
 
   /* Array/Object Iterators */
   if (1) {
@@ -2151,8 +2151,15 @@
         return xObj;
       }
     }
+
+    xsr.strZip;
+    xsr.strUnzip;
     // simple compress
     function _compress(s) {
+      if (xsr.strZip) {
+        return xsr.strZip(s);
+      }
+
       var dict = {};
       var data = (s + '').split('');
       var out = [];
@@ -2177,6 +2184,37 @@
       }
       return out.join('');
     }
+
+    // simple decompress
+    function _deCompress(s) {
+      if (xsr.strUnzip) {
+        return xsr.strUnzip(s);
+      }
+
+      var dict = {};
+      var data = (s + '').split('');
+      var currChar = data[0];
+      var oldPhrase = currChar;
+      var out = [currChar];
+      var code = 256;
+      var phrase;
+      for (var i=1; i<data.length; i++) {
+        var currCode = data[i].charCodeAt(0);
+        if (currCode < 256) {
+          phrase = data[i];
+        }
+        else {
+          phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+        }
+        out.push(phrase);
+        currChar = phrase.charAt(0);
+        dict[code] = oldPhrase + currChar;
+        code++;
+        oldPhrase = phrase;
+      }
+      return out.join('');
+    }
+
     function _getSignature(input, keyPrefix) {
       keyPrefix = keyPrefix || '';
 
@@ -2348,20 +2386,20 @@
       return retValue;
     }
   }
-  spa.map      = _map;
-  spa.uniq     = _uniq;
-  spa.omit     = _omit;
-  spa.union    = _union;
-  spa.filter   = _filter;
-  spa.sortBy   = _sortBy;
-  spa.zipObj   = _zipObj;
-  spa.removeOn = _removeOn;
-  spa.each     = spa.forEach  = _each;
-  spa.every    = spa.forEvery = _every;
-  spa.some     = spa.forSome  = _some;
-  spa.indexOf  = _indexOf;
-  spa.extend   = _extend;
-  spa.merge    = _mergeDeep;
+  xsr.map      = _map;
+  xsr.uniq     = _uniq;
+  xsr.omit     = _omit;
+  xsr.union    = _union;
+  xsr.filter   = _filter;
+  xsr.sortBy   = _sortBy;
+  xsr.zipObj   = _zipObj;
+  xsr.removeOn = _removeOn;
+  xsr.each     = xsr.forEach  = _each;
+  xsr.every    = xsr.forEvery = _every;
+  xsr.some     = xsr.forSome  = _some;
+  xsr.indexOf  = _indexOf;
+  xsr.extend   = _extend;
+  xsr.merge    = _mergeDeep;
 
   Object.defineProperties(_arrProto, {
     '__now' : {
@@ -2469,7 +2507,7 @@
     },
     '__hasKey' : {
       value: function _obj_hasKey(key) {
-        return spa.hasKey(this, key);
+        return xsr.hasKey(this, key);
       }
     },
     '__hasKeys' : {
@@ -2500,13 +2538,13 @@
     },
     '__toQueryString': {
       value: function(){
-        return spa.toQueryString(this);
+        return xsr.toQueryString(this);
       }
     },
     '__extract': {
       value: function(){
         _arrProto.unshift.call(arguments, this);
-        return spa.extract.apply(this, arguments);
+        return xsr.extract.apply(this, arguments);
       }
     }
   });
@@ -2518,8 +2556,8 @@
       var urlPath = url.split('/')
         , urlRoot = urlPath[0].replace(/[\{\}]/g,'')
         , cName   = (urlRoot == '$' || urlRoot == '.')? defaultCompName : urlRoot.replace(/[\{\$\}]/,'')
-        , cPath   = ((spa.defaults.components.inFolder)? (cName+"/"): '');
-      urlPath[0]  = (spa.defaults.components.rootPath + cPath).trimRightStr('/');
+        , cPath   = ((xsr.defaults.components.inFolder)? (cName+"/"): '');
+      urlPath[0]  = (xsr.defaults.components.rootPath + cPath).trimRightStr('/');
       newUrl = urlPath.join('/');
     }
     return newUrl;
@@ -2529,8 +2567,8 @@
     if (responseText.trim()) {
       var xScript = document.createElement( "script" );
       xScript.setAttribute( 'id', 'js-'+_now() );
-      if (spa.defaults.csp.nonce) {
-        xScript.setAttribute( 'nonce', spa.defaults.csp.nonce );
+      if (xsr.defaults.csp.nonce) {
+        xScript.setAttribute( 'nonce', xsr.defaults.csp.nonce );
       }
       xScript.text = responseText;
       document.head.appendChild( xScript ).parentNode.removeChild( xScript );
@@ -2542,7 +2580,7 @@
     /* allow user to set any option except for dataType and url */
     url = _getFullPath4Component(url, (options? options['spaComponent'] : '') );
     if (!(url.endsWithStrIgnoreCase( '.js' )) && (url.indexOf('?')<0)) {
-      url += spa.defaults.components.scriptExt;
+      url += xsr.defaults.components.scriptExt;
     }
     options = options || {};
     if (!options.hasOwnProperty('cache')) {
@@ -2566,7 +2604,7 @@
       options['cache'] = true;
     }
     if (!$styleContainerEl.length) {
-      options['cache'] = spa.defaults.components.offline; //1st load from the server
+      options['cache'] = xsr.defaults.components.offline; //1st load from the server
     }
 
     options = _extend(options, {
@@ -2574,7 +2612,7 @@
       url: url,
       success: function (cssStyles) {
         $styleContainerEl.remove();
-        var styleNonceAttr = (spa.defaults.csp.nonce)? (' nonce="'+(spa.defaults.csp.nonce)+'"') : '';
+        var styleNonceAttr = (xsr.defaults.csp.nonce)? (' nonce="'+(xsr.defaults.csp.nonce)+'"') : '';
         $("head").append('<style id="' + (styleId) + '" type="text/css"'+styleNonceAttr+'>' + cssStyles + '<\/style>');
       }
     });
@@ -2583,7 +2621,7 @@
   }
 
   /* Add Script Tag */
-  spa.addScriptTag = function (scriptId, scriptSrc) {
+  xsr.addScriptTag = function (scriptId, scriptSrc) {
     scriptId = scriptId.replace(/#/, "");
     _log.group("spaAddScriptTag");
     if (!_isElementExist("#spaScriptsContainer")) {
@@ -2596,14 +2634,14 @@
     else {
       _log.info("script [" + scriptId + "] NOT found. Added script tag with src [" + scriptSrc + "]");
       var scriptSrcAttr = (scriptSrc)? (' src="' + scriptSrc + '"') : '';
-      var scriptNonceAttr = (spa.defaults.csp.nonce)? (' nonce="'+(spa.defaults.csp.nonce)+'"') : '';
+      var scriptNonceAttr = (xsr.defaults.csp.nonce)? (' nonce="'+(xsr.defaults.csp.nonce)+'"') : '';
       $("#spaScriptsContainer").append('<script id="' + (scriptId) + '" type="text/javascript"'+scriptSrcAttr+scriptNonceAttr+'><\/script>');
     }
     _log.groupEnd("spaAddScriptTag");
   };
 
   /* Add Style Tag */
-  spa.addStyle = function (styleId, styleSrc) {
+  xsr.addStyle = function (styleId, styleSrc) {
     styleId = styleId.replace(/#/, "");
     _log.group("spaAddStyle");
     if (!_isElementExist("#spaStylesContainer")) {
@@ -2621,7 +2659,7 @@
   };
 
   /* Loading script */
-  spa.loadScript = function (scriptId, scriptPath, useScriptTag, tAjaxRequests, xOptions) {
+  xsr.loadScript = function (scriptId, scriptPath, useScriptTag, tAjaxRequests, xOptions) {
     scriptId = scriptId.replace(/#/, "");
     useScriptTag = useScriptTag || false;
     tAjaxRequests = tAjaxRequests || [];
@@ -2631,7 +2669,7 @@
     }
     else {
       if (useScriptTag) {
-        spa.addScriptTag(scriptId, scriptPath);
+        xsr.addScriptTag(scriptId, scriptPath);
       }
       else { /* load script script-URL */
         tAjaxRequests.push(
@@ -2654,23 +2692,23 @@
     }
   }
 
-  spa.getComponentsFullPath = function(compNameLst){
-    compNameLst = spa.strToArray(_toObj(compNameLst));
+  xsr.getComponentsFullPath = function(compNameLst){
+    compNameLst = xsr.strToArray(_toObj(compNameLst));
     return _map(compNameLst, function(compName){
-        return (spa.defaults.components.rootPath)+ ((spa.defaults.components.inFolder || (/[^a-z0-9]/gi.test(compName)))? compName: '') +'/'+(_getComponentFileName(compName))+ (spa.defaults.components.scriptExt);
+        return (xsr.defaults.components.rootPath)+ ((xsr.defaults.components.inFolder || (/[^a-z0-9]/gi.test(compName)))? compName: '') +'/'+(_getComponentFileName(compName))+ (xsr.defaults.components.scriptExt);
       });
   };
 
-  spa.loadComponents = function(compNameLst, onDone, onFail) {
-    var unloadedComponents = _filter(spa.strToArray(_toObj(compNameLst)), function(compName){
-      return (!spa.components.hasOwnProperty(compName.replace(/[^a-z0-9]/gi,'_') ));
+  xsr.loadComponents = function(compNameLst, onDone, onFail) {
+    var unloadedComponents = _filter(xsr.strToArray(_toObj(compNameLst)), function(compName){
+      return (!xsr.components.hasOwnProperty(compName.replace(/[^a-z0-9]/gi,'_') ));
     });
-    var scriptFullPathList = spa.getComponentsFullPath(unloadedComponents);
-    spa.loadScripts(scriptFullPathList, onDone, onFail);
+    var scriptFullPathList = xsr.getComponentsFullPath(unloadedComponents);
+    xsr.loadScripts(scriptFullPathList, onDone, onFail);
   };
 
-  spa.loadScripts = function(scriptsLst, onDone, onFail) {
-    scriptsLst = spa.strToArray(_toObj(scriptsLst));
+  xsr.loadScripts = function(scriptsLst, onDone, onFail) {
+    scriptsLst = xsr.strToArray(_toObj(scriptsLst));
 
     if (!_isBlank(scriptsLst)) {
       var ajaxQ = [];
@@ -2686,18 +2724,18 @@
 
       $ajaxQ.apply($, ajaxQ)
         .then(function(){
-          spa.renderUtils.runCallbackFn(onDone);
+          xsr.renderUtils.runCallbackFn(onDone);
         })
         .fail(function(){
-          spa.renderUtils.runCallbackFn(onFail);
+          xsr.renderUtils.runCallbackFn(onFail);
         });
     }
   };
 
-  spa.loadScriptsSync = function(scriptsLst, onDone, onFail) {
-    scriptsLst = spa.strToArray(_toObj(scriptsLst));
+  xsr.loadScriptsSync = function(scriptsLst, onDone, onFail) {
+    scriptsLst = xsr.strToArray(_toObj(scriptsLst));
     if (_isBlank(scriptsLst)) {
-      spa.renderUtils.runCallbackFn(onDone);
+      xsr.renderUtils.runCallbackFn(onDone);
     } else {
       var scriptCache = true, scriptPath = scriptsLst.shift();
       if (scriptPath) {
@@ -2708,19 +2746,19 @@
         _log.info("Load script from   [" + scriptPath + "], cache:",scriptCache);
         _cachedScript(scriptPath, {cache: scriptCache}).done(function() {
           _log.info("Loaded script from [" + scriptPath + "]");
-          spa.loadScriptsSync(scriptsLst, onDone, onFail);
+          xsr.loadScriptsSync(scriptsLst, onDone, onFail);
         }).fail(function(){
           console.error("Failed Loading script from [" + scriptPath + "].", arguments);
-          spa.renderUtils.runCallbackFn(onFail);
+          xsr.renderUtils.runCallbackFn(onFail);
         });
       } else {
-        spa.loadScriptsSync(scriptsLst, onDone, onFail);
+        xsr.loadScriptsSync(scriptsLst, onDone, onFail);
       }
     }
   };
 
   /* Loading style */
-  spa.loadStyle = function (styleId, stylePath, styleCache, tAjaxRequests) {
+  xsr.loadStyle = function (styleId, stylePath, styleCache, tAjaxRequests) {
     styleId = styleId.replace(/#/, "");
     styleCache = !!styleCache;
     tAjaxRequests = tAjaxRequests || [];
@@ -2740,7 +2778,7 @@
       if (getCss) {
         //1st load from the server
         tAjaxRequests.push(
-          _cachedStyle(styleId, stylePath, {cache: spa.defaults.components.offline}).done(function (style, textStatus) {
+          _cachedStyle(styleId, stylePath, {cache: xsr.defaults.components.offline}).done(function (style, textStatus) {
             _log.info("Loaded style [" + styleId + "] from [" + stylePath + "]. STATUS: " + textStatus);
           })
         );
@@ -2751,7 +2789,7 @@
   };
 
   /* Add Template script to BODY */
-  spa.addTemplateScript = function (tmplId, tmplBody, tmplType) {
+  xsr.addTemplateScript = function (tmplId, tmplBody, tmplType) {
     tmplId = tmplId.replace(/#/, "");
     tmplType = tmplType  || 'x-template';
     if (!_isElementExist("#spaViewTemplateContainer")) {
@@ -2763,20 +2801,20 @@
     tmplBody = tmplBody.replace(/<(\s)*script/gi,'<'+Tag4BlockedScript+' src-ref="'+tmplId+'"').replace(/<(\s)*(\/)(\s)*script/gi,'</'+Tag4BlockedScript)
             .replace(/<(\s)*link/gi,'<_LINKTAGINTEMPLATE_').replace(/<(\s)*(\/)(\s)*link/gi,'</_LINKTAGINTEMPLATE_');
 
-    var scriptNonceAttr = (spa.defaults.csp.nonce)? (' nonce="'+(spa.defaults.csp.nonce)+'"') : '';
+    var scriptNonceAttr = (xsr.defaults.csp.nonce)? (' nonce="'+(xsr.defaults.csp.nonce)+'"') : '';
     $("#spaViewTemplateContainer").append('<script id="'+(tmplId)+'" type="text/'+tmplType+'"'+scriptNonceAttr+'>' + tmplBody + '<\/script>');
   };
-  spa.updateTemplateScript = function (tmplId, tmplBody, tmplType){
+  xsr.updateTemplateScript = function (tmplId, tmplBody, tmplType){
     tmplId = tmplId.replace(/#/, "");
     var $tmplScript = $('#spaViewTemplateContainer').find('#'+tmplId);
     if ($tmplScript.length) {
       $tmplScript.remove();
     }
-    spa.addTemplateScript(tmplId, tmplBody, tmplType);
+    xsr.addTemplateScript(tmplId, tmplBody, tmplType);
   };
 
   /* Load external or internal (inline or #container) content as template script */
-  spa.loadTemplate = function (tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions) {
+  xsr.loadTemplate = function (tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions) {
     tmplId = tmplId.replace(/#/g, "");
     tmplPath = (tmplPath.ifBlankStr("inline")).trimStr();
     tmplPath = ((tmplPath==='.') || (tmplPath==='#'))? 'inline' : tmplPath;
@@ -2788,7 +2826,7 @@
     if (!_isElementExist("#"+tmplId)) {
       _log.info("Template[" + tmplId + "] of [" + templateType + "] NOT found. Source [" + tmplPath + "]");
       if (tmplPath && tmplPath == "undefined") {
-        spa.addTemplateScript(tmplId, '', templateType);
+        xsr.addTemplateScript(tmplId, '', templateType);
         _log.info("Loaded Empty Template[" + tmplId + "] of [" + templateType + "]");
       } else if ((tmplPath.equalsIgnoreCase("inline") || tmplPath.beginsWithStr("#"))) { /* load from viewTargetContainer or local container ID given in tmplPath */
         var localTemplateSrcContainerId = tmplPath.equalsIgnoreCase("inline")? viewContainerId : tmplPath;
@@ -2798,7 +2836,7 @@
           _log.error("Template[" + tmplId + "] of [" + templateType + "] NOT defined inline in ["+localTemplateSrcContainerId+"].");
         }
         else {
-          spa.addTemplateScript(tmplId, inlineTemplateHTML, templateType);
+          xsr.addTemplateScript(tmplId, inlineTemplateHTML, templateType);
           if (tmplPath.equalsIgnoreCase("inline")) $localTemplateSrcContainer.html("");
         }
       }
@@ -2809,7 +2847,7 @@
 
         var axMethod = String(tmplAxOptions['method'] || 'get').toLowerCase();
         if (tmplAxOptions['params']) {
-          tmplPath = spa.api.url(tmplPath, tmplAxOptions['params']);
+          tmplPath = xsr.api.url(tmplPath, tmplAxOptions['params']);
         }
         _log.info(">>>>>>>>>> Making New Template Request");
 
@@ -2818,11 +2856,11 @@
           method: axMethod,
           headers : tmplAxOptions['headers'],
           data: tmplAxOptions['payload'],
-          cache: spa.defaults.components.offline, //1st load from the server
+          cache: xsr.defaults.components.offline, //1st load from the server
           dataType: 'html',
           onTmplError: tmplAxOptions['onError'],
           success: function (template) {
-            spa.addTemplateScript(tmplId, template, templateType);
+            xsr.addTemplateScript(tmplId, template, templateType);
             _log.info("Loaded Template[" + tmplId + "] of [" + templateType + "] from [" + tmplPath + "]");
           },
           error: function (jqXHR, textStatus, errorThrown) {
@@ -2843,7 +2881,7 @@
       if (tmplReload) {
         _log.info("Reload Template[" + tmplId + "] of [" + templateType + "]");
         $tmplId.remove();
-        tAjaxRequests = spa.loadTemplate(tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
+        tAjaxRequests = xsr.loadTemplate(tmplId, tmplPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
       } else if (_isBlank(($tmplId.html()))) {
         _log.warn("Template[" + tmplId + "] of [" + templateType + "] script found EMPTY!");
         var externalPath = "" + $tmplId.attr("path");
@@ -2851,7 +2889,7 @@
           templateType = ((($tmplId.attr("type")||"").ifBlankStr(templateType)).toLowerCase()).replace(/text\//gi, "");
           _log.info("prepare/remove to re-load Template[" + tmplId + "]  of [" + templateType + "] from external path: [" + externalPath + "]");
           $tmplId.remove();
-          tAjaxRequests = spa.loadTemplate(tmplId, externalPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
+          tAjaxRequests = xsr.loadTemplate(tmplId, externalPath, templateType, viewContainerId, tAjaxRequests, tmplReload, tmplAxOptions);
         }
       } else {
         _log.info("Template[" + tmplId + "]  of [" + templateType + "] already found in local.");
@@ -2864,13 +2902,13 @@
 
   /*Get URL Parameters as Object
    * if url = http://xyz.com/page?param0=value0&param1=value1&paramX=valueA&paramX=valueB
-   * spa.urlParams() => {param0: "value0", param1:"value1", paramX:["valueA", "valueB"]}
-   * spa.urlParams()["param0"] => "value0"
-   * spa.urlParams().param0    => "value0"
-   * spa.urlParams().paramX    => ["valueA", "valueB"]
-   * spa.urlParams().paramZ    => undefined
+   * xsr.urlParams() => {param0: "value0", param1:"value1", paramX:["valueA", "valueB"]}
+   * xsr.urlParams()["param0"] => "value0"
+   * xsr.urlParams().param0    => "value0"
+   * xsr.urlParams().paramX    => ["valueA", "valueB"]
+   * xsr.urlParams().paramZ    => undefined
    * */
-  spa.urlParams = function (urlQuery) {
+  xsr.urlParams = function (urlQuery) {
     urlQuery = (urlQuery || window.location.search || "");
     urlQuery = (urlQuery.beginsWithStr("\\?") || urlQuery.indexOf("//") < 7) ? urlQuery.substr(urlQuery.indexOf("?") + 1) : urlQuery;
     var qParams = {};
@@ -2884,20 +2922,20 @@
   };
   /*Get URL Parameter value
    * if url = http://xyz.com/page?param0=value0&param1=value1&paramX=valueA&paramX=valueB
-   * spa.urlParam("param0") => "value0"
-   * spa.urlParam("paramX") => ["valueA", "valueB"]
-   * spa.urlParam("paramZ") => undefined
+   * xsr.urlParam("param0") => "value0"
+   * xsr.urlParam("paramX") => ["valueA", "valueB"]
+   * xsr.urlParam("paramZ") => undefined
    * */
-  spa.urlParam = function (name, queryString) {
-    return (spa.urlParams(queryString)[name]);
+  xsr.urlParam = function (name, queryString) {
+    return (xsr.urlParams(queryString)[name]);
   };
 
   var _winLocHash_='';
   /*Get URL Hash value
    * current window location = http://xyz.com/page#/hash0/hash1/hash2
-   * spa.getLocHash()   => "#/hash0/hash1/hash2"
+   * xsr.getLocHash()   => "#/hash0/hash1/hash2"
    * */
-  spa.getLocHash = function(urlHashBase){
+  xsr.getLocHash = function(urlHashBase){
     var urlHash = (_winLocHash_ || window.location.hash).replace('#','');
     //if (!urlHash && !_isUndef(urlHashBase) && (urlHashBase!='#')) {
     if (!(urlHash || _isUndef(urlHashBase) || urlHashBase=='#')) {
@@ -2909,13 +2947,13 @@
   };
   /*Get URL Hash value
    * if url = http://xyz.com/page#/hash0/hash1/hash2
-   * spa.urlHash()   => "/hash0/hash1/hash2"
-   * spa.urlHash(1)  => "hash1"
-   * spa.urlHash([]) => ["hash0", "hash1", "hash2"]
-   * spa.urlHash(["key0", "key1", "key3"]) => {"key0":"hash0", "key1":"hash1", "key2":"hash2"}
+   * xsr.urlHash()   => "/hash0/hash1/hash2"
+   * xsr.urlHash(1)  => "hash1"
+   * xsr.urlHash([]) => ["hash0", "hash1", "hash2"]
+   * xsr.urlHash(["key0", "key1", "key3"]) => {"key0":"hash0", "key1":"hash1", "key2":"hash2"}
    * */
-  spa.urlHash = function (returnOf, urlHashBase) {
-    var hashDelimiter = "/", retValue = spa.getLocHash(urlHashBase);
+  xsr.urlHash = function (returnOf, urlHashBase) {
+    var hashDelimiter = "/", retValue = xsr.getLocHash(urlHashBase);
     if (returnOf || _isNum(returnOf)) {
       retValue = retValue.beginsWithStr(hashDelimiter) ? retValue.substring(retValue.indexOf(hashDelimiter) + (hashDelimiter.length)) : retValue;
       var hashArray = (retValue.length)? retValue.split(hashDelimiter) : [];
@@ -2929,7 +2967,7 @@
       else if (_isArr(returnOf)) {
         retValue = (returnOf.length === 0) ? hashArray : _zipObj(returnOf, hashArray);
       } else if (_isStr(returnOf) && returnOf == "?") {
-        retValue = (retValue.containsStr("\\?"))? spa.getOnSplit(retValue, "?", 1) : "";
+        retValue = (retValue.containsStr("\\?"))? xsr.getOnSplit(retValue, "?", 1) : "";
       }
     }
     return retValue;
@@ -2937,15 +2975,15 @@
   function _getAboluteUrl(base, url){
     return ((base || '').trimRightStr('/'))+'/'+((url || '').trimLeftStr('/'));
   }
-  spa.urlHashFull = function(urlHashBase) {
+  xsr.urlHashFull = function(urlHashBase) {
     urlHashBase = urlHashBase || '#';
-    return _getAboluteUrl(urlHashBase, spa.urlHash('', urlHashBase));
+    return _getAboluteUrl(urlHashBase, xsr.urlHash('', urlHashBase));
   };
-  /*Similar to spa.urlParam on HashParams*/
-  spa.hashParam = function (name) {
-    var retValue = (''+spa.urlHash('?'));
+  /*Similar to xsr.urlParam on HashParams*/
+  xsr.hashParam = function (name) {
+    var retValue = (''+xsr.urlHash('?'));
     if (typeof name !== "undefined" && !_isBlank(retValue)) {
-      retValue = spa.urlParam((''+name), retValue);
+      retValue = xsr.urlParam((''+name), retValue);
     }
     return (retValue);
   };
@@ -2954,9 +2992,9 @@
   var _i18nStore = {};
   var _i18nLoaded;
 
-  spa.i18n = _i18nTextValue;
-  spa.i18n.loaded = false;
-  spa.i18n.settings = {
+  xsr.i18n = _i18nTextValue;
+  xsr.i18n.loaded = false;
+  xsr.i18n.settings = {
     name: 'Language',
     path: 'language/',
     ext: '.txt'
@@ -3162,25 +3200,25 @@
   }
 
   function _i18nTextValue(i18nKey, data) {
-    var dMessage = spa.i18n.value(i18nKey);
+    var dMessage = xsr.i18n.value(i18nKey);
     if (data && _is(data, 'object|array') ) {
       var msgParamValue = "", msgParamValueTrim="";
       _each(_keys(data), function (key) {
         msgParamValue = ""+data[key]; msgParamValueTrim = msgParamValue.trim();
-        if (msgParamValue && (msgParamValueTrim.beginsWithStrIgnoreCase("i18n:") || msgParamValueTrim.beginsWithStrIgnoreCase("@")) ) msgParamValue = spa.i18n.value(msgParamValueTrim);
+        if (msgParamValue && (msgParamValueTrim.beginsWithStrIgnoreCase("i18n:") || msgParamValueTrim.beginsWithStrIgnoreCase("@")) ) msgParamValue = xsr.i18n.value(msgParamValueTrim);
         dMessage = dMessage.replace(new RegExp("{\\s*("+(key.trim())+")\\s*}", "g"), msgParamValue);
       });
     }
 
     var lookupKeys=[i18nKey], isDuplicateKey;
     function parseMessage( xMsg ){
-      var varList = spa.extractStrBetweenEx(xMsg, '{', '}', true);
+      var varList = xsr.extractStrBetweenEx(xMsg, '{', '}', true);
       if (!_isBlank(varList)) {
         _each(varList, function(key){
           isDuplicateKey = (isDuplicateKey || lookupKeys.indexOf(key)>=0);
           if (!isDuplicateKey) {
             lookupKeys.push(key);
-            xMsg = xMsg.replace((new RegExp('{\\s*('+(key.trim())+')\\s*}', 'g')), spa.i18n.value(key));
+            xMsg = xMsg.replace((new RegExp('{\\s*('+(key.trim())+')\\s*}', 'g')), xsr.i18n.value(key));
           }
         });
 
@@ -3196,12 +3234,12 @@
 
     return parseMessage(dMessage);
   }
-  spa.i18n.browserLang = function(){
+  xsr.i18n.browserLang = function(){
     return (navigator)? (navigator.language || navigator.userLanguage || 'en_US') : 'en_US';
   };
-  spa.i18n.setLanguage = function (lang, i18nSettings) {
-    lang = (lang || spa.i18n.browserLang()).replace(/-/g, "_");
-    i18nSettings = _extend(spa.i18n.settings, i18nSettings);
+  xsr.i18n.setLanguage = function (lang, i18nSettings) {
+    lang = (lang || xsr.i18n.browserLang()).replace(/-/g, "_");
+    i18nSettings = _extend(xsr.i18n.settings, i18nSettings);
     _init_i18n_Lang({
       language: lang,
       name: i18nSettings.name,
@@ -3214,12 +3252,12 @@
           $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
         }
         _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(__i18nStore)) : _i18nLoaded;
-        spa.i18n.loaded = spa.i18n.loaded || _i18nLoaded;
+        xsr.i18n.loaded = xsr.i18n.loaded || _i18nLoaded;
         if ((lang.length > 1) && (!_i18nLoaded)) {
           _log.warn("Error Loading Language File [" + lang + "]. Loading default.");
-          spa.i18n.setLanguage("_", i18nSettings);
+          xsr.i18n.setLanguage("_", i18nSettings);
         }
-        spa.i18n.apply();
+        xsr.i18n.apply();
         if (i18nSettings.callback) {
           i18nSettings.callback(_i18nLoaded);
         }
@@ -3229,21 +3267,21 @@
 
   function _setLang(uLang, options, isAuto) {
     if (uLang) {
-      if (spa.i18n.onLangChange) {
-        var fnOnLangChange = spa.i18n.onLangChange,
+      if (xsr.i18n.onLangChange) {
+        var fnOnLangChange = xsr.i18n.onLangChange,
             nLang = (_isFn(fnOnLangChange))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
         uLang = (_isStr(nLang))? nLang : uLang;
       }
       $('html').attr('lang', uLang.replace('_', '-'));
-      spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
+      xsr.i18n.setLanguage(uLang, _mergeDeep({}, xsr.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
     }
   }
-  spa.i18n.setLang = function(lang, i18nSettings){
+  xsr.i18n.setLang = function(lang, i18nSettings){
     _setLang(lang, i18nSettings);
   };
 
-  spa.i18n.value = function(i18nKey) {
-    if (spa.i18n.loaded || window['Liferay']) {
+  xsr.i18n.value = function(i18nKey) {
+    if (xsr.i18n.loaded || window['Liferay']) {
       i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
       if (i18nKey.beginsWithStrIgnoreCase('@')) {
         i18nKey = ((i18nKey.substr(1)).trim());
@@ -3254,7 +3292,7 @@
       function _i18nValue(iKey){
         var retStr = iKey;
         try {
-          retStr = (''+((!spa.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : _i18nRaw(iKey))).trim();
+          retStr = (''+((!xsr.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : _i18nRaw(iKey))).trim();
           if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
             retStr = _stripEnds(retStr);
           }
@@ -3268,13 +3306,13 @@
         }
       }
     } else {
-      _log.info('jQ-spa.i18n module not found. Skipping i18n value lookup.');
+      _log.info('jQ-xsr.i18n module not found. Skipping i18n value lookup.');
     }
   };
 
-  spa.i18n.text = _i18nTextValue;
+  xsr.i18n.text = _i18nTextValue;
 
-  spa.i18n.update = function(elSelector, i18nKeySpec, apply){
+  xsr.i18n.update = function(elSelector, i18nKeySpec, apply){
     i18nKeySpec = i18nKeySpec || '';
     var $el = $(elSelector), oldSpec = $el.attr('data-i18n') || '', newSpec = '', oldSpecJSON, newSpecJSON;
 
@@ -3305,12 +3343,12 @@
     }
 
     $el.attr('data-i18n', newSpec).data('i18n', newSpec);
-    if (apply || _isUndef(apply)) spa.i18n.apply(elSelector);
+    if (apply || _isUndef(apply)) xsr.i18n.apply(elSelector);
     return $el;
   };
 
-  spa.i18n.apply = spa.i18n.render = function (contextRoot, elSelector) {
-    if (spa.i18n.loaded || window['Liferay']) {
+  xsr.i18n.apply = xsr.i18n.render = function (contextRoot, elSelector) {
+    if (xsr.i18n.loaded || window['Liferay']) {
       contextRoot = contextRoot || "html";
       elSelector = elSelector || "";
       var isTag = contextRoot.beginsWithStr("<");
@@ -3336,11 +3374,11 @@
         if (i18nSpec && !_isEmptyObj(i18nSpec)) {
           _each(_keys(i18nSpec), function (attrSpec) {
             var i18nKey = i18nSpec[attrSpec];
-            var i18nValue = spa.i18n.text(i18nKey, i18nData);
+            var i18nValue = xsr.i18n.text(i18nKey, i18nData);
             _each(attrSpec.split("_"), function (attribute) {
               switch (attribute.toLowerCase()) {
                 case "html":
-                  $el.html( spa.sanitizeXSS(i18nValue) );
+                  $el.html( xsr.sanitizeXSS(i18nValue) );
                   break;
                 case "text":
                   $el.text(i18nValue);
@@ -3383,7 +3421,7 @@
     return retValue;
   }
 
-  spa.pipes = {
+  xsr.pipes = {
     trim: function(str) {
       return (''+str).trim();
     },
@@ -3485,7 +3523,7 @@
       .replace(/<\/IFRAME-X-TMP/gi, '</iframe');
   }
 
-  spa.dataBind = spa.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
+  xsr.dataBind = xsr.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
     //console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
@@ -3533,10 +3571,10 @@
       return ['_runTimeTemplate',type,compName,(key.replace(/[^a-z0-9]/gi,'_')),(_now())].join('_');
     }
     function _inlineTemplate(templateId, template) {
-      if (!spa.compiledTemplates4DataBind.hasOwnProperty(tmplStoreName)) {
-        spa.compiledTemplates4DataBind[tmplStoreName] = {};
+      if (!xsr.compiledTemplates4DataBind.hasOwnProperty(tmplStoreName)) {
+        xsr.compiledTemplates4DataBind[tmplStoreName] = {};
       }
-      return spa.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile( _unmaskHandlebars(template) ));
+      return xsr.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile( _unmaskHandlebars(template) ));
     }
 
     _each($dataBindEls, function(el) {
@@ -3545,7 +3583,7 @@
 
       if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
       bindSpec = _toObj(bindSpecStr || '{}');
-      bindCallback = spa.renderUtils.getFn($el.attr('data-bind-callback') || '');
+      bindCallback = xsr.renderUtils.getFn($el.attr('data-bind-callback') || '');
 
       if (bindSpec && !_isEmptyObj(bindSpec)) {
 
@@ -3565,17 +3603,17 @@
           for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
             fnFormat = bindKeyFn[fIdx].trim();
             if (fnFormat) {
-              if (fnFormat[0]=='.') fnFormat = 'spa.pipes'+fnFormat;
+              if (fnFormat[0]=='.') fnFormat = 'xsr.pipes'+fnFormat;
               if (fnFormat[0]=='!') {
                 if (fnFormat == '!') {
                   bindValue = !bindValue;
                 } else {
                   fnFormat = fnFormat.substr(1).trim();
-                  if (fnFormat[0]=='.') fnFormat = 'spa.pipes'+fnFormat;
-                  bindValue = !spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
+                  if (fnFormat[0]=='.') fnFormat = 'xsr.pipes'+fnFormat;
+                  bindValue = !xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
                 }
               } else {
-                bindValue = spa.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
+                bindValue = xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
               }
             }
           }
@@ -3587,7 +3625,7 @@
             if (!_isUndef(bindValue)) {
               switch (attribute.toLowerCase()) {
                 case 'html':
-                  $el.html( spa.sanitizeXSS(bindValue) );
+                  $el.html( xsr.sanitizeXSS(bindValue) );
                   break;
                 case 'text':
                   $el.text(bindValue);
@@ -3623,7 +3661,7 @@
                     ifTemplate   = _inlineTemplate(ifTemplateId, ifTemplateBody);
                     $el.attr('data-bind-template', ifTemplateId);
                   } else {
-                    ifTemplate = spa.compiledTemplates4DataBind[tmplStoreName][ifTemplateId];
+                    ifTemplate = xsr.compiledTemplates4DataBind[tmplStoreName][ifTemplateId];
                   }
                   $el.html( ifTemplate(templateData) );
                   break;
@@ -3640,7 +3678,7 @@
                     repeatTemplate   = _inlineTemplate(repeatTemplateId, repeatTemplateBody);
                     $el.attr('data-bind-template', repeatTemplateId);
                   } else {
-                    repeatTemplate = spa.compiledTemplates4DataBind[tmplStoreName][repeatTemplateId];
+                    repeatTemplate = xsr.compiledTemplates4DataBind[tmplStoreName][repeatTemplateId];
                   }
                   $el.html( repeatTemplate(templateData) );
                   break;
@@ -3656,7 +3694,7 @@
                     default:
                       $el.attr(attribute, bindValue);
                       if (attribute.beginsWithStr('data-')) {
-                        dataAttrKey = spa.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
+                        dataAttrKey = xsr.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
                         if (dataAttrKey) $el.data(dataAttrKey, bindValue);
                       }
                     break;
@@ -3679,7 +3717,7 @@
       var componentName = $contextRoot.attr('data-rendered-component');
       if (!_isBlank(componentName)) {
         var onBindCallback = 'app.'+componentName+'.bindCallback';
-        spa.renderUtils.runCallbackFn(onBindCallback, templateData, app[componentName]);
+        xsr.renderUtils.runCallbackFn(onBindCallback, templateData, app[componentName]);
       }
     }
 
@@ -3687,7 +3725,9 @@
       //innerComponents
       var $innerComponents = $contextRoot.find('[data-rendered-component]')
                               .filter(function(){
-                                return (this.hasAttribute('data-spa-component-$data') ||
+                                return (this.hasAttribute('data-x-component-$data') ||
+                                        this.hasAttribute('data-x-$data') ||
+                                        this.hasAttribute('data-spa-component-$data') ||
                                         this.hasAttribute('data-spa-$data') ||
                                         this.hasAttribute('spa-$data'));
                               });
@@ -3697,7 +3737,7 @@
         $innerComponents.each(function(){
           data4InnerCompBind = _get$dataInAttr(this, compName, data);
           //console.log('data4InnerCompBind>', data4InnerCompBind);
-          spa.bindData(this, data4InnerCompBind);
+          xsr.bindData(this, data4InnerCompBind);
         });
       }
     }
@@ -3706,7 +3746,7 @@
     return onVirtualDOM? ($contextRoot.html().replace((new RegExp(blockedScriptTagName, 'g')), "script")) : $contextRoot;
   };
 
-  spa.bindTemplateData = function (xTemplate, data) {
+  xsr.bindTemplateData = function (xTemplate, data) {
     var xContent = xTemplate;
     if ((/^\s*#[a-z]+/i).test(xTemplate)) {
       xContent = $(xTemplate).html();
@@ -3717,7 +3757,7 @@
     }
 
     if ((/ data-bind\s*=/i).test(xContent)) {
-      xContent = spa.bindData(xTemplate, data);
+      xContent = xsr.bindData(xTemplate, data);
     }
 
     if ((/{{(.+)}}/).test(xContent)) {
@@ -3735,7 +3775,7 @@
     return xContent;
   };
 
-  spa.togglePassword = function(elPwd){
+  xsr.togglePassword = function(elPwd){
     if (!$(elPwd).next('.icon.eye').length){
       var $eyeEl = $('<i class="icon eye"></i>');
       $eyeEl.on('click', function(e){
@@ -3751,14 +3791,14 @@
     }
   };
 
-  spa.initTogglePassword = function(scope){
+  xsr.initTogglePassword = function(scope){
     $(scope||'body').find('.toggle-password').each(function(idx, elPwd) {
       _log.info('Initializing toggle password', elPwd);
-      spa.togglePassword(elPwd);
+      xsr.togglePassword(elPwd);
     });
   };
 
-  spa.isElValueChanged = function(elSelector){
+  xsr.isElValueChanged = function(elSelector){
     var isChanged, $el = $(elSelector), el;
 
     if ($el.length) {
@@ -3784,7 +3824,7 @@
 
     return isChanged;
   };
-  spa.resetElDefaultValue = function(elSelector){
+  xsr.resetElDefaultValue = function(elSelector){
     var $el = $(elSelector), el;
     if ($el.length) {
       el = $el[0];
@@ -3802,11 +3842,11 @@
     }
   };
 
-  spa.updateTrackFormCtrls = function(elForm){
+  xsr.updateTrackFormCtrls = function(elForm){
     if (elForm) {
       var $elForm             = $(elForm),
           changedElcount      = $elForm.find('.tracking-change.changed').length,
-          validationResult    = spa.validateForm('#'+$elForm.attr('id')),
+          validationResult    = xsr.validateForm('#'+$elForm.attr('id')),
           isValidForm         = (_isBlank(validationResult) || (validationResult[0]['errcode']==1) ),
           validationErrFound  = ( !isValidForm || $elForm.find('.validation-error,.validation-pending').length),
           enableCtrlEls4Ch    = (changedElcount>0 && !validationErrFound),
@@ -3832,12 +3872,12 @@
     }
   };
 
-  spa.trackFormElChange = function _trackFormElChange(elSelector, scope){
+  xsr.trackFormElChange = function _trackFormElChange(elSelector, scope){
     var $elementsToTrack = $(scope||'body').find(elSelector);
 
     $elementsToTrack.each(function(idx, el){
       if ('FORM' == el.tagName.toUpperCase()) {
-        spa.trackFormElChange(($(el).find('.track-change').length? '.track-change':'input,textarea,select'), el);
+        xsr.trackFormElChange(($(el).find('.track-change').length? '.track-change':'input,textarea,select'), el);
       } else {
         elTrackChange(el);
       }
@@ -3866,7 +3906,7 @@
           if (isChanged && !this.multiple) isChanged = (def != this.selectedIndex);
         }
         $(this)[isChanged? 'addClass' : 'removeClass']('changed');
-        spa.updateTrackFormCtrls($thisForm);
+        xsr.updateTrackFormCtrls($thisForm);
         if (prvChgCount!=newChgCount && triggerFormChange) $thisForm.trigger('change');
       }
     }
@@ -3889,7 +3929,7 @@
       }
 
       $el.removeClass('track-change changed');
-      spa.updateTrackFormCtrls($el.closest('form'));
+      xsr.updateTrackFormCtrls($el.closest('form'));
 
       if (el.className.indexOf('tracking-change') < 0) {
         $el.addClass('tracking-change').on(trackEvents, eTrackChange);
@@ -3898,14 +3938,14 @@
     }
   };
 
-  spa.initTrackFormElChanges = function(scope){
+  xsr.initTrackFormElChanges = function(scope){
     $(scope||'body').find('form.track-changes,form:has(.ctrl-on-change,.track-change)').each(function(idx, formEl){
       _log.info('Initializing Form Elements Track: Form ['+ (formEl['id'] || formEl['name']) +']');
-      spa.trackFormElChange(formEl);
+      xsr.trackFormElChange(formEl);
     });
   };
 
-  spa.getModifiedElement = function (elSelector) {
+  xsr.getModifiedElement = function (elSelector) {
     var modified, modifiedEl=undefined;
     var $elements = $(elSelector || "form:not([data-ignore-change]) :input:not(:disabled,:button,[data-ignore-change])");
     //$elements.each(function(index, element) //jQuery each does not break the loop
@@ -3929,7 +3969,7 @@
     });
     return (modifiedEl);
   };
-  spa.getModifiedElements = function (elSelector) {
+  xsr.getModifiedElements = function (elSelector) {
     var modified, modifiedEls = [];
     var $elements = $(elSelector || "form:not([data-ignore-change]) :input:not(:disabled,:button,[data-ignore-change])");
     $elements.each(function (index, element) {
@@ -3951,7 +3991,7 @@
     return (modifiedEls);
   };
 
-  spa.initTrackElValueChanges = spa.resetElementsDefaultValue = function (elSelector) {
+  xsr.initTrackElValueChanges = xsr.resetElementsDefaultValue = function (elSelector) {
     $(elSelector || "form :input:not(:disabled)").each(function (index, element) {
       element.defaultValue = element.value;
       if ((element.tagName.match(/^input$/i)) && (element.type.match(/^(checkbox|radio)$/i) && element.checked != element.defaultChecked)) {
@@ -3960,13 +4000,13 @@
     });
   };
 
-  spa.trash = {
+  xsr.trash = {
       container:[]
     , push : function(junk){ this.container.push(junk); }
     , empty: function(){this.container = []; }
     , pick : function(tIndex){ return ((tIndex)? this.container[tIndex] : this.container); }
   };
-  spa.fillData = function (data, context, options) {
+  xsr.fillData = function (data, context, options) {
     var ready2Fill = ((typeof data) == "object");
 
     if (context && ((typeof context) == "object")) {
@@ -4010,7 +4050,7 @@
           if ( _isFn(app.api['onError']) ) {
             app.api.onError.call(this, jqXHR, textStatus, errorThrown);
           } else {
-            spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
+            xsr.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
           }
         }
       });
@@ -4034,16 +4074,16 @@
 
         switch (keyFormat) {
           case "_" :
-            dataKey = spa.dotToX(dataKey, "_");
-            dataKeyForFormatterFnSpec = spa.dotToX(dataKeyForFormatterFnSpec, "_");
+            dataKey = xsr.dotToX(dataKey, "_");
+            dataKeyForFormatterFnSpec = xsr.dotToX(dataKeyForFormatterFnSpec, "_");
             break;
           case "AbC":
-            dataKey = spa.dotToTitleCase(dataKey);
-            dataKeyForFormatterFnSpec = spa.dotToTitleCase(dataKeyForFormatterFnSpec);
+            dataKey = xsr.dotToTitleCase(dataKey);
+            dataKeyForFormatterFnSpec = xsr.dotToTitleCase(dataKeyForFormatterFnSpec);
             break;
           default:
-            dataKey = spa.dotToCamelCase(dataKey);
-            dataKeyForFormatterFnSpec = spa.dotToCamelCase(dataKeyForFormatterFnSpec);
+            dataKey = xsr.dotToCamelCase(dataKey);
+            dataKeyForFormatterFnSpec = xsr.dotToCamelCase(dataKeyForFormatterFnSpec);
             break;
         }
 
@@ -4052,9 +4092,9 @@
           "formatterKey": dataKeyForFormatterFnSpec,
           "isArrayChild": isArrayKey
         };
-        spa.trash.push(debugInfo);
+        xsr.trash.push(debugInfo);
         _log.info(debugInfo);
-        spa.trash.empty();
+        xsr.trash.empty();
 
         var elSelector = (fillOptions.selectPattern).replace(/\?/g, dataKey);
         if (fillOptions.keysMap[dataKey] || fillOptions.keysMap[dataKeyForFormatterFnSpec]) {
@@ -4122,7 +4162,7 @@
               break;
 
             case "SELECT":
-              spa.selectOptionForValue(el, dataValue);
+              xsr.selectOptionForValue(el, dataValue);
               if (!fillOptions.resetElDefaultInContext && fillOptions.resetElDefault) el.defaultValue = el.value;
               break;
 
@@ -4132,7 +4172,7 @@
               break;
 
             default:
-              $(el).html( spa.sanitizeXSS(dataValue) );
+              $(el).html( xsr.sanitizeXSS(dataValue) );
               break;
           }
         });
@@ -4141,11 +4181,11 @@
       });
 
       _log.groupEnd("fillData");
-      if (fillOptions.resetElDefaultInContext) spa.resetElementsDefaultValue(context + " :input");
+      if (fillOptions.resetElDefaultInContext) xsr.resetElementsDefaultValue(context + " :input");
     }
   };
 
-  spa.toRenderDataStructure = function(saoDataUrl, soParams, hashParams) {
+  xsr.toRenderDataStructure = function(saoDataUrl, soParams, hashParams) {
     var retObj = {}
       , dataCollection = {}
       , itemUrl = {}
@@ -4160,7 +4200,7 @@
         };
 
     if (soParams){
-      oParams = (_isStr(soParams))? spa.queryStringToJson(soParams) : ((_isObj(soParams))? soParams : {});
+      oParams = (_isStr(soParams))? xsr.queryStringToJson(soParams) : ((_isObj(soParams))? soParams : {});
     }
     switch(true) {
       case (_isStr(saoDataUrl)) :
@@ -4168,8 +4208,8 @@
            'target.data.key|path/to/data/api' => {dataUrl:'path/to/data/api', dataModel:'target.data.key'}
         */
         if (saoDataUrl.containsStr("\\|")) {
-          retObj['dataModel'] = spa.getOnSplit(saoDataUrl, "|", 0);
-          saoDataUrl = spa.getOnLastSplit(1);
+          retObj['dataModel'] = xsr.getOnSplit(saoDataUrl, "|", 0);
+          saoDataUrl = xsr.getOnLastSplit(1);
         }
         retObj['dataUrl'] = replaceKeysWithValues(saoDataUrl, hashParams);
         if (!_isEmpty(oParams)) retObj['dataParams'] = oParams;
@@ -4198,8 +4238,8 @@
         _each(saoDataUrl, function(apiUrl){
           itemUrl = {url:replaceKeysWithValues(apiUrl, hashParams), params:oParams};
           if (apiUrl.containsStr("\\|")) {
-            itemUrl['target'] = spa.getOnSplit(apiUrl, "|", 0);
-            itemUrl['url'] = replaceKeysWithValues(spa.getOnLastSplit(1), hashParams);
+            itemUrl['target'] = xsr.getOnSplit(apiUrl, "|", 0);
+            itemUrl['url'] = replaceKeysWithValues(xsr.getOnLastSplit(1), hashParams);
           }
           dataCollection.urls.push(itemUrl);
         });
@@ -4230,8 +4270,8 @@
         _each(_keys(saoDataUrl), function(dName){
           itemUrl = {name:dName, url:replaceKeysWithValues(saoDataUrl[dName], hashParams), params:oParams};
           if (saoDataUrl[dName].containsStr("\\|")) {
-            itemUrl['target'] = spa.getOnSplit(saoDataUrl[dName], "|", 0);
-            itemUrl['url'] = replaceKeysWithValues(spa.getOnLastSplit(1), hashParams);
+            itemUrl['target'] = xsr.getOnSplit(saoDataUrl[dName], "|", 0);
+            itemUrl['url'] = replaceKeysWithValues(xsr.getOnLastSplit(1), hashParams);
           }
           dataCollection.urls.push(itemUrl);
         });
@@ -4245,15 +4285,15 @@
 
   /* each spaRender's view and model will be stored in renderHistory */
   var _$dataWatchList = {};
-  spa.env = '';
-  spa.compiledTemplates4DataBind={};
-  spa.compiledTemplates={};
-  spa.viewModels = {};
-  spa.renderHistory = {};
-  spa.renderHistoryMax = 0;
-  spa.components = {};
-  spa.tempBind$data = {};
-  spa.defaults = {
+  xsr.env = '';
+  xsr.compiledTemplates4DataBind={};
+  xsr.compiledTemplates={};
+  xsr.viewModels = {};
+  xsr.renderHistory = {};
+  xsr.renderHistoryMax = 0;
+  xsr.components = {};
+  xsr.tempBind$data = {};
+  xsr.defaults = {
       components: {
           templateEngine: 'handlebars'
         , rootPath: 'app/components/'
@@ -4304,9 +4344,9 @@
           _mergeDeep(this, oNewValues);
         } else if (typeof oNewValues == 'string') {
           if (oNewValues == 'components.extend$data') {
-            spa.defaults.components.extend$data = newValue;
+            xsr.defaults.components.extend$data = newValue;
           } else {
-            spa.setSimpleObjProperty(this, oNewValues, newValue);
+            xsr.setSimpleObjProperty(this, oNewValues, newValue);
           }
         }
         return this;
@@ -4315,7 +4355,7 @@
 
   function _adjustComponentOptions(componentName, options){
     var tmplId = '_rtt_'+componentName, tmplBody = '';
-    if (options && _isObj(options)  && spa.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
+    if (options && _isObj(options)  && xsr.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
       if (options.hasOwnProperty('template')) {
         var givenTemplate = options['template'].trim();
         var isContainerId = ((givenTemplate.beginsWithStr('#') && !givenTemplate.containsStr(' ')) || ((givenTemplate=='inline') || (givenTemplate=='.')));
@@ -4327,27 +4367,27 @@
           options['templateStr'] = options['template'];
         }
       }
-      if (spa.hasPrimaryKeys(options, 'templateStr|templateString')) {
+      if (xsr.hasPrimaryKeys(options, 'templateStr|templateString')) {
         tmplBody = options['templateStr'] || options['templateString'] || '';
-        spa.updateTemplateScript(tmplId, tmplBody);
+        xsr.updateTemplateScript(tmplId, tmplBody);
         options['template'] = '#'+tmplId;
-      } else if (spa.hasPrimaryKeys(options, 'templateUrl')) {
+      } else if (xsr.hasPrimaryKeys(options, 'templateUrl')) {
         var xTmplUrlPath = (options['templateUrl'] || '').trim();
         if (xTmplUrlPath) {
           if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
             var isChildComponent = (/[^a-z0-9]/gi).test(componentName); //childComponentIndicator
-            var _cFldrPath   = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder || isChildComponent)? ((componentName.replace(/[^a-z0-9]/gi, '/')) +"/"): '');
+            var _cFldrPath   = xsr.defaults.components.rootPath+ ((xsr.defaults.components.inFolder || isChildComponent)? ((componentName.replace(/[^a-z0-9]/gi, '/')) +"/"): '');
             xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
           }
           // if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
-          //   xTmplUrlPath += spa.defaults.components.templateExt;
+          //   xTmplUrlPath += xsr.defaults.components.templateExt;
           // }
         }
         options['template'] = xTmplUrlPath;
       }
     }
 
-    if (options && _isObj(options) && !spa.hasPrimaryKeys(options, 'data|dataUrl') && spa.hasPrimaryKeys(spa.api.urls, '$'+componentName)){
+    if (options && _isObj(options) && !xsr.hasPrimaryKeys(options, 'data|dataUrl') && xsr.hasPrimaryKeys(xsr.api.urls, '$'+componentName)){
       options['dataUrl'] = '@$'+componentName;
     }
 
@@ -4365,50 +4405,50 @@
   function __$refresh( options ) {
     var cName = this.__name__;
     _onDomReady(function(){
-      spa.refreshComponent(cName, options);
+      xsr.refreshComponent(cName, options);
     });
     return this;
   }
   function __$render( options ) {
     var cName = this.__name__;
     _onDomReady(function(){
-      spa.renderComponent(cName, options);
+      xsr.renderComponent(cName, options);
     });
     return this;
   }
   function __$show( options ) {
     var cName = this.__name__;
     _onDomReady(function(){
-      spa.showComponent(cName, options);
+      xsr.showComponent(cName, options);
     });
     return this;
   }
   function __$hide() {
     var cName = this.__name__;
     _onDomReady(function(){
-      spa.hideComponent(cName);
+      xsr.hideComponent(cName);
     });
     return this;
   }
   function __$enable() {
     var cName = this.__name__;
     _onDomReady(function(){
-      spa.enableComponent(cName);
+      xsr.enableComponent(cName);
     });
     return this;
   }
   function __$disable() {
     var cName = this.__name__;
     _onDomReady(function(){
-      spa.disableComponent(cName);
+      xsr.disableComponent(cName);
     });
     return this;
   }
   function __$remove() {
-    return spa.removeComponent(this.__name__);
+    return xsr.removeComponent(this.__name__);
   }
   function __$destroy() {
-    return spa.destroyComponent(this.__name__);
+    return xsr.destroyComponent(this.__name__);
   }
   var SPAComponentProto = {
     render    : __$render,
@@ -4434,7 +4474,7 @@
   SPAComponent.prototype = SPAComponentProto;
 
   var reservedCompNames = 'api,debug,lang';
-  spa.component = spa.$ = spa.registerComponent = function(componentNameFull, options) {
+  xsr.component = xsr.$ = xsr.registerComponent = function(componentNameFull, options) {
 
     var req2Create = !!options, componentName = componentNameFull;
     options = options || {};
@@ -4479,7 +4519,7 @@
             componentName = componentName.replace(/[^a-z0-9]/gi, '_');
           }
 
-          if (spa.components[componentName]) {
+          if (xsr.components[componentName]) {
             //already registered
             //console.error('Component ['+componentName+'] has been created already.');
             return;
@@ -4493,7 +4533,7 @@
             options['renderCallback'] = 'app.'+componentName+'.renderCallback';
           }
           if (options.hasOwnProperty('require')) {
-            spa.loadComponents(options['require'], function(){
+            xsr.loadComponents(options['require'], function(){
               _log.log('Required components successfully loaded.');
             }, function(){
               _log.log('Failed to load required components.');
@@ -4531,8 +4571,8 @@
             delete baseProperties['data'];
           }
 
-          spa.components[componentName] = baseProperties;
-          spa.extendComponent(componentNameFull, options);
+          xsr.components[componentName] = baseProperties;
+          xsr.extendComponent(componentNameFull, options);
 
           return window.app[componentName] || (new SPAComponent(componentNameFull));
 
@@ -4545,12 +4585,12 @@
           }
 
           if (componentName.indexOf(':')>0) {
-            compIndex = spa.toInt(componentName.getRightStr(':').trim());
+            compIndex = xsr.toInt(componentName.getRightStr(':').trim());
             componentName = componentName.getLeftStr(':');
           }
 
           componentName = componentName.replace(/[^a-z0-9]/gi, '_');
-          if (!spa.components[componentName]) {
+          if (!xsr.components[componentName]) {
             console.warn('Unknown SPA Component "'+(componentNameFull.getLeftStr(' ') || componentNameFull)+'"');
           }
 
@@ -4579,39 +4619,39 @@
     }
   };
 
-  /* spa.registerComponents( 'compName1' );
-   * spa.registerComponents( 'compName1,compName2' );
-   * spa.registerComponents( 'compName1', 'compName2', 'compName3' );
-   * spa.registerComponents( ['compName1', 'compName2', 'compName3'] );
-   * spa.registerComponents( { compName1: {baseProps}, compName2: {baseProps} } );
+  /* xsr.registerComponents( 'compName1' );
+   * xsr.registerComponents( 'compName1,compName2' );
+   * xsr.registerComponents( 'compName1', 'compName2', 'compName3' );
+   * xsr.registerComponents( ['compName1', 'compName2', 'compName3'] );
+   * xsr.registerComponents( { compName1: {baseProps}, compName2: {baseProps} } );
    */
-  spa.$$ = spa.registerComponents = function() {
+  xsr.$$ = xsr.registerComponents = function() {
     if (arguments.length){
-      var compList = arguments;                //spa.registerComponents('compName1', 'compName2', 'compName3');
+      var compList = arguments;                //xsr.registerComponents('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
-        if (_isArr(arguments[0])) {         //spa.registerComponents(['compName1', 'compName2', 'compName3']);
+        if (_isArr(arguments[0])) {         //xsr.registerComponents(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_isStr(arguments[0])) { //spa.registerComponents('compName1') | spa.registerComponents('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //xsr.registerComponents('compName1') | xsr.registerComponents('compName1,compName2');
           compList = arguments[0].split(',');
         } else {
-          compList = arguments[0];             // spa.registerComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+          compList = arguments[0];             // xsr.registerComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
         }
       }
       if (_isObj(compList)) {
         _each(_keys(compList), function(compName){
-          _log.info('Registering spa-component:['+compName+']');
-          spa.registerComponent(compName, compList[compName]);
+          _log.info('Registering x-component:['+compName+']');
+          xsr.registerComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info('Registering spa-component:['+compName+']');
-          spa.registerComponent(compName.trim());
+          _log.info('Registering x-component:['+compName+']');
+          xsr.registerComponent(compName.trim());
         });
       }
     }
   };
 
-  spa.extendComponent = spa.$extend = spa.module = function(componentName, options) {
+  xsr.extendComponent = xsr.$extend = xsr.module = function(componentName, options) {
     options = options || {};
     if (!componentName) {
       console.error('Missing ComponentName to extend.');
@@ -4643,15 +4683,15 @@
         window['app'] = window['app'] || {};
         window.app[componentName] = window.app[componentName] || (new SPAComponent(componentName));
         if (options && _isFn(options)) {
-          options = options.call(spa.components[componentName] || {});
+          options = options.call(xsr.components[componentName] || {});
         }
         options = _isObj(options)? options : {};
-        if (!spa.components[componentName]) spa.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.onRender', renderCallback: 'app.'+componentName+'.renderCallback'};
-        if (spa.components[componentName]) {
+        if (!xsr.components[componentName]) xsr.components[componentName] = {componentName: componentName, beforeRender: 'app.'+componentName+'.onRender', renderCallback: 'app.'+componentName+'.renderCallback'};
+        if (xsr.components[componentName]) {
           if (options['__prop__']) {
-            _mergeDeep(spa.components[componentName], _extend({},options['__prop__']));
+            _mergeDeep(xsr.components[componentName], _extend({},options['__prop__']));
           }
-          options['__prop__'] = spa.components[componentName];
+          options['__prop__'] = xsr.components[componentName];
         }
         _extend(window.app[componentName], options);
         window['$$'+componentName] = window.app[componentName];
@@ -4662,47 +4702,47 @@
     }
   };
 
-  /* spa.extendComponents( 'compName1' );
-   * spa.extendComponents( 'compName1,compName2' );
-   * spa.extendComponents( 'compName1', 'compName2', 'compName3' );
-   * spa.extendComponents( ['compName1', 'compName2', 'compName3'] );
-   * spa.extendComponents( { compName1: {baseProps}, compName2: {baseProps} } );
+  /* xsr.extendComponents( 'compName1' );
+   * xsr.extendComponents( 'compName1,compName2' );
+   * xsr.extendComponents( 'compName1', 'compName2', 'compName3' );
+   * xsr.extendComponents( ['compName1', 'compName2', 'compName3'] );
+   * xsr.extendComponents( { compName1: {baseProps}, compName2: {baseProps} } );
    */
-  spa.extendComponents = spa.$$extend = function() {
+  xsr.extendComponents = xsr.$$extend = function() {
     if (arguments.length){
-      var compList = arguments;                //spa.extendComponents('compName1', 'compName2', 'compName3');
+      var compList = arguments;                //xsr.extendComponents('compName1', 'compName2', 'compName3');
       if (arguments.length == 1) {
-        if (_isArr(arguments[0])) {         //spa.extendComponents(['compName1', 'compName2', 'compName3']);
+        if (_isArr(arguments[0])) {         //xsr.extendComponents(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_isStr(arguments[0])) { //spa.extendComponents('compName1') | spa.registerComponents('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //xsr.extendComponents('compName1') | xsr.registerComponents('compName1,compName2');
           compList = arguments[0].split(',');
         } else {
-          compList = arguments[0];             //spa.extendComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
+          compList = arguments[0];             //xsr.extendComponents( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
         }
       }
       if (_isObj(compList)) {
         _each(_keys(compList), function(compName){
-          _log.info('Extend spa-component:['+compName+']');
-          spa.extendComponent(compName, compList[compName]);
+          _log.info('Extend x-component:['+compName+']');
+          xsr.extendComponent(compName, compList[compName]);
         });
       } else if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info('Extend spa-component:['+compName+']');
-          spa.extendComponent(compName.trim());
+          _log.info('Extend x-component:['+compName+']');
+          xsr.extendComponent(compName.trim());
         });
       }
     }
   };
 
-  spa.$bind = function(cName, newData) {
+  xsr.$bind = function(cName, newData) {
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
     if (_isBlank(newData)) {
       newData = _find(app, cName+'.$data', {});
     }
-    spa.$(cName).spaBindData(newData);
+    xsr.$(cName).spaBindData(newData);
   };
 
-  spa.$data = function(cName, newData, mode){
+  xsr.$data = function(cName, newData, mode){
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
     var retData;
     cName = (cName || '').trim();
@@ -4716,7 +4756,7 @@
           app[cName].$data = data;
         }
       }
-      app[cName]['is$DataUpdated'] = spa.components[cName]['is$DataUpdated'] = true;
+      app[cName]['is$DataUpdated'] = xsr.components[cName]['is$DataUpdated'] = true;
       return app[cName].$data;
     }
 
@@ -4726,21 +4766,21 @@
         if (newData) {
           retData = update$data( (_isFn(newData))? newData.call(app[cName], app[cName].$data) : newData );
 
-          var $component = spa.$(cName);
+          var $component = xsr.$(cName);
           if ($component.is(':visible')) {
-            var _$prop = spa.components[cName]
+            var _$prop = xsr.components[cName]
               , _$dataCache = _$prop['dataCache']
               , _on$dataChange = (_$prop['on$dataChange']||'').trim().toLowerCase();
             if (_$dataCache && _on$dataChange && (['render','refresh','bind'].__has(_on$dataChange))) {
               _log.log(cName+'$'+_on$dataChange+' on $data update ...');
               spa['$'+_on$dataChange](cName);
             }
-            spa.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
+            xsr.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
           } else {
             console.log('Component is not visible! Skipped $on$dataChange.');
           }
 
-          spa.$dataNotify(cName);
+          xsr.$dataNotify(cName);
         }
       } else {
         _log.warn('SPA Component[',cName,'] is not loaded.');
@@ -4750,7 +4790,7 @@
     return retData;
   };
 
-  spa.$dataWatch = function(cName, watchName, fnCallback){
+  xsr.$dataWatch = function(cName, watchName, fnCallback){
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
     if (!cName || !watchName || !_isFn(fnCallback)) return;
 
@@ -4766,7 +4806,7 @@
       return true;
     }
   };
-  spa.$dataUnwatch = function(cName, watchName){
+  xsr.$dataUnwatch = function(cName, watchName){
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
     var retVal;
     if (cName && watchName && _$dataWatchList.hasOwnProperty(cName)) {
@@ -4784,7 +4824,7 @@
     }
     return retVal;
   };
-  spa.$dataNotify = function(cName, watchName){
+  xsr.$dataNotify = function(cName, watchName){
     cName = String(cName).replace(/[^a-z0-9]/gi, '_');
     if (!cName) return;
 
@@ -4805,14 +4845,14 @@
   function _$renderCountUpdate(componentName){
     componentName = String(componentName).replace(/[^a-z0-9]/gi, '_');
     if (app[componentName]) {
-      app[componentName]['__renderCount__'] = spa.toInt(spa.$renderCount(componentName)) + 1;
+      app[componentName]['__renderCount__'] = xsr.toInt(xsr.$renderCount(componentName)) + 1;
     }
   }
-  spa.$renderCount = function(componentName){
+  xsr.$renderCount = function(componentName){
     return _find(window, 'app.'+(String(componentName).replace(/[^a-z0-9]/gi, '_'))+'.__renderCount__', 0);
   };
 
-  spa.removeComponent = function (componentName, byComp) {
+  xsr.removeComponent = function (componentName, byComp) {
     var ok2Remove;
     componentName = (componentName || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (byComp) {
@@ -4823,7 +4863,7 @@
       cName = String(cName).replace(/[^a-z0-9]/gi, '_').trim();
       var ok2Remove$ = _isBlank(cName), _fnOnRemoveCompRes;
       if (!ok2Remove$) {
-        _fnOnRemoveCompRes = spa.renderUtils.runCallbackFn(('app.'+cName+'.onRemove'), (byComp || '_script_'), app[cName]);
+        _fnOnRemoveCompRes = xsr.renderUtils.runCallbackFn(('app.'+cName+'.onRemove'), (byComp || '_script_'), app[cName]);
         ok2Remove$ = (_isUndef(_fnOnRemoveCompRes) || (_isBool(_fnOnRemoveCompRes) && _fnOnRemoveCompRes));
         if (!ok2Remove$) {
           _log.warn('Remove $'+cName+' request denied onRemove()');
@@ -4849,21 +4889,21 @@
     }
     return (_isBool(ok2Remove) && ok2Remove);
   };
-  spa.destroyComponent = function (componentName) {
+  xsr.destroyComponent = function (componentName) {
     var isDestroyed;
     componentName = (componentName || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (componentName) {
-      if ( spa.removeComponent(componentName) ) {
+      if ( xsr.removeComponent(componentName) ) {
         delete app[componentName];
-        if (spa.components[componentName]) {
-          var tmplScriptId = _find(spa.components[componentName], 'template', '');
+        if (xsr.components[componentName]) {
+          var tmplScriptId = _find(xsr.components[componentName], 'template', '');
           if (tmplScriptId && !tmplScriptId.beginsWithStr('#')) {
             tmplScriptId = "#__tmpl_" + ((''+tmplScriptId).replace(/[^a-z0-9]/gi,'_'));
           }
           $('script'+tmplScriptId).remove();
-          delete spa.components[componentName];
-          delete spa.compiledTemplates4DataBind[componentName];
-          delete spa.compiledTemplates[componentName];
+          delete xsr.components[componentName];
+          delete xsr.compiledTemplates4DataBind[componentName];
+          delete xsr.compiledTemplates[componentName];
           delete _$dataWatchList[componentName];
           isDestroyed = true;
         }
@@ -4871,30 +4911,30 @@
     }
     return isDestroyed;
   };
-  spa.showComponent = function (componentPath, options) {
+  xsr.showComponent = function (componentPath, options) {
     var componentName = (componentPath || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (componentName) {
       var $componentContainer = $('[data-rendered-component="'+componentName+'"]');
       if ($componentContainer.length) {
         $componentContainer.show();
       } else {
-        spa.$render(componentPath, options);
+        xsr.$render(componentPath, options);
       }
     }
   };
-  spa.hideComponent = function (componentName) {
+  xsr.hideComponent = function (componentName) {
     componentName = (componentName || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (componentName) {
       $('[data-rendered-component="'+componentName+'"]').hide();
     }
   };
-  spa.disableComponent = function (componentName) {
+  xsr.disableComponent = function (componentName) {
     componentName = (componentName || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (componentName) {
       $('[data-rendered-component="'+componentName+'"]').css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
     }
   };
-  spa.enableComponent = function (componentName) {
+  xsr.enableComponent = function (componentName) {
     componentName = (componentName || '').replace(/[^a-z0-9]/gi, '_').trim();
     if (componentName) {
       $('[data-rendered-component="'+componentName+'"]').css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
@@ -4922,33 +4962,33 @@
       _log.log(compList);
       if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info(actionName+' spa-component:['+compName.trim()+']');
+          _log.info(actionName+' x-component:['+compName.trim()+']');
           spa[actionName](compName.trim());
         });
       }
     }
   }
-  spa.removeComponents = spa.$remove = spa.$$remove = function () {
+  xsr.removeComponents = xsr.$remove = xsr.$$remove = function () {
     _spaComponentOp.apply({action: 'removeComponent'}, arguments);
   };
-  spa.destroyComponents = spa.$destroy = spa.$$destroy = function () {
+  xsr.destroyComponents = xsr.$destroy = xsr.$$destroy = function () {
     _spaComponentOp.apply({action: 'destroyComponent'}, arguments);
   };
-  spa.showComponents = spa.$show = spa.$$show = function () {
+  xsr.showComponents = xsr.$show = xsr.$$show = function () {
     _spaComponentOp.apply({action: 'showComponent'}, arguments);
   };
-  spa.hideComponents = spa.$hide = spa.$$hide = function () {
+  xsr.hideComponents = xsr.$hide = xsr.$$hide = function () {
     _spaComponentOp.apply({action: 'hideComponent'}, arguments);
   };
-  spa.enableComponents = spa.$enable = spa.$$enable = function () {
+  xsr.enableComponents = xsr.$enable = xsr.$$enable = function () {
     _spaComponentOp.apply({action: 'enableComponent'}, arguments);
   };
-  spa.disableComponents = spa.$disable = spa.$$disable = function () {
+  xsr.disableComponents = xsr.$disable = xsr.$$disable = function () {
     _spaComponentOp.apply({action: 'disableComponent'}, arguments);
   };
 
   //////////////////////////////////////////////////////////////////////////////////
-  spa.refreshComponent = spa.$refresh = function (componentName, options) {
+  xsr.refreshComponent = xsr.$refresh = function (componentName, options) {
     if (!componentName) return;
     options = options || {};
     if (!_isObj(options)) return;
@@ -4963,7 +5003,7 @@
 
     _log.info('Calling refreshComponent: '+componentName+' with below options');
     _log.info(options);
-    spa.$render(componentName, options);
+    xsr.$render(componentName, options);
   };
 
   function __finalValue(srcVal) {
@@ -4981,12 +5021,18 @@
   }
 
   //////////////////////////////////////////////////////////////////////////////////
-  spa.renderComponent = spa.$render = function (componentNameFull, options) {
+  xsr.renderComponent = xsr.$render = function (componentNameFull, options) {
 
+    if (!isSPAReady) {
+      $(function(){
+        xsr.renderComponent(componentNameFull, options);
+      });
+      return;
+    }
     if (!( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) )) {
       _log.info('DOM NOT Ready. will render component ['+componentNameFull+'] on DOM Ready.');
       _doc.addEventListener('DOMContentLoaded', function(){
-        spa.renderComponent(componentNameFull, options);
+        xsr.renderComponent(componentNameFull, options);
       });
       return;
     }
@@ -5011,15 +5057,18 @@
       componentNameFull = componentNameFull.trim();
       if (componentNameFull[0] == '$') {
         isReq4SpaComponent = true;
+      } else if (componentNameFull[0] == '#') {
+        $(componentNameFull).spaRender(options);
+        return;
       }
     } else {
       console.error('Invalid ComponentName:', componentNameFull);
       return;
     }
 
-    if ( (!(options && _isObj(options) && options['isRefreshCall'])) && spa.$renderCount(componentName) && _find(window, 'app.'+componentName+'.refreshCallback', '')){
+    if ( (!(options && _isObj(options) && options['isRefreshCall'])) && xsr.$renderCount(componentName) && _find(window, 'app.'+componentName+'.refreshCallback', '')){
       _log.info('Component ['+componentNameFull+'] has been rendered already. Refreshing instead of re-render.');
-      spa.refreshComponent(componentName, options);
+      xsr.refreshComponent(componentName, options);
       return;
     }
 
@@ -5028,9 +5077,9 @@
     var isServerComponent = (!isReq4SpaComponent && (/[^a-z0-9]/ig).test( componentName ));
     if (isServerComponent){
       var componentUrl = componentName, urlKey;
-      if (componentName[0] === spa.api.urlKeyIndicator) {
-        urlKey = componentName.trimLeftStr(spa.api.urlKeyIndicator);
-        componentUrl = spa.api.urls[urlKey] || '';
+      if (componentName[0] === xsr.api.urlKeyIndicator) {
+        urlKey = componentName.trimLeftStr(xsr.api.urlKeyIndicator);
+        componentUrl = xsr.api.urls[urlKey] || '';
       }
       options['componentUrl'] = componentUrl;
       _log.info('Called to render ServerComponent: ['+componentName+'] with options', options);
@@ -5046,15 +5095,15 @@
           , xUrlPayload   = __finalValue(_toObj(options['urlPayload']), options)
           , xUrlMethod    = (options['urlMethod'] || 'GET').toLowerCase()
           , xUrlCache     = (String(options['urlCache'] || 'false').toLowerCase() !== 'false')
-          , xUrl          = spa.api.url(componentUrl, xUrlParams)
+          , xUrl          = xsr.api.url(componentUrl, xUrlParams)
           , xUrlError     = __finalValue(options['urlError']);
 
         _log.log('Loading ServerComponent ...');
 
-        spa.api[xUrlMethod](xUrl, xUrlPayload
+        xsr.api[xUrlMethod](xUrl, xUrlPayload
           , function _onSuccess(xContent) {
               $(xTargetEl).html(xContent);
-              spa.renderComponentsInHtml(xTargetEl);
+              xsr.renderComponentsInHtml(xTargetEl);
             }
           , function _onFail(jqXHR, textStatus, errorThrown) {
               if (this.onError && _isFn(this.onError)) {
@@ -5093,43 +5142,43 @@
       componentFileName = componentNameSplit[componentNameSplit.length-1];
     }
 
-    var _cFldrPath   = spa.defaults.components.rootPath+ ((spa.defaults.components.inFolder || isChildComponent)? (componentPath+"/"): '')
+    var _cFldrPath   = xsr.defaults.components.rootPath+ ((xsr.defaults.components.inFolder || isChildComponent)? (componentPath+"/"): '')
       , _cFilesPath  = _cFldrPath+componentFileName
-      , _cTmplFile   = _cFilesPath+spa.defaults.components.templateExt
-      , _cScriptExt  = spa.defaults.components.scriptExt
+      , _cTmplFile   = _cFilesPath+xsr.defaults.components.templateExt
+      , _cScriptExt  = xsr.defaults.components.scriptExt
       , _cScriptFile = (options && _isObj(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
       , _renderComp  = function(){
           _log.info('_renderComp: '+componentName+' with below options');
           _log.info(options);
-          if (!spa.components[componentName].hasOwnProperty('template')) {
-            if (spa.components[componentName].hasOwnProperty('templateStr') || spa.components[componentName].hasOwnProperty('templateString')) {
-              tmplBody = spa.components[componentName]['templateStr'] || spa.components[componentName]['templateString'] || '';
-              spa.updateTemplateScript(tmplId, tmplBody);
-              spa.components[componentName]['template'] = '#'+tmplId;
-            } else  if (spa.hasPrimaryKeys(spa.components[componentName], 'templateUrl')) {
-              var xTmplUrlPath = (spa.components[componentName]['templateUrl'] || '').trim();
+          if (!xsr.components[componentName].hasOwnProperty('template')) {
+            if (xsr.components[componentName].hasOwnProperty('templateStr') || xsr.components[componentName].hasOwnProperty('templateString')) {
+              tmplBody = xsr.components[componentName]['templateStr'] || xsr.components[componentName]['templateString'] || '';
+              xsr.updateTemplateScript(tmplId, tmplBody);
+              xsr.components[componentName]['template'] = '#'+tmplId;
+            } else  if (xsr.hasPrimaryKeys(xsr.components[componentName], 'templateUrl')) {
+              var xTmplUrlPath = (xsr.components[componentName]['templateUrl'] || '').trim();
               if (xTmplUrlPath) {
                 if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
                   xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
                 }
                 // if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no file extension, set default
-                //   xTmplUrlPath += spa.defaults.components.templateExt;
+                //   xTmplUrlPath += xsr.defaults.components.templateExt;
                 // }
               }
-              spa.components[componentName]['template'] = xTmplUrlPath;
+              xsr.components[componentName]['template'] = xTmplUrlPath;
             } else {
-              spa.components[componentName]['template'] = _cTmplFile;
+              xsr.components[componentName]['template'] = _cTmplFile;
             }
           }
-          _log.info('render-options: spa.components['+componentName+']');
-          _log.info(spa.components[componentName]);
-          var renderOptions = (options && options['saveOptions'])?  spa.components[componentName] : _extend({}, spa.components[componentName]);
+          _log.info('render-options: xsr.components['+componentName+']');
+          _log.info(xsr.components[componentName]);
+          var renderOptions = (options && options['saveOptions'])?  xsr.components[componentName] : _extend({}, xsr.components[componentName]);
           if (options) {
             if (!options.hasOwnProperty('mountComponent')) {
               delete renderOptions['mountComponent'];
             }
             _extend(renderOptions, options);
-            _log.info('Extended> render-options: spa.components['+componentName+']');
+            _log.info('Extended> render-options: xsr.components['+componentName+']');
             _log.info(renderOptions);
           }
 
@@ -5153,7 +5202,7 @@
             }
           }
 
-          spa.render(renderOptions);
+          xsr.render(renderOptions);
         }
       , _parseComp = function(){
           if (_cScriptFile) {
@@ -5161,28 +5210,28 @@
           } else {
             _log.info('Skipped Loading component ['+componentName+'] source from script file.');
           }
-          _log.info('In Source> spa.components['+componentName+']');
-          _log.info(spa.components[componentName]);
-          if (!spa.components.hasOwnProperty(componentName)) {
-            _log.info('spa.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'spa.components') +']. Creating *NEW*');
+          _log.info('In Source> xsr.components['+componentName+']');
+          _log.info(xsr.components[componentName]);
+          if (!xsr.components.hasOwnProperty(componentName)) {
+            _log.info('xsr.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'xsr.components') +']. Creating *NEW*');
             if (_isBlank(options)) options = {};
             if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
-            spa.components[componentName] = options;
-            _log.info('NEW> spa.components['+componentName+']');
-            _log.info(spa.components[componentName]);
+            xsr.components[componentName] = options;
+            _log.info('NEW> xsr.components['+componentName+']');
+            _log.info(xsr.components[componentName]);
           }
           _renderComp();
         };
 
-    if (spa.components.hasOwnProperty(componentName)) {
-      _log.info('Re-rending spa.components['+componentName+']');
-      _log.info(spa.components[componentName]);
+    if (xsr.components.hasOwnProperty(componentName)) {
+      _log.info('Re-rending xsr.components['+componentName+']');
+      _log.info(xsr.components[componentName]);
       _renderComp();
     } else {
       //load component's base prop from .(min.)js
       if (_cScriptFile) {
         _log.info("Attempt to load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"]"); //1st load from server
-        _cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:spa.defaults.components.offline}).done(noop)
+        _cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:xsr.defaults.components.offline}).done(noop)
           .fail(function(){
             _log.info("Attempt to Load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"] has FAILED. Not to worry. Continuing to render with default properties.");
             _parseComp();
@@ -5208,7 +5257,7 @@
       if (arguments.length == 1) {
         if (_isArr(arguments[0])) {         //(['compName1', 'compName2', 'compName3']);
           compList = arguments[0];
-        } else if (_isStr(arguments[0])) { //('compName1') | spa.renderComponents('compName1,compName2');
+        } else if (_isStr(arguments[0])) { //('compName1') | xsr.renderComponents('compName1,compName2');
           compList = arguments[0].split(',');
         } else {
           compList = arguments[0];             //( { compName1: {overrideOptions}, compName2: {overrideOptions} } );
@@ -5217,21 +5266,21 @@
 
       if (_isObj(compList)) {
         _each(_keys(compList), function(compName){
-          _log.info('Rendering spa-component:['+compName+']');
+          _log.info('Rendering x-component:['+compName+']');
           spa[actionName](compName, compList[compName]);
         });
       } else if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info('Rendering spa-component:['+compName+']');
+          _log.info('Rendering x-component:['+compName+']');
           spa[actionName](compName.trim());
         });
       }
     }
   }
-  spa.renderComponents = spa.$$render = function () {
+  xsr.renderComponents = xsr.$$render = function () {
     _spaRenderRefreshComponents.apply({action: 'renderComponent'}, arguments);
   };
-  spa.refreshComponents = spa.$$refresh = function () {
+  xsr.refreshComponents = xsr.$$refresh = function () {
     _spaRenderRefreshComponents.apply({action: 'refreshComponent'}, arguments);
   };
 
@@ -5240,15 +5289,15 @@
 
     var pCompRef = 'app.'+pComponentName+'.';
     if (_isObj(newData)) {
-      if (!spa.tempBind$data.hasOwnProperty(pComponentName)) spa.tempBind$data[pComponentName] = {};
-      spa.tempBind$data[pComponentName]['$data'] = _mergeDeep({}, _find(app, pComponentName+'.$data', {}), newData);
-      pCompRef = 'spa.tempBind$data.'+pComponentName+'.';
+      if (!xsr.tempBind$data.hasOwnProperty(pComponentName)) xsr.tempBind$data[pComponentName] = {};
+      xsr.tempBind$data[pComponentName]['$data'] = _mergeDeep({}, _find(app, pComponentName+'.$data', {}), newData);
+      pCompRef = 'xsr.tempBind$data.'+pComponentName+'.';
     }
 
     var $el, $elData, spaCompNameWithOpt, spaCompOpt, spaCompOptions;
 
     $el = $(el); $elData = $el.data();
-    spaCompNameWithOpt = ($el.attr('data-spa-component') || '').split('|');
+    spaCompNameWithOpt = ($el.attr('data-x-component') || $el.attr('data-spa-component') || '').split('|');
     //spaCompName = (spaCompNameWithOpt[0]).trim();
     spaCompOpt  = (spaCompNameWithOpt[1]||'').trim();
 
@@ -5259,7 +5308,7 @@
       spaCompOpt = _toObj(spaCompOpt);
     }
 
-    var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
+    var cOptionsInAttr = $el.attr('data-x-component-options') || $el.attr('data-x-$options') || $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
     spaCompOptions = _mergeDeep( {}, spaCompOpt, $elData, _toObj(cOptionsInAttr));
 
     if (spaCompOptions.hasOwnProperty('data') && _isStr(spaCompOptions.data)) {
@@ -5270,7 +5319,7 @@
       spaCompOptions.data = _mergeDeep({}, _find(window, dataPath, {}));
     }
 
-    var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
+    var $dataInAttr = ($el.attr('data-x-component-$data') || $el.attr('data-x-$data') || $el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
     if ($dataInAttr) {
       if (/\:\s*\$data/.test($dataInAttr)) {
         $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':'+pCompRef+'$data');
@@ -5294,56 +5343,103 @@
 
   function _spaTagsSelector(tagNames){
     return tagNames.split(',').map(function(tagName){
-      return (tagName.trim())+'[src]:not([data-spa-component])';
+      return (tagName.trim())+'[src]:not([data-spa-component]):not([data-x-component])';
     }).join(',');
   }
 
-  spa.renderComponentsInHtml = function (scope, pComponentName) {
-    scope = scope||'body';
-    pComponentName = (pComponentName || '').trim();
-
-    // <spa-template src=""> <x-template src="">
-    var templateTags = _spaTagsSelector('spa-template,x-template');
-    $(scope).find(templateTags).each(function(){
-      this.setAttribute('data-spa-component', this.getAttribute('src'));
-      this.setAttribute('data-skip-data-bind', 'true');
-      this.setAttribute('data-template-script', 'true');
-      this.style.display = 'none';
-    });
-
-    // <spa-html src=""> <x-html src=""> with optional [data] attribute
-    var htmlTags = _spaTagsSelector('spa-html,x-html');
-    $(scope).find(htmlTags).each(function(){
-      var htmlSrc = this.getAttribute('src');
-      var isSpaComponent = ((htmlSrc[0] === '$') || !(/[^a-z0-9]/ig).test( htmlSrc ));
-      if (isSpaComponent && !spa.components[htmlSrc.replace(/[^a-z0-9]/gi,'_')]) {
-        var cOptions = {
-          templateScript: true
-        };
-        var skipDataBind = (!(this.hasAttribute('data') || this.hasAttribute('data-url')));
-        if (skipDataBind) {
-          cOptions['skipDataBind'] = true;
-        } else if (!this.hasAttribute('data-url')) {
-          cOptions['data'] = this.hasAttribute('data')? _toObj(this.getAttribute('data')) : {};
+  function _delayedRenderFor(compName) {
+    var $compContainers = $('body').find('[render-after*="'+compName+'"]');
+    if ($compContainers.length) {
+      var pendingList = '';
+      $compContainers.each(function(i, el){
+        pendingList = (' '+(el.getAttribute('render-after').replace(/,/g, ' ').replace(/\s+/g, ' '))+' ').replace(' '+compName+' ', '').trim();
+        if (pendingList) {
+          el.setAttribute('render-after',  pendingList);
+        } else {
+          el.removeAttribute('render-after');
+          xsr.renderComponentsInHtml(el, '', true);
         }
-        spa.$(htmlSrc, cOptions);
-      }
-      this.setAttribute('data-spa-component', htmlSrc);
-    });
+      });
+    }
+  }
 
-    // <spa-component src=""> <x-component src="">
-    var componentTags = _spaTagsSelector('spa-component,x-component');
-    $(scope).find(componentTags).each(function(){
-      this.setAttribute('data-spa-component', this.getAttribute('src'));
-    });
+  xsr.renderComponentsInHtml = function (scope, pComponentName, renderSelf) {
+    scope = scope||'body';
 
-    var $spaCompList = $(scope).find('[data-spa-component]');
+    renderOptions  = (typeof pComponentName == 'object')? pComponentName : '';
+    pComponentName = (typeof pComponentName == 'string')? pComponentName.trim() : '';
+
+    var $spaCompList = $(scope);
+
+    if (!renderSelf) {
+      // <spa-template src=""> <x-template src="">
+      var templateTags = _spaTagsSelector('spa-template,x-template');
+      $(scope).find(templateTags).each(function(){
+        // this.setAttribute('data-spa-component', this.getAttribute('src'));
+        this.setAttribute('data-x-component', this.getAttribute('src'));
+        this.setAttribute('data-skip-data-bind', 'true');
+        this.setAttribute('data-template-script', 'true');
+        this.style.display = 'none';
+      });
+
+      // <spa-html src=""> <x-html src=""> with optional [data] attribute
+      var htmlTags = _spaTagsSelector('spa-html,x-html');
+      $(scope).find(htmlTags).each(function(){
+        var htmlSrc = this.getAttribute('src');
+        var isSpaComponent = ((htmlSrc[0] === '$') || !(/[^a-z0-9]/ig).test( htmlSrc ));
+        if (isSpaComponent && !xsr.components[htmlSrc.replace(/[^a-z0-9]/gi,'_')]) {
+          var cOptions = {
+            templateScript: true
+          };
+          var skipDataBind = (!(this.hasAttribute('data') || this.hasAttribute('data-url')));
+          if (skipDataBind) {
+            cOptions['skipDataBind'] = true;
+          } else if (!this.hasAttribute('data-url')) {
+            cOptions['data'] = this.hasAttribute('data')? _toObj(this.getAttribute('data')) : {};
+          }
+          xsr.$(htmlSrc, cOptions);
+        }
+        // this.setAttribute('data-spa-component', htmlSrc);
+        this.setAttribute('data-x-component', htmlSrc);
+      });
+
+      // <spa-component src=""> <x-component src="">
+      var componentTags = _spaTagsSelector('spa-component,x-component');
+      $(scope).find(componentTags).each(function(){
+        // this.setAttribute('data-spa-component', this.getAttribute('src'));
+        this.setAttribute('data-x-component', this.getAttribute('src'));
+      });
+
+      $spaCompList = $spaCompList.find('[data-x-component],[data-spa-component]').filter(':not([render-after])');
+    }
+
     if ($spaCompList.length){
 
       var $el, spaCompNameWithOpt, spaCompName, spaCompOpt, spaCompOptions, newElId, $elData;
       $spaCompList.each(function( index, el ) {
         $el = $(el); $elData = $el.data();
-        spaCompNameWithOpt = ($el.attr('data-spa-component') || '').split('|');
+
+        var dataKeysMap = {
+          url                   : "dataUrl",
+          urlParams             : "dataUrlParams",
+          urlMethod             : "dataUrlMethod",
+          urlErrorHandle        : "dataUrlErrorHandle",
+          urlHeaders            : "dataUrlHeaders",
+          params                : "dataParams",
+          type                  : "dataType",
+          model                 : "dataModel",
+          cache                 : "dataCache",
+          validate              : "dataValidate",
+          process               : "dataProcess"
+        };
+        Object.keys($elData).forEach(function(key){
+          if (dataKeysMap.hasOwnProperty(key)) {
+            $elData[dataKeysMap[key]] = (/params|headers/gi.test(key))? _toObj($elData[key]) : $elData[key];
+            delete $elData[key];
+          }
+        });
+
+        spaCompNameWithOpt = ($el.attr('data-x-component') || $el.attr('data-spa-component') || '').split('|');
         spaCompName = (spaCompNameWithOpt[0]).trim();
         spaCompOpt  = (spaCompNameWithOpt[1]||'').trim();
 
@@ -5355,8 +5451,8 @@
         }
 
         if (spaCompName) {
-          if ((!spa.components[spaCompName]) && (el.hasAttribute('no-script') || el.hasAttribute('noscript') || el.hasAttribute('nojs') || el.hasAttribute('no-js'))) {
-            spa.$(spaCompName, {});
+          if ((!xsr.components[spaCompName]) && (el.hasAttribute('no-script') || el.hasAttribute('noscript') || el.hasAttribute('nojs') || el.hasAttribute('no-js'))) {
+            xsr.$(spaCompName, {});
           }
 
           if (!el.id) {
@@ -5370,8 +5466,8 @@
             el.setAttribute("rel", "spaComponentContainer_"+_spaCompName);
           }
 
-          var cOptionsInAttr = $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
-          spaCompOptions = _mergeDeep( {target: "#"+el.id, targetEl: el, spaComponent:(spaCompName.trim()), _reqFrTag_: 1}, spaCompOpt, $elData, _toObj(cOptionsInAttr));
+          var cOptionsInAttr = $el.attr('data-x-component-options') || $el.attr('data-x-$options') || $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
+          spaCompOptions = _mergeDeep( {target: "#"+el.id, targetEl: el, spaComponent:(spaCompName.trim()), _reqFrTag_: 1}, spaCompOpt, $elData, _toObj(cOptionsInAttr), renderOptions);
 
           if (el.hasAttribute('skipDataBind') || el.hasAttribute('skip-data-bind')) {
             spaCompOptions['skipDataBind'] = true;
@@ -5385,7 +5481,7 @@
             }
             spaCompOptions.data = _mergeDeep({}, _find(window, dataPath, {}));
           }
-          var $dataInAttr = ($el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
+          var $dataInAttr = ($el.attr('data-x-component-$data') || $el.attr('data-x-$data') || $el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
           if ($dataInAttr) {
             if (/\:\s*\$data/.test($dataInAttr)) {
               $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':app.'+pComponentName+'.$data');
@@ -5409,13 +5505,13 @@
           }
 
           _log.log('inner-component', spaCompName, 'options:', spaCompOptions);
-          spa.renderComponent(spaCompName, spaCompOptions);
+          xsr.renderComponent(spaCompName, spaCompOptions);
         }
       });
     }
   };
 
-  spa.renderUtils = {
+  xsr.renderUtils = {
     array2ObjWithKeyPrefix: function(arrayList, keyPrefix, targetId){
       var retObj = {};
       _each(arrayList, function(item){
@@ -5474,7 +5570,7 @@
         _each(_keys(app[compName].events), function(eventId){
           if (app[compName].events[eventId].hasOwnProperty('target') && (!_isBlank(app[compName].events[eventId].target))) {
             elTargetSelector = app[compName].events[eventId].target;
-            $elTarget = spa.$(compName+' '+elTargetSelector); //$('body').find(elTargetSelector)
+            $elTarget = xsr.$(compName+' '+elTargetSelector); //$('body').find(elTargetSelector)
             $elTarget.filter(':not([spa-events-'+eventId+'="'+compName+'"])')
             .attr('spa-events-'+eventId, compName)
             .each(function(index, el){
@@ -5499,7 +5595,7 @@
   }
 
   /*
-   * spa.render("#containerID")
+   * xsr.render("#containerID")
    *
    * OR
    *
@@ -5550,14 +5646,14 @@
    ,dataRenderCallback        : ""    // single javascript functionName to run after render
    ,dataRenderMode            : ""    // "":Replace target | "append" : Append to target | "prepend" : Prepend to target
 
-   ,dataRenderId              : ""    // Render Id, may be used to locate in spa.renderHistory[dataRenderId], auto-generated key if not defined
+   ,dataRenderId              : ""    // Render Id, may be used to locate in xsr.renderHistory[dataRenderId], auto-generated key if not defined
    ,saveOptions               : false // Save options in render-container element
    };
 
-   spa.render("#containerID", uOption);
+   xsr.render("#containerID", uOption);
    */
-  spa.render = function (viewContainerId, uOptions) {
-    _log.log('spa.render', viewContainerId, uOptions);
+  xsr.render = function (viewContainerId, uOptions) {
+    _log.log('xsr.render', viewContainerId, uOptions);
 
     if (!arguments.length) return;
 
@@ -5572,10 +5668,10 @@
         viewContainerId = (oldTarget? '#' : '')+oldTarget;
         if (!viewContainerId) {
           console.warn('Render target is missing.');
-          viewContainerId = "dynRender_"+_now()+"_"+(spa.rand(1000, 9999));
+          viewContainerId = "dynRender_"+_now()+"_"+(xsr.rand(1000, 9999));
         }
       }
-      spa.render(viewContainerId, uOptions);
+      xsr.render(viewContainerId, uOptions);
       return;
     }
 
@@ -5636,7 +5732,7 @@
 
     var spaRVOptions = {
       data: {}
-      , dataPreRequest : spa.defaults.components.dataPreRequest
+      , dataPreRequest : xsr.defaults.components.dataPreRequest
       , dataUrl: ""
       , dataUrlParams: {}
       , dataUrlMethod: "GET"
@@ -5653,7 +5749,7 @@
       , dataProcess: ''
       , dataUrlCache: false
       , dataCache: false
-      , extend$data : spa.defaults.components.extend$data
+      , extend$data : xsr.defaults.components.extend$data
 
       , dataCollection: {}
 
@@ -5687,7 +5783,7 @@
     if (useOptions) { /* for each user option set/override internal spaRVOptions */
       /* store options in container data properties if saveOptions == true */
       var _globalCompOptions = {
-        dataTemplatesCache : spa.defaults.components.templateCache
+        dataTemplatesCache : xsr.defaults.components.templateCache
       };
       uOptions = _mergeDeep({}, _globalCompOptions, uOptions);
 
@@ -5695,7 +5791,7 @@
       for (var key in uOptions) {
         spaRVOptions[key] = uOptions[key];
         if (saveOptions && (!(key === "data" || key === "saveOptions"))) {
-          $(viewContainerId).data((''+( ('' + ( ((''+key)[4]) || '') ).toLowerCase() )+key.slice(5)), spa.toStr(uOptions[key]));
+          $(viewContainerId).data((''+( ('' + ( ((''+key)[4]) || '') ).toLowerCase() )+key.slice(5)), xsr.toStr(uOptions[key]));
         }
       }
     }
@@ -5771,7 +5867,7 @@
 //      spaRenderId = spaRVOptions.dataRenderId;
 //    }
     var spaRenderId = _renderOption('dataRenderId', 'renderId');
-    retValue.id = (spaRenderId.ifBlankStr(("spaRender" + (_now()) + (spa.rand(1000, 9999)))));
+    retValue._renderId = (spaRenderId.ifBlankStr(("spaRender" + (_now()) + (xsr.rand(1000, 9999)))));
 
 //    var targetRenderMode = ("" + $(viewContainerId).data("renderMode")).replace(/undefined/, "");
 //    if (!_isBlank(spaRVOptions.dataRenderMode)) {
@@ -5781,7 +5877,7 @@
     _log.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
-    var spaTemplateEngine = (spaRVOptions.templateEngine || spa.defaults.components.templateEngine || "handlebars").toLowerCase();
+    var spaTemplateEngine = (spaRVOptions.templateEngine || xsr.defaults.components.templateEngine || "handlebars").toLowerCase();
 
     /* Load Scripts Begins */
     _log.group("spaLoadingViewScripts");
@@ -5824,7 +5920,7 @@
     if (vScripts && (!_isEmptyObj(vScripts))) {
       if (_isArr(vScripts)) {
         _log.info("Convert array of script(s) without scriptID to object with scriptID(s).");
-        var newScriptsObj = spa.renderUtils.array2ObjWithKeyPrefix(vScripts, '__scripts_', viewContainerId);
+        var newScriptsObj = xsr.renderUtils.array2ObjWithKeyPrefix(vScripts, '__scripts_', viewContainerId);
         _log.info("Scripts(s) with scriptID(s).");
         _log.log(newScriptsObj);
         vScripts = (_isEmpty(newScriptsObj))? {} : newScriptsObj;
@@ -5842,7 +5938,7 @@
       vScriptsList = _map(vScriptsNames, function (scriptId) {
         scriptPath = _getFullPath4Component(vScripts[scriptId], rCompName);
         if (!(scriptPath.endsWithStrIgnoreCase( '.js' )) && (scriptPath.indexOf('?')<0)) {
-          scriptPath += spa.defaults.components.scriptExt;
+          scriptPath += xsr.defaults.components.scriptExt;
         }
         return ((spaRVOptions.dataScriptsCache? '' : '~') + scriptPath);
       });
@@ -5850,7 +5946,7 @@
     /* Load Scripts Ends */
 
     _log.log('Loading component [',rCompName,'] scripts:', vScriptsList);
-    spa.loadScriptsSync(vScriptsList, function _onScriptsLoadComplete(){
+    xsr.loadScriptsSync(vScriptsList, function _onScriptsLoadComplete(){
       /*Wait till scripts are loaded before proceed*/
       _log.info("External Scripts Loaded.");
 
@@ -5858,7 +5954,7 @@
 
       var dataPreRequest = (spaRVOptions)? spaRVOptions['dataPreRequest'] : '';
       if (_isStr(dataPreRequest)) {
-        dataPreRequest = spa.renderUtils.getFn(dataPreRequest);
+        dataPreRequest = xsr.renderUtils.getFn(dataPreRequest);
       }
       if (_isFn(dataPreRequest)) {
         try{
@@ -5945,9 +6041,7 @@
                 _log.log(dataApi);
 
                 if (apiDataUrl) {
-                  if (_hasKey(dataApi, 'urlParams')) {
-                    apiDataUrl = spa.api.url(apiDataUrl, dataApi['urlParams']);
-                  }
+                  apiDataUrl = xsr.api.url(apiDataUrl, (_hasKey(dataApi, 'urlParams')? dataApi['urlParams'] : {}));
 
                   var dataAjaxReqHeaders = _hasKey(dataApi, 'headers')? dataApi.headers : spaRVOptions['dataUrlHeaders'];
                   if (_isBlank(dataAjaxReqHeaders)) {
@@ -5976,7 +6070,7 @@
                           , oResult = _isStr(result)? _toObj(''+result, 'data') : result;
 
                         if (targetDataModelName.indexOf(".") > 0) {
-                          targetApiData = spa.hasKey(oResult, targetDataModelName) ? _find(oResult, targetDataModelName) : oResult;
+                          targetApiData = xsr.hasKey(oResult, targetDataModelName) ? _find(oResult, targetDataModelName) : oResult;
                         }
                         else {
                           try {
@@ -6040,7 +6134,7 @@
                           if ( _isFn(app.api['onError']) ) {
                             app.api.onError.call(this, jqXHR, textStatus, errorThrown);
                           } else {
-                            spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
+                            xsr.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                           }
                         }
                       }
@@ -6065,13 +6159,13 @@
                 // _evStr
                 localDataModelObj = (Function('"use strict";return (' + localDataModelName + ')')());
               } catch(e) {
-                console.error('Error in spa.$(\''+(spaRVOptions['componentName'])+'\'): Invalid Data Model >> "local:'+localDataModelName+'"\n>> ' + (e.stack.substring(0, e.stack.indexOf('\n'))) );
+                console.error('Error in xsr.$(\''+(spaRVOptions['componentName'])+'\'): Invalid Data Model >> "local:'+localDataModelName+'"\n>> ' + (e.stack.substring(0, e.stack.indexOf('\n'))) );
               }
               _log.info("Using LOCAL Data Model: " + localDataModelName);
             }
 
             if ((!isLocalDataModel) && (dataModelName.indexOf(".") > 0)) {
-              spaTemplateModelData[viewDataModelName] = spa.hasKey(localDataModelObj, dataModelName) ? _find(localDataModelObj, dataModelName) : localDataModelObj;
+              spaTemplateModelData[viewDataModelName] = xsr.hasKey(localDataModelObj, dataModelName) ? _find(localDataModelObj, dataModelName) : localDataModelObj;
             } else {
               try {
                 spaTemplateModelData[viewDataModelName] = localDataModelObj.hasOwnProperty(dataModelName) ? localDataModelObj[dataModelName] : localDataModelObj;
@@ -6082,9 +6176,8 @@
 
           }
           else { /*External Data Source*/
-            if (!_isBlank(spaRVOptions.dataUrlParams)){
-              dataModelUrl = spa.api.url(dataModelUrl, spaRVOptions.dataUrlParams);
-            }
+            dataModelUrl = xsr.api.url(dataModelUrl, _isBlank(spaRVOptions.dataUrlParams)? {} : spaRVOptions.dataUrlParams);
+
             _log.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache']) + "] from URL =>" + dataModelUrl);
             var ajaxReqHeaders = spaRVOptions.dataUrlHeaders;
             if (_isBlank(ajaxReqHeaders)) {
@@ -6107,12 +6200,12 @@
                 cache: spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache'],
                 dataType: spaRVOptions.dataType || _find(window, 'app.api.ajaxOptions.dataType', 'text'),
                 success: function (result) {
-                  spa.console.log('API response:', result);
+                  xsr.console.log('API response:', result);
                   var oResult = _isStr(result)? _toObj(''+result, 'data') : result,
                       validateData = _renderOption('dataValidate', 'validate');
 
                   if (dataModelName.indexOf(".") > 0) {
-                    spaTemplateModelData[viewDataModelName] = spa.hasKey(oResult, dataModelName) ? _find(oResult, dataModelName) : oResult;
+                    spaTemplateModelData[viewDataModelName] = xsr.hasKey(oResult, dataModelName) ? _find(oResult, dataModelName) : oResult;
                   } else {
                     try{
                       if ((dataModelName == 'data') && !oResult.hasOwnProperty(dataModelName)) {
@@ -6137,7 +6230,7 @@
                     if ( _isFn(app.api['onError']) ) {
                       app.api.onError.call(this, jqXHR, textStatus, errorThrown);
                     } else {
-                      spa.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
+                      xsr.api.onReqError.call(this, jqXHR, textStatus, errorThrown);
                     }
                   } else {
                     var _xErrFn_ = _isStr(fnOnDataUrlErrorHandle)? _find(window, fnOnDataUrlErrorHandle) : fnOnDataUrlErrorHandle;
@@ -6191,7 +6284,7 @@
         //Handle if array without templateID, convert to object with auto templateID
         if (_isArr(vTemplates) && !_isEmpty(vTemplates)) {
           _log.info("Array of template(s) without templateID(s).");
-          var newTemplatesObj = spa.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
+          var newTemplatesObj = xsr.renderUtils.array2ObjWithKeyPrefix(vTemplates, '__tmpl_', viewContainerId);
           _log.info("Template(s) with template ID(s).");
           _log.log(newTemplatesObj);
           if (_isEmpty(newTemplatesObj)) {
@@ -6276,7 +6369,7 @@
           };
           _each(vTemplateNames, function (tmplId, tmplIndex) {
             _log.info([tmplIndex, tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaRVOptions]);
-            spaAjaxRequestsQue = spa.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache, tmplOptions);
+            spaAjaxRequestsQue = xsr.loadTemplate(tmplId, vTemplates[tmplId], spaTemplateType, viewContainerId, spaAjaxRequestsQue, !spaRVOptions.dataTemplatesCache, tmplOptions);
           });
 
           var vTemplate2RenderID = "#"+(vTemplateNames[0].trimStr("#"));
@@ -6316,7 +6409,7 @@
           if (vStyles && (!_isEmptyObj(vStyles))) {
             if (_isArr(vStyles)) {
               _log.info("Convert array of style(s) without styleID to object with styleID(s).");
-              var newStylesObj = spa.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
+              var newStylesObj = xsr.renderUtils.array2ObjWithKeyPrefix(vStyles, '__styles_', viewContainerId);
   //            var dynStyleIDForContainer;
   //            _each(vStyles, function(styleUrl, sIndex){
   //              _log.log(styleUrl);
@@ -6336,7 +6429,7 @@
             _log.group("spaLoadingStyles");
             _each(vStylesNames, function (styleId) {
               fullStylePath = _getFullPath4Component(vStyles[styleId], rCompName);
-              spaAjaxRequestsQue = spa.loadStyle(styleId, fullStylePath, spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
+              spaAjaxRequestsQue = xsr.loadStyle(styleId, fullStylePath, spaRVOptions.dataStylesCache, spaAjaxRequestsQue);
             });
             _log.info("External Styles Loading Status: " + JSON.stringify(spaAjaxRequestsQue));
             _log.groupEnd("spaLoadingStyles");
@@ -6350,7 +6443,7 @@
           $ajaxQ.apply($, spaAjaxRequestsQue)
             .then(function () {
 
-              _log.group("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+              _log.group("spaRender[" + spaTemplateEngine + "] - xsr.renderHistory[" + retValue._renderId + "]");
               _log.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
 
               try {
@@ -6366,7 +6459,7 @@
                   if (fnDataValidate && _isFn(fnDataValidate)) {
                     isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
                   } else {
-                    isValidData = (spa.api['isCallSuccess'].call(this, spaTemplateModelData[viewDataModelName], this));
+                    isValidData = (xsr.api['isCallSuccess'].call(this, spaTemplateModelData[viewDataModelName], this));
                   }
                 }
 
@@ -6452,15 +6545,15 @@
                         }
 
                         retValue['model']['_this']  = _mergeDeep({}, _find(window, 'app.'+rCompName, {}));
-                        retValue['model']['_this_'] = _mergeDeep({}, (spa.components[rCompName] || {}), uOptions);
+                        retValue['model']['_this_'] = _mergeDeep({}, (xsr.components[rCompName] || {}), uOptions);
                       }
                       retValue['model']['_global_'] = window || {};
 
                       var spaViewModel = retValue.model, compiledTemplate;
-                      //spa.viewModels[retValue.id] = retValue.model;
+                      //xsr.viewModels[retValue._renderId] = retValue.model;
 
                       var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
-                      var allowScriptsInTemplates = spaRVOptions.templateScript || spa.defaults.components.templateScript;
+                      var allowScriptsInTemplates = spaRVOptions.templateScript || xsr.defaults.components.templateScript;
                       if (allowScriptsInTemplates){
                         templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScript_ src-ref="([^"])*"/g, 'script').replace(/_BlockedScript_/g, "script");
                       } else {
@@ -6503,20 +6596,20 @@
                         } else {
 
                           if (!spaRVOptions.dataTemplatesCache) {
-                            delete spa.compiledTemplates4DataBind[rCompName];
-                            delete spa.compiledTemplates[rCompName];
+                            delete xsr.compiledTemplates4DataBind[rCompName];
+                            delete xsr.compiledTemplates[rCompName];
                           }
 
-                          if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
+                          if (!xsr.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
                             if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
                               templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
                               _log.log('TemplateBeforeBind', templateContentToBindAndRender);
                               var data4SpaTemplate = _isObj(spaViewModel)? _mergeDeep({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                               _log.log('SPA built-in binding ... ...', data4SpaTemplate);
-                              templateContentToBindAndRender = spa.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
+                              templateContentToBindAndRender = xsr.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
                               templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
                               _log.log('TemplateAfterBind', templateContentToBindAndRender);
-                              if (!spa.compiledTemplates4DataBind.hasOwnProperty(rCompName)) spa.compiledTemplates4DataBind[rCompName] = {};
+                              if (!xsr.compiledTemplates4DataBind.hasOwnProperty(rCompName)) xsr.compiledTemplates4DataBind[rCompName] = {};
                               skipSpaBind=true;
                             }
                           }
@@ -6527,10 +6620,10 @@
                               _log.log(templateContentToBindAndRender);
                               _log.groupEnd("Data bind using handlebars on Template ...");
                               try{
-                                var preCompiledTemplate = spa.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
+                                var preCompiledTemplate = xsr.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
                                 var data4Template = _isObj(spaViewModel)? _mergeDeep({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                                 spaBindData = data4Template;
-                                if (!spa.compiledTemplates.hasOwnProperty(rCompName)) spa.compiledTemplates[rCompName] = preCompiledTemplate;
+                                if (!xsr.compiledTemplates.hasOwnProperty(rCompName)) xsr.compiledTemplates[rCompName] = preCompiledTemplate;
                                 compiledTemplate = preCompiledTemplate(data4Template);
                                 _log.log(compiledTemplate);
                               }catch(e){
@@ -6564,13 +6657,13 @@
                       }
 
                       /* Default Global components before-render */
-                      spa.renderUtils.runCallbackFn(spa.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
+                      xsr.renderUtils.runCallbackFn(xsr.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
 
                       //beforeRender
                       var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
                       if (fnBeforeRender){
                         var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
-                        fnBeforeRenderRes = spa.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
+                        fnBeforeRenderRes = xsr.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
                         if (!_isUndef(fnBeforeRenderRes)) {
                           switch (_of(fnBeforeRenderRes)) {
                             case 'string' :
@@ -6589,7 +6682,7 @@
                         _log.warn('Render aborted by '+fnBeforeRender);
                       } else if (!abortView) {
                         var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
-                        if (prevRenderedComponent && !spa.removeComponent(prevRenderedComponent, rCompName)){
+                        if (prevRenderedComponent && !xsr.removeComponent(prevRenderedComponent, rCompName)){
                           abortRender = true; retValue = {};
                           _log.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
                         }
@@ -6627,34 +6720,34 @@
                         $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
                         _$renderCountUpdate(rCompName);
                         _log.info("Render: SUCCESS");
-                        var rhKeys = _keys(spa.renderHistory);
+                        var rhKeys = _keys(xsr.renderHistory);
                         var rhLen = rhKeys.length;
-                        if (rhLen > spa.renderHistoryMax) {
-                          _each(rhKeys.splice(0, rhLen - (spa.renderHistoryMax)), function (index, key) {
-                            delete spa.renderHistory[key];
+                        if (rhLen > xsr.renderHistoryMax) {
+                          _each(rhKeys.splice(0, rhLen - (xsr.renderHistoryMax)), function (index, key) {
+                            delete xsr.renderHistory[key];
                           });
                         }
                         retValue.cron = "" + _now();
-                        if (spa.renderHistoryMax>0) {
-                          spa.renderHistory[retValue.id] = retValue;
+                        if (xsr.renderHistoryMax>0) {
+                          xsr.renderHistory[retValue._renderId] = retValue;
                         }
 
                         if (doDeepRender && !abortView) {
                           /*Register Events in Components*/
-                          spa.renderUtils.registerComponentEvents(rCompName);
+                          xsr.renderUtils.registerComponentEvents(rCompName);
 
                           /*display selected i18n lang*/
                           if ($(viewContainerId).find('.lang-icon,.lang-text,[data-i18n-lang]').length) {
-                            spa.i18n.displayLang();
+                            xsr.i18n.displayLang();
                           }
 
                           _init_SPA_DOM_(viewContainerId);
                           if (!skipSpaBind) {
-                            spa.bindData(viewContainerId, spaBindData, '', true);
+                            xsr.bindData(viewContainerId, spaBindData, '', true);
                           }
 
                           /*apply i18n*/
-                          spa.i18n.apply(viewContainerId);
+                          xsr.i18n.apply(viewContainerId);
 
                           if (_routeReloadUrl(rCompName)) return (retValue); //Routing-Request-On-Reload
                         }
@@ -6670,12 +6763,14 @@
                         _log.info("Processing callback: " + _fnCallbackAfterRender);
 
                         if (!isCallbackDisabled) {
-                          spa.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                          xsr.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
                         }
 
                         /*run callback if any*/
                         /* Default Global components callback */
-                        spa.renderUtils.runCallbackFn(spa.defaults.components.callback, retValue, renderCallbackContext);
+                        xsr.renderUtils.runCallbackFn(xsr.defaults.components.callback, retValue, renderCallbackContext);
+
+                        _delayedRenderFor(rCompName);
 
                         /*Deep/Child Render*/
                         if (doDeepRender && !abortView) {
@@ -6685,11 +6780,11 @@
                           // if (spaRVOptions.hasOwnProperty('mountComponent')) {
                           //   _log.info('mounting defered component', spaRVOptions.mountComponent);
                           //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
-                          //   spa.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
+                          //   xsr.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
                           // };
                           // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
 
-                          spa.renderComponentsInHtml(viewContainerId, rCompName);
+                          xsr.renderComponentsInHtml(viewContainerId, rCompName);
                         }
 
                       }//if !abortRender
@@ -6701,18 +6796,18 @@
                   if ( _isFn(app.api['onResError']) ) {
                     app.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
                   } else {
-                    spa.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
+                    xsr.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
                   }
                 }
               }
               catch(e){
                 console.error(e);
               }
-              _log.groupEnd("spaRender[" + spaTemplateEngine + "] - spa.renderHistory[" + retValue.id + "]");
+              _log.groupEnd("spaRender[" + spaTemplateEngine + "] - xsr.renderHistory[" + retValue._renderId + "]");
             })
             .fail(function () {
               console.error("External Data|Template|Style|Script Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
-            });//.done(spa.runOnceOnRender);
+            });//.done(xsr.runOnceOnRender);
         }
         else {
           _log.error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
@@ -6742,7 +6837,7 @@
   }
 
   function _triggerClickEventOnAttr(targetEl, eAttr) {
-    var targetEvent = (spa.defaults.routes.onClickAs || 'click').toLowerCase();
+    var targetEvent = (xsr.defaults.routes.onClickAs || 'click').toLowerCase();
     var $targetEl = $(targetEl);
     var jsStmts   = (''+(targetEl.getAttribute(eAttr)) || '').trim();
     var useEventDispatch = (targetEvent !== 'click');
@@ -6809,7 +6904,7 @@
       return !$(this).closest('pre').length;
     }).addClass('as-btn').renameAttr('onclick', 'onclickthis').on('click', _disabledElClick);
   }
-  spa.initElementsIn = _initSpaElements;
+  xsr.initElementsIn = _initSpaElements;
 
   function _initFormValidation(el){
     var $el = $(el), formId, $elData, hasCtrlElements, enableDefaultOffline = _find(spa, '_validate.defaults.offline', true);
@@ -6847,7 +6942,7 @@
       if (!$el.attr('onsubmit')) $el.attr('onsubmit', 'return false;');
 
       $el.on('change', function(){
-        spa.updateTrackFormCtrls(this);
+        xsr.updateTrackFormCtrls(this);
       });
 
       $el.find('textarea,input:not(:checkbox),input:not(:radio)').filter(':not([data-validate])').each(function(){
@@ -6855,7 +6950,7 @@
       });
 
       var xssValidationSpec = ''
-        , xssValidation     = spa.defaults.validation.xss
+        , xssValidation     = xsr.defaults.validation.xss
         , vXssInAttr        = ($el.attr('data-validate-xss') || '').trim()
         , xssValidationMsg  = (xssValidation.msg || '').trim();
 
@@ -6894,19 +6989,19 @@
         $el.attr('data-validate-common', '{'+commonClearFnSpec+'}');
       }
 
-      spa.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || formId));
+      xsr.initDataValidation('#'+ ( (($elData['validateForm'] || $elData['validateScope'] || '').replace(/[#onRender]/gi,'')) || formId));
       if (!$el.hasClass('track-changes') && hasCtrlElements) {
-        spa.trackFormElChange(el);
+        xsr.trackFormElChange(el);
       }
       if ('onRender'.equalsIgnoreCase($elData['validateForm'])) {
-        spa.validateForm('#'+formId, true, true);
+        xsr.validateForm('#'+formId, true, true);
       }
     }
 
   }
 
   function _initFormValidationInScope(container){
-    if (spa.hasOwnProperty('initDataValidation')) {
+    if (xsr.hasOwnProperty('initDataValidation')) {
       $(container || 'body').find('[data-validate-form],[data-validate-scope],form:has([data-validate])')
                             .filter(':not([data-validation-initialized])').each(function (i, el){
                               _initFormValidation(el);
@@ -6919,7 +7014,7 @@
   function _setElIdIfNot(el) {
     var $el = $(el);
     if (_isBlank($el.attr("id"))) {
-      $el.attr("id", ("_el_" + (_now()) + "_" + spa.rand(1000, 9999)));
+      $el.attr("id", ("_el_" + (_now()) + "_" + xsr.rand(1000, 9999)));
     }
     return ($el.attr("id"));
   }
@@ -6927,10 +7022,10 @@
     var retValue;
     var viewContainerId = _setElIdIfNot(obj);
     if ((opt) && (!_isEmptyObj(opt))) {
-      retValue = spa.render("#" + viewContainerId, opt);
+      retValue = xsr.render("#" + viewContainerId, opt);
     }
     else {
-      retValue = spa.render("#" + viewContainerId);
+      retValue = xsr.render("#" + viewContainerId);
     }
     return retValue;
   }
@@ -6954,7 +7049,7 @@
 				( this.checked || !rcheckableType.test( type ) );
 		} )
 		.map( function( i, elem ) {
-      var val = spa.getElValue(elem); //$( this ).val();
+      var val = xsr.getElValue(elem); //$( this ).val();
 			if ( val == null ) {
 				return null;
 			}
@@ -6980,13 +7075,14 @@
     i18n: function (opt) {
       this.each(function () {
         if (opt) $(this).attr('data-i18n', opt).data('i18n', opt);
-        spa.i18n.apply(this);
+        xsr.i18n.apply(this);
       });
       return this;
     },
     spaRender: function (opt) {
       this.each(function () {
-        __renderView(this, opt);
+        //__renderView(this, opt);
+        xsr.renderComponentsInHtml(this, opt, true);
       });
     },
     renameAttr: function(oldName, newName){
@@ -7004,7 +7100,7 @@
       return (retValue.length == 1)? retValue[0] : retValue;
     },
     spaBindData: function(data, elFilter){
-      return spa.bindData(this, data, elFilter);
+      return xsr.bindData(this, data, elFilter);
     },
     inBlockedSpaNavContainer:function(){
       return !!(this.closest(_blockNavClass).length);
@@ -7052,7 +7148,7 @@
         return this.html();
       } else {
         this.each(function(){
-          $(this).html( spa.sanitizeScript(newValue) );
+          $(this).html( xsr.sanitizeScript(newValue) );
         });
         return this;
       }
@@ -7084,7 +7180,7 @@
       return isEnabled;
     },
     trackChanges: function(){
-      spa.trackFormElChange(this);
+      xsr.trackFormElChange(this);
     },
     isChanged: function( anyOrAll ){
       anyOrAll = ((anyOrAll || 'ANY').toUpperCase());
@@ -7099,7 +7195,7 @@
           if ('FORM' == elType) {
             isChanged = $($elements[i]).find('input,textarea,select').isChanged(anyOrAll);
           } else if ('/INPUT/TEXTAREA/SELECT/'.indexOf(elType) > 0) {
-            isChanged = spa.isElValueChanged( $elements[i] );
+            isChanged = xsr.isElValueChanged( $elements[i] );
             if (any && isChanged) break;
             if (all && !isChanged) break;
           }
@@ -7127,9 +7223,9 @@
         if ('FORM' == elType) {
           if (_isStr(elFilter)) {
             var elIDs = $form.find(elFilter).map(function(){ return this.id; }).get().join();
-            vResponse = spa.validateForm(formId, elIDs, showMsg, validateAll);
+            vResponse = xsr.validateForm(formId, elIDs, showMsg, validateAll);
           } else {
-            vResponse = spa.validateForm(formId, arguments[0], arguments[1]);
+            vResponse = xsr.validateForm(formId, arguments[0], arguments[1]);
           }
         } else {
           vResponse = [{errcode:1, errmsg:"NOT a FORM"}];
@@ -7142,28 +7238,28 @@
     },
     updateValidation: function(isValid, invalidErrMsg){
       this.each(function(i, el){
-        spa._validate._showValidateMsg(el, invalidErrMsg, isValid);
+        xsr._validate._showValidateMsg(el, invalidErrMsg, isValid);
       });
     },
     updateValidationPromise: function(promiseNames, isValid, invalidErrMsg){
-      spa.updateValidationPromise(promiseNames, this, invalidErrMsg, isValid);
+      xsr.updateValidationPromise(promiseNames, this, invalidErrMsg, isValid);
     }
   });
 
 
-  spa.initDataValidation = function () {
+  xsr.initDataValidation = function () {
     _log.log("include validate framework lib (spa-validate.js) to use this feature!");
   };
-  spa.doDataValidation = function () {
+  xsr.doDataValidation = function () {
     _log.log("include validate framework lib (spa-validate.js) to use this feature!");
   };
 
-  spa.properties = {
-    version: spa.VERSION
+  xsr.properties = {
+    version: xsr.VERSION
   };
 
   //API Section begins
-  spa.api = {
+  xsr.api = {
     baseUrl:'',
     liveUrlSuffix:'',
     urls:{},
@@ -7177,22 +7273,62 @@
     forceParamValuesInMockUrls:false,
     urlKeyIndicator:'@',
     url: function(apiKey, urlReplaceKeyValues){
-      apiKey = (apiKey||'').trimLeftStr(spa.api.urlKeyIndicator);
+      apiKey = (apiKey||'').trimLeftStr(xsr.api.urlKeyIndicator);
       urlReplaceKeyValues = urlReplaceKeyValues || {};
 
-      var apiUrl = (spa.api.urls[apiKey] || apiKey)
-        , isStaticUrl = apiUrl.beginsWithStr('!') || spa.api.mock || app.api.mock
-        , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || spa.api.forceParamValuesInMockUrls
+      var apiUrl = (xsr.api.urls[apiKey] || apiKey)
+        , isStaticUrl = apiUrl.beginsWithStr('!') || xsr.api.mock || app.api.mock
+        , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || xsr.api.forceParamValuesInMockUrls
         , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
-        , pKey, pValue;
+        , pKey, pValue, skip, vFilters=[], filterContext = {url: apiUrl, urlParams: urlReplaceKeyValues}, defaultValue;
 
       if (!_isBlank(paramsInUrl)) {
         _each(paramsInUrl, function(param){
-          pKey   = param.replace(/[{}<>]/g, '');
+          pKey   = param.replace(/[{}<>]/g, '').trim();
           if (pKey) {
-            pValue = _find(urlReplaceKeyValues, pKey, urlReplaceKeyValues['_undefined']);
-            pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? pValue : ('_'+pKey)) : pValue);
-            apiUrl = apiUrl.replace(new RegExp(param.replace(/([^a-zA-Z0-9])/g,'\\$1'), 'g'), pValue);
+            if (pKey.indexOf('|')>0) {
+              vFilters = pKey.split('|').map(function(x){ return x.replace(/\(.*\)/g, '').trim(); });
+              pKey = vFilters.shift();
+            }
+            if (pKey.indexOf(':')>0) {
+              var pKeyDefault = pKey.split(':');
+              pKey         = pKeyDefault[0].trim();
+              defaultValue = pKeyDefault[1].trim();
+            }
+
+            if (pKey[0] == '#') {
+              pValue = xsr.getElValue(pKey);
+            } else {
+              skip = _isBlank(urlReplaceKeyValues);
+              if (!skip) {
+                pValue = _find(urlReplaceKeyValues, pKey, urlReplaceKeyValues['_undefined']);
+                if ((typeof pValue == 'string') && (pValue.indexOf('$#')==0)) {
+                  pValue = xsr.getElValue(pValue.substr(1));
+                }
+                pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? pValue : ('_'+pKey)) : pValue);
+              }
+            }
+            for(var x=0, fLen=vFilters.length; x < fLen; x++) {
+              if (vFilters[x]) {
+                if (vFilters[x][0]=='.') {
+                  try {
+                    pValue = pValue[vFilters[x].substr(1)]();
+                  } catch(e) {
+                    console.error('Error parsing urlParam: '+pValue+vFilters[x]+'()', 'param:', pValue, filterContext, e);
+                  }
+                } else {
+                  pValue = xsr.renderUtils.runCallbackFn(vFilters[x], pValue, filterContext);
+                }
+              }
+            }
+
+            if (typeof pValue == 'undefined' || pValue === 'undefined') {
+              pValue = defaultValue;
+            }
+
+            if (!(skip && _isBlank(vFilters))) {
+              apiUrl = apiUrl.replace(new RegExp(param.replace(/([^a-zA-Z0-9])/g,'\\$1'), 'g'), (''+pValue));
+            }
           }
         });
       }
@@ -7211,25 +7347,25 @@
       _log.error($(jqXHR.responseText).text());
     },
     onResError : function () {
-      //This function is to handle when spa.api.isCallSuccess returns false
+      //This function is to handle when xsr.api.isCallSuccess returns false
     },
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
       var defAjaxOptions = _find(window, 'app.api.ajaxOptions', {});
-      var apiErroHandle = (_isObj(ajaxOptions) && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : (app.api['onError'] || spa.api.onReqError);
+      var apiErroHandle = (_isObj(ajaxOptions) && ajaxOptions.hasOwnProperty('error'))? ajaxOptions['error'] : (app.api['onError'] || xsr.api.onReqError);
 
       ajaxOptions = _extend({}, defAjaxOptions, ajaxOptions,  {
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
-          if (spa.api['isCallSuccess'].call(this, axResponse, this)) {
+          if (xsr.api['isCallSuccess'].call(this, axResponse, this)) {
             ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
           }
           else {
             if ( _isFn(app.api['onResError']) ) {
               app.api.onResError.call(this, axResponse, textStatus, jqXHR);
             } else {
-              spa.api.onResError.call(this, axResponse, textStatus, jqXHR);
+              xsr.api.onResError.call(this, axResponse, textStatus, jqXHR);
             }
           }
         }
@@ -7263,11 +7399,11 @@
         }
       }
 
-      if ((ajaxOptions.url).beginsWithStr(spa.api.urlKeyIndicator)){
-        ajaxOptions.url = spa.api.url((ajaxOptions.url).trimLeftStr(spa.api.urlKeyIndicator), ajaxOptions.data);
+      if ((ajaxOptions.url).beginsWithStr(xsr.api.urlKeyIndicator)){
+        ajaxOptions.url = xsr.api.url((ajaxOptions.url).trimLeftStr(xsr.api.urlKeyIndicator), ajaxOptions.data);
       }
 
-      if (app['debug'] || spa['debug']) console.info(['API(ajax) call with options', ajaxOptions]);
+      if ((app['api'] && app.api['debug']) || app['debug'] || spa['debug']) console.info(['API(ajax) call with options', ajaxOptions]);
 
       return $ajax(ajaxOptions);
     },
@@ -7306,8 +7442,8 @@
 
       if (axOverrideOptions) {
         if (axOverrideOptions['dataUrlParams']) {
-          if ((''+(axOptions['url'])).beginsWithStr(spa.api.urlKeyIndicator)){
-            axOptions.url = spa.api.url((axOptions.url).trimLeftStr(spa.api.urlKeyIndicator), axOverrideOptions['dataUrlParams']);
+          if ((''+(axOptions['url'])).beginsWithStr(xsr.api.urlKeyIndicator)){
+            axOptions.url = xsr.api.url((axOptions.url).trimLeftStr(xsr.api.urlKeyIndicator), axOverrideOptions['dataUrlParams']);
           }
           delete axOverrideOptions['dataUrlParams'];
         }
@@ -7318,16 +7454,16 @@
       return (axOptions);
     },
     get : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call(spa.api._params2AxOptions.apply(undefined, arguments));
+      return xsr.api._call(xsr.api._params2AxOptions.apply(undefined, arguments));
     },
     post: function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call(_extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
+      return xsr.api._call(_extend(xsr.api._params2AxOptions.apply(undefined, arguments), {method:'POST'}));
     },
     put : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call(_extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
+      return xsr.api._call(_extend(xsr.api._params2AxOptions.apply(undefined, arguments), {method:'PUT'}));
     },
     del : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
-      return spa.api._call(_extend(spa.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
+      return xsr.api._call(_extend(xsr.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
     },
     mix : function(){
       var apiQue=[], fnWhenDone = arguments[arguments.length-1];
@@ -7359,11 +7495,11 @@
         }
       });
     }
-  };//End of spa.api{}
+  };//End of xsr.api{}
   //API Section Ends
 
-  spa.i18n.onLangChange;
-  spa.i18n.displayLang = function(){
+  xsr.i18n.onLangChange;
+  xsr.i18n.displayLang = function(){
     var selectedLang = $('html').attr('lang');
     if (selectedLang){
       var selLangCode   = selectedLang,
@@ -7379,20 +7515,20 @@
         $('.lang-icon').removeClass(_arrProto.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' '));
       }
       $('.lang-icon').addClass( (langClassType=='-')? selLangCode : selLangCode_ );
-      spa.i18n.apply('.lang-text');
+      xsr.i18n.apply('.lang-text');
     }
     return selectedLang;
   };
   function init_i18n_Lang() {
     // function setLang(uLang, options, isAuto) {
     //   if (uLang) {
-    //     if (spa.i18n.onLangChange) {
-    //       var fnOnLangChange = spa.i18n.onLangChange,
+    //     if (xsr.i18n.onLangChange) {
+    //       var fnOnLangChange = xsr.i18n.onLangChange,
     //           nLang = (_isFn(fnOnLangChange))? fnOnLangChange.call(undefined, uLang, isAuto) : uLang;
     //       uLang = (_isStr(nLang))? nLang : uLang;
     //     }
     //     $('html').attr('lang', uLang.replace('_', '-'));
-    //     spa.i18n.setLanguage(uLang, _mergeDeep({}, spa.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
+    //     xsr.i18n.setLanguage(uLang, _mergeDeep({}, xsr.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
     //   }
     // }
 
@@ -7410,14 +7546,14 @@
         $('.lang-icon').removeClass(_arrProto.join.call($('[data-i18n-lang]').map(function(i, el){ return $(el).data('i18nLang'); }), ' ')).addClass( (langClassType=='_')? selLangCode_ : selLangCode);
         $('[data-i18n-lang]').removeClass('active');
         $('[data-i18n-lang="'+(selLangCode)+'"],[data-i18n-lang="'+(selLangCode_)+'"]').addClass('active');
-        spa.i18n.apply('.lang-text');
+        xsr.i18n.apply('.lang-text');
       }});
     });
 
     var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
     if (defaultLang) {
       if (initialLang == '*') {
-        initialLang = spa.i18n.browserLang();
+        initialLang = xsr.i18n.browserLang();
         if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
           initialLang = initialLang.getLeftStr(2).toLowerCase();
           var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
@@ -7435,7 +7571,7 @@
       if (initialLang) {
         _setLang(initialLang, {}, true);
         setTimeout(function(){
-          spa.i18n.displayLang();
+          xsr.i18n.displayLang();
         }, 500);
       }
     }
@@ -7676,7 +7812,7 @@
 //        }});
 //    }
 //  }
-//  spa.testMockSys = _testMockSys;
+//  xsr.testMockSys = _testMockSys;
 
   function _mockFinalUrl( liveUrl, reqMethod, liveApiPrefixStr ){
     liveUrl          = liveUrl || '/';
@@ -7714,8 +7850,8 @@
 
   function _ajaxPrefilter(options, orgOptions, jqXHR){
 
-    if ((options.url).beginsWithStr(spa.api.urlKeyIndicator)) {
-      options.url = spa.api.url((options.url).trimLeftStr(spa.api.urlKeyIndicator), options.data);
+    if ((options.url).beginsWithStr(xsr.api.urlKeyIndicator)) {
+      options.url = xsr.api.url((options.url).trimLeftStr(xsr.api.urlKeyIndicator), options.data);
     }
     var actualUrl = options.url, isMockReq;
 
@@ -7729,14 +7865,14 @@
 
     //Common Request Error Handling if not defined
     if ((options['dataType'] != 'script') && (!options.hasOwnProperty('error'))) {
-      options['error'] = app.api['onError'] || spa.api.onReqError;
+      options['error'] = app.api['onError'] || xsr.api.onReqError;
     }
 
     var liveApiPrefixStr = '', regExUrlParams = /({+)([^}])*(}+)/, urlParamsData;
-    if (spa.api.mock || app.api.mock || actualUrl.beginsWithStr('!')) {
+    if (xsr.api.mock || app.api.mock || actualUrl.beginsWithStr('!')) {
       if (actualUrl.beginsWithStr('~')) { //force Live While In Mock
-        options.url = (_isRelativePath(actualUrl.trimLeftStr('~'))? (spa.api.baseUrl||'') : '') + (actualUrl.trimLeftStr('~')) + (spa.api.liveUrlSuffix||'');
-        if (spa.api.baseUrl) options['crossDomain'] = true;
+        options.url = (_isRelativePath(actualUrl.trimLeftStr('~'))? (xsr.api.baseUrl||'') : '') + (actualUrl.trimLeftStr('~')) + (xsr.api.liveUrlSuffix||'');
+        if (xsr.api.baseUrl) options['crossDomain'] = true;
       } else {
         var reqMethod = ('/'+(options['method'] || options['type']).toUpperCase()).replace('/GET', '');
         options['type'] = options['method'] = 'GET'; //force GET for mock URLs
@@ -7751,7 +7887,7 @@
             _log.log('URL has undefined params >>', actualUrl, options.data);
             try {
               urlParamsData = (_isStr(options.data))? JSON.parse(options.data) : options.data;
-              actualUrl = spa.api.url(actualUrl.replace(/{{/g,'{').replace(/}}/g,'}'), urlParamsData);
+              actualUrl = xsr.api.url(actualUrl.replace(/{{/g,'{').replace(/}}/g,'}'), urlParamsData);
             } catch(e){}
             _log.log('Updated URL>>', actualUrl);
           }
@@ -7759,16 +7895,16 @@
           var finalMockUrl = _mockFinalUrl(actualUrl, reqMethod, liveApiPrefixStr);
           options.url = finalMockUrl;
 
-          if (app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + finalMockUrl + "]");
+          if ((app['api'] && app.api['debug']) || app['debug'] || spa['debug']) console.warn(">>>>>>Intercepting Live API URL: [" + actualUrl + "] ==> [" + finalMockUrl + "]");
           isMockReq = true;
         }
       }
     } else {
       liveApiPrefixStr = _isLiveApiUrl(actualUrl);
-      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+spa.api.baseUrl+',liveApiPrefix:'+liveApiPrefixStr);
+      if (app['debug'] || spa['debug']) console.log('actualUrl:'+actualUrl+',baseUrl:'+xsr.api.baseUrl+',liveApiPrefix:'+liveApiPrefixStr);
       if (liveApiPrefixStr) {
-        options.url = (_isRelativePath(actualUrl)? (spa.api.baseUrl||'') : '') + actualUrl + (spa.api.liveUrlSuffix||'');
-        if (spa.api.baseUrl) options['crossDomain'] = true;
+        options.url = (_isRelativePath(actualUrl)? (xsr.api.baseUrl||'') : '') + actualUrl + (xsr.api.liveUrlSuffix||'');
+        if (xsr.api.baseUrl) options['crossDomain'] = true;
       }
     }
 
@@ -7779,7 +7915,7 @@
       _log.log('URL has undefined params>', options.url, options.data);
       try {
         urlParamsData = (_isStr(options.data))? JSON.parse(options.data) : options.data;
-        options.url = spa.api.url((options.url).replace(/{</g,'{').replace(/>}/g,'}'), urlParamsData);
+        options.url = xsr.api.url((options.url).replace(/{</g,'{').replace(/>}/g,'}'), urlParamsData);
       } catch(e){}
     }
     //Final Ajax URL
@@ -7791,7 +7927,7 @@
     }
 
     //Global defaultPayload
-    var defaultPayloadGlobal  = app.api['defaultPayload'] || spa.api['defaultPayload'];
+    var defaultPayloadGlobal  = app.api['defaultPayload'] || xsr.api['defaultPayload'];
     if (defaultPayloadGlobal) {
       var reqPayloadType  = _of(options['data'])
         , reqPayload      = (reqPayloadType == 'string')? _toObj(options['data']) : options['data']
@@ -7816,8 +7952,8 @@
       }
     }
 
-    if (spa.ajaxPreProcess) {
-      spa.ajaxPreProcess(options, orgOptions, jqXHR);
+    if (xsr.ajaxPreProcess) {
+      xsr.ajaxPreProcess(options, orgOptions, jqXHR);
     }
 
     if (_isBlank( options['data'] ) || (_isStr(options['data']) && !(/[a-z0-9]/i.test(options['data'])))) {
@@ -7836,7 +7972,7 @@
       delete options['data'];
     }
 
-    if (app['debug'] || spa['debug']) console.log('ajax Options', options);
+    if ((app['api'] && app.api['debug']) || app['debug'] || spa['debug']) console.log('ajax Options', options);
   }
 
   /* Pub/Sub */
@@ -7902,7 +8038,7 @@
       return retValue;
     }
   };
-  spa.event = {
+  xsr.event = {
     on: _PubSub.sub,
     off: _PubSub.unSub,
     trigger: _PubSub.pub,
@@ -7936,7 +8072,7 @@
     _maxAutoRoute = 50;
   }
   function _initRoutesDefaults(){
-    _prevUrlHash = spa.urlHashFull( _urlHashBase );
+    _prevUrlHash = xsr.urlHashFull( _urlHashBase );
 
     _urlHashBase        = (_find(spa, 'defaults.routes.base', '')            || '#').trim();
     _blockNavClassName  = (_find(spa, 'defaults.routes.className.block', '') || 'BLOCK-SPA-NAV').trim();
@@ -8009,10 +8145,10 @@
     } else {
       if (_curBlockedUrlHash != _skipUrlChangeOn) {
         //custom function trigger
-        if (spa.onUrlHashChange) {
-          spa.onUrlHashChange(spa.urlHash([], _urlHashBase), e);
-        } else if (spa.onUrlChange) {
-          spa.onUrlChange(spa.urlHash([], _urlHashBase), e);
+        if (xsr.onUrlHashChange) {
+          xsr.onUrlHashChange(xsr.urlHash([], _urlHashBase), e);
+        } else if (xsr.onUrlChange) {
+          xsr.onUrlChange(xsr.urlHash([], _urlHashBase), e);
         }
       }
       _curBlockedUrlHash = '';
@@ -8020,30 +8156,30 @@
   }
   function _onWindowReload(){
     var fnRes, i18nMsgKey, retValue;
-    if (spa.onReload) {
-      fnRes = spa.onReload();
+    if (xsr.onReload) {
+      fnRes = xsr.onReload();
     }
     switch(_of(fnRes)) {
       case 'boolean':
         if (!fnRes) {
-          i18nMsgKey = 'spa.message.on.window.reload';
-          return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
+          i18nMsgKey = 'xsr.message.on.window.reload';
+          return xsr.i18n.text(i18nMsgKey).replace(i18nMsgKey, '');//shows message only in IE and Firefox. NOT in Chrome!
         }
         break;
       case 'string':
         fnRes = fnRes.trim();
         if (fnRes) {
           i18nMsgKey = fnRes.beginsWithIgnoreCase('i18n')? fnRes.replace(/i18n(:)*/i,'') : '';
-          retValue = i18nMsgKey? spa.i18n.text(i18nMsgKey).replace(i18nMsgKey) : fnRes;
+          retValue = i18nMsgKey? xsr.i18n.text(i18nMsgKey).replace(i18nMsgKey) : fnRes;
         } else {
           retValue = fnRes;
         }
         return retValue;
 
       default:
-        i18nMsgKey = 'spa.message.on.window.reload';
+        i18nMsgKey = 'xsr.message.on.window.reload';
         if (_blockNav) {
-          return spa.i18n.text(i18nMsgKey).replace(i18nMsgKey, ''); //shows message only in IE and Firefox. NOT in Chrome!
+          return xsr.i18n.text(i18nMsgKey).replace(i18nMsgKey, ''); //shows message only in IE and Firefox. NOT in Chrome!
         }
         break;
     }
@@ -8073,14 +8209,14 @@
     });
   }
 
-  spa.blockNav     = _blockSpaNavigation;
-  spa.allowNav     = _allowSpaNavigation;
-  //spa.showNav      = _showSpaNavigation;
-  //spa.hideNav      = _hideSpaNavigation;
-  spa.isNavBlocked = _isSpaNavBlocked;
-  spa.isNavAllowed = _isSpaNavAllowed;
-  spa.isToShowNav  = _isToShowSpaNav;
-  spa.isInBlockedSpaNavContainer = _inBlockedSpaNavContainer;
+  xsr.blockNav     = _blockSpaNavigation;
+  xsr.allowNav     = _allowSpaNavigation;
+  //xsr.showNav      = _showSpaNavigation;
+  //xsr.hideNav      = _hideSpaNavigation;
+  xsr.isNavBlocked = _isSpaNavBlocked;
+  xsr.isNavAllowed = _isSpaNavAllowed;
+  xsr.isToShowNav  = _isToShowSpaNav;
+  xsr.isInBlockedSpaNavContainer = _inBlockedSpaNavContainer;
 
   function _ctrlBrwowserNav(){
     window.onpageshow   = _onpageshow;
@@ -8098,7 +8234,7 @@
   };
 
   function _routeSpaUrlOnHashChange(){
-    var urlHash = spa.urlHashFull(_urlHashBase);
+    var urlHash = xsr.urlHashFull(_urlHashBase);
     _log.log('on Hash Change: Url To [',urlHash,'] from[',_prevUrlHash,'] on click:',_routeOnClick,' block-Navigation:',_blockNav,'isDelayed:', _isDelayed);
     if ((!_isToShowSpaNav) || (!_routeOnClick && _blockNav)) {
       _log.log('------------->', _prevUrlHash, urlHash, _isDelayed, _isDelayedOnUrl);
@@ -8146,7 +8282,7 @@
         _each(routeStoreSpecObj, function(elSelector, key){
           elSelector = elSelector.trim();
           if ((/(^app\.(.)+\.)|(^\$)|(^\#)/).test(elSelector)) {
-            spa.setElValue(elSelector, routeStoreData[key]);
+            xsr.setElValue(elSelector, routeStoreData[key]);
 
           } else if (( /^fn:/i ).test(elSelector)) {
             var fn2Exec = ((elSelector.split(' ')[0]).getRightStr(':').trim()).split('(')[0];
@@ -8169,7 +8305,7 @@
   }
 
   function _processDynHashInUrl(){
-    var hashList = spa.urlHash([], _urlHashBase), routeHash='', pIndex;
+    var hashList = xsr.urlHash([], _urlHashBase), routeHash='', pIndex;
     for(var i=0; i< hashList.length; i++) {
       routeHash = hashList[i];
       pIndex = _dynHashProcessed.indexOf(routeHash);
@@ -8180,13 +8316,13 @@
       }
     }
   }
-  //spa.processDynHashInUrl = _processDynHashInUrl;
+  //xsr.processDynHashInUrl = _processDynHashInUrl;
 
   function _triggerNextHash( reset ){
     //console.log('Finding next hash ...', reset);
     if (reset) _initAutoRoute();
     _onAutoRoute = _isUndef(reset)? _onAutoRoute : reset;
-    var hashList = spa.urlHash([], _urlHashBase), lastHashIndex = hashList.length-1, curHashName, isLastHash, prevHash;
+    var hashList = xsr.urlHash([], _urlHashBase), lastHashIndex = hashList.length-1, curHashName, isLastHash, prevHash;
 
     if (_maxAutoRoute<0) _onAutoRoute = false;
     if (_onAutoRoute) {
@@ -8275,7 +8411,7 @@
       _prevUrlHash = newHashUrl;
     } else {
       _routeOnClick  = true;
-      if (spa.isToShowNav()) {
+      if (xsr.isToShowNav()) {
         if (!_onAutoRoute) _updateBrowserAddress(newHashUrl, delayUpdate);
       } else {
         _prevUrlHash = newHashUrl;
@@ -8288,7 +8424,7 @@
     //console.log('Process reqUrl:', reqUrl);
     if (!reqUrl) return [];
 
-    var oldRoutes = spa.urlHash([], _urlHashBase);
+    var oldRoutes = xsr.urlHash([], _urlHashBase);
     var reqRoutes = reqUrl.trimStr('/').split('/');
     var newRoutes = [];
     var reqRootRoute = reqRoutes[0];
@@ -8331,10 +8467,10 @@
 
     return newRoutes;
   }
-  spa.parseRoutes = _getNewMatchingRoutes;
+  xsr.parseRoutes = _getNewMatchingRoutes;
 
   function _onRouteElClick(e){
-    var spaRoutePath = spa.urlHash([], _urlHashBase);
+    var spaRoutePath = xsr.urlHash([], _urlHashBase);
     //console.clear();
     //console.log('Current Route:', spaRoutePath);
     var targetEl = this
@@ -8375,7 +8511,7 @@
       _each(routeStoreSpecObj, function(elSelector, key){
         paramValue = elSelector;
         if ((/(^app\.(.)+\.)|(^\$)|(^\#)/).test(elSelector.trim())) {
-          paramValue = spa.getElValue(elSelector);
+          paramValue = xsr.getElValue(elSelector);
 
         } else if (( /^fn:/i ).test(elSelector.trim())) {
           var fn2Exec = ((elSelector.split(' ')[0]).getRightStr(':').trim()).split('(')[0];
@@ -8407,7 +8543,7 @@
         e.preventDefault();
         continueAutoRoute = true;
         routeDir  = '/';
-        routeName = spa.urlHash('', _urlHashBase);
+        routeName = xsr.urlHash('', _urlHashBase);
       }
     }
 
@@ -8424,7 +8560,7 @@
         spaRoutePath = _getNewMatchingRoutes(routeName);
         break;
       case '-':
-        var revCount = spa.toInt(routeName.replace(/[^0-9]/g,'')) || 1;
+        var revCount = xsr.toInt(routeName.replace(/[^0-9]/g,'')) || 1;
         if (spaRoutePath.length) {
           spaRoutePath.length = spaRoutePath.length-revCount;
         }
@@ -8454,7 +8590,7 @@
   }
 
   function _onRouteAutoReg(){
-    spa.route(this.getAttribute(_attrSpaRoute+'-AUTO').substr(1));
+    xsr.route(this.getAttribute(_attrSpaRoute+'-AUTO').substr(1));
   }
   function _initRouteHash(scope){
     // var addClassMatch = ''//_routeByHref? '.spa-route' : ''
@@ -8491,7 +8627,7 @@
     }
 
     _triggerNextHash();
-    _blockNav = spa.isNavBlocked();
+    _blockNav = xsr.isNavBlocked();
   }
 
   function _routeToUrl(route) {
@@ -8513,14 +8649,14 @@
           routes = _getNewMatchingRoutes(routePath);
           break;
         case '-':
-          routes = spa.urlHash([], _urlHashBase);
-          var revCount = spa.toInt(route.replace(/[^0-9]/g,'')) || 1;
+          routes = xsr.urlHash([], _urlHashBase);
+          var revCount = xsr.toInt(route.replace(/[^0-9]/g,'')) || 1;
           if (routes.length) {
             routes.length = routes.length-revCount;
           }
           break;
         case '?':
-          // routes = spa.urlHash([], _urlHashBase);
+          // routes = xsr.urlHash([], _urlHashBase);
           // var resetFrom = routes.indexOf( routePath.split('/')[0] );
           // if (resetFrom>=0) routes.length = resetFrom;
           // routes.push(routePath);
@@ -8564,7 +8700,7 @@
           }
 
           if (routePath.trim() == '/') {
-            spa.allowNav();
+            xsr.allowNav();
             window.location.reload();
           } else {
             _onPopStateChange();
@@ -8579,7 +8715,31 @@
 
       function _set(k, v) {
         function _store(keyName, valueStr) {
-          xStorage.setItem(('' + keyName), JSON.stringify(valueStr));
+          keyName  = (''+keyName).trim();
+          var compress = (/^\[(.)+]$/).test(keyName);
+          if (keyName.indexOf('.')>0) {
+            if (compress) {
+              keyName = keyName.slice(1,-1);
+            }
+            var keys = keyName.split('.').map(function(tKey){ return tKey.trim(); });
+            var baseKey = keys.shift();
+            if (compress) {
+              baseKey = '['+baseKey+']';
+            }
+            var baseObj = {};
+            if (Object.keys(xStorage).indexOf(baseKey)>=0) {
+              baseObj = xsr.objProp(_get(baseKey), keys.join('.'), valueStr);
+            } else {
+              baseObj = xsr.objProp({}, keys.join('.'), valueStr);
+            }
+            _store(baseKey, baseObj);
+          } else {
+            var storeStr = JSON.stringify(valueStr);
+            if (compress) {
+              storeStr = _compress( storeStr );
+            }
+            xStorage.setItem(keyName, storeStr);
+          }
         }
 
         if (arguments.length == 1) {
@@ -8602,7 +8762,29 @@
           return _all();
         } else if (arguments.length == 1) {
           if (_type(k, 'string')) {
-            return (k.indexOf(',') > 0) ? _all.apply(null, k.split(',')) : JSON.parse(xStorage.getItem(k));
+            k = k.trim();
+            if (k.indexOf(',') > 0) {
+              return _all.apply(null, k.split(','));
+            } else {
+              if (k.indexOf('.')>0) {
+                var isCompressed = (/^\[(.)+]$/).test(k);
+                if (isCompressed) {
+                  k = k.slice(1,-1);
+                }
+                var keys = k.split('.').map(function(tKey){ return tKey.trim(); });
+                var baseKey = keys.shift();
+                if (isCompressed) {
+                  baseKey = '['+baseKey+']';
+                }
+                return _find(_get(baseKey), keys.join('.'));
+              } else {
+                var storeStr = xStorage.getItem(k);
+                if ((/^\[(.)+]$/).test(k)) {
+                  storeStr = _deCompress( storeStr );
+                }
+                return JSON.parse(storeStr);
+              }
+            }
           } else if (_type(k, 'array')) {
             return _all.apply(null, k);
           }
@@ -8706,42 +8888,42 @@
     }
 
   try {
-    spa.sesStore = _StoreMgmt(sessionStorage);
+    xsr.sesStore = _StoreMgmt(sessionStorage);
   } catch(e){
     console.warn('No Access to sessionStorage.', e);
   }
 
   try {
-    spa.locStore = _StoreMgmt(localStorage);
+    xsr.locStore = _StoreMgmt(localStorage);
   } catch(e){
     console.warn('No Access to localStorage.', e);
   }
 
   function _routeReloadUrl(compName){
-    var redirUrl = (spa.sesStore.get('_spaReloadUrl')||'').trim();
+    var redirUrl = (xsr.sesStore.get('_spaReloadUrl')||'').trim();
     if (compName && (redirUrl.indexOf(compName)!=0)) return;
     if (redirUrl) {
-      spa.sesStore.remove('_spaReloadUrl');
+      xsr.sesStore.remove('_spaReloadUrl');
       redirUrl = redirUrl.replace(/.*#/gi,'');
-      spa.route(redirUrl, true);
+      xsr.route(redirUrl, true);
       return true;
     }
   }
 
-  spa.reload = function(reloadUrl){
-    if (reloadUrl) spa.sesStore.set('_spaReloadUrl', reloadUrl||'');
-    spa.allowNav();
+  xsr.reload = function(reloadUrl){
+    if (reloadUrl) xsr.sesStore.set('_spaReloadUrl', reloadUrl||'');
+    xsr.allowNav();
     window.location.reload();
   };
 
-  spa.hasReloadUrl = function(){
-    return !!(spa.sesStore.get('_spaReloadUrl')||'').trim();
+  xsr.hasReloadUrl = function(){
+    return !!(xsr.sesStore.get('_spaReloadUrl')||'').trim();
   };
 
-  spa.initRoutes = _initRouteHash;
-  spa.route      = _routeNewUrl;
-  spa.routeUrl   = _routeToUrl;
-  spa.routeEl    = _$routeElements;
+  xsr.initRoutes = _initRouteHash;
+  xsr.route      = _routeNewUrl;
+  xsr.routeUrl   = _routeToUrl;
+  xsr.routeEl    = _$routeElements;
   /* ***************  SPA Route Solution Ends ************************ */
 
   /* 2way Data-Bind */
@@ -8763,20 +8945,20 @@
 
   function _onViewDataChange() {
     var el = this, $el = $(el)
-      , elValue = spa.getElValue(el), bindData={}
+      , elValue = xsr.getElValue(el), bindData={}
       , $component = $el.spa$()[0], cName=$el.spa$name()
-      , is2WayBind = ('2way'.equalsIgnoreCase(spa.components[cName]['dataBindType']));
+      , is2WayBind = ('2way'.equalsIgnoreCase(xsr.components[cName]['dataBindType']));
     el.classList.add('DATA-MODEL-CHANGE-SRC');
 
     var bindKey =_getBindKeyOf(el, 'value|$');
-    spa.setSimpleObjProperty(bindData, bindKey, elValue);
+    xsr.setSimpleObjProperty(bindData, bindKey, elValue);
     if (is2WayBind) {
-      _mergeDeep(spa.$data(cName), bindData);
-      app[cName]['is$DataUpdated'] = spa.components[cName]['is$DataUpdated'] = true;
+      _mergeDeep(xsr.$data(cName), bindData);
+      app[cName]['is$DataUpdated'] = xsr.components[cName]['is$DataUpdated'] = true;
     }
-    spa.bindData($component, bindData, '[data-bind*="'+bindKey+'"]:not(.DATA-MODEL-CHANGE-SRC)', true);
+    xsr.bindData($component, bindData, '[data-bind*="'+bindKey+'"]:not(.DATA-MODEL-CHANGE-SRC)', true);
     el.classList.remove('DATA-MODEL-CHANGE-SRC');
-    if (is2WayBind) spa.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
+    if (is2WayBind) xsr.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
   }
 
   function _initDataBind(scope, elFilter){
@@ -8800,7 +8982,7 @@
     }
 
   }
-  spa.initDataBind = _initDataBind;
+  xsr.initDataBind = _initDataBind;
 
   function _init_SPA_DOM_(scope) {
     /*init KeyTracking*/
@@ -8813,7 +8995,7 @@
     _initSpaElements(scope);
 
     /* Init Track Form Element's changes */
-    spa.initTrackFormElChanges(scope);
+    xsr.initTrackFormElChanges(scope);
     /*apply data-validation*/
     _initFormValidationInScope(scope);
 
@@ -8821,7 +9003,7 @@
     _initRouteHash(scope);
 
     /* Init togglePassword (eye icon) */
-    spa.initTogglePassword(scope);
+    xsr.initTogglePassword(scope);
 
     /* Init data-bind */
     _initDataBind(scope);
@@ -8840,16 +9022,16 @@
     _init_SPA_DOM_('body');
 
     /*apply i18n*/
-    spa.i18n.apply('body');
+    xsr.i18n.apply('body');
   }
 
   /*
-   * spa.async(fn)
-   * spa.async(fn, callbackFn)
-   * spa.async(fn, param1, param2, param3)
-   * spa.async(fn, param1, param2, param3, callbackFn)
+   * xsr.async(fn)
+   * xsr.async(fn, callbackFn)
+   * xsr.async(fn, param1, param2, param3)
+   * xsr.async(fn, param1, param2, param3, callbackFn)
    */
-  spa.async = function(fn){
+  xsr.async = function(fn){
     var fnArg = _arrProto.slice.call(arguments, 1);
     function fnAsyc(){
       var fnRes = fn.apply(undefined, fnArg)
@@ -8866,15 +9048,15 @@
 
     var appApiBaseUrl = _find(window, 'app.api.baseUrl');
     if (!_isBlank(appApiBaseUrl)) {
-      spa.api.baseUrl = appApiBaseUrl;
+      xsr.api.baseUrl = appApiBaseUrl;
     }
 
     var appApiUrls = _find(window, 'app.api.urls');
-    if (_isBlank(spa.api.urls) && !_isBlank(appApiUrls)) {
-      spa.api.urls = app.api.urls;
+    if (_isBlank(xsr.api.urls) && !_isBlank(appApiUrls)) {
+      xsr.api.urls = app.api.urls;
     }
 
-    if (!_isBlank(spa.api.urls)) {
+    if (!_isBlank(xsr.api.urls)) {
       var liveApiPrefix = _find(window, 'app.api.liveApiPrefix|app.api.mockRootAtPaths');
       if (!_isBlank(liveApiPrefix)) {
         var apiContextList = _isArr(liveApiPrefix)? liveApiPrefix : (''+liveApiPrefix).split(',')
@@ -8885,11 +9067,11 @@
           contextMode = apiContext[0];
           if (contextMode == '!' || contextMode == '~') {
             apiContext = apiContext.substr(1);
-            _each(spa.api.urls, function(url, key){
+            _each(xsr.api.urls, function(url, key){
               urlMode = url[0];
               if ( (!(urlMode == '!' || urlMode == '~'))
                 && ((url.indexOf(apiContext) == 0) || (url.indexOf('/'+apiContext) > 0)) ) {
-                spa.api.urls[key] = contextMode+url;
+                xsr.api.urls[key] = contextMode+url;
               }
             });
           }
@@ -8906,8 +9088,8 @@
       if (spa[eName]) return spa[eName]();
     }
     function initSpaModules(){
-      if (spa.env && 'dev'.equalsIgnoreCase(spa.env)){
-        spa.api.mock = true;
+      if (xsr.env && 'dev'.equalsIgnoreCase(xsr.env)){
+        xsr.api.mock = true;
         var compDefaults = {
           components: {
             templateCache: false,
@@ -8915,14 +9097,14 @@
               console.log('spa$>', this.__prop__.componentName);
             }
           }};
-        spa.defaults.set(compDefaults);
+        xsr.defaults.set(compDefaults);
       }
 
       $when( _init_SPA_() ).done(function(){
         /*SPA Init Complete - run_once*/
         $when( runSpaEvent('onInitComplete') ).done(function(){
           /*SPA onReady - run_once*/
-          $when( runSpaEvent('onReady') ).done( spa.renderComponentsInHtml );
+          $when( runSpaEvent('onReady') ).done( xsr.renderComponentsInHtml );
         });
       });
     }
@@ -8937,13 +9119,13 @@
       , dataInBody = $body.data();
 
     if (!_isBlank(dataInBody)) {
-      dataInBody['spaDefaults'] = _toObj(elBody.getAttribute('data-spa-defaults') || {});
+      dataInBody['spaDefaults'] = _toObj(elBody.getAttribute('data-xsr-defaults') || elBody.getAttribute('data-spa-defaults') || {});
 
-      _each(_keys(spa.defaults), function(spaDefaultsKey){
+      _each(_keys(xsr.defaults), function(spaDefaultsKey){
         if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
           defaultsInTag = dataInBody.spaDefaults[spaDefaultsKey] || dataInBody[ 'spaDefaults'+(spaDefaultsKey.toTitleCase()) ];
           if (!_isBlank(defaultsInTag)){
-            _mergeDeep(spa.defaults[spaDefaultsKey], _toObj(defaultsInTag));
+            _mergeDeep(xsr.defaults[spaDefaultsKey], _toObj(defaultsInTag));
           }
         }
       });
@@ -8993,17 +9175,21 @@
     //init xhrLib
     _initXHR();
 
+    xsr.strZip   = !xsr.strZip   && win['LZString'] && LZString.compress;
+    xsr.strUnzip = !xsr.strUnzip && win['LZString'] && LZString.decompress;
+
     if (xhrLib) {
-      //Read spa.defaults from body
+      //Read xsr.defaults from body
       _initSpaDefaults();
 
-      /*onLoad Set spa.debugger on|off using URL param*/
-      spa.debug = spa.urlParam('spa.debug') || spa.hashParam('spa.debug') || spa.debug;
+      /*onLoad Set xsr.debugger on|off using URL param*/
+      xsr.debug = xsr.urlParam('xsr.debug') || xsr.hashParam('xsr.debug') || xsr.debug;
       /* ajaxPrefilter */
       $ajaxPrefilter(_ajaxPrefilter);
 
       _initSpaApp();
 
+      isSPAReady = true;
       _log.info("Initialized SPA.");
     } else {
       console.error('Could not find XHR(ajax) module. Use jQuery Full version or include spaXHR module.');
@@ -9020,4 +9206,4 @@
   });
 
 })();
-spa.console.info("SPA.js loaded.");
+xsr.console.info("SPA.js loaded.");
