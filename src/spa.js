@@ -3298,8 +3298,7 @@
 
   function _i18nRaw(key /* Add parameters as function arguments as necessary  */) {
     var value = _i18nStore[key];
-    if (value == null)
-      return '[' + key + ']';
+    if (_is(value,'null|undefined')) return key;
 
     var i, j;
     if (typeof(value) == 'string') {
@@ -3424,7 +3423,7 @@
         if (!_isElementExist('#i18nSpaRunTime')) {
           $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
         }
-        _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(__i18nStore)) : _i18nLoaded;
+        _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(_i18nStore)) : _i18nLoaded;
         xsr.i18n.loaded = xsr.i18n.loaded || _i18nLoaded;
         if ((lang.length > 1) && (!_i18nLoaded)) {
           _log.warn("Error Loading Language File [" + lang + "]. Loading default.");
@@ -3466,20 +3465,21 @@
         var retStr = iKey;
         try {
           retStr = (''+((!xsr.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : _i18nRaw(iKey))).trim();
-          if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
-            retStr = _stripEnds(retStr);
-          }
+//          if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
+//            retStr = _stripEnds(retStr);
+//          }
         } catch(e){
           console.warn('i18n lookup error:', e);
         }
         return retStr;
 
-        function _stripEnds(Str) {
-          return Str.substring(1, Str.length-1);
-        }
+//        function _stripEnds(Str) {
+//          return Str.substring(1, Str.length-1);
+//        }
       }
     } else {
       _log.info('jQ-xsr.i18n module not found. Skipping i18n value lookup.');
+      return i18nKey;
     }
   };
 
@@ -3521,50 +3521,48 @@
   };
 
   xsr.i18n.apply = xsr.i18n.render = function (contextRoot, elSelector) {
-    if (xsr.i18n.loaded || window['Liferay']) {
-      contextRoot = contextRoot || "html";
-      elSelector = elSelector || "";
-      var isTag = contextRoot.beginsWithStr("<");
-      if (isTag) {
-        $('#i18nSpaRunTime').html( contextRoot );
-        contextRoot = '#i18nSpaRunTime';
-      }
-
-      var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
-      if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
-      $i18nElements.each(function (indes, el) {
-        var $el = $(el),
-            i18nSpecStr = $el.data("i18n") || '';
-        if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
-        var i18nSpec = _toObj(i18nSpecStr || "{}"),
-            i18nData = i18nSpec['data'] || i18nSpec['i18ndata'];
-        if (i18nData) {
-          delete i18nSpec['data'];
-          delete i18nSpec['i18ndata'];
-        } else {
-          i18nData = _toObj($el.data("i18nData") || "{}");
-        }
-        if (i18nSpec && !_isEmptyObj(i18nSpec)) {
-          _each(_keys(i18nSpec), function (attrSpec) {
-            var i18nKey = i18nSpec[attrSpec];
-            var i18nValue = xsr.i18n.text(i18nKey, i18nData);
-            _each(attrSpec.split("_"), function (attribute) {
-              switch (attribute.toLowerCase()) {
-                case "html":
-                  $el.html( xsr.sanitizeXSS(i18nValue) );
-                  break;
-                case "text":
-                  $el.text(i18nValue);
-                  break;
-                default:
-                  $el.attr(attribute, i18nValue);
-                  break;
-              }
-            });
-          });
-        }
-      });
+    contextRoot = contextRoot || "html";
+    elSelector = elSelector || "";
+    var isTag = contextRoot.beginsWithStr("<");
+    if (isTag) {
+      $('#i18nSpaRunTime').html( contextRoot );
+      contextRoot = '#i18nSpaRunTime';
     }
+
+    var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
+    if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
+    $i18nElements.each(function (indes, el) {
+      var $el = $(el),
+          i18nSpecStr = $el.data("i18n") || '';
+      if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
+      var i18nSpec = _toObj(i18nSpecStr || "{}"),
+          i18nData = i18nSpec['data'] || i18nSpec['i18ndata'];
+      if (i18nData) {
+        delete i18nSpec['data'];
+        delete i18nSpec['i18ndata'];
+      } else {
+        i18nData = _toObj($el.data("i18nData") || "{}");
+      }
+      if (i18nSpec && !_isEmptyObj(i18nSpec)) {
+        _each(_keys(i18nSpec), function (attrSpec) {
+          var i18nKey = i18nSpec[attrSpec];
+          var i18nValue = xsr.i18n.text(i18nKey, i18nData);
+          _each(attrSpec.split("_"), function (attribute) {
+            switch (attribute.toLowerCase()) {
+              case "html":
+                $el.html( xsr.sanitizeXSS(i18nValue) );
+                break;
+              case "text":
+                $el.text(i18nValue);
+                break;
+              default:
+                $el.attr(attribute, i18nValue);
+                break;
+            }
+          });
+        });
+      }
+    });
 
     if (isTag) {
       return $('#i18nSpaRunTime').html();
