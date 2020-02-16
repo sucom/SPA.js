@@ -129,14 +129,14 @@
                       }
       , LengthMin   : function _fnValidLengthMin(obj) {
                         var elValue = $(obj).val();
-                        var minLen  = spa.toInt($(obj).data("minlength") || $(obj).attr("minlength"));
+                        var minLen  = spa.toInt($(obj).data("minlength") || $(obj).data("minLength") || $(obj).attr("minlength"));
                         var isValid = (elValue.length >= minLen);
                         return isValid;
                         //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                       }
       , LengthMax   : function _fnValidLengthMax(obj) {
                         var elValue = $(obj).val();
-                        var maxLen  = spa.toInt($(obj).data("maxlength"));
+                        var maxLen  = spa.toInt($(obj).data("maxlength") || $(obj).data("maxLength"));
                         var isValid = (elValue.length <= maxLen);
                         return isValid;
                         //return spa['_validate']._showValidateMsg(obj, msg, isValid);
@@ -144,8 +144,8 @@
       , Lengths     : function _fnValidLengths(obj){
                         var elValue = $(obj).val();
                         var eLength = elValue.length;
-                        var minLen  = spa.toInt($(obj).data("minlength") || $(obj).attr("minlength"));
-                        var maxLen  = spa.toInt($(obj).data("maxlength"));
+                        var minLen  = spa.toInt($(obj).data("minlength") || $(obj).data("minLength") || $(obj).attr("minlength"));
+                        var maxLen  = spa.toInt($(obj).data("maxlength") || $(obj).data("maxLength"));
                         var isValid = ((eLength >= minLen) && (eLength <= maxLen));
                         return isValid;
                         //return spa['_validate']._showValidateMsg(obj, msg, isValid);
@@ -721,6 +721,7 @@
       showMsg     = arguments[2];
       validateAll = arguments[3];
     }
+
     var rulesScopeID     = (context.replace(/[^a-zA-Z0-9]/g,''))
       , validationScope  = "#"+(context.replace(/#/g, ""))
       , $validationScope = $(validationScope)

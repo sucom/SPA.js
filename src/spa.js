@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.79.0';
+  var _VERSION = '2.80.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -123,6 +123,37 @@
     if (!('none' in window)) window['none'] = '';
     if (!('noop' in window)) window['noop'] = function(){};
   }());
+
+  /* IE 9+ Polyfills*/
+  // Element.closest()
+  (function(){
+    if (!Element.prototype.matches) {
+      Element.prototype.matches = Element.prototype.msMatchesSelector ||
+                                  Element.prototype.webkitMatchesSelector;
+    }
+    if (!Element.prototype.closest) {
+      Element.prototype.closest = function(s) {
+        var el = this;
+        do {
+          if (el.matches(s)) return el;
+          el = el.parentElement || el.parentNode;
+        } while (el !== null && el.nodeType === 1);
+        return null;
+      };
+    }
+  })();
+
+  // Element.get/set-Attribute
+  function _attr(el, aN, aV){
+    if (_isEl(el)) {
+      if (arguments.length == 3) {
+        el.setAttribute(aN, aV);
+        return el;
+      } else {
+        return el.getAttribute(aN);
+      }
+    }
+  }
 
   var _appApiInitialized;
   var _reservedObjKeys = 'hasOwnProperty,prototype,__proto__'.split(',');
@@ -606,6 +637,9 @@
     return (_objProto.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
   }
   function _is(x, type) {
+    if ((''+type)[0] == '*') {
+      return (of(x).indexOf((''+type).toLowerCase().substr(1)) >= 0);
+    }
     return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
   }
 
@@ -635,6 +669,10 @@
   }
   function _isUndef ( x ) {
     return _is(x, 'undefined');
+  }
+
+  function _isEl ( x ) {
+    return _is(x, '*element');
   }
 
   function _isArrLike ( x ) {
@@ -705,6 +743,7 @@
   xsr.isNumber       = _isNum;
   xsr.isUndefined    = _isUndef;
   xsr.isEmptyObject  = _isEmptyObj;
+  xsr.isElement      = _isEl;
   xsr.isElementExist = _isElementExist;
   xsr.isBlank  = xsr.isEmpty = _isEmpty = _isBlank;
 
@@ -934,10 +973,10 @@
     $(scope || 'body').find('[onKeyPause]:not([onKeyPauseReg])').each(function(i, el){
       $(el).attr('onKeyPauseReg', '').on('input propertychange paste', function(){
         var targetEl = this,
-            timeDelay = ((''+targetEl.getAttribute('data-pause-time')).replace(/[^0-9]/g,'') || '1250')*1;
+            timeDelay = ((''+_attr(targetEl, 'data-pause-time')).replace(/[^0-9]/g,'') || '1250')*1;
         if (keyPauseTimer) clearTimeout(keyPauseTimer);
         keyPauseTimer = setTimeout(function(){
-          var fnName = targetEl.getAttribute('onKeyPause').split('(')[0], fn2Call=_find(window,fnName);
+          var fnName = _attr(targetEl, 'onKeyPause').split('(')[0], fn2Call=_find(window,fnName);
           if (fn2Call) fn2Call.call(targetEl, targetEl);
         }, timeDelay);
       });
@@ -947,7 +986,7 @@
   /* old dom element ops begins */
   xsr.getDocObj = function (objId) {
     var jqSelector = ((typeof objId) == "object") ? objId : ((objId.beginsWithStr("#") ? "" : "#") + objId);
-    return ( $(jqSelector).get(0) );
+    return ((_isEl(jqSelector))? jqSelector : $(jqSelector).get(0) );
   };
   xsr.getDocObjs = function (objId) {
     var jqSelector = (objId.beginsWithStr("#") ? "" : "#") + objId;
@@ -1025,7 +1064,7 @@
     return (retValue);
   };
   /* get options Index : for value */
-  xsr.optionIndexOfValue = function (objId, optValue) {
+  xsr.optionIndexOfValue = function (objId, optValue, setSelect) {
     var retValue = -1;
     var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
@@ -1102,12 +1141,63 @@
   };
 
   /*Set Selected options for Value*/
+  // Multiple Options Select by value/text
+  function _selectOptionsFor(objId, sType, selValues, valDelimitChar) {
+    sType = (sType || 'value').toLowerCase();
+    valDelimitChar = valDelimitChar || ",";
+    if (_isArr(selValues)) {
+      valDelimitChar = '~~';
+      selValues = selValues.join(valDelimitChar);
+    }
+    selValues = (valDelimitChar + selValues + valDelimitChar).toLowerCase();
+    var oLstObj = xsr.getDocObj(objId), optValue;
+    if (oLstObj) {
+      var isOptSelected;
+      for (var i = 0; i < oLstObj.length; i++) {
+        optValue = (valDelimitChar + (oLstObj.options[i][sType]) + valDelimitChar).toLowerCase();
+        isOptSelected = (selValues.indexOf(optValue) >= 0);
+        oLstObj.options[i].selected = isOptSelected;
+        if (isOptSelected) {
+          _attr(oLstObj.options[i], 'selected', '');
+        } else {
+          oLstObj.options[i].removeAttribute('selected');
+        }
+      }
+    }
+  };
+  xsr.selectOptionsForValues = function (objId, selValues, valDelimitChar) {
+    _selectOptionsFor(objId, 'value', selValues, valDelimitChar);
+  };
+  xsr.selectOptionsForTexts = function (objId, selValues, valDelimitChar) {
+    _selectOptionsFor(objId, 'text', selValues, valDelimitChar);
+  };
+  xsr.selectOptionsAll = function (objId) {
+    var oLstObj = xsr.getDocObj(objId);
+    if (oLstObj) {
+      for (var i = 0; i < oLstObj.length; i++) {
+        oLstObj.options[i].selected = true;
+        _attr(oLstObj.options[i], 'selected', '');
+      }
+    }
+  };
+  xsr.selectOptionsNone = function (objId) {
+    var oLstObj = xsr.getDocObj(objId);
+    if (oLstObj) {
+      for (var i = 0; i < oLstObj.length; i++) {
+        oLstObj.options[i].selected = false;
+        oLstObj.options[i].removeAttribute('selected');
+      }
+    }
+  };
+
+  // Single Option Select
   xsr.selectOptionForValue = function (objId, selValue) {
     var retValue = -1;
     var oLstObj = xsr.getDocObj(objId);
     if (oLstObj) {
       retValue = xsr.optionIndexOfValue(objId, selValue);
       oLstObj.selectedIndex = retValue;
+      _attr(oLstObj.options[retValue], 'selected', '');
     }
     return (retValue);
   };
@@ -1117,19 +1207,9 @@
     if (oLstObj) {
       retValue = xsr.optionIndexOfValueBeginsWith(objId, selValue);
       oLstObj.selectedIndex = retValue;
+      _attr(oLstObj.options[retValue], 'selected', '');
     }
     return (retValue);
-  };
-  xsr.selectOptionsForValues = function (objId, selValues, valDelimitChar) {
-    valDelimitChar = valDelimitChar || ",";
-    selValues = (valDelimitChar + selValues + valDelimitChar).toLowerCase();
-    var oLstObj = xsr.getDocObj(objId), optValue;
-    if (oLstObj) {
-      for (var i = 0; i < oLstObj.length; i++) {
-        optValue = (valDelimitChar + (oLstObj.options[i].value) + valDelimitChar).toLowerCase();
-        oLstObj.options[i].selected = (selValues.indexOf(optValue) >= 0);
-      }
-    }
   };
   xsr.selectOptionForText = function (objId, selText) {
     var retValue = -1;
@@ -1137,25 +1217,11 @@
     if (oLstObj) {
       retValue = xsr.optionIndexOfText(objId, selText);
       oLstObj.selectedIndex = retValue;
+      _attr(oLstObj.options[retValue], 'selected', '');
     }
     return (retValue);
   };
-  xsr.selectOptionsAll = function (objId) {
-    var oLstObj = xsr.getDocObj(objId);
-    if (oLstObj) {
-      for (var i = 0; i < oLstObj.length; i++) {
-        oLstObj.options[i].selected = true;
-      }
-    }
-  };
-  xsr.selectOptionsNone = function (objId) {
-    var oLstObj = xsr.getDocObj(objId);
-    if (oLstObj) {
-      for (var i = 0; i < oLstObj.length; i++) {
-        oLstObj.options[i].selected = false;
-      }
-    }
-  };
+
   /*Add / Remove Options*/
   xsr.optionsReduceToLength = function (objID, nLen) {
     nLen = nLen || 0;
@@ -1219,8 +1285,12 @@
     var sortByAttr = ["", "key", "value"];
     beginsAt = beginsAt || 0;
     sortBy = sortBy || 0;
-    if ((_isStr(list)) && (list.indexOf("..") > 0)) {
-      list = xsr.range(list);
+    if (_isStr(list)) {
+      if (list.indexOf("..") > 0) {
+        list = xsr.range(list);
+      } else if (list.indexOf(",") > 0) {
+        list = list.split(',').map(function(item){ return item.trim(); });
+      }
     }
     if (beginsAt >= 0) {
       xsr.optionsReduceToLength(elSelector, beginsAt);
@@ -1229,8 +1299,7 @@
       _each(list, function (opt) {
         xsr.optionAppend(elSelector, opt, opt);
       });
-    }
-    else {
+    } else {
       if (sortBy > 0) {
         var listArray = [];
         for (var key in list) {
@@ -1248,6 +1317,84 @@
       }
     }
   };
+
+  xsr.optionsList = function (elSelector, list, beginsAt, sortOn, sortBy) {
+
+    var elSelect = xsr.getDocObj(elSelector);
+
+    if (_isUndef(beginsAt)) {
+      beginsAt = _attr(elSelect, 'data-options-from');
+    }
+    if (_isUndef(sortOn)) {
+      sortOn = _attr(elSelect, 'data-sort-on');
+    }
+    if (_isUndef(sortBy)) {
+      sortBy = _attr(elSelect, 'data-sort-by');
+    }
+
+    var keyVal = (_attr(elSelect, 'data-value-key') || 'value').toLowerCase();
+    var keyTxt = (_attr(elSelect, 'data-text-key') || 'text').toLowerCase();
+
+    var sortOnAttr = ['', keyVal, keyTxt];
+    beginsAt = +(beginsAt || 0);
+    sortOn   = +(((sortOn || 0)+'').replace(new RegExp(keyVal, 'i'),'1').replace(new RegExp(keyTxt, 'i'),'2'));
+    sortBy   = ((sortBy || '')+'').trim().toLowerCase();
+    if (beginsAt >= 0) {
+      xsr.optionsReduceToLength(elSelector, beginsAt);
+    }
+
+    if (_isStr(list)) {
+      if (list.indexOf("..") > 0) {
+        list = xsr.range(list);
+      } else {
+        if (elSelect.hasAttribute('data-split-by')) {
+          list = list.split(_attr(elSelect, 'data-split-by')).map(function(item){ return item.trim(); });
+        } else {
+          list = [list];
+        }
+      }
+    }
+
+    if (_isObj(list)) {
+      var listArray = [];
+      _each(list, function (value, key) {
+        var tOpt = {};
+        tOpt[keyVal] = key;
+        tOpt[keyTxt] = value;
+        listArray.push(tOpt);
+      });
+      list = listArray;
+    }
+
+    if (_isArr(list)) {
+      if (sortOn || sortBy) {
+        if (_isObj(list[0])) {
+          list = _sortBy(list, sortOnAttr[sortOn]);
+          if (sortBy[0]=='d') {
+            list = list.reverse();
+          }
+        } else {
+          if (sortBy[0]=='a') {
+            list = list.sort();
+          } else if (sortBy[0]=='d') {
+            list = list.sort().reverse();
+          }
+        }
+      }
+      var optV, optT;
+      _each(list, function (opt) {
+        if (_isObj(opt)) {
+          optV = opt[keyVal];
+          optT = opt[keyTxt];
+        } else {
+          optV = optT = opt;
+        }
+        xsr.optionAppend(elSelector, optV, optT);
+      });
+    }
+
+  };
+
 
   /* Radio & Checkbox related */
   /* checkedState: returns old Checked State {true|false}; sets newState {true | false} if provided */
@@ -1314,9 +1461,10 @@
   };
 
   /* rand: Random number between min - max */
-  xsr.rand = function (min, max) {
+  function _rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
+  }
+  xsr.rand = _rand;
 
   xsr.appendToObj = function(xObj, oKey, oValue) {
     if (_hasKey(xObj, oKey)) {
@@ -1600,7 +1748,7 @@
         break;
     }
     if (_isBlank(elValue) && el.hasAttribute('data-default')) {
-      var defValue = el.getAttribute('data-default')||'';
+      var defValue = _attr(el, 'data-default')||'';
       if (defValue[0]==='@') {
         defValue = _find(win, defValue.replace(/^[@\s]+/, ''), ''); //trimLeft @ and find in window
         if (_isFn(defValue)) {
@@ -1742,8 +1890,10 @@
    * */
   /* as jQ extension see $fnEx below */
   function _serializeFormToObject(obj, keyNameToLowerCase, strPrefixToIgnore) {
-    var a = this.serializeToArray()
-      , $fmData = $(this).data()
+    var $thisForm = $(this)
+      , thisForm = $thisForm[0]
+      , a = $thisForm.serializeToArray()
+      , $fmData = $thisForm.data()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : (keyNameToLowerCase || false)
       , kParse   = $fmData["serializeIgnorePrefix"]
@@ -1757,7 +1907,7 @@
     });
 
     //include unchecked checkboxes
-    $(this).find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function () {
+    $thisForm.find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function(){
       oKeyName = $(this).attr('name');
       if (oKeyName) {
         oKeyValue = $(this).data("unchecked");
@@ -1771,6 +1921,23 @@
       }
     });
 
+    //include disabled elements
+    var includeDisabled = (thisForm.hasAttribute('data-disabled') && _isBlank(_attr(thisForm,'data-disabled'))) || _strToNative( $fmData['disabled'] || 'false' );
+    if (includeDisabled) {
+      $thisForm.find("[disabled][name]").each(function(){
+        oKeyName = $(this).attr('name');
+        if (oKeyName) {
+          oKeyValue = xsr.getElValue(this);
+          if (kParse) {
+            oKeyName = (oKeyName).replace(kParse, "");
+          }
+          oKeyValue = '' + ((typeof oKeyValue == 'undefined') ? '' : oKeyValue);
+
+          o = xsr.setObjProperty(o, oKeyName, (toNative? (oKeyValue.toNative()) : oKeyValue), c);
+        }
+      });
+    }
+
     return o;
   }
   xsr.serializeFormToJSON = xsr.serializeFormToObject = function (formSelector, obj, keyNameToLowerCase, strPrefixToIgnore) {
@@ -1779,20 +1946,26 @@
 
   /* as jQ extension see $fnEx below */
   function _serializeFormToSimpleObject(obj, includeDisabledElements) {
-    var a = this.serializeToArray()
+    var $thisForm = $(this)
+      , thisForm  = $thisForm[0]
+      , $fmData   = $thisForm.data()
+      , a = this.serializeToArray()
       , o = (typeof obj === "object") ? obj : {}
-      , c = (typeof obj === "boolean") ? obj : (includeDisabledElements || false)
+      , c = (typeof obj === "boolean") ? obj : ( _is(includeDisabledElements, 'boolean')? includeDisabledElements : ((thisForm.hasAttribute('data-disabled') && _isBlank(_attr(thisForm,'data-disabled'))) || _strToNative( $fmData['disabled'] || 'false' )))
       , oKeyStr, oGrpStr
       , oKeyName, oKeyValue;
 
     _each(a, function () {
       xsr.appendToObj(o, this.name, this.value);
     });
+
+    //include disabled elements
     if (c) {
       $(this).find("[disabled][name]").each(function () {
         xsr.appendToObj(o, this.name, xsr.getElValue(this));
       });
     }
+
     //include unchecked checkboxes
     $(this).find("input[data-unchecked]:checkbox:enabled:not(:checked)[name]").each(function () {
       oKeyName = $(this).attr('name');
@@ -2566,9 +2739,9 @@
   function _ajaxScriptHandle( responseText ) {
     if (responseText.trim()) {
       var xScript = document.createElement( "script" );
-      xScript.setAttribute( 'id', 'js-'+_now() );
+      _attr(xScript, 'id', 'js-'+_now() );
       if (xsr.defaults.csp.nonce) {
-        xScript.setAttribute( 'nonce', xsr.defaults.csp.nonce );
+        _attr(xScript, 'nonce', xsr.defaults.csp.nonce );
       }
       xScript.text = responseText;
       document.head.appendChild( xScript ).parentNode.removeChild( xScript );
@@ -3421,10 +3594,17 @@
     return retValue;
   }
 
+  function _pipeLower(str) {
+    return (''+str).toLowerCase();
+  }
+  function _pipeUpper(str) {
+    return (''+str).toUpperCase();
+  }
+  function _pipeTitle(str) {
+    return (''+str).toTitleCase();
+  }
+
   xsr.pipes = {
-    trim: function(str) {
-      return (''+str).trim();
-    },
     trimLeft: function(str) {
       return (''+str).trimLeftStr();
     },
@@ -3434,15 +3614,19 @@
     normalize: function(str) {
       return (''+str).normalizeStr();
     },
-    toLowerCase: function(str) {
-      return (''+str).toLowerCase();
-    },
-    toUpperCase: function(str) {
-      return (''+str).toUpperCase();
-    },
-    toTitleCase: function(str) {
-      return (''+str).toTitleCase();
-    },
+
+    lower      : _pipeLower,
+    lowerCase  : _pipeLower,
+    toLower    : _pipeLower,
+
+    upper      : _pipeUpper,
+    upperCase  : _pipeUpper,
+    toUpper    : _pipeUpper,
+
+    title      : _pipeTitle,
+    titleCase  : _pipeTitle,
+    toTitleCase: _pipeTitle,
+
     capitalize: function(str) {
       return (''+str).capitalize();
     },
@@ -3488,7 +3672,7 @@
         switch ((el.type).toLowerCase()) {
           case "checkbox":
           case "radio":
-            elAttr = '$';
+            elAttr = 'check';
             break;
           default:
             elAttr = 'value';
@@ -3499,7 +3683,7 @@
         elAttr = 'value';
         break;
       case "SELECT":
-        elAttr = '$';
+        elAttr = 'options';
         break;
     }
     return elAttr;
@@ -3524,15 +3708,17 @@
   }
 
   xsr.dataBind = xsr.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
-    //console.log('spaBind>', arguments);
+    // console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
 
     var $contextRoot, onVirtualDOM = (_isStr(contextRoot) && (/\s*</).test(contextRoot)), blockedScriptTagName;
     if (onVirtualDOM) {
-      blockedScriptTagName = '_BlockedScriptInTemplate_';
+      blockedScriptTagName = 'blocked-script-in-template';
       var bindTmplHtml = contextRoot.replace(/<\s*script/gi,'<'+blockedScriptTagName)
-                                    .replace(/<\s*(\/)\s*script/gi,'</'+blockedScriptTagName);
+                                    .replace(/<\s*(\/)\s*script/gi,'</'+blockedScriptTagName)
+                                    .replace(/<\s*textarea/gi,'<spa-vdom-textarea')
+                                    .replace(/<\s*(\/)\s*textarea/gi,'</spa-vdom-textarea');
       $contextRoot = $('<div style="display:none">'+bindTmplHtml+'</div>');
     } else {
       $contextRoot = $(contextRoot);
@@ -3564,7 +3750,7 @@
 
     function _getValue(key) {
       key = (key || '').trim();
-      return (key[0] == '#')? key : _find(templateData, key);
+      return (key[0] == '#')? key : _find(templateData, key, key);
     }
 
     function _templateDynId(type, key) {
@@ -3575,6 +3761,33 @@
         xsr.compiledTemplates4DataBind[tmplStoreName] = {};
       }
       return xsr.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile( _unmaskHandlebars(template) ));
+    }
+
+    function _formatBindValue(fnFormat, bindValue, bindKey, el) {
+      fnFormat = fnFormat.trim();
+      var retValue = bindValue;
+      var fnName = fnFormat.trim();
+      var idxFnBrace = fnName.indexOf('(');
+      var fnArgs = [];
+      if (idxFnBrace>0) {
+        fnName = fnName.substr(0, idxFnBrace);
+      }
+      if (fnName[0]=='.') {
+        fnName = fnName.substr(1);
+        if (xsr.pipes.hasOwnProperty(fnName)) {
+          fnName = 'xsr.pipes.'+fnName;
+        } else {
+          fnArgs = fnFormat.substring(idxFnBrace+1, fnFormat.indexOf(')')).trim();
+          fnArgs = (fnArgs)? fnArgs.split(',').map(function(arg){ return _strToNative(arg); }) : [];
+          try {
+            retValue = bindValue[fnName].apply(bindValue, fnArgs);
+          }catch(e){
+            console.warn('Error calling format function .'+fnName+'() on:', bindValue, el, e);
+          }
+          return retValue;
+        }
+      }
+      return xsr.renderUtils.runCallbackFn(fnName, ['(...)', bindValue, bindKey, templateData, el], el);
     }
 
     _each($dataBindEls, function(el) {
@@ -3603,17 +3816,17 @@
           for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
             fnFormat = bindKeyFn[fIdx].trim();
             if (fnFormat) {
-              if (fnFormat[0]=='.') fnFormat = 'xsr.pipes'+fnFormat;
               if (fnFormat[0]=='!') {
                 if (fnFormat == '!') {
                   bindValue = !bindValue;
                 } else {
                   fnFormat = fnFormat.substr(1).trim();
-                  if (fnFormat[0]=='.') fnFormat = 'xsr.pipes'+fnFormat;
-                  bindValue = !xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
+                  bindValue = !_formatBindValue(fnFormat, bindValue, bindKey, el);
+                  //bindValue = !xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
                 }
               } else {
-                bindValue = xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
+                bindValue = _formatBindValue(fnFormat, bindValue, bindKey, el);
+                //bindValue = xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
               }
             }
           }
@@ -3621,7 +3834,7 @@
           _each(attrSpec.split("_"), function (attribute) {
             var computedKey='';
             attribute = attribute.trim();
-            //console.log('[',attribute,']',bindKey,'=',bindValue);
+            // console.log('[',attribute,']',bindKey,'=',bindValue);
             if (!_isUndef(bindValue)) {
               switch (attribute.toLowerCase()) {
                 case 'html':
@@ -3630,7 +3843,97 @@
                 case 'text':
                   $el.text(bindValue);
                   break;
+                case 'value':
+                  _attr(el, 'value', bindValue);
+                  break;
+
+                case 'options':
+                  var beginsAt = bindSpec['startAt'] || _attr(el, 'data-options-from') || 0;
+                  var sortOn   = bindSpec['sortOn']  || _attr(el, 'data-sort-on') || 0;
+                  var sortBy   = bindSpec['sortBy']  || _attr(el, 'data-sort-by') || '';
+                  if (bindSpec['valueKey']) {
+                    _attr(el, 'data-value-key', bindSpec['valueKey']);
+                  }
+                  if (bindSpec['textKey']) {
+                    _attr(el, 'data-text-key', bindSpec['textKey']);
+                  }
+                  xsr.optionsList(el, bindValue, beginsAt, sortOn, sortBy);
+
+                  delete bindSpec['options'];
+                  delete bindSpec['sortOn'];
+                  delete bindSpec['sortBy'];
+                  delete bindSpec['startAt'];
+                  delete bindSpec['valueKey'];
+                  delete bindSpec['textKey'];
+                  break;
+                case 'sorton':
+                case 'sortby':
+                case 'startat':
+                case 'valuekey':
+                case 'textkey':
+                  break;
+
+                case 'selectvalue':
+                case 'selectedvalue':
+                  if (bindSpec.hasOwnProperty('options')) {
+                    console.warn('Incorrect Order. Move options: first, finally select...', el);
+                  } else if ((/select/i).test(el.tagName)) {
+                    if (el.hasAttribute('multiple')) {
+                      if (!_isArr(bindValue)) {
+                        var splitByStr = _attr(el, 'data-split-by') || ',';
+                        bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
+                      }
+                      _selectOptionsFor(el, 'value', bindValue);
+                    } else {
+                      xsr.selectOptionForValue(el, bindValue);
+                    }
+                  }
+                  break;
+
+                case 'selecttext':
+                case 'selectedtext':
+                  if (bindSpec.hasOwnProperty('options')) {
+                    console.warn('Incorrect Order. Move options: first, finally select...', el);
+                  } else if ((/select/i).test(el.tagName)) {
+                    if (el.hasAttribute('multiple')) {
+                      if (!_isArr(bindValue)) {
+                        var splitByStr = _attr(el, 'data-split-by') || ',';
+                        bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
+                      }
+                      _selectOptionsFor(el, 'text', bindValue);
+                    } else {
+                      xsr.selectOptionForText(el, bindValue);
+                    }
+                  }
+                  break;
+
+                case 'selectindex':
+                case 'selectedindex':
+                  if (bindSpec.hasOwnProperty('options')) {
+                    console.warn('Incorrect Order. Move options: first, finally select...', el);
+                  } else if ((/select/i).test(el.tagName)) {
+                    if (el.hasAttribute('multiple')) {
+                      if (!_isArr(bindValue)) {
+                        var splitByStr = _attr(el, 'data-split-by') || ',';
+                        bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
+                      }
+                      bindValue.forEach(function(idx){
+                        if (_isEl(el.options[+idx])) {
+                          el.options[+idx].selected = true;
+                          _attr(el.options[+idx], 'selected', '');
+                        }
+                      });
+                    } else {
+                      if (_isEl(el.options[+bindValue])) {
+                        el.options[+bindValue].selected = true;
+                        _attr(el.options[+bindValue], 'selected', '');
+                      }
+                    }
+                  }
+                  break;
+
                 case '$':
+                case 'check':
                   if ((/checkbox|radio/i).test(el.type)) {
                     switch (_of(bindValue)){
                       case 'boolean':
@@ -3641,13 +3944,10 @@
                         break;
                     }
                     if (el.checked) {
-                      el.setAttribute('checked', '');
+                      _attr(el, 'checked', '');
                     } else {
                       el.removeAttribute('checked');
                     }
-
-                  } else if ((/select/i).test(el.tagName)) {
-                    console.warn('TODO: data-bind:select');
                   }
                   break;
 
@@ -3671,7 +3971,7 @@
                   templateData.__computed__[computedKey] = bindValue;
                   var repeatTemplateId = $el.attr('data-bind-template'), repeatTemplate;
                   if (!repeatTemplateId) { //create new repeat template
-                    var repeatAs = (bindSpec['repeatAs'] || '').replace(/[,|:]/g,' ').normalizeStr()
+                    var repeatAs = (bindSpec['repeatAs'] || bindSpec['as'] || '').replace(/[,|:]/g,' ').normalizeStr()
                       , repeatTemplateBody = '{{#each __computed__.'+ computedKey + (repeatAs? (' as |'+repeatAs+'|') : '') +' }}'
                                             + ($el.html().trim()) + '{{/each}}';
                     repeatTemplateId = _templateDynId('repeat', bindKey);
@@ -3682,7 +3982,8 @@
                   }
                   $el.html( repeatTemplate(templateData) );
                   break;
-                case 'repeatAs':break;
+                case 'as':break;
+                case 'repeatas':break;
 
                 default:
                   switch(true){
@@ -3743,7 +4044,7 @@
     }
 
     templateData = null;
-    return onVirtualDOM? ($contextRoot.html().replace((new RegExp(blockedScriptTagName, 'g')), "script")) : $contextRoot;
+    return onVirtualDOM? ($contextRoot.html().replace((new RegExp(blockedScriptTagName, 'g')), "script").replace(/spa-vdom-textarea/g,'textarea') ) : $contextRoot;
   };
 
   xsr.bindTemplateData = function (xTemplate, data) {
@@ -5074,7 +5375,7 @@
 
     _log.info('Called renderComponent: '+componentNameFull+' with options', options);
 
-    var isServerComponent = (!isReq4SpaComponent && (/[^a-z0-9]/ig).test( componentName ));
+    var isServerComponent = ((/\/$|\/\/|\.|\?|\#/.test(componentName)) && (componentNameFull[0] != '$'));// || (!isReq4SpaComponent && (/[^a-z0-9]/ig).test( componentName ));
     if (isServerComponent){
       var componentUrl = componentName, urlKey;
       if (componentName[0] === xsr.api.urlKeyIndicator) {
@@ -5126,7 +5427,8 @@
     }
 
     //Render SPA Component
-    var isChildComponent = (/[^a-z0-9]/gi).test(componentNameFull); //childComponentIndicator
+    var isDynSpa$ = _isDynSpa$(componentNameFull);
+    var isChildComponent = ((!isDynSpa$) && (/[^a-z0-9]/gi).test(componentNameFull)); //childComponentIndicator
     if (isChildComponent) {
       componentName = componentNameFull.replace(/[\s\$]/g, '').replace(/[^a-z0-9]/gi, '_').trimLeftStr('_');
     }
@@ -5229,7 +5531,7 @@
       _renderComp();
     } else {
       //load component's base prop from .(min.)js
-      if (_cScriptFile) {
+      if (_cScriptFile && !_isDynSpa$(componentNameFull)) {
         _log.info("Attempt to load component ["+componentNameFull+"]'s properties from ["+_cScriptFile+"]"); //1st load from server
         _cachedScript(_cScriptFile, {spaComponent:componentPath, dataType:'spaComponent', success:_parseComp, cache:xsr.defaults.components.offline}).done(noop)
           .fail(function(){
@@ -5352,9 +5654,9 @@
     if ($compContainers.length) {
       var pendingList = '';
       $compContainers.each(function(i, el){
-        pendingList = (' '+(el.getAttribute('render-after').replace(/,/g, ' ').replace(/\s+/g, ' '))+' ').replace(' '+compName+' ', '').trim();
+        pendingList = (' '+(_attr(el,'render-after').replace(/,/g, ' ').replace(/\s+/g, ' '))+' ').replace(' '+compName+' ', '').trim();
         if (pendingList) {
-          el.setAttribute('render-after',  pendingList);
+          _attr(el, 'render-after',  pendingList);
         } else {
           el.removeAttribute('render-after');
           xsr.renderComponentsInHtml(el, '', true);
@@ -5372,20 +5674,23 @@
     var $spaCompList = $(scope);
 
     if (!renderSelf) {
+      /*Register Events *for* in a, button, form elements */
+      _registerEventsForComponentRender(scope);
+
       // <spa-template src=""> <x-template src="">
       var templateTags = _spaTagsSelector('spa-template,x-template');
       $(scope).find(templateTags).each(function(){
-        // this.setAttribute('data-spa-component', this.getAttribute('src'));
-        this.setAttribute('data-x-component', this.getAttribute('src'));
-        this.setAttribute('data-skip-data-bind', 'true');
-        this.setAttribute('data-template-script', 'true');
+        // _attr(this, 'data-spa-component', _attr(this,'src'));
+        _attr(this, 'data-x-component', _attr(this,'src'));
+        _attr(this, 'data-skip-data-bind', 'true');
+        _attr(this, 'data-template-script', 'true');
         this.style.display = 'none';
       });
 
       // <spa-html src=""> <x-html src=""> with optional [data] attribute
       var htmlTags = _spaTagsSelector('spa-html,x-html');
       $(scope).find(htmlTags).each(function(){
-        var htmlSrc = this.getAttribute('src');
+        var htmlSrc = _attr(this,'src');
         var isSpaComponent = ((htmlSrc[0] === '$') || !(/[^a-z0-9]/ig).test( htmlSrc ));
         if (isSpaComponent && !xsr.components[htmlSrc.replace(/[^a-z0-9]/gi,'_')]) {
           var cOptions = {
@@ -5395,19 +5700,19 @@
           if (skipDataBind) {
             cOptions['skipDataBind'] = true;
           } else if (!this.hasAttribute('data-url')) {
-            cOptions['data'] = this.hasAttribute('data')? _toObj(this.getAttribute('data')) : {};
+            cOptions['data'] = this.hasAttribute('data')? _toObj(_attr(this,'data')) : {};
           }
           xsr.$(htmlSrc, cOptions);
         }
-        // this.setAttribute('data-spa-component', htmlSrc);
-        this.setAttribute('data-x-component', htmlSrc);
+        // _attr(this, 'data-spa-component', htmlSrc);
+        _attr(this, 'data-x-component', htmlSrc);
       });
 
       // <spa-component src=""> <x-component src="">
       var componentTags = _spaTagsSelector('spa-component,x-component');
       $(scope).find(componentTags).each(function(){
-        // this.setAttribute('data-spa-component', this.getAttribute('src'));
-        this.setAttribute('data-x-component', this.getAttribute('src'));
+        // _attr(this, 'data-spa-component', _attr(this,'src'));
+        _attr(this, 'data-x-component', _attr(this,'src'));
       });
 
       $spaCompList = $spaCompList.find('[data-x-component],[data-spa-component]').filter(':not([render-after])');
@@ -5463,7 +5768,7 @@
             _spaCompName = _spaCompName.replace(/[^a-z0-9_]/gi,'');
             newElId = 'spaCompContainer_'+_spaCompName+'_'+ ($('body').find('[rel=spaComponentContainer_'+_spaCompName+']').length+1);
             el.id = newElId;
-            el.setAttribute("rel", "spaComponentContainer_"+_spaCompName);
+            _attr(el, "rel", "spaComponentContainer_"+_spaCompName);
           }
 
           var cOptionsInAttr = $el.attr('data-x-component-options') || $el.attr('data-x-$options') || $el.attr('data-spa-component-options') || $el.attr('data-spa-$options') || $el.attr('spa-$options') || '{}';
@@ -5545,6 +5850,10 @@
             }
             fnContext = (fnContextName)? _find(window, fnContextName) : window;
           }
+          var idxBrace = _fn2Call.indexOf('(');
+          if (idxBrace>0) {
+            _fn2Call = _fn2Call.substr(0, idxBrace);
+          }
           _fn2Call = _find(window, _fn2Call);
         }
         if (_fn2Call) {
@@ -5588,6 +5897,121 @@
       }
     }
   };
+
+  function _isDynSpa$(cName) {
+    return (/^(\$)*(dyn)*SPA\$/i.test(cName));
+  }
+  function _renderForComponent() {
+    var xEl       = this;
+    var forAttr   = _attr(xEl,'for');
+    var forSpec   = (((forAttr.indexOf('|')<0)? '|': '')+forAttr).split('|').map(function(i){ return i.trim(); });
+    var cName     = forSpec.shift();
+    var cOptStr   = forSpec[0];
+    var cOptions  = {};
+
+
+    if ((cOptStr.indexOf(':')>0) && ((cOptStr.indexOf("'")>0) || (cOptStr.indexOf('"')>0) ) ) {
+      cOptions = _toObj(cOptStr);
+    } else {
+      console.warn('Invalid Options in:', xEl);
+    }
+
+    setTimeout(function(){
+      var xElId     = '#'+_attr(xEl,'id');
+      var ok2Render = true;
+      var xElValue  = '';
+      var payload   = {};
+      var vErrors;
+
+      if ((cName.length<2 && (!cName || /[^a-z]/g.test(cName))) || (_isDynSpa$(cName))) {
+        cName = _attr(xEl,'spa-dyn-comp-name');
+        if (!cName) {
+          cName = '$dynSPA$'+_now()+_rand(0, 999);
+          _attr(xEl, 'spa-dyn-comp-name', cName);
+        }
+      }
+
+      if (xEl.tagName.toUpperCase() === 'FORM') {
+        vErrors = xsr.validateForm(xElId, true);
+        ok2Render = (_isBlank(vErrors));
+        if (ok2Render) {
+          payload = xEl.hasAttribute('data-nested')? xsr.serializeFormToObject(xElId) : xsr.serializeFormToSimpleObject(xElId);
+          cOptions['dataUrlMethod'] = _attr(xEl,'method');
+        } else {
+          _log.info('Form has validation error(s):', vErrors);
+        }
+      } else {
+
+        if (xEl.hasAttribute('data-validate')) {
+          var xElForm = xEl.closest('form');
+          if (xElForm) {
+            vErrors = xsr.validateForm('#'+xElForm.id, xElId, true);
+            ok2Render = (_isBlank(vErrors));
+            if (!ok2Render) {
+              _log.info('Element has validation error(s):', vErrors);
+            }
+          }
+        }
+
+        if (ok2Render) {
+          xElValue = xsr.getElValue(xEl);
+          ok2Render = xEl.hasAttribute('required')? !_isBlank(xElValue) : ok2Render;
+          if (ok2Render && xEl.hasAttribute('name')) {
+            payload[_attr(xEl,'name')] = xElValue;
+          }
+        }
+      }
+
+      if (ok2Render) {
+        cOptions['dataXtra']      = payload;
+        cOptions['dataUrlParams'] = payload;
+        cOptions['dataParams']    = (cOptions.hasOwnProperty('payload') && !cOptions['payload'])? {} : payload;
+
+        // console.log('render', cName, cOptions);
+        xsr.$render(cName, cOptions);
+      }
+
+    }, (cOptions['delay']? (cOptions['delay']*1): 0));
+  }
+
+  function _registerRenderForEl(el) {
+    var elTag = (el.tagName.toUpperCase());
+    var onEvent = (elTag === 'FORM')? 'submit' : 'click';
+    var forAttr = _attr(el,'for');
+
+    if (/on(\s*):/i.test(forAttr)) {
+      var forSpec  = (((forAttr.indexOf('|')<0)? '|': '')+forAttr).split('|').map(function(i){ return i.trim(); });
+      var options  = _toObj(forSpec[1]);
+      onEvent = (options['on']+'').toLowerCase();
+    }
+
+    if (elTag === 'FORM') {
+      if (!el.hasAttribute('id')) {
+        _attr(el, 'id', 'spaForm-' + _now() + _rand(1,999));
+      }
+    }
+
+    _attr(el, 'render-on', onEvent);
+    el.addEventListener(onEvent, _renderForComponent);
+  }
+  function _registerEventsForComponentRender(scope) {
+    scope = scope || 'body';
+
+    //elements with for attribute
+    var $forElements = $(scope).find('[for]:not(label):not([render-on])');
+    $forElements.each(function(i, el){
+      _registerRenderForEl(el);
+    });
+
+    // forms with action="$xyz/abc"
+    var $spaActionForms = $(scope).find('form[action^="$"]:not([for]):not([render-on])');
+    $spaActionForms.each(function(i, el){
+      _attr(el, 'for', _attr(el,'action').substr(1));
+      el.removeAttribute('action');
+
+      _registerRenderForEl(el);
+    });
+  }
 
   function _appApiDefaultPayload(){
     var defaultPayload = _find(app, 'api.ajaxOptions.defaultPayload', {});
@@ -6839,7 +7263,7 @@
   function _triggerClickEventOnAttr(targetEl, eAttr) {
     var targetEvent = (xsr.defaults.routes.onClickAs || 'click').toLowerCase();
     var $targetEl = $(targetEl);
-    var jsStmts   = (''+(targetEl.getAttribute(eAttr)) || '').trim();
+    var jsStmts   = (''+(_attr(targetEl,eAttr)) || '').trim();
     var useEventDispatch = (targetEvent !== 'click');
 
     if ((jsStmts && (!(('null' == jsStmts) || ('undefined' == jsStmts))))
@@ -6946,7 +7370,7 @@
       });
 
       $el.find('textarea,input:not(:checkbox),input:not(:radio)').filter(':not([data-validate])').each(function(){
-        this.setAttribute('data-validate',"{onInput:{fn:_check.noop}}");
+        _attr(this, 'data-validate',"{onInput:{fn:_check.noop}}");
       });
 
       var xssValidationSpec = ''
@@ -7087,7 +7511,7 @@
     },
     renameAttr: function(oldName, newName){
       this.each(function(){
-        this.setAttribute(newName, this.getAttribute(oldName));
+        _attr(this, newName, _attr(this,oldName));
         this.removeAttribute(oldName);
       });
       return this;
@@ -8590,7 +9014,7 @@
   }
 
   function _onRouteAutoReg(){
-    xsr.route(this.getAttribute(_attrSpaRoute+'-AUTO').substr(1));
+    xsr.route(_attr(this,_attrSpaRoute+'-AUTO').substr(1));
   }
   function _initRouteHash(scope){
     // var addClassMatch = ''//_routeByHref? '.spa-route' : ''
@@ -8928,7 +9352,7 @@
 
   /* 2way Data-Bind */
   function _getBindKeyOf(el, keyOf){
-    var bindSpecStr = el.getAttribute('data-bind'), bindSpec, bindKeyFn, bindKey = '';
+    var bindSpecStr = _attr(el,'data-bind'), bindSpec, bindKeyFn, bindKey = '';
     if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
     bindSpec = _toObj(bindSpecStr || '{}');
     if (bindSpec && !_isEmptyObj(bindSpec)) {
@@ -8963,7 +9387,7 @@
 
   function _initDataBind(scope, elFilter){
     function _bindEvent(el, eName){
-      $(el).on((el.getAttribute('data-bind-event') || eName).toLowerCase(), _onViewDataChange);
+      $(el).on((_attr(el,'data-bind-event') || eName).toLowerCase(), _onViewDataChange);
     }
 
     //console.log('Init [data-bind]', scope);
@@ -9119,7 +9543,7 @@
       , dataInBody = $body.data();
 
     if (!_isBlank(dataInBody)) {
-      dataInBody['spaDefaults'] = _toObj(elBody.getAttribute('data-xsr-defaults') || elBody.getAttribute('data-spa-defaults') || {});
+      dataInBody['spaDefaults'] = _toObj(_attr(elBody,'data-xsr-defaults') || _attr(elBody,'data-spa-defaults') || {});
 
       _each(_keys(xsr.defaults), function(spaDefaultsKey){
         if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
