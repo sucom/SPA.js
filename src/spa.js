@@ -5902,16 +5902,17 @@
   function _renderForComponent() {
     var xEl       = this;
     var forAttr   = _attr(xEl,'for');
-    var forSpec   = (((forAttr.indexOf('|')<0)? '|': '')+forAttr).split('|').map(function(i){ return i.trim(); });
+    var forSpec   = (forAttr+'|').split('|').map(function(i){ return i.trim(); });
     var cName     = forSpec.shift();
-    var cOptStr   = forSpec[0];
+    var cOptStr   = forSpec[0].trim();
     var cOptions  = {};
 
-
-    if ((cOptStr.indexOf(':')>0) && ((cOptStr.indexOf("'")>0) || (cOptStr.indexOf('"')>0) ) ) {
-      cOptions = _toObj(cOptStr);
-    } else {
-      console.warn('Invalid Options in:', xEl);
+    if (cOptStr) {
+      if ((cOptStr.indexOf(':')>0) && ((cOptStr.indexOf("'")>0) || (cOptStr.indexOf('"')>0) ) ) {
+        cOptions = _toObj(cOptStr);
+      } else {
+        console.warn('Invalid Options in:', xEl);
+      }
     }
 
     setTimeout(function(){
@@ -5978,7 +5979,7 @@
     var forAttr = _attr(el,'for');
 
     if (/on(\s*):/i.test(forAttr)) {
-      var forSpec  = (((forAttr.indexOf('|')<0)? '|': '')+forAttr).split('|').map(function(i){ return i.trim(); });
+      var forSpec  = (forAttr+'|').split('|').map(function(i){ return i.trim(); });
       var options  = _toObj(forSpec[1]);
       onEvent = (options['on']+'').toLowerCase();
     }
