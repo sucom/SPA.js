@@ -3168,12 +3168,17 @@
   xsr.i18n = _i18nTextValue;
   xsr.i18n.loaded = false;
   xsr.i18n.settings = {
-    name: 'Language',
-    path: 'language/',
-    ext: '.txt'
+    reset : true,
+    url   : '',
+    path  : 'language/',
+    prefix: 'Language_', //name:'Language',
+    ext   : '.txt'
   };
 
   /* Ensure language code is in the format aa_AA. */
+  function _defaultLangCode() {
+    return _normalizeLanguageCode('-');
+  }
   function _normalizeLanguageCode(lang) {
     if (!lang || lang.length < 2) {
       lang = (navigator.languages) ? navigator.languages[0]
@@ -3189,51 +3194,61 @@
   function _init_i18n_Lang(settings) {
     // set up settings
     var defaults = {
+      reset   : true,
       language: '',
-      name: 'Language',
-      path: 'language/',
-      ext: '.txt',
-      cache: true,
-      async: true,
+      url     : '',
+      path    : 'language/',
+      prefix  : 'Language_', //name:'Language'
+      ext     : '.txt',
+      cache   : true,
+      async   : true,
       callback: null
     };
     settings = _extend(defaults, settings);
 
-    _i18nStore = {}; //clear previous dictionary
-
     // Try to ensure that we have minimum a two letter language code
     var langCode     = _normalizeLanguageCode(settings.language)
-      , langFilePath = settings.path + settings.name
+      , langFilePath = settings.path + settings.prefix
       , langExt      = settings.ext || '.properties'
-      , langFileFullPath = langFilePath + langExt;
+      , xLangCode    = '';
 
-    if (langCode.length >= 5) {
-      // 1. with country code (eg, Language_en_US.properties)
-      langFileFullPath = langFilePath + '_' + (langCode.substring(0, 5)) + langExt;
-    } else if (langCode.length >= 2) {
-      langFileFullPath =
-      // 2. without country code (eg, Language_pt.properties)
-      langFileFullPath = langFilePath + '_' + (langCode.substring(0, 2)) + langExt;
+    if (langCode.length >= 5) { // 1. with country code (eg, Language_en_US.properties)
+      xLangCode = (langCode.substring(0, 5));
+    } else if (langCode.length >= 2) { // 2. without country code (eg, Language_pt.properties)
+      xLangCode = (langCode.substring(0, 2));
     }
-    _loadAndParseLangFile(langFileFullPath, settings);
+
+    var localLangFileFullPath = langFilePath + ((langFilePath.indexOf('{')<0)? xLangCode : '') + langExt;
+    var langFileUrl = xsr.api.url((settings.url || localLangFileFullPath), {lang: xLangCode.replace(/_/g,'-') });
+
+    _loadAndParseLangFile(langFileUrl, settings);
   }
 
-  function _loadAndParseLangFile(filename, settings) {
+  function _loadAndParseLangFile(langFileUrl, settings) {
+    _log.info('Attempt to get language properties from:', langFileUrl);
     $ajax({
-      url: filename,
-      async: settings.async,
-      cache: settings.cache,
+      url     : langFileUrl,
+      async   : settings.async,
+      cache   : settings.cache,
       dataType: 'text',
-      success: function (data) {
+      success : function (data) {
         if (data) {
-          _parseLangFile(data);
+          if (settings.reset) {
+            _log.info('Resetting previous language dictionary.');
+            _i18nStore = {}; //clear previous dictionary
+          }
+
+          _updateLangDictionary(data);
+
           if (settings.callback) {
             settings.callback();
           }
+        } else {
+          console.warn('Received empty language properties.');
         }
       },
       error: function () {
-        console.log('Failed to download language file: ' + filename);
+        console.warn('Failed to get language properties from: ' + langFileUrl);
         if (settings.callback) {
           settings.callback();
         }
@@ -3257,8 +3272,46 @@
     return unescaped;
   }
 
-  function _parseLangFile(data) {
-    var parameters = data.split(/\n/);
+  function _updateLangDictionary(data) {
+
+    var parameters = [];
+
+    if (data && /^\s*{/.test(data)) {
+      var jsonData;
+
+      try {
+        jsonData = JSON.parse(data);
+        _log.log('Lang Properties Object:', jsonData);
+      } catch (e) {
+        console.warn('Error Parsing Language Properties JSON.', e, '\n'+data);
+      }
+
+      if (jsonData) {
+        var xConnectorB, xConnectorE, curKey, keyPath;
+        (function (o, r) {
+          r = r || '';
+          if (typeof o != 'object') {
+            return true;
+          }
+          for (var c in o) {
+            curKey = r.substring(1);
+            xConnectorB = (_isNumStr(c)) ? "[" : ".";
+            xConnectorE = (((curKey) && (xConnectorB == "[")) ? "]" : "");
+
+            if ((!arguments.callee(o[c], r + xConnectorB + c + xConnectorE)) && (typeof o[c] != 'object')) {
+              keyPath = (curKey) + (((curKey) ? xConnectorB : "")) + c + (xConnectorE);
+              parameters.push( keyPath+'='+o[c] );
+            }
+          }
+          return false;
+        })(jsonData);
+      }
+
+    } else {
+      parameters = (''+data).split(/\n/);
+    }
+    _log.log('Lang Properties Array:', parameters);
+
     var unicodeRE = /(\\u.{4})/ig;
     for (var i = 0; i < parameters.length; i++) {
       parameters[i] = parameters[i].replace(/^\s\s*/, '').replace(/\s\s*$/, ''); // trim
@@ -3414,11 +3467,13 @@
     i18nSettings = _extend(xsr.i18n.settings, i18nSettings);
     _init_i18n_Lang({
       language: lang,
-      name: i18nSettings.name,
-      path: i18nSettings.path,
-      ext: i18nSettings.ext,
-      cache: i18nSettings.cache,
-      async: i18nSettings.async,
+      reset   : i18nSettings.reset,
+      url     : i18nSettings.url,
+      prefix  : i18nSettings.prefix,
+      path    : i18nSettings.path,
+      ext     : i18nSettings.ext,
+      cache   : i18nSettings.cache,
+      async   : i18nSettings.async,
       callback: function () {
         if (!_isElementExist('#i18nSpaRunTime')) {
           $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
@@ -3426,8 +3481,11 @@
         _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(_i18nStore)) : _i18nLoaded;
         xsr.i18n.loaded = xsr.i18n.loaded || _i18nLoaded;
         if ((lang.length > 1) && (!_i18nLoaded)) {
-          _log.warn("Error Loading Language File [" + lang + "]. Loading default.");
-          xsr.i18n.setLanguage("_", i18nSettings);
+          var _defLangCode = _defaultLangCode();
+          if (lang != _defLangCode) {
+            console.warn("Error Loading Language File [" + lang + "]. Loading default [" + _defLangCode + "].");
+            xsr.i18n.setLanguage('_', i18nSettings);
+          }
         }
         xsr.i18n.apply();
         if (i18nSettings.callback) {
@@ -3465,17 +3523,10 @@
         var retStr = iKey;
         try {
           retStr = (''+((!xsr.i18n.loaded && window['Liferay'])? Liferay.Language.get(iKey) : _i18nRaw(iKey))).trim();
-//          if (retStr.beginsWithStr('\\[') && retStr.endsWithStr(']')) {
-//            retStr = _stripEnds(retStr);
-//          }
         } catch(e){
           console.warn('i18n lookup error:', e);
         }
         return retStr;
-
-//        function _stripEnds(Str) {
-//          return Str.substring(1, Str.length-1);
-//        }
       }
     } else {
       _log.info('jQ-xsr.i18n module not found. Skipping i18n value lookup.');
@@ -4622,10 +4673,13 @@
         onClickAs: 'click'
     }
     , lang: {
-        path: 'app/language/',
-        ext: '.txt',
-        cache: true,
-        async: true
+        reset : true,
+        url   : '',
+        path  : 'app/language/',
+        prefix: 'Language_',
+        ext   : '.txt',
+        cache : true,
+        async : true
     }
     , validation: {
         xss: {
