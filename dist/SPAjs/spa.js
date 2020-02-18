@@ -3164,7 +3164,6 @@
   /* i18n support */
   var _i18nStore = {};
   var _i18nLoaded;
-  var _i18nInitiated;
   var failedLangs = {};
   function _isFailedLang (lang) {
     return failedLangs.hasOwnProperty(lang.replace(/[^a-z]/gi,''));
@@ -3184,7 +3183,7 @@
   /* Ensure language code is in the format aa_AA. */
   function _browserLang(short) {
     var bLang = (navigator.languages) ? navigator.languages[0]
-                                 : (navigator.language || navigator.userLanguage /* IE */ || 'en');
+                                      : (navigator.language || navigator.userLanguage /* IE */ || 'en');
     return (short)? ((bLang||'').substr(0,2).toLowerCase()) : bLang;
   }
   function _normalizeLanguageCode(lang) {
@@ -3233,7 +3232,6 @@
 
   function _loadAndParseLangFile(langFileUrl, settings) {
     _log.info('Attempt to get language properties from:', langFileUrl, settings);
-    _i18nInitiated = true;
     $ajax({
       url     : langFileUrl,
       async   : settings.async,
@@ -3588,10 +3586,6 @@
   };
 
   xsr.i18n.apply = xsr.i18n.render = function (contextRoot, elSelector) {
-    if (!_i18nInitiated) {
-      _setLang(_browserLang(1));
-      return;
-    }
 
     contextRoot = contextRoot || "html";
     elSelector = elSelector || "";
@@ -8058,7 +8052,9 @@
       }});
     });
 
-    var defaultLang = ($('body').attr('i18n-lang') || '').replace(/ /g,''), initialLang = defaultLang.split(',')[0];
+    var defaultLang = (($('body').attr('i18n-lang') || '').replace(/ /g,'')) || (xsr.defaults.lang.url && $('html').attr('lang'))
+      , initialLang = defaultLang.split(',')[0];
+
     if (defaultLang) {
       if (initialLang == '*') {
         initialLang = xsr.i18n.browserLang();
