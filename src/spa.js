@@ -3164,9 +3164,15 @@
   /* i18n support */
   var _i18nStore = {};
   var _i18nLoaded;
+  var _i18nInitiated;
+  var failedLangs = {};
+  function _isFailedLang (lang) {
+    return failedLangs.hasOwnProperty(lang.replace(/[^a-z]/gi,''));
+  }
 
   xsr.i18n = _i18nTextValue;
   xsr.i18n.loaded = false;
+
   xsr.i18n.settings = {
     reset : true,
     url   : '',
@@ -3176,13 +3182,14 @@
   };
 
   /* Ensure language code is in the format aa_AA. */
-  function _defaultLangCode() {
-    return _normalizeLanguageCode('-');
+  function _browserLang(short) {
+    var bLang = (navigator.languages) ? navigator.languages[0]
+                                 : (navigator.language || navigator.userLanguage /* IE */ || 'en');
+    return (short)? ((bLang||'').substr(0,2).toLowerCase()) : bLang;
   }
   function _normalizeLanguageCode(lang) {
     if (!lang || lang.length < 2) {
-      lang = (navigator.languages) ? navigator.languages[0]
-                                        : (navigator.language || navigator.userLanguage /* IE */ || 'en');
+      lang = _browserLang();
     }
     lang = lang.toLowerCase().replace(/-/,"_"); // some browsers report language as en-US instead of en_US
     if (lang.length > 3) {
@@ -3225,7 +3232,8 @@
   }
 
   function _loadAndParseLangFile(langFileUrl, settings) {
-    _log.info('Attempt to get language properties from:', langFileUrl);
+    _log.info('Attempt to get language properties from:', langFileUrl, settings);
+    _i18nInitiated = true;
     $ajax({
       url     : langFileUrl,
       async   : settings.async,
@@ -3248,6 +3256,7 @@
         }
       },
       error: function () {
+        failedLangs[settings['language'].replace(/[^a-z]/gi,'')] = langFileUrl;
         console.warn('Failed to get language properties from: ' + langFileUrl);
         if (settings.callback) {
           settings.callback();
@@ -3481,10 +3490,17 @@
         _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(_i18nStore)) : _i18nLoaded;
         xsr.i18n.loaded = xsr.i18n.loaded || _i18nLoaded;
         if ((lang.length > 1) && (!_i18nLoaded)) {
-          var _defLangCode = _defaultLangCode();
-          if (lang != _defLangCode) {
-            console.warn("Error Loading Language File [" + lang + "]. Loading default [" + _defLangCode + "].");
-            xsr.i18n.setLanguage('_', i18nSettings);
+          var _brDefLangCode = _browserLang(1);
+          if (lang != _brDefLangCode) {
+            if (!_isFailedLang(_brDefLangCode)) {
+              console.warn("Error Loading Language File [" + lang + "]. Attempt to get browser default language [" + _brDefLangCode + "].");
+              xsr.i18n.setLanguage(_brDefLangCode, i18nSettings);
+            }
+          } else if (lang != 'en') {
+            if (!_isFailedLang('en')) {
+              console.warn("Error Loading browser default language [" + lang + "]. Attempt to get [en].");
+              xsr.i18n.setLanguage('en', i18nSettings);
+            }
           }
         }
         xsr.i18n.apply();
@@ -3572,6 +3588,11 @@
   };
 
   xsr.i18n.apply = xsr.i18n.render = function (contextRoot, elSelector) {
+    if (!_i18nInitiated) {
+      _setLang(_browserLang(1));
+      return;
+    }
+
     contextRoot = contextRoot || "html";
     elSelector = elSelector || "";
     var isTag = contextRoot.beginsWithStr("<");
@@ -5780,6 +5801,7 @@
           url                   : "dataUrl",
           urlParams             : "dataUrlParams",
           urlMethod             : "dataUrlMethod",
+          urlError              : "dataUrlErrorHandle",
           urlErrorHandle        : "dataUrlErrorHandle",
           urlHeaders            : "dataUrlHeaders",
           params                : "dataParams",
@@ -5955,17 +5977,20 @@
   }
   function _renderForComponent() {
     var xEl       = this;
-    var forAttr   = _attr(xEl,'for');
-    var forSpec   = (forAttr+'|').split('|').map(function(i){ return i.trim(); });
+    var forAttr   = _attr(xEl,'for') || '';
+    var idxSpec   = forAttr.indexOf(':');
+    var idxPipe   = forAttr.indexOf('|');
+    var prefix    = ((idxSpec>0 && (idxPipe<0 || idxPipe>idxSpec))? ('|') : '');
+    var forSpec   = (prefix+forAttr+'|').split('|').map(function(i){ return i.trim(); });
     var cName     = forSpec.shift();
     var cOptStr   = forSpec[0].trim();
     var cOptions  = {};
 
     if (cOptStr) {
-      if ((cOptStr.indexOf(':')>0) && ((cOptStr.indexOf("'")>0) || (cOptStr.indexOf('"')>0) ) ) {
-        cOptions = _toObj(cOptStr);
-      } else {
+      cOptions = _toObj(cOptStr);
+      if (!_isObj(cOptions) || _isBlank(cOptions)) {
         console.warn('Invalid Options in:', xEl);
+        return;
       }
     }
 
@@ -6019,33 +6044,39 @@
         cOptions['dataXtra']      = payload;
         cOptions['dataUrlParams'] = payload;
         cOptions['dataParams']    = (cOptions.hasOwnProperty('payload') && !cOptions['payload'])? {} : payload;
-
+        if ('stringify'.equalsIgnoreCase(cOptions['payload'])) {
+          cOptions['stringifyPayload'] = true;
+        }
         // console.log('render', cName, cOptions);
         xsr.$render(cName, cOptions);
       }
 
-    }, (cOptions['delay']? (cOptions['delay']*1): 0));
+    }, (cOptions['delay']? (+cOptions['delay']): 0));
   }
 
   function _registerRenderForEl(el) {
     var elTag = (el.tagName.toUpperCase());
     var onEvent = (elTag === 'FORM')? 'submit' : 'click';
-    var forAttr = _attr(el,'for');
-
-    if (/on(\s*):/i.test(forAttr)) {
-      var forSpec  = (forAttr+'|').split('|').map(function(i){ return i.trim(); });
-      var options  = _toObj(forSpec[1]);
-      onEvent = (options['on']+'').toLowerCase();
-    }
-
-    if (elTag === 'FORM') {
-      if (!el.hasAttribute('id')) {
-        _attr(el, 'id', 'spaForm-' + _now() + _rand(1,999));
+    var forAttr = (_attr(el,'for') || '').trim();
+    if (forAttr) {
+      if (/on(\s*):/i.test(forAttr)) {
+        var idxSpec = forAttr.indexOf(':');
+        var idxPipe = forAttr.indexOf('|');
+        var prefix  = ((idxSpec>0 && (idxPipe<0 || idxPipe>idxSpec))? ('|') : '');
+        var forSpec = (prefix+forAttr+'|').split('|').map(function(i){ return i.trim(); });
+        var options = _toObj(forSpec[1]);
+        onEvent = (options['on']+'').toLowerCase();
       }
-    }
 
-    _attr(el, 'render-on', onEvent);
-    el.addEventListener(onEvent, _renderForComponent);
+      if (elTag === 'FORM') {
+        if (!el.hasAttribute('id')) {
+          _attr(el, 'id', 'spaForm-' + _now() + _rand(1,999));
+        }
+      }
+
+      _attr(el, 'render-on', onEvent);
+      el.addEventListener(onEvent, _renderForComponent);
+    }
   }
   function _registerEventsForComponentRender(scope) {
     scope = scope || 'body';
@@ -9593,14 +9624,16 @@
     var defaultsInTag
       , $body  = $('body')
       , elBody = $body[0]
-      , dataInBody = $body.data();
+      , dataInBody = $body.data()
+      , tcKey;
 
     if (!_isBlank(dataInBody)) {
-      dataInBody['spaDefaults'] = _toObj(_attr(elBody,'data-xsr-defaults') || _attr(elBody,'data-spa-defaults') || {});
+      dataInBody['spaDefaults'] = _toObj(_attr(elBody,'data-spa-defaults') || _attr(elBody,'data-app-defaults') || {});
 
       _each(_keys(xsr.defaults), function(spaDefaultsKey){
         if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
-          defaultsInTag = dataInBody.spaDefaults[spaDefaultsKey] || dataInBody[ 'spaDefaults'+(spaDefaultsKey.toTitleCase()) ];
+          tcKey = spaDefaultsKey.toTitleCase();
+          defaultsInTag = dataInBody.spaDefaults[spaDefaultsKey] || dataInBody[ 'spaDefaults'+tcKey ] || dataInBody[ 'appDefaults'+tcKey ];
           if (!_isBlank(defaultsInTag)){
             _mergeDeep(xsr.defaults[spaDefaultsKey], _toObj(defaultsInTag));
           }
