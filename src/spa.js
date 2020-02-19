@@ -3230,8 +3230,9 @@
       xLangCode = (langCode.substring(0, 2));
     }
 
+    var urlParams = _extend({}, (settings['urlParams'] || {}), {lang: xLangCode.replace(/_/g,'-') });
     var localLangFileFullPath = langFilePath + ((langFilePath.indexOf('{')<0)? xLangCode : '') + langExt;
-    var langFileUrl = xsr.api.url((settings.url || localLangFileFullPath), {lang: xLangCode.replace(/_/g,'-') });
+    var langFileUrl = xsr.api.url((settings.url || localLangFileFullPath), urlParams);
 
     _loadAndParseLangFile(langFileUrl, settings);
   }
@@ -3273,6 +3274,9 @@
     var langApiPayload = settings['data'] || settings['payload'];
     if (!_isBlank(langApiPayload)) {
       axOptions['data'] = langApiPayload;
+    }
+    if (settings['headers']) {
+      axOptions['data'] = settings['headers'];
     }
     $ajax(axOptions);
   }
@@ -3489,17 +3493,19 @@
     lang = (lang || _browserLang()).replace(/-/g, "_");
     i18nSettings = _extend(xsr.i18n.settings, i18nSettings);
     _init_i18n_Lang({
-      language: lang,
-      reset   : i18nSettings.reset,
-      url     : i18nSettings.url,
-      method  : i18nSettings.method,
-      data    : i18nSettings['data'] || i18nSettings['payload'],
-      prefix  : i18nSettings.prefix,
-      path    : i18nSettings.path,
-      ext     : i18nSettings.ext,
-      cache   : i18nSettings.cache,
-      async   : i18nSettings.async,
-      callback: function () {
+      language : lang,
+      reset    : i18nSettings.reset,
+      url      : i18nSettings.url,
+      method   : i18nSettings.method,
+      urlParams: i18nSettings['urlParams'],
+      headers  : i18nSettings['headers'],
+      data     : i18nSettings['data'] || i18nSettings['payload'],
+      prefix   : i18nSettings.prefix,
+      path     : i18nSettings.path,
+      ext      : i18nSettings.ext,
+      cache    : i18nSettings.cache,
+      async    : i18nSettings.async,
+      callback : function () {
         if (!_isElementExist('#i18nSpaRunTime')) {
           $("body").append('<div id="i18nSpaRunTime" style="display:none"></div>');
         }
@@ -4730,6 +4736,7 @@
     , lang: {
         reset : true,
         url   : '',
+        method: 'GET',
         path  : 'app/language/',
         prefix: 'Language_',
         ext   : '.txt',
