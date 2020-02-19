@@ -3176,6 +3176,7 @@
   xsr.i18n.settings = {
     reset : true,
     url   : '',
+    method: 'GET',
     path  : 'language/',
     prefix: 'Language_', //name:'Language',
     ext   : '.txt'
@@ -3207,6 +3208,7 @@
       reset   : true,
       language: '',
       url     : '',
+      method  : 'GET',
       path    : 'language/',
       prefix  : 'Language_', //name:'Language'
       ext     : '.txt',
@@ -3236,8 +3238,9 @@
 
   function _loadAndParseLangFile(langFileUrl, settings) {
     _log.info('Attempt to get language properties from:', langFileUrl, settings);
-    $ajax({
+    var axOptions = {
       url     : langFileUrl,
+      method  : (settings.method || 'GET').toUpperCase(),
       async   : settings.async,
       cache   : settings.cache,
       dataType: 'text',
@@ -3266,7 +3269,12 @@
           settings.callback();
         }
       }
-    });
+    };
+    var langApiPayload = settings['data'] || settings['payload'];
+    if (!_isBlank(langApiPayload)) {
+      axOptions['data'] = langApiPayload;
+    }
+    $ajax(axOptions);
   }
 
   /* unicode ('\u00e3') to char */
@@ -3484,6 +3492,8 @@
       language: lang,
       reset   : i18nSettings.reset,
       url     : i18nSettings.url,
+      method  : i18nSettings.method,
+      data    : i18nSettings['data'] || i18nSettings['payload'],
       prefix  : i18nSettings.prefix,
       path    : i18nSettings.path,
       ext     : i18nSettings.ext,
@@ -3518,6 +3528,9 @@
   };
 
   function _setLang(uLang, options, isAuto) {
+    if (!uLang || uLang=='*') {
+      uLang = _docLang() || _browserLang(1);
+    }
     if (uLang) {
       if (xsr.i18n.onLangChange) {
         var fnOnLangChange = xsr.i18n.onLangChange,
@@ -3529,7 +3542,18 @@
     }
   }
   xsr.i18n.setLang = function(lang, i18nSettings){
+    if (_isObj(lang)) {
+      i18nSettings = lang;
+      lang = '';
+    }
     _setLang(lang, i18nSettings);
+  };
+  xsr.i18n.updateLang = function(lang, i18nSettings){
+    if (_isObj(lang)) {
+      i18nSettings = lang;
+      lang = '';
+    }
+    _setLang(lang, _mergeDeep({reset: !1}, i18nSettings || {}));
   };
 
   xsr.i18n.value = function(i18nKey) {
@@ -3603,8 +3627,9 @@
       contextRoot = '#i18nSpaRunTime';
     }
 
-    var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
-    if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
+    var i18nElFilter = '[data-i18n]:not([data-i18n=""])';
+    var $i18nElements = $(contextRoot).find(elSelector + i18nElFilter);
+    if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + i18nElFilter);
 
     if ($i18nElements.length && !(xsr.i18n.loaded || _langLoadFailCount)) {
       _log.info('Language is not initialized! Attempt to initialize.');
@@ -8087,7 +8112,6 @@
             }
             initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
           }
-
         }
       }
 
