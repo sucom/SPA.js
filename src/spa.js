@@ -3165,6 +3165,7 @@
   var _i18nStore = {};
   var _i18nLoaded;
   var failedLangs = {};
+  var _langLoadFailCount=0;
   function _isFailedLang (lang) {
     return failedLangs.hasOwnProperty(lang.replace(/[^a-z]/gi,''));
   }
@@ -3181,9 +3182,12 @@
   };
 
   /* Ensure language code is in the format aa_AA. */
+  function _docLang() {
+    return document.querySelector('html').getAttribute('lang');
+  }
   function _browserLang(short) {
     var bLang = (navigator.languages) ? navigator.languages[0]
-                                      : (navigator.language || navigator.userLanguage /* IE */ || 'en');
+                                      : (navigator.language || navigator.userLanguage /* IE */ || _docLang() || 'en');
     return (short)? ((bLang||'').substr(0,2).toLowerCase()) : bLang;
   }
   function _normalizeLanguageCode(lang) {
@@ -3238,6 +3242,7 @@
       cache   : settings.cache,
       dataType: 'text',
       success : function (data) {
+        _langLoadFailCount = 0;
         if (data) {
           if (settings.reset) {
             _log.info('Resetting previous language dictionary.');
@@ -3254,6 +3259,7 @@
         }
       },
       error: function () {
+        _langLoadFailCount++;
         failedLangs[settings['language'].replace(/[^a-z]/gi,'')] = langFileUrl;
         console.warn('Failed to get language properties from: ' + langFileUrl);
         if (settings.callback) {
@@ -3466,11 +3472,13 @@
 
     return parseMessage(dMessage);
   }
-  xsr.i18n.browserLang = function(){
-    return (navigator)? (navigator.language || navigator.userLanguage || 'en_US') : 'en_US';
-  };
+  xsr.i18n.browserLang = _browserLang;
+//  function(){
+//    return (navigator)? (navigator.language || navigator.userLanguage || 'en_US') : 'en_US';
+//  };
+
   xsr.i18n.setLanguage = function (lang, i18nSettings) {
-    lang = (lang || xsr.i18n.browserLang()).replace(/-/g, "_");
+    lang = (lang || _browserLang()).replace(/-/g, "_");
     i18nSettings = _extend(xsr.i18n.settings, i18nSettings);
     _init_i18n_Lang({
       language: lang,
@@ -3488,10 +3496,10 @@
         _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(_i18nStore)) : _i18nLoaded;
         xsr.i18n.loaded = xsr.i18n.loaded || _i18nLoaded;
         if ((lang.length > 1) && (!_i18nLoaded)) {
-          var _brDefLangCode = _browserLang(1);
+          var _brDefLangCode = ((lang.length>2)? lang.substr(0,2) : _browserLang(1)).toLowerCase();
           if (lang != _brDefLangCode) {
             if (!_isFailedLang(_brDefLangCode)) {
-              console.warn("Error Loading Language File [" + lang + "]. Attempt to get browser default language [" + _brDefLangCode + "].");
+              console.warn("Error Loading Language File [" + lang + "]. Attempt to get default language [" + _brDefLangCode + "].");
               xsr.i18n.setLanguage(_brDefLangCode, i18nSettings);
             }
           } else if (lang != 'en') {
@@ -3597,6 +3605,13 @@
 
     var $i18nElements = $(contextRoot).find(elSelector + "[data-i18n]");
     if (!$i18nElements.length) $i18nElements = $(contextRoot).filter(elSelector + "[data-i18n]");
+
+    if ($i18nElements.length && !(xsr.i18n.loaded || _langLoadFailCount)) {
+      _log.info('Language is not initialized! Attempt to initialize.');
+      _setLang((_docLang() || _browserLang(1)));
+      return;
+    }
+
     $i18nElements.each(function (indes, el) {
       var $el = $(el),
           i18nSpecStr = $el.data("i18n") || '';
@@ -8052,12 +8067,13 @@
       }});
     });
 
-    var defaultLang = (($('body').attr('i18n-lang') || '').replace(/ /g,'')) || (xsr.defaults.lang.url && $('html').attr('lang'))
+    var docLang = _docLang() || '';
+    var defaultLang = (($('body').attr('i18n-lang') || '').replace(/ /g,'')) || ((/,|\*/.test(docLang)) && docLang) || (xsr.defaults.lang.url && (docLang || _browserLang(1))) || ''
       , initialLang = defaultLang.split(',')[0];
 
     if (defaultLang) {
       if (initialLang == '*') {
-        initialLang = xsr.i18n.browserLang();
+        initialLang = _browserLang();
         if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
           initialLang = initialLang.getLeftStr(2).toLowerCase();
           var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
