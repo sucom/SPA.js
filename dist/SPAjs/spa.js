@@ -3504,7 +3504,7 @@
             }
           } else if (lang != 'en') {
             if (!_isFailedLang('en')) {
-              console.warn("Error Loading browser default language [" + lang + "]. Attempt to get [en].");
+              console.warn("Error Loading default language [" + lang + "]. Attempt to get [en].");
               xsr.i18n.setLanguage('en', i18nSettings);
             }
           }
