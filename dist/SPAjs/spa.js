@@ -8077,14 +8077,17 @@
         if ((','+(defaultLang.toLowerCase())+',').indexOf(','+(initialLang.toLowerCase())+',') < 0) {
           initialLang = initialLang.getLeftStr(2).toLowerCase();
           var supportedLangs = defaultLang.split(','), supportedLang='', matchLang='';
-          for (var i=0; i<supportedLangs.length; i++){
-            supportedLang = (supportedLangs[i] || '').trim();
-            if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
-              matchLang = supportedLang;
-              break;
+          if (supportedLangs.length>1) {
+            for (var i=0; i<supportedLangs.length; i++){
+              supportedLang = (supportedLangs[i] || '').trim();
+              if (supportedLang.toLowerCase().indexOf( initialLang ) == 0) {
+                matchLang = supportedLang;
+                break;
+              }
             }
+            initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
           }
-          initialLang = (matchLang)? matchLang : (defaultLang.split(',')[1] || '');
+
         }
       }
 
