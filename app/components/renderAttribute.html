@@ -19,9 +19,12 @@
   </script>
 
   <h3>To render nested spa-component</h3>
-  <h6>(from v2.71.0+)</h6>
+
   <section>
-    <p>prefix component path with $, else it will try to load server-side rendered component.</p>
+    <h6>(from v2.71.0+)</h6>
+    <blockquote>
+      <p>prefix component path with $, else it will try to load server-side rendered component.</p>
+    </blockquote>
 
     <i>using &lt;<mark>spa-component</mark>&gt; tag</i>
     <script type="text/code" class="code trim" data-lang="html">
@@ -31,6 +34,23 @@
     <i>using [<mark>data-spa-component</mark>] attribute</i>
     <script type="text/code" class="code trim" data-lang="html">
       <div data-spa-component="$componentX/componentX1"></div>
+    </script>
+  </section>
+
+  <section>
+    <h4>(from v2.80.0+)</h4>
+    <blockquote>
+      No need to prefix component path with $, for nested SPA component.
+    </blockquote>
+
+    <i>using &lt;<mark>spa-component</mark>&gt; tag</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <spa-component src="componentX/componentX1"></spa-component>
+    </script>
+
+    <i>using [<mark>data-spa-component</mark>] attribute</i>
+    <script type="text/code" class="code trim" data-lang="html">
+      <div data-spa-component="componentX/componentX1"></div>
     </script>
   </section>
 
@@ -49,6 +69,20 @@
     <script type="text/code" class="code trim" data-lang="html">
       <x-html src="full/path/to/html/portion.html"></x-html>
     </script>
+
+    <h4>(from v2.80.0+)</h4>
+    <blockquote>
+      <h4>for server rendered component</h4>
+      <ul>
+        <li> The src path should not begin with $</li> +
+        <br><br>
+        <li> The src path should have dot (.)</li> OR
+        <li> The src path should have ?</li> OR
+        <li> The src path should have #</li> OR
+        <li> The src path should have //</li> OR
+        <li> The src path should end with /</li>
+      </ul>
+    </blockquote>
 
   </section>
 

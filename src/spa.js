@@ -40,7 +40,7 @@
   /* Create SPA */
   var xsr = function(){};
   /* Expose to global with alias */
-  win.spa = win.xsr = win.__ = win._$ = xsr;
+  win.spa = win.xsr = win.ngx = win.__ = win._$ = xsr;
 
 //  var xhrLib = ($['ajax'] && $)  || spaXHR;
 //  var $when  = xhrLib.when;
@@ -674,6 +674,9 @@
   function _isEl ( x ) {
     return _is(x, '*element');
   }
+  function _is$El ( x ) {
+    return _isObj(x) && !!x['jquery'];
+  }
 
   function _isArrLike ( x ) {
     if (_isArr(x)) {
@@ -744,6 +747,7 @@
   xsr.isUndefined    = _isUndef;
   xsr.isEmptyObject  = _isEmptyObj;
   xsr.isElement      = _isEl;
+  xsr.is$El          = _is$El;
   xsr.isElementExist = _isElementExist;
   xsr.isBlank  = xsr.isEmpty = _isEmpty = _isBlank;
 
@@ -3278,6 +3282,7 @@
     if (settings['headers']) {
       axOptions['data'] = settings['headers'];
     }
+    //LangAjax
     $ajax(axOptions);
   }
 
@@ -3500,6 +3505,7 @@
       urlParams: i18nSettings['urlParams'],
       headers  : i18nSettings['headers'],
       data     : i18nSettings['data'] || i18nSettings['payload'],
+      target   : i18nSettings['target'] || '',
       prefix   : i18nSettings.prefix,
       path     : i18nSettings.path,
       ext      : i18nSettings.ext,
@@ -3525,7 +3531,7 @@
             }
           }
         }
-        xsr.i18n.apply();
+        xsr.i18n.apply( i18nSettings['target'] );
         if (i18nSettings.callback) {
           i18nSettings.callback(_i18nLoaded);
         }
@@ -3534,6 +3540,10 @@
   };
 
   function _setLang(uLang, options, isAuto) {
+    if (_isObj(uLang)) {
+      options = uLang;
+      uLang = options['lang'] || '';
+    }
     if (!uLang || uLang=='*') {
       uLang = _docLang() || _browserLang(1);
     }
@@ -3550,14 +3560,14 @@
   xsr.i18n.setLang = function(lang, i18nSettings){
     if (_isObj(lang)) {
       i18nSettings = lang;
-      lang = '';
+      lang = i18nSettings['lang'] || '';
     }
     _setLang(lang, i18nSettings);
   };
   xsr.i18n.updateLang = function(lang, i18nSettings){
     if (_isObj(lang)) {
       i18nSettings = lang;
-      lang = '';
+      lang = i18nSettings['lang'] || '';
     }
     _setLang(lang, _mergeDeep({reset: !1}, i18nSettings || {}));
   };
@@ -3713,6 +3723,9 @@
   function _pipeTitle(str) {
     return (''+str).toTitleCase();
   }
+  function _pipeSortDesc(inVal){
+    return _pipeSort(inVal, true);
+  }
 
   xsr.pipes = {
     trimLeft: function(str) {
@@ -3746,15 +3759,13 @@
     not: function(inVal) {
       return !inVal;
     },
-    sort: function(inVal){
-      return _pipeSort(inVal);
-    },
-    sortAsc: function(inVal){
-      return _pipeSort(inVal);
-    },
-    sortDesc: function(inVal){
-      return _pipeSort(inVal, true);
-    },
+
+    sort    : _pipeSort,
+    sortAsc : _pipeSort,
+    sortDesc: _pipeSortDesc,
+    asc     : _pipeSort,
+    desc    : _pipeSortDesc,
+
     reverse: function(inVal) {
       var retValue = inVal;
       if (_isArr(inVal)) {
@@ -3817,7 +3828,45 @@
       .replace(/<\/IFRAME-X-TMP/gi, '</iframe');
   }
 
+  // [bind-el=""]
+  function _bindElEvent(el, event, targetElSelector) {
+    var elValue = xsr.getElValue(el);
+    if (elValue && !(elValue == 'undefined' || elValue == 'null')) {
+      var targetBindData = { __ : {on: event, el: el} };
+      targetBindData.__[_attr(el, 'name') || _attr(el, 'id') || '_'] = elValue;
+      xsr.bindData(targetElSelector, targetBindData);
+    }
+  }
+  xsr.bindElement = function(contextRoot){
+    xsr.bindElements(contextRoot, '.');
+  };
+  xsr.bindElements = function(contextRoot, elFilter){
+    var $bindElements = $(contextRoot || 'body');
+    elFilter = elFilter || '';
+    if (elFilter && (elFilter == '.')) {
+      $bindElements = $bindElements.filter('[bind-element]:not([attached])');
+    } else {
+      $bindElements = $bindElements.find('[bind-element]:not([attached])'+elFilter);
+    }
+
+    //bind-element="input:'#xyz', change:'#abc'"
+    $bindElements.each(function(i, el){
+      var bindSpec = _toObj(el.getAttribute('bind-element')) || {};
+      if (!_isBlank(bindSpec)) {
+        _attr(el, 'attached', '');
+      }
+      for (var e in bindSpec) {
+        el.addEventListener(e.toLowerCase(), function(){
+          _bindElEvent(this, e, bindSpec[e]);
+        });
+      }
+    });
+  };
+
   xsr.dataBind = xsr.bindData = function (contextRoot, data, elFilter, skipBindCallback) {
+    if ((arguments.length==1) && ((_isStr(contextRoot) && contextRoot[0] == '#') || _isEl(contextRoot) || _is$El(contextRoot) ) ) {
+      data = {_:0};
+    }
     // console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
@@ -3844,7 +3893,7 @@
     var tmplStoreName = compName || '_unknown_';
     //console.log('compName>', tmplStoreName);
 
-    var templateData = _mergeDeep({__computed__:{}}, data);
+    var templateData = _mergeDeep({__computed__:{}}, _isObj(data)? data : {__raw__: data});
     var $dataBindEls = $contextRoot.find(elFilter + '[data-bind]');
     if (!$dataBindEls.length) $dataBindEls = $contextRoot.filter(elFilter + '[data-bind]');
 
@@ -3858,9 +3907,17 @@
 
     var $el, bindSpecStr, bindSpec, bindKeyFn, bindKey, fnFormat, bindValue, dataAttrKey, bindCallback, negate;
 
-    function _getValue(key) {
+    function _getValue(key, el) {
       key = (key || '').trim();
-      return (key[0] == '#')? key : _find(templateData, key, key);
+      if (key[0]=='-') { //data[-key]
+        return $(el).data(key.substr(1));
+      } else if (key[0] == '#') {
+        return xsr.getElValue(key);
+      } else if (key == '.' || key == 'this') {
+        return templateData.hasOwnProperty('__raw__')? templateData.__raw__ : templateData;
+      } else {
+        return _find(templateData, key, key);
+      }
     }
 
     function _templateDynId(type, key) {
@@ -3902,226 +3959,278 @@
 
     _each($dataBindEls, function(el) {
       $el = $(el);
-      bindSpecStr = $el.data('bind') || '';
 
-      if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
-      bindSpec = _toObj(bindSpecStr || '{}');
-      bindCallback = xsr.renderUtils.getFn($el.attr('data-bind-callback') || '');
+      if (el.hasAttribute('data-src') && !el.hasAttribute('async-in-progress')) {
+        var srcOptions = _toObj(_attr(el, 'data-src'));
+        var getRemoteData = true;
 
-      if (bindSpec && !_isEmptyObj(bindSpec)) {
-
-        _each(_keys(bindSpec), function (attrSpec) {
-          bindKeyFn = (bindSpec[attrSpec]+'|').split('|');
-          bindKey   = bindKeyFn.shift().trim();
-          negate    = (bindKey[0]=='!');
-          if (negate) {
-            bindKey   = (bindKey.substr(1).trim());
-            bindValue = !_getValue(bindKey);
-          } else {
-            bindValue = _getValue(bindKey);
+        if (srcOptions.hasOwnProperty('on')) {
+          getRemoteData = (templateData && templateData['__']);
+          if (srcOptions.on && getRemoteData) {
+            templateData  = templateData.__;
+            getRemoteData = srcOptions.on.split(',').map(function(e){return e.trim();}).indexOf(templateData['on'])>=0;
           }
+        }
 
-          if (_is(bindValue, 'undefined|null')) bindValue = '';
-
-          for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
-            fnFormat = bindKeyFn[fIdx].trim();
-            if (fnFormat) {
-              if (fnFormat[0]=='!') {
-                if (fnFormat == '!') {
-                  bindValue = !bindValue;
-                } else {
-                  fnFormat = fnFormat.substr(1).trim();
-                  bindValue = !_formatBindValue(fnFormat, bindValue, bindKey, el);
-                  //bindValue = !xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
-                }
+        if (getRemoteData) {
+          _attr(el, 'async-in-progress', '');
+          if (!el.id) {
+            _attr(el, id, 'el-'+_now()+_rand(1,9999));
+          }
+          var axOptions = {
+            url: xsr.api.url(srcOptions['url'], templateData),
+            method: srcOptions['method'] || 'GET',
+            success: function(apiRes){
+              xsr.bindData('#'+el.id, apiRes);
+            },
+            error: function(){
+              el.removeAttribute('async-in-progress');
+              if (srcOptions['onError']) {
+                xsr.renderUtils.runCallbackFn(srcOptions['onError'], ['(...)', el, this], el);
               } else {
-                bindValue = _formatBindValue(fnFormat, bindValue, bindKey, el);
-                //bindValue = xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
+                console.warn('Failed to retrieve data.');
               }
             }
+          };
+
+          if (srcOptions['payload']) {
+            delete templateData['on'];
+            delete templateData['el'];
+            axOptions['data'] = ('stringify' == srcOptions['payload'])? JSON.stringify(templateData) : templateData;
           }
 
-          _each(attrSpec.split("_"), function (attribute) {
-            var computedKey='';
-            attribute = attribute.trim();
-            // console.log('[',attribute,']',bindKey,'=',bindValue);
-            if (!_isUndef(bindValue)) {
-              switch (attribute.toLowerCase()) {
-                case 'html':
-                  $el.html( xsr.sanitizeXSS(bindValue) );
-                  break;
-                case 'text':
-                  $el.text(bindValue);
-                  break;
-                case 'value':
-                  _attr(el, 'value', bindValue);
-                  break;
+          if (srcOptions['headers']) {
+            axOptions['headers'] = srcOptions['headers'];
+          }
 
-                case 'options':
-                  var beginsAt = bindSpec['startAt'] || _attr(el, 'data-options-from') || 0;
-                  var sortOn   = bindSpec['sortOn']  || _attr(el, 'data-sort-on') || 0;
-                  var sortBy   = bindSpec['sortBy']  || _attr(el, 'data-sort-by') || '';
-                  if (bindSpec['valueKey']) {
-                    _attr(el, 'data-value-key', bindSpec['valueKey']);
+          _log.log('async data-bind:', el, axOptions);
+          $ajax(axOptions);
+        }
+
+      } else {
+        // console.log(el, templateData);
+        el.removeAttribute('async-in-progress');
+        bindSpecStr = $el.data('bind') || '';
+
+        if ((bindSpecStr) && (!bindSpecStr.containsStr(':'))) bindSpecStr = _defaultAttr(el)+":'"+bindSpecStr+"'";
+        bindSpec = _toObj(bindSpecStr || '{}');
+        bindCallback = xsr.renderUtils.getFn($el.attr('data-bind-callback') || '');
+
+        if (bindSpec && !_isEmptyObj(bindSpec)) {
+
+          _each(_keys(bindSpec), function (attrSpec) {
+            bindKeyFn = (bindSpec[attrSpec]+'|').split('|');
+            bindKey   = bindKeyFn.shift().trim();
+            negate    = (bindKey[0]=='!');
+
+            if (negate) {
+              bindKey   = (bindKey.substr(1).trim());
+              bindValue = !_getValue(bindKey, el);
+            } else {
+              bindValue = _getValue(bindKey, el);
+            }
+
+            if (_is(bindValue, 'undefined|null')) bindValue = '';
+
+            for (var fIdx=0; fIdx<bindKeyFn.length; fIdx++){
+              fnFormat = bindKeyFn[fIdx].trim();
+              if (fnFormat) {
+                if (fnFormat[0]=='!') {
+                  if (fnFormat == '!') {
+                    bindValue = !bindValue;
+                  } else {
+                    fnFormat = fnFormat.substr(1).trim();
+                    bindValue = !_formatBindValue(fnFormat, bindValue, bindKey, el);
+                    //bindValue = !xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
                   }
-                  if (bindSpec['textKey']) {
-                    _attr(el, 'data-text-key', bindSpec['textKey']);
-                  }
-                  xsr.optionsList(el, bindValue, beginsAt, sortOn, sortBy);
+                } else {
+                  bindValue = _formatBindValue(fnFormat, bindValue, bindKey, el);
+                  //bindValue = xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
+                }
+              }
+            }
 
-                  delete bindSpec['options'];
-                  delete bindSpec['sortOn'];
-                  delete bindSpec['sortBy'];
-                  delete bindSpec['startAt'];
-                  delete bindSpec['valueKey'];
-                  delete bindSpec['textKey'];
-                  break;
-                case 'sorton':
-                case 'sortby':
-                case 'startat':
-                case 'valuekey':
-                case 'textkey':
-                  break;
+            _each(attrSpec.split("_"), function (attribute) {
+              var computedKey='';
+              attribute = attribute.trim();
+              // console.log('[',attribute,']',bindKey,'=',bindValue);
+              if (!_isUndef(bindValue)) {
+                switch (attribute.toLowerCase()) {
+                  case 'html':
+                    $el.html( xsr.sanitizeXSS(bindValue) );
+                    break;
+                  case 'text':
+                    $el.text(bindValue);
+                    break;
+                  case 'value':
+                    _attr(el, 'value', bindValue);
+                    break;
 
-                case 'selectvalue':
-                case 'selectedvalue':
-                  if (bindSpec.hasOwnProperty('options')) {
-                    console.warn('Incorrect Order. Move options: first, finally select...', el);
-                  } else if ((/select/i).test(el.tagName)) {
-                    if (el.hasAttribute('multiple')) {
-                      if (!_isArr(bindValue)) {
-                        var splitByStr = _attr(el, 'data-split-by') || ',';
-                        bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
-                      }
-                      _selectOptionsFor(el, 'value', bindValue);
-                    } else {
-                      xsr.selectOptionForValue(el, bindValue);
+                  case 'options':
+                    var beginsAt = bindSpec['startAt'] || _attr(el, 'data-options-from') || 0;
+                    var sortOn   = bindSpec['sortOn']  || _attr(el, 'data-sort-on') || 0;
+                    var sortBy   = bindSpec['sortBy']  || _attr(el, 'data-sort-by') || '';
+                    if (bindSpec['valueKey']) {
+                      _attr(el, 'data-value-key', bindSpec['valueKey']);
                     }
-                  }
-                  break;
-
-                case 'selecttext':
-                case 'selectedtext':
-                  if (bindSpec.hasOwnProperty('options')) {
-                    console.warn('Incorrect Order. Move options: first, finally select...', el);
-                  } else if ((/select/i).test(el.tagName)) {
-                    if (el.hasAttribute('multiple')) {
-                      if (!_isArr(bindValue)) {
-                        var splitByStr = _attr(el, 'data-split-by') || ',';
-                        bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
-                      }
-                      _selectOptionsFor(el, 'text', bindValue);
-                    } else {
-                      xsr.selectOptionForText(el, bindValue);
+                    if (bindSpec['textKey']) {
+                      _attr(el, 'data-text-key', bindSpec['textKey']);
                     }
-                  }
-                  break;
+                    xsr.optionsList(el, bindValue, beginsAt, sortOn, sortBy);
 
-                case 'selectindex':
-                case 'selectedindex':
-                  if (bindSpec.hasOwnProperty('options')) {
-                    console.warn('Incorrect Order. Move options: first, finally select...', el);
-                  } else if ((/select/i).test(el.tagName)) {
-                    if (el.hasAttribute('multiple')) {
-                      if (!_isArr(bindValue)) {
-                        var splitByStr = _attr(el, 'data-split-by') || ',';
-                        bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
-                      }
-                      bindValue.forEach(function(idx){
-                        if (_isEl(el.options[+idx])) {
-                          el.options[+idx].selected = true;
-                          _attr(el.options[+idx], 'selected', '');
+                    delete bindSpec['options'];
+                    delete bindSpec['sortOn'];
+                    delete bindSpec['sortBy'];
+                    delete bindSpec['startAt'];
+                    delete bindSpec['valueKey'];
+                    delete bindSpec['textKey'];
+                    break;
+                  case 'sorton':
+                  case 'sortby':
+                  case 'startat':
+                  case 'valuekey':
+                  case 'textkey':
+                    break;
+
+                  case 'selectvalue':
+                  case 'selectedvalue':
+                    if (bindSpec.hasOwnProperty('options')) {
+                      console.warn('Incorrect Order. Move options: first, finally select...', el);
+                    } else if ((/select/i).test(el.tagName)) {
+                      if (el.hasAttribute('multiple')) {
+                        if (!_isArr(bindValue)) {
+                          var splitByStr = _attr(el, 'data-split-by') || ',';
+                          bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
                         }
-                      });
-                    } else {
-                      if (_isEl(el.options[+bindValue])) {
-                        el.options[+bindValue].selected = true;
-                        _attr(el.options[+bindValue], 'selected', '');
+                        _selectOptionsFor(el, 'value', bindValue);
+                      } else {
+                        xsr.selectOptionForValue(el, bindValue);
                       }
                     }
-                  }
-                  break;
+                    break;
 
-                case '$':
-                case 'check':
-                  if ((/checkbox|radio/i).test(el.type)) {
-                    switch (_of(bindValue)){
-                      case 'boolean':
-                        el.checked = bindValue;
-                        break;
+                  case 'selecttext':
+                  case 'selectedtext':
+                    if (bindSpec.hasOwnProperty('options')) {
+                      console.warn('Incorrect Order. Move options: first, finally select...', el);
+                    } else if ((/select/i).test(el.tagName)) {
+                      if (el.hasAttribute('multiple')) {
+                        if (!_isArr(bindValue)) {
+                          var splitByStr = _attr(el, 'data-split-by') || ',';
+                          bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
+                        }
+                        _selectOptionsFor(el, 'text', bindValue);
+                      } else {
+                        xsr.selectOptionForText(el, bindValue);
+                      }
+                    }
+                    break;
+
+                  case 'selectindex':
+                  case 'selectedindex':
+                    if (bindSpec.hasOwnProperty('options')) {
+                      console.warn('Incorrect Order. Move options: first, finally select...', el);
+                    } else if ((/select/i).test(el.tagName)) {
+                      if (el.hasAttribute('multiple')) {
+                        if (!_isArr(bindValue)) {
+                          var splitByStr = _attr(el, 'data-split-by') || ',';
+                          bindValue = (''+bindValue).split(splitByStr).map(function(v){ return v.trim(); });
+                        }
+                        bindValue.forEach(function(idx){
+                          if (_isEl(el.options[+idx])) {
+                            el.options[+idx].selected = true;
+                            _attr(el.options[+idx], 'selected', '');
+                          }
+                        });
+                      } else {
+                        if (_isEl(el.options[+bindValue])) {
+                          el.options[+bindValue].selected = true;
+                          _attr(el.options[+bindValue], 'selected', '');
+                        }
+                      }
+                    }
+                    break;
+
+                  case '$':
+                  case 'check':
+                    if ((/checkbox|radio/i).test(el.type)) {
+                      switch (_of(bindValue)){
+                        case 'boolean':
+                          el.checked = bindValue;
+                          break;
+                        default:
+                          el.checked = (el.value).equalsIgnoreCase(''+bindValue);
+                          break;
+                      }
+                      if (el.checked) {
+                        _attr(el, 'checked', '');
+                      } else {
+                        el.removeAttribute('checked');
+                      }
+                    }
+                    break;
+
+                  case 'if':
+                    computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
+                    templateData.__computed__[computedKey] = bindValue;
+                    var ifTemplateId = $el.attr('data-bind-template'), ifTemplate;
+                    if (!ifTemplateId) { //create new if template
+                      var ifTemplateBody = '{{#if __computed__.'+ computedKey + ' }}' + ($el.html().trim()) + '{{/if}}';
+                      ifTemplateId = _templateDynId('if', bindKey);
+                      ifTemplate   = _inlineTemplate(ifTemplateId, ifTemplateBody);
+                      $el.attr('data-bind-template', ifTemplateId);
+                    } else {
+                      ifTemplate = xsr.compiledTemplates4DataBind[tmplStoreName][ifTemplateId];
+                    }
+                    $el.html( ifTemplate(templateData) );
+                    break;
+
+                  case 'repeat':
+                    computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
+                    templateData.__computed__[computedKey] = bindValue;
+                    var repeatTemplateId = $el.attr('data-bind-template'), repeatTemplate;
+                    if (!repeatTemplateId) { //create new repeat template
+                      var repeatAs = (bindSpec['repeatAs'] || bindSpec['as'] || '').replace(/[,|:]/g,' ').normalizeStr()
+                        , repeatTemplateBody = '{{#each __computed__.'+ computedKey + (repeatAs? (' as |'+repeatAs+'|') : '') +' }}'
+                                              + ($el.html().trim()) + '{{/each}}';
+                      repeatTemplateId = _templateDynId('repeat', bindKey);
+                      repeatTemplate   = _inlineTemplate(repeatTemplateId, repeatTemplateBody);
+                      $el.attr('data-bind-template', repeatTemplateId);
+                    } else {
+                      repeatTemplate = xsr.compiledTemplates4DataBind[tmplStoreName][repeatTemplateId];
+                    }
+                    $el.html( repeatTemplate(templateData) );
+                    break;
+                  case 'as':break;
+                  case 'repeatas':break;
+
+                  default:
+                    switch(true){
+                      case (/^\./.test(attribute)): //Class
+                      var classNames = attribute.replace(/[\.\,]/g, ' ').normalizeStr();
+                      $el[!!bindValue? 'addClass':'removeClass'](classNames);
+                      break;
+
                       default:
-                        el.checked = (el.value).equalsIgnoreCase(''+bindValue);
-                        break;
+                        $el.attr(attribute, bindValue);
+                        if (attribute.beginsWithStr('data-')) {
+                          dataAttrKey = xsr.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
+                          if (dataAttrKey) $el.data(dataAttrKey, bindValue);
+                        }
+                      break;
                     }
-                    if (el.checked) {
-                      _attr(el, 'checked', '');
-                    } else {
-                      el.removeAttribute('checked');
-                    }
-                  }
-                  break;
-
-                case 'if':
-                  computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
-                  templateData.__computed__[computedKey] = bindValue;
-                  var ifTemplateId = $el.attr('data-bind-template'), ifTemplate;
-                  if (!ifTemplateId) { //create new if template
-                    var ifTemplateBody = '{{#if __computed__.'+ computedKey + ' }}' + ($el.html().trim()) + '{{/if}}';
-                    ifTemplateId = _templateDynId('if', bindKey);
-                    ifTemplate   = _inlineTemplate(ifTemplateId, ifTemplateBody);
-                    $el.attr('data-bind-template', ifTemplateId);
-                  } else {
-                    ifTemplate = xsr.compiledTemplates4DataBind[tmplStoreName][ifTemplateId];
-                  }
-                  $el.html( ifTemplate(templateData) );
-                  break;
-
-                case 'repeat':
-                  computedKey = bindKey.replace(/[^a-z0-9]/gi,'_');
-                  templateData.__computed__[computedKey] = bindValue;
-                  var repeatTemplateId = $el.attr('data-bind-template'), repeatTemplate;
-                  if (!repeatTemplateId) { //create new repeat template
-                    var repeatAs = (bindSpec['repeatAs'] || bindSpec['as'] || '').replace(/[,|:]/g,' ').normalizeStr()
-                      , repeatTemplateBody = '{{#each __computed__.'+ computedKey + (repeatAs? (' as |'+repeatAs+'|') : '') +' }}'
-                                            + ($el.html().trim()) + '{{/each}}';
-                    repeatTemplateId = _templateDynId('repeat', bindKey);
-                    repeatTemplate   = _inlineTemplate(repeatTemplateId, repeatTemplateBody);
-                    $el.attr('data-bind-template', repeatTemplateId);
-                  } else {
-                    repeatTemplate = xsr.compiledTemplates4DataBind[tmplStoreName][repeatTemplateId];
-                  }
-                  $el.html( repeatTemplate(templateData) );
-                  break;
-                case 'as':break;
-                case 'repeatas':break;
-
-                default:
-                  switch(true){
-                    case (/^\./.test(attribute)): //Class
-                    var classNames = attribute.replace(/[\.\,]/g, ' ').normalizeStr();
-                    $el[!!bindValue? 'addClass':'removeClass'](classNames);
                     break;
-
-                    default:
-                      $el.attr(attribute, bindValue);
-                      if (attribute.beginsWithStr('data-')) {
-                        dataAttrKey = xsr.dotToCamelCase(attribute.getRightStr('-').replace(/-/g,'.'));
-                        if (dataAttrKey) $el.data(dataAttrKey, bindValue);
-                      }
-                    break;
-                  }
-                  break;
+                }
               }
+            });
+
+            if (bindCallback) {
+              bindCallback.call(el, el);
             }
-
           });
-
-          if (bindCallback) {
-            bindCallback.call(el, el);
-          }
-        });
-
+        }
       }
+
     });
 
     if (!skipBindCallback && !onVirtualDOM && $contextRoot.is('[data-rendered-component]')) {
@@ -4965,7 +5074,7 @@
                             'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
                             'dataValidate','dataProcess','dataPreProcessAsync',
-                            'beforeRender','beforeRefresh','componentName'];
+                            'lang','beforeRender','beforeRefresh','componentName'];
           var baseProperties = _mergeDeep({}, options);
           _each(baseProps, function(baseProp){
             delete options[baseProp];
@@ -7295,8 +7404,48 @@
                             xsr.bindData(viewContainerId, spaBindData, '', true);
                           }
 
-                          /*apply i18n*/
-                          xsr.i18n.apply(viewContainerId);
+                          xsr.bindElements(viewContainerId);
+
+                          //i18n begins
+                          if (!(_isBlank(xsr.defaults.components.lang) && _isBlank(spaRVOptions.lang))) {
+                            var cDefaultLangSettings = xsr.defaults.components.lang;
+                            var cLangSettings = _mergeDeep({target:viewContainerId},
+                                                           (_isObj(cDefaultLangSettings) && (!_isBlank(cDefaultLangSettings)))? xsr.defaults.components.lang : {},
+                                                           (_isObj(spaRVOptions['lang']) && !_isBlank(spaRVOptions.lang))? spaRVOptions.lang : {}
+                                                           );
+                            var fnArg = {
+                                componentName : rCompName,
+                                componentPath : rCompName.replace(/_/g,'/'),
+                                componentData : spaBindData,
+                                componentLang : cLangSettings
+                              }, fnRes;
+
+                            if (_is(cDefaultLangSettings, 'string|function')) {
+                              fnRes = xsr.renderUtils.runCallbackFn(cDefaultLangSettings, fnArg, fnArg);
+                              if (_isObj(fnRes)) {
+                                cLangSettings = _mergeDeep(cLangSettings, fnRes);
+                                fnArg.lang = cLangSettings;
+                              }
+                            }
+
+                            if (_is(spaRVOptions.lang, 'string|function')) {
+                              fnRes = xsr.renderUtils.runCallbackFn(spaRVOptions.lang, fnArg, fnArg);
+                              if (_isObj(fnRes)) {
+                                cLangSettings = _mergeDeep(cLangSettings, fnRes);
+                              }
+                            }
+
+                            var cLangUrlParams = {'$name': rCompName, '$path': rCompName.replace(/_/g,'/')};
+                            if (cLangSettings['urlParams'] && _isObj(cLangSettings.urlParams)) {
+                              cLangUrlParams = _mergeDeep(cLangUrlParams, cLangSettings.urlParams);
+                            }
+                            cLangSettings['urlParams'] = cLangUrlParams;
+
+                            xsr.i18n.updateLang(cLangSettings);
+                          } else {
+                            xsr.i18n.apply(viewContainerId);
+                          }
+                          //i18n ends
 
                           if (_routeReloadUrl(rCompName)) return (retValue); //Routing-Request-On-Reload
                         }
