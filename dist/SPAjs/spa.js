@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.80.0';
+  var _VERSION = '2.80.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -931,6 +931,11 @@
     return (rangeB > rangeE) ? ((_range(rE, (rB) + 1, rS)).reverse()) : (_range(rB, (rE) + 1, rS));
   };
 
+  function _freeTimer (timerX) {
+    if (timerX) {
+      clearTimeout(timerX);
+    }
+  }
   xsr.checkAndPreventKey = function (e, disableKeys) {
     if (!disableKeys) disableKeys = "";
     var withShiftKey = (disableKeys.indexOf("+shift") >= 0)
@@ -978,10 +983,11 @@
       $(el).attr('onKeyPauseReg', '').on('input propertychange paste', function(){
         var targetEl = this,
             timeDelay = ((''+_attr(targetEl, 'data-pause-time')).replace(/[^0-9]/g,'') || '1250')*1;
-        if (keyPauseTimer) clearTimeout(keyPauseTimer);
+        _freeTimer(keyPauseTimer);
         keyPauseTimer = setTimeout(function(){
           var fnName = _attr(targetEl, 'onKeyPause').split('(')[0], fn2Call=_find(window,fnName);
           if (fn2Call) fn2Call.call(targetEl, targetEl);
+          _freeTimer(keyPauseTimer);
         }, timeDelay);
       });
     });
@@ -4814,6 +4820,7 @@
   xsr.components = {};
   xsr.tempBind$data = {};
   xsr.defaults = {
+      alias: '',
       components: {
           templateEngine: 'handlebars'
         , rootPath: 'app/components/'
@@ -6144,7 +6151,7 @@
       }
     }
 
-    setTimeout(function(){
+    var timerX = setTimeout(function(){
       var xElId     = '#'+_attr(xEl,'id');
       var ok2Render = true;
       var xElValue  = '';
@@ -6201,6 +6208,7 @@
         xsr.$render(cName, cOptions);
       }
 
+      _freeTimer(timerX);
     }, (cOptions['delay']? (+cOptions['delay']): 0));
   }
 
@@ -6225,6 +6233,7 @@
       }
 
       _attr(el, 'render-on', onEvent);
+      el.removeEventListener(onEvent, _renderForComponent);
       el.addEventListener(onEvent, _renderForComponent);
     }
   }
@@ -8273,8 +8282,9 @@
 
       if (initialLang) {
         _setLang(initialLang, {}, true);
-        setTimeout(function(){
+        var timerX = setTimeout(function(){
           xsr.i18n.displayLang();
+          _freeTimer(timerX);
         }, 500);
       }
     }
@@ -9736,13 +9746,15 @@
    */
   xsr.async = function(fn){
     var fnArg = _arrProto.slice.call(arguments, 1);
+    var timerX;
     function fnAsyc(){
       var fnRes = fn.apply(undefined, fnArg)
         , argLen = fnArg.length
         , nextFn = (argLen)? fnArg[argLen-1] : '';
       if (nextFn && _isFn(nextFn)) nextFn(fnRes);
+      _freeTimer(timerX);
     }
-    setTimeout(fnAsyc, 0);
+    timerX = setTimeout(fnAsyc, 0);
   };
 
   function _initApiUrls(){
@@ -9820,20 +9832,28 @@
       , $body  = $('body')
       , elBody = $body[0]
       , dataInBody = $body.data()
-      , tcKey;
+      , tcKey, dfValue;
 
     if (!_isBlank(dataInBody)) {
       dataInBody['spaDefaults'] = _toObj(_attr(elBody,'data-spa-defaults') || _attr(elBody,'data-app-defaults') || {});
 
       _each(_keys(xsr.defaults), function(spaDefaultsKey){
-        if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) {
+        if (!spaDefaultsKey.equalsIgnoreCase( 'set' )) { //exclude set method
           tcKey = spaDefaultsKey.toTitleCase();
           defaultsInTag = dataInBody.spaDefaults[spaDefaultsKey] || dataInBody[ 'spaDefaults'+tcKey ] || dataInBody[ 'appDefaults'+tcKey ];
           if (!_isBlank(defaultsInTag)){
-            _mergeDeep(xsr.defaults[spaDefaultsKey], _toObj(defaultsInTag));
+            dfValue = _toObj(defaultsInTag);
+            if (_isObj(dfValue)) {
+              _mergeDeep(xsr.defaults[spaDefaultsKey], dfValue);
+            } else {
+              xsr.defaults[spaDefaultsKey] = defaultsInTag;
+            }
           }
         }
       });
+    }
+    if (xsr.defaults['alias']) {
+      win[xsr.defaults.alias] = xsr;
     }
 
     _initRoutesDefaults(); //run_once
@@ -9899,6 +9919,8 @@
     } else {
       console.error('Could not find XHR(ajax) module. Use jQuery Full version or include spaXHR module.');
     }
+
+    _doc.removeEventListener('DOMContentLoaded', _beginSPA);
   }
 
   //onDocumentReady
@@ -9911,4 +9933,4 @@
   });
 
 })();
-xsr.console.info("SPA.js loaded.");
+xsr.console.info("SPA.js is loaded.");

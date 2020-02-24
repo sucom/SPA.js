@@ -57,6 +57,15 @@
     return targetClass;
   }
 
+  function _clearTimer(timerX) {
+    if (timerX) {
+      var timerList = (!Array.isArray(timerX))? timerX : [timerX];
+      timerList.forEach(function(tX){
+        if (tX) { clearTimeout( tX ); }
+      });
+    }
+  }
+
   var _strExtract   = spa.extractStrBetweenIn;
   var _is           = spa.is;
   var _isStr        = spa.isString;
@@ -342,6 +351,8 @@
 
     var thisPromise = this;
 
+    var timer0, timer1, timer2;
+
     function complete (state, response) {
       if (thisPromise.isPending) {
         thisPromise.isPending  = false;
@@ -377,6 +388,7 @@
       } else {
         console.warn('Already this promise has been ' + (thisPromise.isResolved ? 'Resolved.' : 'Rejected.'));
       }
+      _clearTimer([timer0, timer1, timer2]);
     }
     function resolve () {
       complete.call(thisPromise, true, Array.prototype.slice.call(arguments));
@@ -389,18 +401,19 @@
       reject   : reject
     };
 
-    setTimeout(function () {
+
+    timer0 = setTimeout(function () {
       if (_isFn(fn)) {
         var fnRes = fn.call(fnContext, resolve, reject);
         if (promiseTimeout) {
-          setTimeout(function () {
+          timer1 = setTimeout(function () {
             if (thisPromise.isPending) {
               complete.call(thisPromise, !!fnRes, [fnRes]);
             }
           }, (_isUndef(fnRes) ? promiseTimeout : (deferTime || _defaultDeferTime)));
         }
       } else {
-        setTimeout(function () {
+        timer2 = setTimeout(function () {
           if (thisPromise.isPending) {
             complete.call(thisPromise, !!fn, [fn]);
           }
@@ -474,6 +487,7 @@
     this.prevFnRes;
 
     var thisPromise = this;
+    var timerX;
 
     function _runFn (fnType) {
       var fnList = thisPromise.fnQ[fnType], nxtFnArg0;
@@ -502,14 +516,16 @@
           }
           // This will run when always
           _runFn('done');
+          _clearTimer(timerX);
         }
       } catch (e) {
         console.error('Function Execution Error.', e);
+        _clearTimer(timerX);
       }
 
     }
 
-    setTimeout(function () {
+    timerX = setTimeout(function () {
       que.forEach(function (qItem, qIdx) {
         if ( (_isDeferred(qItem)) || (_isObjLike(qItem) && (_isFn(qItem['then']) || _isFn(qItem['fail']) || _isFn(qItem['catch']))) ) {
           if (typeof (qItem['then']) === 'function') {
@@ -1020,6 +1036,7 @@
     var isTimeout;
     var isAborted;
     var isCanceled;
+    var tX;
 
     if (_isFn(_reqOptions.success)) {
       _fnQ.then.push(_reqOptions.success);
@@ -1128,7 +1145,6 @@
         if (timeoutTimer && isTimeout) {
           axReq.statusText    = 'timeout';
           axReq.statusMessage = 'timeout';
-          clearTimeout( timeoutTimer );
         } else if (isAborted) {
           axReq.statusText    = 'abort';
           axReq.statusMessage = 'abort';
@@ -1151,6 +1167,8 @@
       }
       // This will run always
       _runFn('done');
+
+      _clearTimer([timeoutTimer, tX]);
     }
     xhr.onreadystatechange = _xhrReadyStateChange;
 
@@ -1258,13 +1276,13 @@
         if ((_axMethod !== 'GET') && axPayload) {
           axPayload = (_isStr(axPayload)) ? axPayload : JSON.stringify(axPayload);
           if (_reqOptions.async) {
-            setTimeout(function () { xhr.send(axPayload); }, _defaultDeferTime);
+            tX = setTimeout(function () { xhr.send(axPayload); }, _defaultDeferTime);
           } else {
             xhr.send(axPayload);
           }
         } else {
           if (_reqOptions.async) {
-            setTimeout(function () { xhr.send(); }, _defaultDeferTime);
+            tX = setTimeout(function () { xhr.send(); }, _defaultDeferTime);
           } else {
             xhr.send();
           }
