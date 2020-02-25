@@ -59,7 +59,7 @@
 
   function _clearTimer(timerX) {
     if (timerX) {
-      var timerList = (!Array.isArray(timerX))? timerX : [timerX];
+      var timerList = (Array.isArray(timerX))? timerX : [timerX];
       timerList.forEach(function(tX){
         if (tX) { clearTimeout( tX ); }
       });
