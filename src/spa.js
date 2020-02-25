@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.80.1';
+  var _VERSION = '2.80.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -7416,43 +7416,47 @@
                           xsr.bindElements(viewContainerId);
 
                           //i18n begins
-                          if (!(_isBlank(xsr.defaults.components.lang) && _isBlank(spaRVOptions.lang))) {
-                            var cDefaultLangSettings = xsr.defaults.components.lang;
-                            var cLangSettings = _mergeDeep({target:viewContainerId},
-                                                           (_isObj(cDefaultLangSettings) && (!_isBlank(cDefaultLangSettings)))? xsr.defaults.components.lang : {},
-                                                           (_isObj(spaRVOptions['lang']) && !_isBlank(spaRVOptions.lang))? spaRVOptions.lang : {}
-                                                           );
-                            var fnArg = {
-                                componentName : rCompName,
-                                componentPath : rCompName.replace(/_/g,'/'),
-                                componentData : spaBindData,
-                                componentLang : cLangSettings
-                              }, fnRes;
+                          var $i18nElementsInComp = $(viewContainerId).find('[data-i18n]:not([data-i18n=""])');
+                          if ($i18nElementsInComp.length) {
+                            if ((!(_isBlank(xsr.defaults.components.lang) && _isBlank(spaRVOptions.lang)))
+                                || (xsr.defaults.lang.url && (xsr.defaults.lang.url.indexOf('$')>=0))) {
+                              var cDefaultLangSettings = xsr.defaults.components.lang;
+                              var cLangSettings = _mergeDeep({target:viewContainerId},
+                                                             (_isObj(cDefaultLangSettings) && (!_isBlank(cDefaultLangSettings)))? xsr.defaults.components.lang : {},
+                                                             (_isObj(spaRVOptions['lang']) && !_isBlank(spaRVOptions.lang))? spaRVOptions.lang : {}
+                                                             );
+                              var fnArg = {
+                                  componentName : rCompName,
+                                  componentPath : rCompName.replace(/_/g,'/'),
+                                  componentData : spaBindData,
+                                  componentLang : cLangSettings
+                                }, fnRes;
 
-                            if (_is(cDefaultLangSettings, 'string|function')) {
-                              fnRes = xsr.renderUtils.runCallbackFn(cDefaultLangSettings, fnArg, fnArg);
-                              if (_isObj(fnRes)) {
-                                cLangSettings = _mergeDeep(cLangSettings, fnRes);
-                                fnArg.lang = cLangSettings;
+                              if (_is(cDefaultLangSettings, 'string|function')) {
+                                fnRes = xsr.renderUtils.runCallbackFn(cDefaultLangSettings, fnArg, fnArg);
+                                if (_isObj(fnRes)) {
+                                  cLangSettings = _mergeDeep(cLangSettings, fnRes);
+                                  fnArg.lang = cLangSettings;
+                                }
                               }
-                            }
 
-                            if (_is(spaRVOptions.lang, 'string|function')) {
-                              fnRes = xsr.renderUtils.runCallbackFn(spaRVOptions.lang, fnArg, fnArg);
-                              if (_isObj(fnRes)) {
-                                cLangSettings = _mergeDeep(cLangSettings, fnRes);
+                              if (_is(spaRVOptions.lang, 'string|function')) {
+                                fnRes = xsr.renderUtils.runCallbackFn(spaRVOptions.lang, fnArg, fnArg);
+                                if (_isObj(fnRes)) {
+                                  cLangSettings = _mergeDeep(cLangSettings, fnRes);
+                                }
                               }
-                            }
 
-                            var cLangUrlParams = {'$name': rCompName, '$path': rCompName.replace(/_/g,'/')};
-                            if (cLangSettings['urlParams'] && _isObj(cLangSettings.urlParams)) {
-                              cLangUrlParams = _mergeDeep(cLangUrlParams, cLangSettings.urlParams);
-                            }
-                            cLangSettings['urlParams'] = cLangUrlParams;
+                              var cLangUrlParams = {'$name': rCompName, '$path': rCompName.replace(/_/g,'/')};
+                              if (cLangSettings['urlParams'] && _isObj(cLangSettings.urlParams)) {
+                                cLangUrlParams = _mergeDeep(cLangUrlParams, cLangSettings.urlParams);
+                              }
+                              cLangSettings['urlParams'] = cLangUrlParams;
 
-                            xsr.i18n.updateLang(cLangSettings);
-                          } else {
-                            xsr.i18n.apply(viewContainerId);
+                              xsr.i18n.updateLang(cLangSettings);
+                            } else {
+                              xsr.i18n.apply(viewContainerId);
+                            }
                           }
                           //i18n ends
 
