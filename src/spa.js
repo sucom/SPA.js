@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.80.2';
+  var _VERSION = '2.81.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -5080,7 +5080,7 @@
                             'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders','defaultPayload','stringifyPayload',
                             'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
-                            'dataValidate','dataProcess','dataPreProcessAsync',
+                            'dataValidate','dataProcess','dataPreProcessAsync','renderMode',
                             'lang','beforeRender','beforeRefresh','componentName'];
           var baseProperties = _mergeDeep({}, options);
           _each(baseProps, function(baseProp){
@@ -6133,6 +6133,7 @@
     return (/^(\$)*(dyn)*SPA\$/i.test(cName));
   }
   function _renderForComponent() {
+    var onEvent   = event;
     var xEl       = this;
     var forAttr   = _attr(xEl,'for') || '';
     var idxSpec   = forAttr.indexOf(':');
@@ -6210,6 +6211,10 @@
 
       _freeTimer(timerX);
     }, (cOptions['delay']? (+cOptions['delay']): 0));
+
+    if (onEvent && onEvent.type == 'submit') {
+      onEvent.preventDefault();
+    }
   }
 
   function _registerRenderForEl(el) {
@@ -6867,7 +6872,7 @@
                 cache: spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache'],
                 dataType: spaRVOptions.dataType || _find(window, 'app.api.ajaxOptions.dataType', 'text'),
                 success: function (result) {
-                  xsr.console.log('API response:', result);
+                  _log.log('API response:', result);
                   var oResult = _isStr(result)? _toObj(''+result, 'data') : result,
                       validateData = _renderOption('dataValidate', 'validate');
 
@@ -7113,24 +7118,41 @@
               _log.group("spaRender[" + spaTemplateEngine + "] - xsr.renderHistory[" + retValue._renderId + "]");
               _log.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
 
+              var dataApiOptions = Array.isArray(this)? this[0] : this;
+
               try {
                 var isPreProcessed = false, isSinlgeAsyncPreProcess;
-                var isValidData = !_renderOption('dataValidate', 'validate');
-                if (!isValidData) {
+                var dataValidateOption = _renderOption('dataValidate', 'validate');
+                var isValidData    = !dataValidateOption;
+
+                if (isValidData && _isFn(app.api['isCallSuccess'])) {
+                  isValidData = (app.api['isCallSuccess'].call(dataApiOptions, spaTemplateModelData[viewDataModelName], dataApiOptions));
+                } else if (!isValidData) {
                   //Get Validated using SPA.API
                   _log.info('Validating Data');
-                  var fnDataValidate = _renderOption('dataValidate', 'validate');
+                  var fnDataValidate = dataValidateOption;
                   if (fnDataValidate && (_isStr(fnDataValidate))) {
                     fnDataValidate = _find(window, fnDataValidate);
                   }
                   if (fnDataValidate && _isFn(fnDataValidate)) {
-                    isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName]);
+                    isValidData = fnDataValidate.call(spaTemplateModelData[viewDataModelName], spaTemplateModelData[viewDataModelName], dataApiOptions);
                   } else {
-                    isValidData = (xsr.api['isCallSuccess'].call(this, spaTemplateModelData[viewDataModelName], this));
+                    if (_isFn(app.api['isCallSuccess'])) {
+                      isValidData = (app.api['isCallSuccess'].call(dataApiOptions, spaTemplateModelData[viewDataModelName], dataApiOptions));
+                    } else {
+                      isValidData = (xsr.api['isCallSuccess'].call(dataApiOptions, spaTemplateModelData[viewDataModelName], dataApiOptions));
+                    }
                   }
                 }
 
+                var orgApiFullRes = spaTemplateModelData[viewDataModelName];
                 var initialTemplateData = spaTemplateModelData[viewDataModelName];
+                if (dataValidateOption) {
+                  var _dataModelInRes4Template = _renderOption('dataModel', 'model');
+                  if (_dataModelInRes4Template) {
+                    initialTemplateData = spaTemplateModelData[viewDataModelName] = xsr.hasKey(initialTemplateData, _dataModelInRes4Template) ? _find(initialTemplateData, _dataModelInRes4Template) : initialTemplateData;
+                  }
+                }
 
                 function _dataPreProcessAsync(){
                   var fnDataPreProcessAsync = _renderOption('dataPreProcessAsync', 'preProcessAsync')
@@ -7505,9 +7527,9 @@
                   });
                 }  else { //NOT a valid Data
                   if ( _isFn(app.api['onResError']) ) {
-                    app.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
+                    app.api.onResError.call(dataApiOptions, orgApiFullRes, 'Invalid-Data', undefined);
                   } else {
-                    xsr.api.onResError(spaTemplateModelData[viewDataModelName], 'Invalid-Data', undefined);
+                    xsr.api.onResError.call(dataApiOptions, orgApiFullRes, 'Invalid-Data', undefined);
                   }
                 }
               }
@@ -8058,7 +8080,7 @@
       _log.error($(jqXHR.responseText).text());
     },
     onResError : function () {
-      //This function is to handle when xsr.api.isCallSuccess returns false
+      //This function is to handle when app.api.isCallSuccess || xsr.api.isCallSuccess returns false
     },
     _call : function(ajaxOptions){
       /* set additional options dataType, error, success */
@@ -8069,10 +8091,15 @@
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
-          if (xsr.api['isCallSuccess'].call(this, axResponse, this)) {
-            ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
+          var isCallSuccess;
+          if (_isFn(app.api['isCallSuccess'])) {
+            isCallSuccess = (app.api['isCallSuccess'].call(this, axResponse, this));
+          } else {
+            isCallSuccess = (xsr.api['isCallSuccess'].call(this, axResponse, this));
           }
-          else {
+          if (isCallSuccess) {
+            ajaxOptions._success.call(this, axResponse, textStatus, jqXHR);
+          } else {
             if ( _isFn(app.api['onResError']) ) {
               app.api.onResError.call(this, axResponse, textStatus, jqXHR);
             } else {
