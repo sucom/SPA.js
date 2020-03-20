@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.81.0';
+  var _VERSION = '2.81.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -271,7 +271,7 @@
       if (typeof fromIndex === 'string') {
         fromIndex = (''+this).indexOf(fromIndex);
       }
-      return (fromIndex)? (''+this).substr(0, fromIndex) : '';
+      return (fromIndex)? (''+this).substring(0, fromIndex) : '';
     };
 
     _strProto.getRightStr = function (fromIndex) {
@@ -280,7 +280,7 @@
         sLen = fromIndex.length;
         fromIndex = (''+this).indexOf(fromIndex);
       }
-      return (fromIndex<0)? '' : (''+this).substr(fromIndex+sLen);
+      return (fromIndex<0)? '' : (''+this).substring(fromIndex+sLen);
     };
 
     _strProto.isBlankStr = function () {
@@ -638,7 +638,7 @@
   }
   function _is(x, type) {
     if ((''+type)[0] == '*') {
-      return (of(x).indexOf((''+type).toLowerCase().substr(1)) >= 0);
+      return (of(x).indexOf((''+type).toLowerCase().substring(1)) >= 0);
     }
     return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
   }
@@ -1654,7 +1654,7 @@
         selectors[0] = (selectors[0]).replace('app.'+compName+'.', '[data-rendered-component="'+(rootSelector.split('.')[1])+'"] ');
         selector = selectors.join(' ');
       } else if (rootSelector.beginsWithStr('\\$')) {
-        compName  = rootSelector.substr(1);
+        compName  = rootSelector.substring(1);
         if (compName.indexOf(':')>0) {
           compIndex = xsr.toInt(compName.getRightStr(':').trim());
           compName = compName.getLeftStr(':');
@@ -2924,7 +2924,7 @@
       if (scriptPath) {
         if (/^~/.test(scriptPath)) {
           scriptCache = false;
-          scriptPath = scriptPath.substr(1);
+          scriptPath = scriptPath.substring(1);
         }
         _log.info("Load script from   [" + scriptPath + "], cache:",scriptCache);
         _cachedScript(scriptPath, {cache: scriptCache}).done(function() {
@@ -3093,7 +3093,7 @@
    * */
   xsr.urlParams = function (urlQuery) {
     urlQuery = (urlQuery || window.location.search || "");
-    urlQuery = (urlQuery.beginsWithStr("\\?") || urlQuery.indexOf("//") < 7) ? urlQuery.substr(urlQuery.indexOf("?") + 1) : urlQuery;
+    urlQuery = (urlQuery.beginsWithStr("\\?") || urlQuery.indexOf("//") < 7) ? urlQuery.substring(urlQuery.indexOf("?") + 1) : urlQuery;
     var qParams = {};
     urlQuery.replace(/([^&=]+)=?([^&]*)(?:&+|$)/g, function (match, key, value) {
       (qParams[key] = qParams[key] || []).push(decodeURIComponent(value));
@@ -3199,7 +3199,7 @@
   function _browserLang(short) {
     var bLang = (navigator.languages) ? navigator.languages[0]
                                       : (navigator.language || navigator.userLanguage /* IE */ || _docLang() || 'en');
-    return (short)? ((bLang||'').substr(0,2).toLowerCase()) : bLang;
+    return (short)? ((bLang||'').substring(0,2).toLowerCase()) : bLang;
   }
   function _normalizeLanguageCode(lang) {
     if (!lang || lang.length < 2) {
@@ -3296,7 +3296,7 @@
   function unicodeToChar(str) {
     // unescape unicode codes
     var codes = [];
-    var code = parseInt(str.substr(2), 16);
+    var code = parseInt(str.substring(2), 16);
     if (code >= 0 && code < Math.pow(2, 16)) {
       codes.push(code);
     }
@@ -3524,7 +3524,7 @@
         _i18nLoaded = (typeof _i18nLoaded == "undefined") ? (!_isEmptyObj(_i18nStore)) : _i18nLoaded;
         xsr.i18n.loaded = xsr.i18n.loaded || _i18nLoaded;
         if ((lang.length > 1) && (!_i18nLoaded)) {
-          var _brDefLangCode = ((lang.length>2)? lang.substr(0,2) : _browserLang(1)).toLowerCase();
+          var _brDefLangCode = ((lang.length>2)? lang.substring(0,2) : _browserLang(1)).toLowerCase();
           if (lang != _brDefLangCode) {
             if (!_isFailedLang(_brDefLangCode)) {
               console.warn("Error Loading Language File [" + lang + "]. Attempt to get default language [" + _brDefLangCode + "].");
@@ -3582,7 +3582,7 @@
     if (xsr.i18n.loaded || window['Liferay']) {
       i18nKey = (''+i18nKey).replace(/i18n:/i, '').trim();
       if (i18nKey.beginsWithStrIgnoreCase('@')) {
-        i18nKey = ((i18nKey.substr(1)).trim());
+        i18nKey = ((i18nKey.substring(1)).trim());
         i18nKey = _find(window, i18nKey, i18nKey);
       }
       return _i18nValue(i18nKey);
@@ -3894,7 +3894,7 @@
     }
 
     var compName = ''; //pre-render-time
-    if (elFilter[0]=='$') { compName = elFilter.substr(1).trim(); elFilter = ''; }
+    if (elFilter[0]=='$') { compName = elFilter.substring(1).trim(); elFilter = ''; }
     compName = compName || $contextRoot.attr('data-rendered-component');
     var tmplStoreName = compName || '_unknown_';
     //console.log('compName>', tmplStoreName);
@@ -3916,7 +3916,7 @@
     function _getValue(key, el) {
       key = (key || '').trim();
       if (key[0]=='-') { //data[-key]
-        return $(el).data(key.substr(1));
+        return $(el).data(key.substring(1));
       } else if (key[0] == '#') {
         return xsr.getElValue(key);
       } else if (key == '.' || key == 'this') {
@@ -3943,10 +3943,10 @@
       var idxFnBrace = fnName.indexOf('(');
       var fnArgs = [];
       if (idxFnBrace>0) {
-        fnName = fnName.substr(0, idxFnBrace);
+        fnName = fnName.substring(0, idxFnBrace);
       }
       if (fnName[0]=='.') {
-        fnName = fnName.substr(1);
+        fnName = fnName.substring(1);
         if (xsr.pipes.hasOwnProperty(fnName)) {
           fnName = 'xsr.pipes.'+fnName;
         } else {
@@ -4030,7 +4030,7 @@
             negate    = (bindKey[0]=='!');
 
             if (negate) {
-              bindKey   = (bindKey.substr(1).trim());
+              bindKey   = (bindKey.substring(1).trim());
               bindValue = !_getValue(bindKey, el);
             } else {
               bindValue = _getValue(bindKey, el);
@@ -4045,7 +4045,7 @@
                   if (fnFormat == '!') {
                     bindValue = !bindValue;
                   } else {
-                    fnFormat = fnFormat.substr(1).trim();
+                    fnFormat = fnFormat.substring(1).trim();
                     bindValue = !_formatBindValue(fnFormat, bindValue, bindKey, el);
                     //bindValue = !xsr.renderUtils.runCallbackFn(fnFormat, ['(...)', bindValue, bindKey, templateData, el], el);
                   }
@@ -4908,7 +4908,7 @@
           if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
             var isChildComponent = (/[^a-z0-9]/gi).test(componentName); //childComponentIndicator
             var _cFldrPath   = xsr.defaults.components.rootPath+ ((xsr.defaults.components.inFolder || isChildComponent)? ((componentName.replace(/[^a-z0-9]/gi, '/')) +"/"): '');
-            xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
+            xTmplUrlPath = _cFldrPath+xTmplUrlPath.substring(2);
           }
           // if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no extension set default
           //   xTmplUrlPath += xsr.defaults.components.templateExt;
@@ -5691,7 +5691,7 @@
               var xTmplUrlPath = (xsr.components[componentName]['templateUrl'] || '').trim();
               if (xTmplUrlPath) {
                 if ( (/^(\.\/)/).test(xTmplUrlPath) )  { //beginsWith ./
-                  xTmplUrlPath = _cFldrPath+xTmplUrlPath.substr(2);
+                  xTmplUrlPath = _cFldrPath+xTmplUrlPath.substring(2);
                 }
                 // if  (!((/(\.([a-z])+)$/i).test(xTmplUrlPath))) { //if no file extension, set default
                 //   xTmplUrlPath += xsr.defaults.components.templateExt;
@@ -5716,7 +5716,7 @@
 
           if (renderOptions.hasOwnProperty('style') && _isStr(renderOptions.style)) {
             renderOptions['dataStyles'] = {};
-            renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : (((/^(\.\/)/).test(renderOptions.style))? (_cFldrPath+(renderOptions.style).substr(2)) : (renderOptions.style));
+            renderOptions['dataStyles'][componentName+'Style'] = (renderOptions.style=='.' || renderOptions.style=='$')? (_cFilesPath+'.css') : (((/^(\.\/)/).test(renderOptions.style))? (_cFldrPath+(renderOptions.style).substring(2)) : (renderOptions.style));
             delete renderOptions['style'];
             _log.info('Using component style for ['+componentName+']');
             _log.info(renderOptions);
@@ -6083,7 +6083,7 @@
           }
           var idxBrace = _fn2Call.indexOf('(');
           if (idxBrace>0) {
-            _fn2Call = _fn2Call.substr(0, idxBrace);
+            _fn2Call = _fn2Call.substring(0, idxBrace);
           }
           _fn2Call = _find(window, _fn2Call);
         }
@@ -6254,7 +6254,7 @@
     // forms with action="$xyz/abc"
     var $spaActionForms = $(scope).find('form[action^="$"]:not([for]):not([render-on])');
     $spaActionForms.each(function(i, el){
-      _attr(el, 'for', _attr(el,'action').substr(1));
+      _attr(el, 'for', _attr(el,'action').substring(1));
       el.removeAttribute('action');
 
       _registerRenderForEl(el);
@@ -6492,7 +6492,7 @@
           , navAwayFn, navAwayFnRes;
         if (onNavAway) {
           if (onNavAway[0] == '#' || onNavAway[0] == '>') {
-            var navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substr(1).trim() : onNavAway;
+            var navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substring(1).trim() : onNavAway;
             var $navAwayTarget = $navBlockContainer.find(navAwayTargetSelector).filter(':not(.disabled):not(:disabled)');
             if ($navAwayTarget.length) {
               $navAwayTarget.trigger('click');
@@ -8013,11 +8013,13 @@
         , isStaticUrl = apiUrl.beginsWithStr('!') || xsr.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || xsr.api.forceParamValuesInMockUrls
         , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
-        , pKey, pValue, skip, vFilters=[], filterContext = {url: apiUrl, urlParams: urlReplaceKeyValues}, defaultValue;
+        , pKey, pValue, skip, vFilters=[], ivFilters=[], filterContext = {url: apiUrl, urlParams: urlReplaceKeyValues}, defaultValue;
 
       if (!_isBlank(paramsInUrl)) {
         _each(paramsInUrl, function(param){
-          pKey   = param.replace(/[{}<>]/g, '').trim();
+          ivFilters = [];
+          vFilters  = [];
+          pKey      = param.replace(/[{}<>]/g, '').trim();
           if (pKey) {
             if (pKey.indexOf('|')>0) {
               vFilters = pKey.split('|').map(function(x){ return x.replace(/\(.*\)/g, '').trim(); });
@@ -8036,19 +8038,27 @@
               if (!skip) {
                 pValue = _find(urlReplaceKeyValues, pKey, urlReplaceKeyValues['_undefined']);
                 if ((typeof pValue == 'string') && (pValue.indexOf('$#')==0)) {
-                  pValue = xsr.getElValue(pValue.substr(1));
+                  if (pValue.indexOf('|') > 0) {
+                    ivFilters = pValue.split('|').map(function(x){ return x.replace(/\(.*\)/g, '').trim(); });
+                    pValue = ivFilters.shift();
+                  }
+                  pValue = xsr.getElValue(pValue.substring(1));
                 }
                 pValue = ((isStaticUrl && !forceParamValuesInMockUrls)? (param.containsStr('>')? pValue : ('_'+pKey)) : pValue);
               }
             }
+
+            vFilters = ivFilters.concat(vFilters);
             for(var x=0, fLen=vFilters.length; x < fLen; x++) {
               if (vFilters[x]) {
                 if (vFilters[x][0]=='.') {
                   try {
-                    pValue = pValue[vFilters[x].substr(1)]();
+                    pValue = pValue[vFilters[x].substring(1)]();
                   } catch(e) {
                     console.error('Error parsing urlParam: '+pValue+vFilters[x]+'()', 'param:', pValue, filterContext, e);
                   }
+                }  else if (vFilters[x][0]==':') {
+                  defaultValue = vFilters[x].substring(1).trim();
                 } else {
                   pValue = xsr.renderUtils.runCallbackFn(vFilters[x], pValue, filterContext);
                 }
@@ -8548,7 +8558,7 @@
 //          if (newMockAddress) {
 //            var rootIndex = newMockAddress.indexOf('/', 8),
 //                newMockBaseUrl  = (rootIndex > 0)? newMockAddress.slice(0, rootIndex) : newMockAddress,
-//                newMockRootFldr = (rootIndex > 0)? newMockAddress.substr(rootIndex+1) : '';
+//                newMockRootFldr = (rootIndex > 0)? newMockAddress.substring(rootIndex+1) : '';
 //            app.api['mockBaseUrl']    = (newMockBaseUrl == location.origin)? '' : newMockBaseUrl;
 //            app.api['mockRootFolder'] = newMockRootFldr;
 //            _testMockSys();
@@ -8585,7 +8595,7 @@
       if (indexOfDblSlash < 0) {
         finalMockUrl = mockBaseUrl + finalMockUrl;
       } else if (indexOfDblSlash < 7) {
-        finalMockUrl = mockBaseUrl + ( finalMockUrl.substr( finalMockUrl.indexOf('/', finalMockUrl.indexOf('//')+2 )+1 ) );
+        finalMockUrl = mockBaseUrl + ( finalMockUrl.substring( finalMockUrl.indexOf('/', finalMockUrl.indexOf('//')+2 )+1 ) );
       }
     }
 
@@ -8936,7 +8946,7 @@
       $container = $(this);
       onNavAway = ($container.attr( _attrOnNavAway )||'').trim();
       if (onNavAway[0] == '#' || onNavAway[0] == '>') {
-        navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substr(1).trim() : onNavAway;
+        navAwayTargetSelector = onNavAway[0] == '>'? onNavAway.substring(1).trim() : onNavAway;
         $navAwayTarget = $container.find(navAwayTargetSelector).filter(':not(.disabled):not(:disabled)');
         if ($navAwayTarget.length) {
           if ($byEl) byEl = "id:'"+$byEl.attr('id')+"', spaRoute:'"+$byEl.attr( _attrSpaRoute )+"'";
@@ -9240,11 +9250,11 @@
     function update(newRouteData, rDir) {
       //console.log('>>>>>>>>>>>', newRouteData);
       routeData   = (newRouteData||'').trim();
-      if (routeData[0]=='#') routeData = routeData.substr(1);
+      if (routeData[0]=='#') routeData = routeData.substring(1);
       usePrevHash = (routeData[0] == '<');
       delayUpdate = (routeData[0] == '>');
       routeDir    = rDir || routeData[delayUpdate? 1: 0];
-      routeName   = routeData.substr(delayUpdate? 2 : 1);
+      routeName   = routeData.substring(delayUpdate? 2 : 1);
       continueAutoRoute = false;
     }
     update($routeEl.attr( _attrSpaRoute ), $routeEl.attr('data-route-dir'));
@@ -9282,7 +9292,7 @@
     //console.log('RouteDir:', routeDir);
     if (routeDir == '^') {
       if (_isBlank(spaRoutePath)) {
-        update(routeData.substr(1));
+        update(routeData.substring(1));
       } else {
         e.preventDefault();
         continueAutoRoute = true;
@@ -9334,7 +9344,7 @@
   }
 
   function _onRouteAutoReg(){
-    xsr.route(_attr(this,_attrSpaRoute+'-AUTO').substr(1));
+    xsr.route(_attr(this,_attrSpaRoute+'-AUTO').substring(1));
   }
   function _initRouteHash(scope){
     // var addClassMatch = ''//_routeByHref? '.spa-route' : ''
@@ -9358,12 +9368,12 @@
         if (href[0] == '#') {
           if (('^><-').indexOf(href[1]) >=0) {
             rDir = href[1];
-            href = href.substr(2);
+            href = href.substring(2);
           }
         } else {
           if (('^').indexOf(href[0]) >=0) {
             rDir = href[0];
-            href = href.substr(1);
+            href = href.substring(1);
           }
         }
         $a.attr('href', '#'+href).removeAttr('target').attr('data-route-dir', rDir);
@@ -9386,7 +9396,7 @@
         routeDir = '?';
         routePathBeginsAt = 0;
       }
-      routePath = route.substr(routePathBeginsAt);
+      routePath = route.substring(routePathBeginsAt);
 
       switch (routeDir) {
         case '/':
@@ -9812,7 +9822,7 @@
           apiContext = apiContext.trim();
           contextMode = apiContext[0];
           if (contextMode == '!' || contextMode == '~') {
-            apiContext = apiContext.substr(1);
+            apiContext = apiContext.substring(1);
             _each(xsr.api.urls, function(url, key){
               urlMode = url[0];
               if ( (!(urlMode == '!' || urlMode == '~'))
