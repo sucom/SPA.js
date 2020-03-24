@@ -77,6 +77,29 @@
       </form>
       </script>
 
+      <section>
+        <h6>v2.82.0+</h6>
+        <p>Starting this release, an event specific validation rules can be defined using event specific attribute [data-validate-onEvent].
+          Note: An empty [data-validate] attribute must exist, along with event specific validation rules attributes.</p>
+        <script type="text/code" class="code trim no-num-tool" data-lang="html" data-title="componentX.html">
+        <form id="FormX">
+
+          <div class="input-group">
+            <div>Email:</div>
+            <input type="text" name="email"
+              data-validate
+              data-validate-onKeyup="[ {fn:'_check.email', msg:'Invalid email.'} ]"
+              data-validate-onBlur="[ {fn:'_check.required', msg:'Enter email.'} ]"
+            >
+          </div>
+
+          <div>
+            <button onClick="{$}saveForm();"> Save </button>
+          </div>
+        </form>
+        </script>
+      </section>
+
 
       <strong>data-validate</strong> attribute ...
       <ul>
@@ -145,7 +168,7 @@
                   </p></li>
                 </ul>
               </td></tr>
-          <tr><td>'_check.range'        </td>
+          <tr><td>'_check.range'</td>
             <td>
               <strong>data-validate-range</strong>="<strong>from-number:to-number</strong>"
               <p>
@@ -157,23 +180,22 @@
               </p>
             </td>
           </tr>
-          <tr><td>'_check.minlength'    </td>
+          <tr><td>'_check.minlength'</td>
             <td>
               <strong>data-minlength</strong>="NUMBER"
             </td>
           </tr>
-          <tr><td>'_check.maxlength'    </td>
+          <tr><td>'_check.maxlength'</td>
             <td>
               <strong>data-maxlength</strong>="NUMBER"
             </td>
           </tr>
-          <tr><td>'_check.fixedlength'  </td>
+          <tr><td>'_check.fixedlength'</td>
             <td>
-              <strong>data-minlength</strong>="NUMBER"
-              <strong>data-maxlength</strong>="NUMBER"
+              <strong>data-fixedlength</strong>="NUMBER"
             </td>
           </tr>
-          <tr><td>'_check.wordsize'     </td>
+          <tr><td>'_check.wordsize'</td>
             <td>
               <strong>data-valid-word-size="<strong>NUMBER</strong>"</strong>
             </td>
@@ -181,10 +203,7 @@
         </table>
         </li>
       </ul>
-
-
     </p>
-
   </section>
 
   <section>

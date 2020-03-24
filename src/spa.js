@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.81.1';
+  var _VERSION = '2.82.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -40,7 +40,7 @@
   /* Create SPA */
   var xsr = function(){};
   /* Expose to global with alias */
-  win.spa = win.xsr = win.ngx = win.__ = win._$ = xsr;
+  win.spa = win.xsr = win.__ = win._$ = xsr;
 
 //  var xhrLib = ($['ajax'] && $)  || spaXHR;
 //  var $when  = xhrLib.when;
@@ -1901,8 +1901,13 @@
   /* as jQ extension see $fnEx below */
   function _serializeFormToObject(obj, keyNameToLowerCase, strPrefixToIgnore) {
     var $thisForm = $(this)
-      , thisForm = $thisForm[0]
-      , a = $thisForm.serializeToArray()
+      , thisForm = $thisForm[0];
+    if (!thisForm) {
+      console.warn('Form not found! (_serializeFormToObject)');
+      return {};
+    }
+
+    var a = $thisForm.serializeToArray()
       , $fmData = $thisForm.data()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : (keyNameToLowerCase || false)
@@ -1957,8 +1962,13 @@
   /* as jQ extension see $fnEx below */
   function _serializeFormToSimpleObject(obj, includeDisabledElements) {
     var $thisForm = $(this)
-      , thisForm  = $thisForm[0]
-      , $fmData   = $thisForm.data()
+      , thisForm  = $thisForm[0];
+    if (!thisForm) {
+      console.warn('Form not found! (serializeFormToSimpleObject)');
+      return {};
+    }
+
+    var $fmData   = $thisForm.data()
       , a = this.serializeToArray()
       , o = (typeof obj === "object") ? obj : {}
       , c = (typeof obj === "boolean") ? obj : ( _is(includeDisabledElements, 'boolean')? includeDisabledElements : ((thisForm.hasAttribute('data-disabled') && _isBlank(_attr(thisForm,'data-disabled'))) || _strToNative( $fmData['disabled'] || 'false' )))
@@ -7991,6 +8001,22 @@
     version: xsr.VERSION
   };
 
+  function _getUrl( urlKey ) {
+    urlKey = (urlKey+'').trim().trimLeftStr(xsr.api.urlKeyIndicator);
+    var retValue = urlKey;
+    if (_isObj(xsr.api.urls) && Object.keys(xsr.api.urls).length) {
+      if (urlKey.indexOf('.')>=0) {
+        retValue = _find(xsr.api.urls, urlKey, '');
+      } else {
+        retValue = xsr.api.urls[urlKey] || ((urlKey[0] !== '$') && xsr.api.urls['$'+urlKey]) || '';
+      }
+      if (!retValue) {
+        console.warn('URL undefined for key:', urlKey);
+      }
+    }
+    return retValue;
+  }
+
   //API Section begins
   xsr.api = {
     baseUrl:'',
@@ -8006,10 +8032,12 @@
     forceParamValuesInMockUrls:false,
     urlKeyIndicator:'@',
     url: function(apiKey, urlReplaceKeyValues){
-      apiKey = (apiKey||'').trimLeftStr(xsr.api.urlKeyIndicator);
+      var lookupUrl = ((apiKey || '').trim()[0] === xsr.api.urlKeyIndicator);
+
+      apiKey = lookupUrl? (apiKey||'').trimLeftStr(xsr.api.urlKeyIndicator) : (apiKey || '');
       urlReplaceKeyValues = urlReplaceKeyValues || {};
 
-      var apiUrl = (xsr.api.urls[apiKey] || apiKey)
+      var apiUrl = (lookupUrl && _getUrl(apiKey)) || apiKey // (xsr.api.urls[apiKey] || apiKey)
         , isStaticUrl = apiUrl.beginsWithStr('!') || xsr.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || xsr.api.forceParamValuesInMockUrls
         , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
@@ -8069,7 +8097,7 @@
               pValue = defaultValue;
             }
 
-            if (!(skip && _isBlank(vFilters))) {
+            if ((!(skip && _isBlank(vFilters))) || (pValue)) {
               apiUrl = apiUrl.replace(new RegExp(param.replace(/([^a-zA-Z0-9])/g,'\\$1'), 'g'), (''+pValue));
             }
           }
@@ -8382,191 +8410,6 @@
         isFullPath = (urlBeginStr.beginsWithStr('http:') || urlBeginStr.beginsWithStr('https:') || urlBeginStr.beginsWithStr('//'));
     return !isFullPath;
   }
-
-//  function _xhrReq( options ){
-//
-//    var axOptions = {
-//      url: '',
-//      responseType: 'json', // text, html, css, csv, xml, json, pdf, zip
-//      async: true,
-//      cache: false,
-//      method: 'GET',    // GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS, TRACE
-//      headers: {},      // {key: 'value'} or function which returns {key: 'value'}
-//      auth: null,       // { user: '', pwd: ''},
-//      timeout: 0,       // 0=No Timeout; in milliseconds
-//      success: null,    // function(response, statusCode, XHR){}
-//      error: null,      // function(statusCode, statusText, XHR){}
-//      finally: null     // function(response, statusCode, XHR){}
-//
-//      //data:
-//      //onAbort:            function(XHR, event){}
-//      //onError:            function(XHR, event){}
-//      //onLoad:             function(XHR, event){}
-//      //onLoadEnd:          function(XHR, event){}
-//      //onLoadStart:        function(XHR, event){}
-//      //onProgress:         function(XHR, event){}
-//      //onReadyStateChange: function(XHR, event){}
-//      //onTimeout:          function(XHR, event){}
-//    };
-//
-//    var contentTypes = {TEXT:'text/plain', HTML:'text/html', CSS:'text/css', CSV:'text/csv', XML:'text/xml', JSON:'application/json', PDF:'application/pdf', ZIP:'application/zip' },
-//        axResType = axOptions.responseType.toUpperCase(),
-//        contentType = contentTypes[ axResType ] || axOptions.responseType,
-//        axHeaders = {};
-//
-//    // updating axOptions
-//    _keys(options || {}).forEach(function(oKey){
-//      axOptions[oKey] = options[oKey];
-//    });
-//
-//    axOptions.method = axOptions.method.toUpperCase();
-//
-//    // Set Headers
-//    if (_isFn(axOptions.headers)) {
-//      axOptions.headers = axOptions.headers.call(undefined, axOptions);
-//    }
-//    if (_isObj(axOptions.headers)) {
-//      _keys(axOptions.headers).forEach(function(oKey){
-//        axHeaders[oKey] = axOptions.headers[oKey];
-//      });
-//    }
-//
-//    if (contentType) {
-//      axHeaders['Content-Type'] = contentType;
-//    }
-//    axHeaders['Cache-Control'] = axOptions.cache? 'max-age=86400000' : 'no-cache, no-store, must-revalidate, max-age=0';
-//    axHeaders['Expires']       = axOptions.cache? ((new Date( (new Date()).setDate( (new Date()).getDate() + 1 ) )).toUTCString()) : '0';
-//    if (!axOptions.cache) {
-//      axHeaders['Pragma'] = 'no-cache';
-//    }
-//
-//    //----------------------------------------------------------------------
-//    // Create new HTTP Request Object
-//    var xhr = new XMLHttpRequest(), axData;
-//
-//    xhr['requestOptions'] = axOptions;
-//
-//    // Setup timeout
-//    if (axOptions.timeout) {
-//      xhr.timeout   = axOptions.timeout;
-//    }
-//
-//    var onReadyStateChange;
-//
-//    _keys(axOptions).forEach(function(oKey){
-//      var eName = oKey.toLowerCase();
-//      if ((eName === 'onreadystatechange') && (_isFn(axOptions[oKey]))) {
-//        onReadyStateChange = axOptions[oKey];
-//      } else if ((eName.indexOf('on') === 0) && (_isFn(axOptions[oKey]))) {
-//        xhr[eName] = function(e){
-//          axOptions[oKey].call(axOptions, xhr, e);
-//        };
-//      }
-//    });
-//
-//    // Setup our listener to process request state changes
-//    xhr.onreadystatechange = function (e) {
-//
-//        if (onReadyStateChange) {
-//          onReadyStateChange.call(axOptions, xhr, e);
-//        }
-//
-//        // Only run if the request is complete
-//        if (xhr.readyState !== 4) return;
-//
-//        var xhrResponse = xhr.responseText;
-//
-//        // Process our return data
-//        if (xhr.status >= 200 && xhr.status < 300) {
-//          if (axResType === 'JSON') {
-//            try {
-//              if (xhrResponse) {
-//                xhrResponse = JSON.parse(xhrResponse);
-//              }
-//            } catch(e) {
-//              xhrResponse = xhr.responseText;
-//              console.warn('Invalid JSON response.', xhrResponse, xhr, e);
-//            }
-//          }
-//          // This will run when the request is successful
-//          if (_isFn(axOptions.success)) {
-//            axOptions.success.call(axOptions, xhrResponse, xhr.status, xhr);
-//          }
-//        } else {
-//            // This will run when it's not
-//            if (_isFn(axOptions.error)) {
-//              axOptions.error.call(axOptions, xhr.status, xhr.statusText, xhr);
-//            }
-//        }
-//
-//        // This will run always
-//        if (_isFn(axOptions.finally)) {
-//          axOptions.finally.call(axOptions, xhrResponse, xhr.status, xhr);
-//        }
-//
-//    };
-//
-//    if (axOptions.hasOwnProperty('data') && axOptions.method === 'GET') {
-//      axData = (_isObj(axOptions['data']))? _toQueryString(axOptions['data']) : (''+axOptions['data']);
-//      if (axData) {
-//        axOptions.url += ((axOptions.url.indexOf('?') < 0)? '?' : ((/\?$|\&$/.test(axOptions.url))? '' : '&')) + axData;
-//      }
-//    }
-//
-//    // Open request
-//    // The first argument is the post type (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
-//    // The second argument is the endpoint URL
-//    // The third arugment is async: true/false
-//    try {
-//      if (axOptions.auth && (_isObj(axOptions.auth))) {
-//        if (axOptions.auth.hasOwnProperty('user')) {
-//          if (axOptions.auth.hasOwnProperty('pwd')) {
-//            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user, axOptions.auth.pwd);
-//          } else {
-//            xhr.open(axOptions.method, axOptions.url, axOptions.async, axOptions.auth.user);
-//          }
-//        }
-//      } else {
-//        xhr.open(axOptions.method, axOptions.url, axOptions.async);
-//      }
-//
-//      // Set Request Headers
-//      _keys(axHeaders).forEach(function(oKey){
-//        xhr.setRequestHeader(oKey, axHeaders[oKey]);
-//      });
-//
-//      // Send Payload
-//      if ((axOptions.method !== 'GET') && axOptions.hasOwnProperty('data')) {
-//        axData = (_isObj(axOptions['data']))? JSON.stringify(axOptions['data']) : axOptions['data'];
-//        xhr.send( axData );
-//      } else {
-//        xhr.send();
-//      }
-//    }catch(e){
-//      console.warn('Ajax-Exception', xhr, e);
-//    }
-//
-//    return xhr;
-//  }
-//  function _testMockSys() {
-//    if (app['api']) {
-//      _xhrReq({url: _mockFinalUrl(), method:'HEAD', error:function(){
-//          var mockBaseUrlExternal = _find(app, 'api.mockBaseUrl') || _find(spa, 'api.mockBaseUrl') || '';
-//          var mockBaseUrl  = ((mockBaseUrlExternal || location.origin).trimRightStr('/')) + '/',
-//              mockRootFldr = mockBaseUrlExternal? '' : ((_find(app, 'api.mockRootFolder') || _find(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')),
-//              newMockAddress = prompt('Enter Mock Root Address: http[s]://server.address[:port]/root-folder', mockBaseUrl+mockRootFldr);
-//          if (newMockAddress) {
-//            var rootIndex = newMockAddress.indexOf('/', 8),
-//                newMockBaseUrl  = (rootIndex > 0)? newMockAddress.slice(0, rootIndex) : newMockAddress,
-//                newMockRootFldr = (rootIndex > 0)? newMockAddress.substring(rootIndex+1) : '';
-//            app.api['mockBaseUrl']    = (newMockBaseUrl == location.origin)? '' : newMockBaseUrl;
-//            app.api['mockRootFolder'] = newMockRootFldr;
-//            _testMockSys();
-//          }
-//        }});
-//    }
-//  }
-//  xsr.testMockSys = _testMockSys;
 
   function _mockFinalUrl( liveUrl, reqMethod, liveApiPrefixStr ){
     liveUrl          = liveUrl || '/';

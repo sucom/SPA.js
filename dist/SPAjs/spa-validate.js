@@ -144,9 +144,14 @@
       , Lengths     : function _fnValidLengths(obj){
                         var elValue = $(obj).val();
                         var eLength = elValue.length;
-                        var minLen  = spa.toInt($(obj).data("minlength") || $(obj).data("minLength") || $(obj).attr("minlength"));
-                        var maxLen  = spa.toInt($(obj).data("maxlength") || $(obj).data("maxLength"));
-                        var isValid = ((eLength >= minLen) && (eLength <= maxLen));
+                        var isValid;
+                        if (obj.hasAttribute('data-fixed-length')) {
+                          isValid = (eLength == +(obj.getAttribute('data-fixed-length')));
+                        } else {
+                          var minLen  = spa.toInt($(obj).data("minlength") || $(obj).data("minLength") || $(obj).attr("minlength"));
+                          var maxLen  = spa.toInt($(obj).data("maxlength") || $(obj).data("maxLength"));
+                          isValid = ((eLength >= minLen) && (eLength <= maxLen));
+                        }
                         return isValid;
                         //return spa['_validate']._showValidateMsg(obj, msg, isValid);
                       }
@@ -494,6 +499,14 @@
     }
   };
 
+  function _formatEventName( eName ) {
+    if (/^on/i.test(eName)) {
+      eName = eName.toLowerCase();
+      eName = eName.substring(0, 2) + eName[2].toUpperCase() + eName.substring(3);
+    }
+    return eName;
+  }
+
   spa['initValidation'] = spa['initDataValidation'] = function(context){
     /* apply same rules if mult-events specified with underscore eg: onFocus_onBlur_onKeyup */
     spa.console.log('>>>>> initDataValidation request for context:'+context);
@@ -574,6 +587,39 @@
         //$(el).data("validate", elValidateRuleSpec);
       }
       elValidateRules = splitValidateEvents(spa.toJSON(elValidateRuleSpec));
+
+      // data-validate-onXyz begins
+      var elValidateAttrRules = {};
+      var elAttrName = '';
+      var eName = '';
+      var attrRule;
+      var elAttributes = el.attributes;
+      if (elAttributes && elAttributes.length) {
+        for(var i=elAttributes.length; i>=0; i--) {
+          elAttrName = elAttributes[i]? elAttributes[i].name : '';
+          if (elAttrName && /^data-validate-/i.test(elAttrName)) {
+            eName = '.'+_formatEventName(elAttrName.replace(/data-validate-/i, ''));
+            attrRule = spa.toJSON(el.getAttribute(elAttrName));
+            if (!spa.isBlank(attrRule)) {
+              if (Array.isArray(attrRule)) {
+                for(var arIdx=0, arLen=attrRule.length; arIdx<arLen; arIdx++) {
+                  spa.setObjProperty(elValidateAttrRules, eName, attrRule[arIdx]);
+                }
+              } else {
+                spa.setObjProperty(elValidateAttrRules, eName, attrRule);
+              }
+            }
+          }
+        }
+        if (!spa.isBlank(elValidateAttrRules)) {
+          elValidateAttrRules = splitValidateEvents(elValidateAttrRules);
+          Object.keys(elValidateAttrRules).forEach(function(eName){
+            spa.setObjProperty(elValidateRules, '.'+eName, elValidateAttrRules[eName]);
+          });
+        }
+      }
+      // data-validate-onXyz ends
+
       spa.console.log(elValidateRuleSpec);
 
       /* Apply common events' rule to each element */
