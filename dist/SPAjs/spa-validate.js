@@ -145,8 +145,8 @@
                         var elValue = $(obj).val();
                         var eLength = elValue.length;
                         var isValid;
-                        if (obj.hasAttribute('data-fixed-length')) {
-                          isValid = (eLength == +(obj.getAttribute('data-fixed-length')));
+                        if (obj.hasAttribute('data-fixed-length') || obj.hasAttribute('data-fixedlength')) {
+                          isValid = (eLength == +(obj.getAttribute('data-fixed-length') || obj.getAttribute('data-fixedlength')));
                         } else {
                           var minLen  = spa.toInt($(obj).data("minlength") || $(obj).data("minLength") || $(obj).attr("minlength"));
                           var maxLen  = spa.toInt($(obj).data("maxlength") || $(obj).data("maxLength"));
