@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.82.0';
+  var _VERSION = '2.82.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -8037,7 +8037,7 @@
       apiKey = lookupUrl? (apiKey||'').trimLeftStr(xsr.api.urlKeyIndicator) : (apiKey || '');
       urlReplaceKeyValues = urlReplaceKeyValues || {};
 
-      var apiUrl = (lookupUrl && _getUrl(apiKey)) || apiKey // (xsr.api.urls[apiKey] || apiKey)
+      var apiUrl = _getUrl(apiKey) || apiKey // (xsr.api.urls[apiKey] || apiKey)
         , isStaticUrl = apiUrl.beginsWithStr('!') || xsr.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || xsr.api.forceParamValuesInMockUrls
         , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
