@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.82.1';
+  var _VERSION = '2.82.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -4837,7 +4837,7 @@
         , inFolder: true
         , templateExt: '.html'
         , scriptExt: '.js'
-        , templateScript: false
+        , templateScript: true
         , templateCache: true
         , dataPreRequest: ''
         , render:''
