@@ -1,0 +1,251 @@
+<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+  <h2>ES6 Modules</h2>
+  <p>
+    <blockquote>
+      ES6 Modules are supported only on modern browsers and not supported in Internet Explorer.
+    </blockquote>
+  </p>
+
+  <p>
+    <h3>ES6 Module (<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules" target="_blank" rel="noopener noreferrer">MDN</a>)</h3>
+    <p>SPA.js supports ES6 Modules. Download <a href="spa-examples_cdn/spa+jsModules.zip" download="spa+jsModules.zip" rel="noopener noreferrer" target="_blank">example bundle</a>.</p>
+  </p>
+
+  <p>Example: <i>modules/module1.js</i></p>
+  <script type="text/code" class="code trim" data-lang="JavaScript" data-title="module1.js">
+    // module1.js
+
+    const PI = 3.1415926;
+
+    function sum(...args) {
+      log('sum', args);
+      return args.reduce((num, tot) => tot + num);
+    }
+
+    // private function
+    function log(...msg) {
+      console.log(...msg);
+    }
+
+    export { PI, sum };
+  </script>
+
+  <p>Example: <i>modules/module2.js</i></p>
+  <script type="text/code" class="code trim" data-lang="JavaScript" data-title="module2.js">
+    // module2.js
+
+    const PI = 3.1415926;
+
+    function mul(...args) {
+      log('mul', args);
+      return args.reduce((num, tot) => tot * num);
+    }
+
+    // private function
+    function log(...msg) {
+      console.log(...msg);
+    }
+
+    export { PI, mul };
+  </script>
+  <br>
+  <p>
+    <h5>Static Imports (<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import" target="_blank" rel="noopener noreferrer">MDN</a>)</h5>
+    <p>It's possible to import ES6 modules using <strong>HTML script</strong> tag in index.html and in componentX.html</p>
+    <p>NOTE: The module path reference starts from index.html (the application's starting page)</p>
+    <p>Example: <i>index.html</i></p>
+    <script type="text/code" class="code trim" data-lang="html" data-title="index.html">
+    <!DOCTYPE html>
+    <html>
+      <_head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MyApp</title>
+        ...
+      </_head>
+      <_body>
+
+      <spa-component src="appRoot"></spa-component>
+
+      <_script src="xlib/jquery/jquery.min.js"        ></_script>
+      <_script src="xlib/handlebars/handlebars.min.js"></_script>
+      <_script src="xlib/spa/spa-bundle.min.js"       ></_script>
+
+      <_script type="module">
+
+        /* Import Modules */
+        import * as lib1 from './modules/module1.js';
+        import * as lib2 from './modules/module2.js';
+
+        /* export to window if needed. So, it can be accessed within component's method(s).
+         * check example code in componentX.js */
+        window.lib1 = lib1;
+        window.lib2 = lib2;
+
+        /* do something with imported module functions */
+        console.log( lib1.sum(1, 2, 3) );
+        console.log( lib2.mul(1, 2, 3) );
+
+      </_script>
+
+
+      </_body>
+    </html>
+    </script>
+
+    <br>
+    <p>Example: <i>componentX.html</i></p>
+    <p>NOTE: Until SPA.js v2.81.1, <mark>&lt;script&gt;</mark> tags are blocked in component html by default until SPA.js v2.81.1 </p>
+    <script type="text/code" class="code trim" data-lang="html" data-title="componentX.html">
+      <section class="container-component" id="c_componentX">
+        <h2>ComponentX</h2>
+        <button onclick="{$}test()">Test</button>
+      </section>
+
+      <_script type="module">
+
+        /* Import Modules */
+        import * as lib3 from './modules/module1.js';
+        import * as lib4 from './modules/module2.js';
+
+        /* export to window if needed. So, it can be accessed within component's method(s).
+         * check example code in componentX.js */
+        window.lib3 = lib3;
+        window.lib4 = lib4;
+
+        // do something with imported modules lib1, lib2 in index.html
+        console.log( lib1.sum(1, 2, 3) );
+        console.log( lib2.mul(1, 2, 3) );
+
+        // do something with imported modules in this script block
+        console.log( lib3.sum(1, 2, 3) );
+        console.log( lib4.mul(1, 2, 3) );
+
+      </_script>
+    </script>
+    <p>Need to enable <mark>templateScript: true</mark> property in componentX.js to Enable script tags in componentX.html.</p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+      spa.$('componentX', {
+
+        ...
+
+        templateScript: true
+
+        ...
+
+      });
+    </script>
+
+    <p>
+      <mark>NOTE:</mark>
+      <blockquote>
+        Static imports are NOT possible in component's script file (componentX.js). However, refer to Dynamic imports section below to load modules in componentX.js file.
+      </blockquote>
+    </p>
+  </p>
+  <br>
+  <p>
+    <br>
+    <h5>Dynamic Imports (<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Dynamic_Imports" target="_blank" rel="noopener noreferrer">MDN</a>)</h5>
+    <p>
+      <a
+      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Dynamic_Imports"
+      target="_blank" rel="noopener noreferrer">ES6 Dynamic Imports</a> are possible within component's methods in componentX.js
+    </p>
+    <p>Example: <i>componentX.js (dynamic import single)</i></p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+      (function () {
+        import('./modules/module1.js').then(moduleX => {
+
+          // do something with imported module in this script block
+          console.log( moduleX.sum(1, 2, 3) );
+
+          // export to window so component methods can access.
+          window.libX = moduleX;
+
+        });
+      })();
+
+      spa.$('componentX', {
+
+        test: function () {
+
+          // using above import - single
+          console.log( 'using dynamically imported (single) module in componentX.js' );
+
+          console.log( libX.sum(1, 2, 3) );
+
+        }
+      });
+    </script>
+
+    <p>Example: <i>componentX.js (dynamic imports - multiple)</i></p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+      (async function () {
+
+        let libA = await import('./modules/module1.js');
+        let libB = await import('./modules/module2.js');
+
+        // export to window so component methods can access.
+        window.utilLib1 = libA;
+        window.utilLib2 = libB;
+
+        // do something with imported module in this script block
+        console.log( libA.sum(1, 2, 3) );
+        console.log( libB.mul(1, 2, 3) );
+
+      })();
+
+      spa.$('componentX', {
+
+        test: function () {
+
+          // do something with dynamically imported (multiple) modules in componentX.js
+          console.log( utilLib1.sum(1, 2, 3) );
+          console.log( utilLib2.mul(1, 2, 3) );
+
+        }
+      });
+    </script>
+
+    <p>Example: <i>componentX.js (dynamic import (single) - inside a function)</i></p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+      spa.$('componentX', {
+
+        test: function () {
+
+          // using dynamic import - single
+          import('./modules/module1.js').then( moduleA => {
+
+            // do something with dynamically imported (single) - inside a function
+            console.log( moduleA.sum(1, 2, 3) );
+
+          } );
+
+        }
+
+      });
+    </script>
+
+    <p>Example: <i>componentX.js (dynamic imports (multiple) - inside a function)</i></p>
+    <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
+      spa.$('componentX', {
+
+        test: async function () { //NOTE: async prefix
+
+          // using dynamic import - multiple
+          let libA = await import('./modules/module1.js');
+          let libB = await import('./modules/module2.js');
+
+          // do something with dynamically imported (multiple) - inside this function
+          console.log( libA.sum(1, 2, 3) );
+          console.log( libB.mul(1, 2, 3) );
+
+        }
+
+      });
+
+    </script>
+
+  </p>
+
+  </div>
