@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.82.2';
+  var _VERSION = '2.83.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -2578,7 +2578,17 @@
       }
       return retValue;
     }
+
+    function _clone( src, exact ) {
+      if (exact) {
+        var target = _isArr(src)? [] : (_isObj(src)? {} : false);
+        return (target && _extend(target, src)) || src;
+      } else {
+        return JSON.parse(JSON.stringify(src));
+      }
+    }
   }
+
   xsr.map      = _map;
   xsr.uniq     = _uniq;
   xsr.omit     = _omit;
@@ -2591,6 +2601,7 @@
   xsr.every    = xsr.forEvery = _every;
   xsr.some     = xsr.forSome  = _some;
   xsr.indexOf  = _indexOf;
+  xsr.clone    = _clone;
   xsr.extend   = _extend;
   xsr.merge    = _mergeDeep;
 
@@ -2602,7 +2613,7 @@
     },
     '__clone': {
       value : function(){
-        return JSON.parse(JSON.stringify(this));
+        return _clone(this, true);
       }
     },
     '__toObject': {
@@ -2685,7 +2696,7 @@
     },
     '__clone': {
       value: function _obj_clone(){
-        return JSON.parse(JSON.stringify(this));
+        return _clone(this, true);
       }
     },
     '__keys': {
@@ -6928,7 +6939,7 @@
           }
         }
       }
-      _log.info("End of Data Processing");
+      _log.info("End of Data Processing -", rCompName);
       _log.log({o: spaTemplateModelData});
       _log.groupEnd("spaDataModel");
 
@@ -7163,13 +7174,14 @@
                     initialTemplateData = spaTemplateModelData[viewDataModelName] = xsr.hasKey(initialTemplateData, _dataModelInRes4Template) ? _find(initialTemplateData, _dataModelInRes4Template) : initialTemplateData;
                   }
                 }
+                _log.log(rCompName, 'Template Data from API:', initialTemplateData);
 
                 function _dataPreProcessAsync(){
                   var fnDataPreProcessAsync = _renderOption('dataPreProcessAsync', 'preProcessAsync')
                     , fnDataPreProcessAsyncResponse;
 
                   if (fnDataPreProcessAsync && (_isStr(fnDataPreProcessAsync))) { fnDataPreProcessAsync = _find(window, fnDataPreProcessAsync); }
-                  retValue['modelOriginal'] = _extend({}, initialTemplateData);
+                  retValue['modelOriginal'] = _clone(initialTemplateData, true);
                   retValue['model'] = initialTemplateData;
                   if (fnDataPreProcessAsync && _isFn(fnDataPreProcessAsync)) {
                     isPreProcessed = true;
@@ -7214,7 +7226,7 @@
                     if (fnDataProcess && (_isStr(fnDataProcess))) {
                       fnDataProcess = _find(window, fnDataProcess);
                     }
-                    retValue['modelOriginal'] = _extend({}, initialTemplateData);
+                    retValue['modelOriginal'] = _clone(initialTemplateData, true);
                     retValue['model'] = initialTemplateData;
                     if (fnDataProcess && _isFn(fnDataProcess)) {
                       var dataProcessContext = _extend({}, (app[rCompName] || {}), (uOptions || {}));
@@ -7227,10 +7239,10 @@
                     }
 
                     retValue['model'] = (_isUndef(finalTemplateData))? initialTemplateData : finalTemplateData;
-                    if (!_isObj(retValue['model'])) {
+                    if (typeof retValue['model'] !== 'object') {
                       retValue['model'] = retValue['modelOriginal'];
                     }
-                    _log.log(rCompName, 'Final Template Data:', retValue['model']);
+                    _log.log(rCompName, 'Template Data initial:', retValue['model']);
 
                     { if (rCompName) {
                         if ((_isObj(app)) && app.hasOwnProperty(rCompName)) {
@@ -7250,6 +7262,7 @@
 
                       var spaViewModel = retValue.model, compiledTemplate;
                       //xsr.viewModels[retValue._renderId] = retValue.model;
+                      _log.log(rCompName, 'Template Data Final:', retValue['model']);
 
                       var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
                       var allowScriptsInTemplates = spaRVOptions.templateScript || xsr.defaults.components.templateScript;
@@ -7288,6 +7301,7 @@
                       _log.log(templateContentToBindAndRender);
                       _log.groupEnd('Template Source ...');
                       _log.log("DATA for Template:", spaViewModel);
+
                       var skipSpaBind, spaBindData;
                       if (!_isBlank(spaViewModel)) {
                         if (spaRVOptions.skipDataBind) {
@@ -9746,6 +9760,9 @@
 
   var xhrLib, $when, $ajax = (win['$'] && $['ajax']) || (win['spaXHR'] && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
   function _initXHR(){
+    if (win['spaXHR']) {
+      xsr.ajax  = spaXHR.ajax;
+    }
     xhrLib = ($['ajax'] && $)  || spaXHR;
     if (xhrLib) {
       $when  = xhrLib.when;
