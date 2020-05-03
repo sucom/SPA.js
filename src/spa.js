@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.83.0';
+  var _VERSION = '2.83.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -5197,7 +5197,7 @@
       } else if (compList && compList.length) {
         _each(compList, function(compName){
           _log.info('Registering x-component:['+compName+']');
-          xsr.registerComponent(compName.trim());
+          xsr.registerComponent(compName.trim(), {});
         });
       }
     }
@@ -8024,7 +8024,7 @@
       } else {
         retValue = xsr.api.urls[urlKey] || ((urlKey[0] !== '$') && xsr.api.urls['$'+urlKey]) || '';
       }
-      if (!retValue) {
+      if (!(retValue || /[^a-z0-9_]/gi.test(urlKey))) {
         console.warn('URL undefined for key:', urlKey);
       }
     }
@@ -8055,8 +8055,12 @@
         , isStaticUrl = apiUrl.beginsWithStr('!') || xsr.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || xsr.api.forceParamValuesInMockUrls
         , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
-        , pKey, pValue, skip, vFilters=[], ivFilters=[], filterContext = {url: apiUrl, urlParams: urlReplaceKeyValues}, defaultValue;
+        , pKey, pValue, skip, vFilters=[], ivFilters=[], filterContext = {url: apiUrl, urlParams: urlReplaceKeyValues}, defaultValue
+        , isMockReq = (xsr.api.mock || app.api.mock || apiUrl.beginsWithStr('!'));
 
+      if (!isMockReq) {
+        apiUrl = _removeMockParams(apiUrl);
+      }
       if (!_isBlank(paramsInUrl)) {
         _each(paramsInUrl, function(param){
           ivFilters = [];
@@ -8440,6 +8444,16 @@
       }
     }
 
+    if (_useDefaultMockApiRoot) {
+      if (liveUrl.indexOf('//') < 0) {
+        liveApiPrefixStr = '__DEFAULT_MOCK_API_ROOT__/';
+        liveUrl = liveApiPrefixStr+(liveUrl.trimLeftStr('/'));
+      } else {
+        liveUrl = liveUrl.replace(new RegExp(liveApiPrefixStr), '__DEFAULT_MOCK_API_ROOT__/'+(liveApiPrefixStr.trimLeftStr('/')));
+        liveApiPrefixStr = '__DEFAULT_MOCK_API_ROOT__/';
+      }
+    }
+
     var finalMockUrl = '',
         mockBaseUrl  = _find(app, 'api.mockBaseUrl') || _find(spa, 'api.mockBaseUrl') || '',
         mockRootFldr = mockBaseUrl? '' : (((_find(app, 'api.mockRootFolder') || _find(spa, 'api.mockRootFolder') || 'api_').trimRightStr('/')) + '/'),
@@ -8457,6 +8471,10 @@
     }
 
     return finalMockUrl;
+  }
+
+  function _removeMockParams( url ) {
+    return url.replace(/{{([^}])*}}(\/*)/g,'');
   }
 
   function _ajaxPrefilter(options, orgOptions, jqXHR){
@@ -8520,7 +8538,7 @@
     }
 
     _log.log('Remove mock params if any in URL>', options.url);
-    options.url = (options.url).replace(/{{([^}])*}}(\/*)/g,''); //remove any mock url-params {{<xyz>}}
+    options.url = _removeMockParams(options.url); //remove any mock url-params {{<xyz>}}
 
     if ( regExUrlParams.test(options.url) ) {
       _log.log('URL has undefined params>', options.url, options.data);
@@ -9655,6 +9673,7 @@
     timerX = setTimeout(fnAsyc, 0);
   };
 
+  var _useDefaultMockApiRoot;
   function _initApiUrls(){
     _appApiInitialized = !!(_keys(app['api']).length);
     if (_appApiInitialized) _log.log('Initializing app.api');
@@ -9671,6 +9690,28 @@
 
     if (!_isBlank(xsr.api.urls)) {
       var liveApiPrefix = _find(window, 'app.api.liveApiPrefix|app.api.mockRootAtPaths');
+      if ((_isBlank(liveApiPrefix)) && (!_isBlank(xsr.api.urls))) { // auto-detect live-api-prefix
+        var liveApiPrefixList = [], prefix, idxDblSlash, idxServerRoot, idxContextPathSlash;
+        _each(xsr.api.urls, function(url){
+          url = url.replace(/^!|~/, '');
+          idxDblSlash = url.indexOf('//');
+          if (idxDblSlash<0) {
+            prefix = url.substring(0, url.indexOf('/', 1))+'/';
+          } else {
+            idxServerRoot = url.indexOf('/', idxDblSlash+2 )+1;
+            idxContextPathSlash = url.indexOf('/', idxServerRoot);
+            prefix = idxContextPathSlash<0? url.substring(idxServerRoot-1) : url.substring(idxServerRoot, idxContextPathSlash+1);
+          }
+          if (prefix.length>1 && (liveApiPrefixList.indexOf(prefix) < 0) ) {
+            liveApiPrefixList.push(prefix);
+          }
+        });
+        _useDefaultMockApiRoot = !!liveApiPrefixList.length;
+        if (_useDefaultMockApiRoot) {
+          _log.log('Auto find - live api identifier list:', liveApiPrefixList);
+          liveApiPrefix = app.api.liveApiPrefix = xsr.api.liveApiPrefix = app.api.mockRootAtPaths = liveApiPrefixList;
+        }
+      }
       if (!_isBlank(liveApiPrefix)) {
         var apiContextList = _isArr(liveApiPrefix)? liveApiPrefix : (''+liveApiPrefix).split(',')
           , contextMode, urlMode;
@@ -9805,11 +9846,12 @@
     xsr.strUnzip = !xsr.strUnzip && win['LZString'] && LZString.decompress;
 
     if (xhrLib) {
+      /*onLoad Set xsr.debugger on|off using URL param*/
+      xsr.debug = xsr.urlParam('spa.debug') || xsr.hashParam('spa.debug') || xsr.debug;
+
       //Read xsr.defaults from body
       _initSpaDefaults();
 
-      /*onLoad Set xsr.debugger on|off using URL param*/
-      xsr.debug = xsr.urlParam('xsr.debug') || xsr.hashParam('xsr.debug') || xsr.debug;
       /* ajaxPrefilter */
       $ajaxPrefilter(_ajaxPrefilter);
 
