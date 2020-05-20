@@ -1,11 +1,8 @@
 {
   "name": "spa.js",
-  "version": "2.83.1",
+  "version": "2.83.2",
   "description": "Single Page Application (SPA) Simplified Framework/Library",
   "main": "dist/spa-bundle.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sucom/SPA.js.git"
