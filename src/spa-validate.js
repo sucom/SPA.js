@@ -597,7 +597,7 @@
       if (elAttributes && elAttributes.length) {
         for(var i=elAttributes.length; i>=0; i--) {
           elAttrName = elAttributes[i]? elAttributes[i].name : '';
-          if (elAttrName && /^data-validate-/i.test(elAttrName)) {
+          if (elAttrName && /^data-validate-on/i.test(elAttrName)) {
             eName = '.'+_formatEventName(elAttrName.replace(/data-validate-/i, ''));
             attrRule = spa.toJSON(el.getAttribute(elAttrName));
             if (!spa.isBlank(attrRule)) {
