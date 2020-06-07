@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.83.2';
+  var _VERSION = '2.84.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -227,7 +227,7 @@
       return ([this.getFullYear(),
               (mm>9 ? '' : '0') + mm,
               (dd>9 ? '' : '0') + dd
-             ].join(sep||''));
+              ].join(sep||''));
     };
     /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
      *
@@ -237,10 +237,10 @@
      */
     _dtProto.hhmmss = function(sep) {
       var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
-      return ([(hh>9 ? '' : '0') + hh,
-               (mm>9 ? '' : '0') + mm,
-               (ss>9 ? '' : '0') + ss
-             ].join(sep||''));
+      return ([ (hh>9 ? '' : '0') + hh,
+                (mm>9 ? '' : '0') + mm,
+                (ss>9 ? '' : '0') + ss
+              ].join(sep||''));
     };
   }
 
@@ -634,11 +634,11 @@
 
   /* isXYZ */
   function _of(x) {
-    return (_objProto.toString.call(x)).replace(/\[object /, '').replace(/\]/, '').toLowerCase();
+    return (_objProto.toString.call(x)).slice(8,-1).toLowerCase();
   }
   function _is(x, type) {
     if ((''+type)[0] == '*') {
-      return (of(x).indexOf((''+type).toLowerCase().substring(1)) >= 0);
+      return (_of(x).indexOf((''+type).toLowerCase().substring(1)) >= 0);
     }
     return ((''+type).toLowerCase().indexOf(of(x)) >= 0);
   }
@@ -669,6 +669,9 @@
   }
   function _isUndef ( x ) {
     return _is(x, 'undefined');
+  }
+  function _isDefined ( x ) {
+    return !_is(x, 'undefined');
   }
 
   function _isEl ( x ) {
@@ -744,6 +747,8 @@
   xsr.isObjectLike   = _isObjLike;
   xsr.isString       = _isStr;
   xsr.isNumber       = _isNum;
+  xsr.isDef          = _isDefined;
+  xsr.isDefined      = _isDefined;
   xsr.isUndefined    = _isUndef;
   xsr.isEmptyObject  = _isEmptyObj;
   xsr.isElement      = _isEl;
@@ -2767,14 +2772,90 @@
     return newUrl;
   }
 
-  function _ajaxScriptHandle( responseText ) {
-    if (responseText.trim()) {
+  var _baseProps = [
+      'target', 'template', 'templateCache', 'templateScript'
+    , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
+    , 'style', 'styleCache', 'styles', 'stylesCache'
+    , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind'
+    , 'dataCollection', 'dataUrl', 'dataUrlMethod', 'dataUrlParams', 'dataUrlHeaders', 'defaultPayload', 'stringifyPayload'
+    , 'dataParams', 'dataType', 'dataModel', 'dataCache', 'dataUrlCache'
+    , 'dataDefaults', 'onDataUrlError', 'onError'
+    , 'dataValidate', 'dataProcess', 'dataPreProcessAsync', 'renderMode'
+    , 'beforeRender', 'beforeRefresh', 'renderCallback', 'events'
+  ];
+  var _defCompProps = _baseProps.map(function(v){ return 'try{(typeof _'+v+'!="undefined")&&(__def$props__.'+v+'=_'+v+')}catch(e){}'  }).join(';')
+                    + ';var _spa$prop={}; try{ extend(_spa$prop, prop || {}); }catch(e){};';
+  var _fnAlias = (isIE?'var':'const')
+                +' render=spa.$render, refresh=spa.$refresh'
+                +', merge=spa.merge, extend=spa.extend, extendProp=function(x){return extend(prop,x||{});}'
+                +';';
+
+  function _is$Loaded(compName) {
+    return !!xsr.components[compName.replace(/\//g,'_')];
+  }
+  xsr.is$Loaded = _is$Loaded;
+  xsr.componentsAsync={};
+
+  function verifyPropsInGlob() {
+    var propsInGlob = [];
+    _baseProps.forEach(function(v){
+      if (win.hasOwnProperty('_'+v)) {
+        propsInGlob.push('_'+v);
+      }
+    });
+    if (win.hasOwnProperty('prop')) {
+      propsInGlob.push('prop');
+    }
+    if (propsInGlob.length) { console.warn('Found reserved spaComponent properties[ '+(propsInGlob.join(', '))+' ] in global scope.'); };
+  }
+
+  function _spaComponentScriptHandle( spa$script, url ) {
+    if (spa$script.trim()) {
+      var autoVarBlock = '', autoRegBlock = '', compName = '', compId   = '', xFnName  = '';
+      var has$extend = /spa\.\$extend\s*\(/g.test(spa$script);
+      var isFun$ = ((xsr.defaults.components.functional) || (/^\s*\/\/\s*@(spaComponent|spa\$)\s*/.test(spa$script))) && (!(has$extend));
+
+      if (isFun$) {
+        var firstLine = spa$script.substring(0, spa$script.indexOf('\n')).trim();
+        if (/^\s*\/\/\s*@(spaComponent|spa\$):\s*/.test(firstLine)) {
+          compName = firstLine.substring(firstLine.indexOf(':')+1).trim();
+        } else {
+          compName = url.substring(0, url.indexOf('.js')).replace(new RegExp('.*'+(xsr.defaults.components.rootPath)+'(.*)'), '$1');
+          if (xsr.defaults.components.inFolder) {
+            compName = compName.substring(0, compName.lastIndexOf('/'));
+          }
+        }
+
+        if (compName) {
+          compId = (compName.replace(/\//g,'_'));
+          xFnName = compName && (' __spa$'+compId);
+          verifyPropsInGlob();
+          autoVarBlock = 'var _spa$="'+compName+'";'
+                        +(isIE?'var':'const')+' __def$props__={};'
+                        +_fnAlias+'\n/*--- ---*/\n\n';
+          autoRegBlock = '\n\n/*--- ---*/\nif(!spa.is$Loaded(_spa$)){'+_defCompProps+'spa.$(_spa$, extend(__def$props__, _spa$prop));}';
+        }
+      }
+
+      var asyncRoot = '';
+      var isModule = isNonIE && (isFun$ || (/import (.*) from /g.test(spa$script)));
+      if (isModule || /async |await /g.test(spa$script)) {
+        asyncRoot = (isIE?  '' : 'async ');
+        xsr.componentsAsync[compId] = 1;
+      }
+
       var xScript = document.createElement( "script" );
-      _attr(xScript, 'id', 'js-'+_now() );
+      _attr(xScript, 'id', 'js-'+compId+_now() );
       if (xsr.defaults.csp.nonce) {
         _attr(xScript, 'nonce', xsr.defaults.csp.nonce );
       }
-      xScript.text = responseText;
+
+      if (isModule) {
+        _attr(xScript, 'type', 'module');
+        xScript.text = autoVarBlock+spa$script+autoRegBlock;
+      } else {
+        xScript.text = '('+asyncRoot+'function'+xFnName+'(){\n'+autoVarBlock+spa$script+autoRegBlock+'\n})();';
+      }
       document.head.appendChild( xScript ).parentNode.removeChild( xScript );
     }
   }
@@ -4751,8 +4832,8 @@
     }
     switch(true) {
       case (_isStr(saoDataUrl)) :
-        /* 'path/to/data/api' => {dataUrl:'path/to/data/api'}
-           'target.data.key|path/to/data/api' => {dataUrl:'path/to/data/api', dataModel:'target.data.key'}
+        /*  'path/to/data/api' => {dataUrl:'path/to/data/api'}
+            'target.data.key|path/to/data/api' => {dataUrl:'path/to/data/api', dataModel:'target.data.key'}
         */
         if (saoDataUrl.containsStr("\\|")) {
           retObj['dataModel'] = xsr.getOnSplit(saoDataUrl, "|", 0);
@@ -4763,22 +4844,22 @@
         break;
       case (_isArr(saoDataUrl)) :
         /* ['path/to/json/data/api0', 'path/to/json/data/api1', 'path/to/json/data/api2'] =>
-         ==> dataCollection : {
-         urls: [
-         {name:'data0', url:'path/to/json/data/api0'}
-         , {name:'data1', url:'path/to/json/data/api1'}
-         , {name:'data2', url:'path/to/json/data/api2'}
-         ]
-         }
+          ==> dataCollection : {
+          urls: [
+          {name:'data0', url:'path/to/json/data/api0'}
+          , {name:'data1', url:'path/to/json/data/api1'}
+          , {name:'data2', url:'path/to/json/data/api2'}
+          ]
+          }
 
-         ['target.data.key0|path/to/json/data/api0', 'target.data.key1|path/to/json/data/api1', 'target.data.key2|path/to/json/data/api2'] =>
-         ==> dataCollection : {
-         urls: [
-         {url:'path/to/json/data/api0', target:'target.data.key0', name:'key0'}
-         , {url:'path/to/json/data/api1', target:'target.data.key1', name:'key1'}
-         , {url:'path/to/json/data/api2', target:'target.data.key2', name:'key2'}
-         ]
-         }
+          ['target.data.key0|path/to/json/data/api0', 'target.data.key1|path/to/json/data/api1', 'target.data.key2|path/to/json/data/api2'] =>
+          ==> dataCollection : {
+          urls: [
+          {url:'path/to/json/data/api0', target:'target.data.key0', name:'key0'}
+          , {url:'path/to/json/data/api1', target:'target.data.key1', name:'key1'}
+          , {url:'path/to/json/data/api2', target:'target.data.key2', name:'key2'}
+          ]
+          }
          */
         dataCollection = {urls:[]};
         itemUrl = {};
@@ -4793,25 +4874,25 @@
         break;
       case (_isObj(saoDataUrl)) :
         /*
-         {dataA:'path/to/json/data/api0', dataB:'path/to/json/data/api1', dataC:'path/to/json/data/api3' }
+          {dataA:'path/to/json/data/api0', dataB:'path/to/json/data/api1', dataC:'path/to/json/data/api3' }
 
-         ==> dataCollection : {
-         urls: [
-         {url:'path/to/json/data/api0', name:'dataA'}
-         , {url:'path/to/json/data/api1', name:'dataB'}
-         , {url:'path/to/json/data/api2', name:'dataC'}
-         ]
-         }
+          ==> dataCollection : {
+          urls: [
+          {url:'path/to/json/data/api0', name:'dataA'}
+          , {url:'path/to/json/data/api1', name:'dataB'}
+          , {url:'path/to/json/data/api2', name:'dataC'}
+          ]
+          }
 
-         {dataA:'target.data.key0|path/to/json/data/api0', dataB:'target.data.key1|path/to/json/data/api1', dataC:'target.data.key3|path/to/json/data/api3' }
-         ==> dataCollection : {
-         urls: [
-         {url:'path/to/json/data/api0', target:'target.data.key0', name:'dataA'}
-         , {url:'path/to/json/data/api1', target:'target.data.key1', name:'dataB'}
-         , {url:'path/to/json/data/api2', target:'target.data.key2', name:'dataC'}
-         ]
-         }
-         * */
+          {dataA:'target.data.key0|path/to/json/data/api0', dataB:'target.data.key1|path/to/json/data/api1', dataC:'target.data.key3|path/to/json/data/api3' }
+          ==> dataCollection : {
+          urls: [
+          {url:'path/to/json/data/api0', target:'target.data.key0', name:'dataA'}
+          , {url:'path/to/json/data/api1', target:'target.data.key1', name:'dataB'}
+          , {url:'path/to/json/data/api2', target:'target.data.key2', name:'dataC'}
+          ]
+          }
+         */
         dataCollection = {urls:[]};
         itemUrl = {};
         _each(_keys(saoDataUrl), function(dName){
@@ -4855,6 +4936,7 @@
         , callback:''
         , extend$data: true
         , offline: false
+        , functional: true
       }
     , routes: {
         base: '#',
@@ -5196,7 +5278,7 @@
         });
       } else if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info('Registering x-component:['+compName+']');
+          _log.info('Registering x-component:',compName);
           xsr.registerComponent(compName.trim(), {});
         });
       }
@@ -5279,7 +5361,7 @@
         });
       } else if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info('Extend x-component:['+compName+']');
+          _log.info('Extend x-component:',compName);
           xsr.extendComponent(compName.trim());
         });
       }
@@ -5514,7 +5596,7 @@
       _log.log(compList);
       if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info(actionName+' x-component:['+compName.trim()+']');
+          _log.info(actionName+' x-component:',compName);
           spa[actionName](compName.trim());
         });
       }
@@ -5700,6 +5782,8 @@
       , _cTmplFile   = _cFilesPath+xsr.defaults.components.templateExt
       , _cScriptExt  = xsr.defaults.components.scriptExt
       , _cScriptFile = (options && _isObj(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
+      , _asyncAttempt= 300
+      , _asyncAwait  = 15
       , _renderComp  = function(){
           _log.info('_renderComp: '+componentName+' with below options');
           _log.info(options);
@@ -5751,7 +5835,7 @@
             } else {
               renderOptions['data'] = $data;
               renderOptions['dataProcess'] = false;
-              _log.log('dataCache:true; Using $data and ingored data + dataProcess ...');
+              _log.log('dataCache:true; Using $data and ignored data + dataProcess ...');
             }
           }
 
@@ -5765,15 +5849,29 @@
           }
           _log.info('In Source> xsr.components['+componentName+']');
           _log.info(xsr.components[componentName]);
+          var isAsyncComp;
           if (!xsr.components.hasOwnProperty(componentName)) {
-            _log.info('xsr.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'xsr.components') +']. Creating *NEW*');
-            if (_isBlank(options)) options = {};
-            if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
-            xsr.components[componentName] = options;
-            _log.info('NEW> xsr.components['+componentName+']');
-            _log.info(xsr.components[componentName]);
+            isAsyncComp = xsr.componentsAsync[componentName];
+            if (isAsyncComp) {
+              if (_asyncAttempt--) {
+                _log.info('Awaiting async component to load.');
+                setTimeout(_parseComp, _asyncAwait);
+              } else {
+                console.error('Failed to load async component:', componentName);
+              }
+            } else {
+              _log.info('xsr.components['+componentName+'] NOT DEFINED in ['+ (_cScriptFile || 'xsr.components') +']. Creating *NEW*');
+              if (_isBlank(options)) options = {};
+              if (!options.hasOwnProperty('componentName')) options['componentName'] = componentName;
+              xsr.components[componentName] = options;
+              _log.info('NEW> xsr.components['+componentName+']');
+              _log.info(xsr.components[componentName]);
+            }
           }
-          _renderComp();
+
+          if (!isAsyncComp) {
+            _renderComp();
+          }
         };
 
     if (xsr.components.hasOwnProperty(componentName)) {
@@ -5795,7 +5893,7 @@
     }
   };
 
- /*
+  /*
   * ( 'compName1', 'compName2', 'compName3', ... ) //as arguments without options
   *
   * ( 'compName1, compName2, compName3, ...' ) //as Single String with comma separated without options
@@ -5824,7 +5922,7 @@
         });
       } else if (compList && compList.length) {
         _each(compList, function(compName){
-          _log.info('Rendering x-component:['+compName+']');
+          _log.info('Rendering x-component:',compName);
           spa[actionName](compName.trim());
         });
       }
@@ -9830,7 +9928,7 @@
         dataFilter: function (rawResponse, dataType) {
           var dataTypeLc = (dataType||'').toLowerCase();
           if (dataTypeLc === 'javascript' || dataTypeLc === 'spacomponent') {
-            _ajaxScriptHandle(rawResponse);
+            _spaComponentScriptHandle(rawResponse, this.url);
           }
           return rawResponse;
         }
