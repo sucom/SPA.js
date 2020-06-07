@@ -1127,7 +1127,7 @@
         var dataFilter = _getOptionalVal(_reqOptions, 'dataFilter'), dataFilterResponse;
         if (dataFilter && _isFn(dataFilter)) {
           try {
-            dataFilterResponse = dataFilter.call(axReq, xhrResponse, axResType);
+            dataFilterResponse = dataFilter.call(axReq['reqOptions'], xhrResponse, axResType);
           } catch (e) {
             console.warn('dataFilter failed.', xhrResponse, axReq, e);
           }
