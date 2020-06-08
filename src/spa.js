@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.84.0';
+  var _VERSION = '2.84.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -2860,6 +2860,18 @@
     }
   }
 
+  function _spaGlbScriptHandle( spa$script ) {
+    if (spa$script.trim()) {
+      var xScript = document.createElement( "script" );
+      _attr(xScript, 'id', 'js-'+_now() );
+      if (xsr.defaults.csp.nonce) {
+        _attr(xScript, 'nonce', xsr.defaults.csp.nonce );
+      }
+      xScript.text = spa$script;
+      document.head.appendChild( xScript ).parentNode.removeChild( xScript );
+    }
+  }
+
   function _cachedScript(url, options) {
     _log.log('Ajax for script:',url, 'options:',options);
     /* allow user to set any option except for dataType and url */
@@ -2999,7 +3011,7 @@
       var ajaxQ = [];
       _each(scriptsLst, function(scriptPath) {
         ajaxQ.push(
-          _cachedScript(scriptPath).done(function (script, textStatus) {
+          _cachedScript(scriptPath, {dataType:'spacomponent'}).done(function (script, textStatus) {
             _log.info("Loaded script from [" + scriptPath + "]. STATUS: " + textStatus);
           }).fail(function(){
             _log.info("Failed Loading script from [" + scriptPath + "].");
@@ -9927,8 +9939,10 @@
         },
         dataFilter: function (rawResponse, dataType) {
           var dataTypeLc = (dataType||'').toLowerCase();
-          if (dataTypeLc === 'javascript' || dataTypeLc === 'spacomponent') {
+          if (dataTypeLc === 'spacomponent') {
             _spaComponentScriptHandle(rawResponse, this.url);
+          } else if (dataTypeLc === 'javascript') {
+            _spaGlbScriptHandle(rawResponse);
           }
           return rawResponse;
         }
