@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.84.1';
+  var _VERSION = '2.84.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -156,7 +156,7 @@
   }
 
   var _appApiInitialized;
-  var _reservedObjKeys = 'hasOwnProperty,prototype,__proto__'.split(',');
+  var _reservedObjKeys = 'hasOwnProperty,prototype,__proto__,isPrototypeOf'.split(',');
   function _isReservedKey (key) {
     return (_reservedObjKeys.indexOf(key) > -1);
   }
@@ -2494,15 +2494,34 @@
       }
       return retValue;
     }
+
+    function _isProto (obj) {
+      return (((typeof obj == 'object') &&
+          ( (obj == __proto__) ||
+            _hasOwnProp(obj, 'isPrototypeOf') ||
+            obj.isPrototypeOf(new Object()) ||
+            obj.isPrototypeOf(new Array()) ||
+            obj.isPrototypeOf(new Function()) ||
+            obj.isPrototypeOf(new String()) ||
+            obj.isPrototypeOf(new Number()) ||
+            obj.isPrototypeOf(new Boolean()) ||
+            obj.isPrototypeOf(new Date()) ||
+            obj.isPrototypeOf(new RegExp())
+          )));
+    }
+    function _isSafeKey (obj, key) {
+      return !(_isReservedKey(key) || (key === 'constructor' && _isFn(obj[key])));
+    }
     function _extend () {
       var targetObj = ((arguments.length)? arguments[0] : {}) || {};
+      if (_isProto(targetObj)) return targetObj;
 
       if (arguments.length) {
         for (var i = 0, nxtObj; (i < arguments.length); i++) {
           nxtObj = arguments[i];
           if (_isObj(nxtObj)) {
             for (var key in nxtObj) {
-              if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+              if ((_isSafeKey(targetObj, key)) && (_hasOwnProp(nxtObj, key))) {
                 targetObj[key] = nxtObj[key];
               }
             }
@@ -2516,13 +2535,14 @@
     }
     function _mergeDeep () {
       var targetObj = ((arguments.length)? arguments[0] : {}) || {};
+      if (_isProto(targetObj)) return targetObj;
 
       if (arguments.length) {
         for (var i = 0, nxtObj; (i < arguments.length); i++) {
           nxtObj = arguments[i];
           if (_isObj(nxtObj)) {
             for (var key in nxtObj) {
-              if ((!_isReservedKey(key)) && (_hasOwnProp(nxtObj, key))) {
+              if ((_isSafeKey(targetObj, key)) && (_hasOwnProp(nxtObj, key))) {
                 if (_isObj(nxtObj[key])) {
                   targetObj[key] = _mergeDeep(targetObj[key], nxtObj[key]);
                 } else if (_isArr(nxtObj[key])) {
