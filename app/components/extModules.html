@@ -69,16 +69,22 @@
         /* Import Modules */
         import * as lib1 from './modules/module1.js';
 
-        spa.$('componentX', {
+        function test () {
 
-          test: function () {
+          // using lib1 from above import
 
-            // using lib1 from above import
+          console.log( lib1.sum(1, 2, 3) );
 
-            console.log( lib1.sum(1, 2, 3) );
+        }
 
-          }
-        });
+        // ... ... ...
+
+        function _renderCallback () {
+          test();
+        }
+
+        // ... ... ...
+
       </script>
     </p>
 
@@ -156,15 +162,15 @@
     </script>
     <p>Need to enable <mark>templateScript: true</mark> property in componentX.js to Enable script tags in componentX.html.</p>
     <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
-      spa.$('componentX', {
+      // private properties
+        var _target = '#targetContainer';
 
-        ...
+        // ... ... ...
 
-        templateScript: true
+        var _templateScript = true;
 
-        ...
+        // ... ... ...
 
-      });
     </script>
   </p>
   <br>
@@ -193,17 +199,24 @@
         });
       })();
 
-      spa.$('componentX', {
 
-        test: function () {
+      function test () {
 
-          // using above import - single
-          console.log( 'using dynamically imported (single) module in componentX.js' );
+        // using above import - single
+        console.log( 'using dynamically imported (single) module in componentX.js' );
 
-          console.log( libX.sum(1, 2, 3) );
+        console.log( libX.sum(1, 2, 3) );
 
-        }
-      });
+      }
+
+      // ... ... ...
+
+      function _renderCallback () {
+        test();
+      }
+
+      // ... ... ...
+
     </script>
 
     <p>Example: <i>componentX.js (dynamic imports - using async+await)</i></p>
@@ -215,54 +228,65 @@
         libB = await import('./modules/module2.js');
       })();
 
-      spa.$('componentX', {
 
-        test: function () {
+      function test () {
 
-          // do something with dynamically imported (multiple) modules in componentX.js
-          console.log( libA.sum(1, 2, 3) );
-          console.log( libB.mul(1, 2, 3) );
+        // do something with dynamically imported (multiple) modules in componentX.js
+        console.log( libA.sum(1, 2, 3) );
+        console.log( libB.mul(1, 2, 3) );
 
-        }
-      });
+      }
+
+      // ... ... ...
+
+      function _renderCallback () {
+        test();
+      }
+
+      // ... ... ...
+
     </script>
 
     <p>Example: <i>componentX.js (dynamic import (single) - inside a function)</i></p>
     <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
-      spa.$('componentX', {
 
-        test: function () {
+      // ... ... ...
 
-          // using dynamic import - single
-          import('./modules/module1.js').then( moduleA => {
+      function test () {
 
-            // do something with dynamically imported (single) - inside a function
-            console.log( moduleA.sum(1, 2, 3) );
+        // using dynamic import - single
+        import('./modules/module1.js').then( moduleA => {
 
-          } );
+          // do something with dynamically imported (single) - inside a function
+          console.log( moduleA.sum(1, 2, 3) );
 
-        }
+        } );
 
-      });
+      }
+
+      // ... ... ...
+
     </script>
 
     <p>Example: <i>componentX.js (dynamic imports using async+await (multiple) - inside a function)</i></p>
     <script type="text/code" class="code trim" data-lang="JavaScript" data-title="componentX.js">
-      spa.$('componentX', {
 
-        test: async function () { //NOTE: async prefix
+      // ... ... ...
 
-          // using dynamic import - multiple
-          let libA = await import('./modules/module1.js');
-          let libB = await import('./modules/module2.js');
+      async function test () { //NOTE: async prefix
 
-          // do something with dynamically imported (multiple) - inside this function
-          console.log( libA.sum(1, 2, 3) );
-          console.log( libB.mul(1, 2, 3) );
+        // using dynamic import - multiple
+        let libA = await import('./modules/module1.js');
+        let libB = await import('./modules/module2.js');
 
-        }
+        // do something with dynamically imported (multiple) - inside this function
+        console.log( libA.sum(1, 2, 3) );
+        console.log( libB.mul(1, 2, 3) );
 
-      });
+      }
+
+      // ... ... ...
+
     </script>
 
   </p>

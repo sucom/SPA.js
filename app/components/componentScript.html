@@ -5,14 +5,58 @@
   <p>A component Script file <mark>componentX.js</mark> contains a single SPA component helper function to define its properties.</p>
 
   <blockquote>
-      <mark>spa.$( 'componentX' , { } )</mark> to define Component's base properties (like template, target, dataUrl etc.) and extended properties like events
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables prefixed with underscore ( _ ).
+  </blockquote>
+
+  <h3>This script file registers a component in app scope using a single name, replacing <mark>/</mark> with <mark>_</mark> as
+    <strong>app.</strong><mark>componentX_componentX1</mark> So, it can be accessed/referenced across the application using a single word (with <mark>_</mark> delimiter).</h3>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+
+    *
+    * prefix the base properties with underscore ( _ ) and define using var or let or const depending on the browser support.
+    *
+    */
+
+    /* base properties */
+
+    var _target = '#targetContainer';
+
+    var _dataUrl =  'data-api/end-point/url';
+
+    // ...
+
+    // ...
+
+    /* extended properties */
+
+    function _renderCallback () {
+      // This function runs just after this component is rendered in DOM.
+
+    }
+
+    var _events = [ { target: 'element-selector', onClick: function() {} } ];
+
+    // ...
+
+    // ...
+
+  </script>
+
+
+
+  <blockquote>
+    Prior to v2.84.0: A function
+      <mark>spa.$( 'componentX' , { } )</mark> is used to define Component's base properties (without underscore ( _ ) prefix like template, target, dataUrl etc.) and extended properties like events
       and other custom actions to be performed on component UI.
   </blockquote>
 
   <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* Prior to v2.84.0 */
+
     spa.$('componentX', {
 
-      //base properties
+      // base properties
       target: '',
       dataUrl: '',
 
@@ -20,9 +64,10 @@
 
       // ...
 
-      //extended properties
+      // extended properties
 
       renderCallback: function() {
+        // This function runs just after this component is rendered in DOM.
 
       },
 
@@ -78,6 +123,8 @@
   <br>
   <p>In componentX1.js, define the path of the component (the path after app/components folder) with slash(/) as path separator, like the example below.</p>
   <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* Prior to v2.84.0 */
+
     spa.$('componentX/componentX1', {
 
       //base properties
@@ -88,8 +135,11 @@
 
     });
   </script>
-  <p>This will register the component in app scope using a single name, replacing <mark>/</mark> with <mark>_</mark> as
-    <strong>app.</strong><mark>componentX_componentX1</mark> So, it can be accessed/referenced using a single word with <mark>_</mark> delimiter.</p>
+
+  <hr>
+  <h3>This will register the component in app scope using a single name, replacing <mark>/</mark> with <mark>_</mark> as
+    <strong>app.</strong><mark>componentX_componentX1</mark> So, it can be accessed/referenced using a single word with <mark>_</mark> delimiter.</h3>
+  <hr>
 
   <blockquote>
       <p>NOTE: The nested components can be created easily with <mark><a href="https://www.npmjs.com/package/spa-cli" rel="noopener noreferrer" target="_blank">spa-cli</a></mark>
