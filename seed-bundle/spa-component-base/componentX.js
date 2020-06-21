@@ -1,10 +1,15 @@
 // @spa$:componentXpath
 
+// componentName: componentX
+
 /* private properties */
+
+var _target = '#targetContainer';
 
 var _dataUrl = '';
 
-var _renderCallback = function () { // DO NOT USE ARROW FUNCTION
+function _renderCallback () { // DO NOT USE ARROW FUNCTION
+
   var templateData = this.$data; // or app.componentX.$data
 
   console.log('Component componentX has been rendered with Data:', templateData);
