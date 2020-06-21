@@ -1,21 +1,35 @@
-spa.$('home', {
-  style:'.',
-  data: { name: 'home' },
+// @spa$:home
 
-  renderCallback: function(){
-    var templateData = this.$data; //or app.home.$data
-    console.log('Component home has been rendered with Data:', templateData);
-  },
+// private properties
 
-  doSomething: function(){
-    //call app.home.doSomething();
-  },
+var _data = { name: 'home' };
 
-  events: [
-    // { target: '#btnSubmit',
-    //   onClick: function(){
-    //     app.home.doSomething();
-    //   }
-    // }
-  ]
-});
+var _renderCallback = function () { // DO NOT USE ARROW FUNCTION
+  var templateData = this.$data; // or app.home.$data
+
+  console.log('Component home has been rendered with Data:', templateData);
+
+  doSomething();
+};
+
+var _events = [
+  // { target: '#btnSubmit',
+  //   onClick: function () { // DO NOT USE ARROW FUNCTION
+  //     doSomething();
+  //   }
+  // }
+];
+
+// local variables and functions
+
+function doSomething () {
+  console.log('Doing Something...');
+}
+
+
+// export local variables or functions as properties accessible through home component:home as app.home.actionX();
+var prop = {
+
+  actionX: doSomething
+
+};

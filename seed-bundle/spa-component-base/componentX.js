@@ -1,27 +1,34 @@
-spa.$('componentXpath', {
-  //style:'.', // Enable only if this component has specific styles in componentXpath/componentXfile.css
+// @spa$:componentXpath
 
-  target: '#targetContainer',
+/* private properties */
 
-  data: { name: 'componentX' },
-  //dataUrl: '', // use this property for external data source instead of above static data property
+var _dataUrl = '';
 
-  renderCallback: function(){
-    // function called after this component is rendered.
+var _renderCallback = function () { // DO NOT USE ARROW FUNCTION
+  var templateData = this.$data; // or app.componentX.$data
 
-    var templateData = this.$data; //or app.componentX.$data
-    console.log('Component componentX has been rendered with Data:', templateData);
-  },
+  console.log('Component componentX has been rendered with Data:', templateData);
 
-  doSomething: function(){
-    //call app.componentX.doSomething();
-  },
+  doSomething();
+};
 
-  events: [
-    // { target: '#btnSubmit',
-    //   onClick: function(){
-    //     app.componentX.doSomething();
-    //   }
-    // }
-  ]
-});
+// var _events = [
+//   { target: '#btnSubmit',
+//     onClick: function () { // DO NOT USE ARROW FUNCTION
+//       doSomething();
+//     }
+//   }
+// ];
+
+/* local variables and functions */
+
+function doSomething () {
+  console.log('Doing Something...');
+}
+
+/* export local variables or functions as properties accessible through component:componentX as app.componentX.actionX(); */
+var prop = {
+
+  actionX: doSomething
+
+};

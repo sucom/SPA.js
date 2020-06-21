@@ -1,22 +1,28 @@
 <!DOCTYPE html>
-<html lang="en-US">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Title</title>
-    <link rel="stylesheet" href="app/styles/app-style.css">
-  </head>
-  <body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:image/x-icon;base64,">
+  <title>Application Title</title>
+  <link rel="stylesheet" href="app/styles/app-style.css">
+</head>
+<body>
 
-    <div id="containerHome"></div>
+  <h1>SPA v2.84.2</h1>
 
-    <spa-component src="footer"></spa-component>
+  <div id="containerHome"></div>
+  <x-component src="footer"></x-component>
 
-    <script src="xlib/jquery/jquery-3.4.1.min.js"         ></script>
-    <script src="xlib/handlebars/handlebars-4.5.3.min.js" ></script>
-    <script src="xlib/spa/spa-bundle.min.js"              ></script>
-    <script src="app/scripts/app.js"                      ></script>
-    <script src="app/scripts/appApi.js"                   ></script>
+  <script src="xlib/jquery/jquery-3.5.1.min.js"         ></script>
+  <script src="xlib/handlebars/handlebars-4.7.6.min.js" ></script>
+  <script src="xlib/spa/spa-bundle.min.js"              ></script>
+
+  <script src="app/scripts/app.js"></script>
+  <script>
+    spa.onReady = function () {
+      spa.$render('home', {target: '#containerHome'});
+    };
+  </script>
 
   </body>
 </html>
