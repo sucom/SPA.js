@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.84.2';
+  var _VERSION = '2.84.3';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -2801,7 +2801,7 @@
     , 'dataParams', 'dataType', 'dataModel', 'dataCache', 'dataUrlCache'
     , 'dataDefaults', 'onDataUrlError', 'onError'
     , 'dataValidate', 'dataProcess', 'dataPreProcessAsync', 'renderMode'
-    , 'beforeRender', 'beforeRefresh', 'renderCallback', 'events'
+    , 'onRender', 'onRefresh', 'onRemove', 'renderCallback', 'refreshCallback', 'events'
   ];
   var _defCompProps = _baseProps.map(function(v){ return 'try{(typeof _'+v+'!="undefined")&&(__def$props__.'+v+'=_'+v+')}catch(e){}'  }).join(';')
                     + ';var _spa$prop={}; try{ extend(_spa$prop, prop || {}); }catch(e){};';
