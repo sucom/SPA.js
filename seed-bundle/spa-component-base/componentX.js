@@ -2,6 +2,8 @@
 
 // componentName: componentX
 
+// available spa.$fn aliases: spa.$render as render; spa.$refresh as refresh; spa.merge as merge; spa.extend as extend;
+
 /* private properties */
 
 var _target = '#targetContainer';
