@@ -705,10 +705,15 @@
         spa.console.log('registering an event: '+validateOnEvent);
         if (validateOnEvent.beginsWithStrIgnoreCase('on') && !('test'.equalsIgnoreCase(jqEventName)) ) {
           $(el).on(jqEventName, function(){
-            var el = this, vFn, errMsg, vFnResponse;
+            var el = this, $el=$(el), vFn, errMsg, vFnResponse
+              , pauseElValidation = el && (el.hasAttribute("data-validate-pause") && spa.toBoolean(((el.getAttribute('data-validate-pause')+'') || 'true')))
+              , skip4Invisible = el && (el.hasAttribute("data-ignore-validation-if-invisible") && spa.toBoolean(((el.getAttribute('data-ignore-validation-if-invisible')+'') || 'true')));
+
+            if (pauseElValidation || (skip4Invisible && !($el.is(":visible")))) { return; }
+
             spa.every(elValidateRules[validateOnEvent], function(validateRule){
-              if (spa.isArray(validateRule))
-              { return spa.every(validateRule, function(validateRuleInArray){
+              if (spa.isArray(validateRule)) {
+                return spa.every(validateRule, function(validateRuleInArray){
                   vFn = validateRuleInArray.fn;
                   if (spa.isString(vFn)) {
                     vFn = spa.findSafe(window, vFn);
@@ -726,9 +731,8 @@
                   }
                   return vFnResponse;
                 });
-              }
-              else
-              { vFn = validateRule.fn;
+              } else {
+                vFn = validateRule.fn;
                 if (spa.isString(vFn)) {
                   vFn = spa.findSafe(window, vFn);
                 }
@@ -777,13 +781,13 @@
     { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
 
       var applyRules = function(elID){
-        var $el = $validationScope.find("#"+elID), el=$el[0], errMsg, vFn, vFnResponse;
+        var $el = $validationScope.find("#"+elID), el=$el[0], errMsg, vFn, vFnResponse, pauseElValidation = el && (el.hasAttribute("data-validate-pause") && spa.toBoolean(((el.getAttribute('data-validate-pause')+'') || 'true')));
         //var ignValidation = spa.toBoolean($el.data("ignoreValidationIfInvisible"));
         //var isVisible = $el.is(":visible");
         //if ($el.prop("type") && $el.prop("type").equalsIgnoreCase("hidden")) debugger;
-        var retValue = (spa.toBoolean($el.data("ignoreValidationIfInvisible")) && !($el.is(":visible")));
-        if (!retValue)
-        { retValue = spa.every(vRules[elID], function(vRule){
+        var retValue = pauseElValidation || (spa.toBoolean($el.data("ignoreValidationIfInvisible")) && !($el.is(":visible")));
+        if (!retValue) {
+          retValue = spa.every(vRules[elID], function(vRule){
             vFn = vRule.fn;
             if (spa.isString(vFn)) {
               vFn = spa.findSafe(window, vFn);
@@ -794,6 +798,7 @@
             errMsg = (vRule.msg || $el.data("validateMsg") || "");
 
             vFnResponse = ((spa.isFunction(vFn))? (vFn.call(el, el, errMsg)) : false);
+
             if (spa.isBoolean(vFnResponse)) {
               spa['_validate']._showValidateMsg($el, errMsg, vFnResponse, '', true);
             }
@@ -840,10 +845,23 @@
     return(failedInfo);
   };
 
-  spa['removeValidationMsg'] = function(forObj){
+  spa['pauseValidation'] = function (forObj, pauseV) {
+    var pauseValidation = (typeof pauseV == 'undefined') || pauseV;
     $(forObj).each(function(i, el){
-      spa['_validate']._showValidateMsg(el, '', true);
+      if (pauseValidation) {
+        el.setAttribute('data-validate-pause', pauseValidation);
+      } else {
+        el.removeAttribute('data-validate-pause');
+      }
     });
+  };
+
+  spa['clearValidation'] = spa['removeValidationMsg'] = function(forObj){
+    if (forObj) {
+      $(forObj).each(function(i, el){
+        spa['_validate']._showValidateMsg(el, '', true);
+      });
+    }
   };
 
   spa['updateValidation'] = function(forObj, msg, isValid, errMsgTemplate){
