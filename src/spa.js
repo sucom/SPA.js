@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.84.3';
+  var _VERSION = '2.85.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -2804,10 +2804,12 @@
     , 'onRender', 'onRefresh', 'onRemove', 'renderCallback', 'refreshCallback', 'events'
   ];
   var _defCompProps = _baseProps.map(function(v){ return 'try{(typeof _'+v+'!="undefined")&&(__def$props__.'+v+'=_'+v+')}catch(e){}'  }).join(';')
-                    + ';var _spa$prop={}; try{ extend(_spa$prop, prop || {}); }catch(e){};';
+                    + ';var _spa$prop={}'
+                    + ';try{ extend(_spa$prop, props || {}); }catch(e){ try{ extend(_spa$prop, prop || {}); }catch(e){ try{ extend(_spa$prop, $props || {}); }catch(e){ try{ extend(_spa$prop, __spa$publicProp__ || {}); }catch(e){}; }; }; };';
   var _fnAlias = (isIE?'var':'const')
-                +' render=spa.$render, refresh=spa.$refresh'
-                +', merge=spa.merge, extend=spa.extend, extendProp=function(x){return extend(prop,x||{});}'
+                +' render=spa.$render, refresh=spa.$refresh, merge=spa.merge, extend=spa.extend' //alias for spa functions
+                +',export$Props=function(o){spa.extend(__spa$publicProp__,o||{});}, export$Prop=function(k,v){export$Props({k:v});}' //function to export $props
+                +',exportProps=export$Props, extendProps=export$Props, exportProp=export$Prop, extendProp=export$Prop' //alias for export$props and export$Prop
                 +';';
 
   function _is$Loaded(compName) {
@@ -2825,6 +2827,12 @@
     });
     if (win.hasOwnProperty('prop')) {
       propsInGlob.push('prop');
+    }
+    if (win.hasOwnProperty('props')) {
+      propsInGlob.push('props');
+    }
+    if (win.hasOwnProperty('$props')) {
+      propsInGlob.push('$props');
     }
     if (propsInGlob.length) { console.warn('Found reserved spaComponent properties[ '+(propsInGlob.join(', '))+' ] in global scope.'); };
   }
@@ -2850,7 +2858,7 @@
           compId = (compName.replace(/\//g,'_'));
           xFnName = compName && (' __spa$'+compId);
           verifyPropsInGlob();
-          autoVarBlock = 'var _spa$="'+compName+'";'
+          autoVarBlock = 'var _spa$="'+compName+'", __spa$publicProp__={};'
                         +(isIE?'var':'const')+' __def$props__={};'
                         +_fnAlias+'\n/*--- ---*/\n\n';
           autoRegBlock = '\n\n/*--- ---*/\nif(!spa.is$Loaded(_spa$)){'+_defCompProps+'spa.$(_spa$, extend(__def$props__, _spa$prop));}';
@@ -4485,9 +4493,7 @@
     return isChanged;
   };
   xsr.resetElDefaultValue = function(elSelector){
-    var $el = $(elSelector), el;
-    if ($el.length) {
-      el = $el[0];
+    $(elSelector).each(function(i, el){
       if (',checkbox,radio'.indexOf(el.type)>0) {
         el.defaultChecked = el.checked;
       } else if (',INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
@@ -4499,7 +4505,25 @@
           opt.defaultSelected = opt.selected;
         }
       }
-    }
+      $(el).trigger('change');
+    });
+  };
+
+  xsr.resetToDefaultValue = function(elSelector){
+    $(elSelector).each(function(i, el){
+      if (',checkbox,radio'.indexOf(el.type)>0) {
+        el.checked = el.defaultChecked;
+      } else if (',INPUT,TEXTAREA'.indexOf(el.tagName)>0) {
+        el.value = el.defaultValue;
+      } else if ('SELECT' == el.tagName) {
+        var oIndex, oLength, opt;
+        for (oIndex=0, oLength=el.options.length; oIndex < oLength; oIndex++) {
+          opt = el.options[oIndex];
+          opt.selected = opt.defaultSelected;
+        }
+      }
+      $(el).trigger('change');
+    });
   };
 
   xsr.updateTrackFormCtrls = function(elForm){
@@ -6368,6 +6392,7 @@
     }
   }
 
+  // [for] auto-render-on-submit of form or click of a link or button ...
   function _registerRenderForEl(el) {
     var elTag = (el.tagName.toUpperCase());
     var onEvent = (elTag === 'FORM')? 'submit' : 'click';
