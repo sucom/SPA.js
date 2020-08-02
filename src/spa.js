@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.85.0';
+  var _VERSION = '2.86.0';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -6319,6 +6319,7 @@
     var cOptStr   = forSpec[0].trim();
     var cOptions  = {};
 
+    console.log('forSpec', forSpec);
     if (cOptStr) {
       cOptions = _toObj(cOptStr);
       if (!_isObj(cOptions) || _isBlank(cOptions)) {
@@ -6332,6 +6333,9 @@
       var ok2Render = true;
       var xElValue  = '';
       var payload   = {};
+      var formMethod = "";
+      var formAction = "";
+      var formTarget = "";
       var vErrors;
 
       if ((cName.length<2 && (!cName || /[^a-z]/g.test(cName))) || (_isDynSpa$(cName))) {
@@ -6347,7 +6351,12 @@
         ok2Render = (_isBlank(vErrors));
         if (ok2Render) {
           payload = xEl.hasAttribute('data-nested')? xsr.serializeFormToObject(xElId) : xsr.serializeFormToSimpleObject(xElId);
-          cOptions['dataUrlMethod'] = _attr(xEl,'method');
+          formMethod = (xEl.hasAttribute('method') && _attr(xEl,'method')) || '';
+          formAction = (xEl.hasAttribute('action') && _attr(xEl,'action')) || '';
+          formTarget = (xEl.hasAttribute('target') && _attr(xEl,'target')) || '';
+          formMethod && (cOptions['dataUrlMethod'] = formMethod);
+          formAction && (cOptions['dataUrl'] = formAction);
+          formTarget && !cOptions['target'] && (cOptions['target'] = formTarget);
         } else {
           _log.info('Form has validation error(s):', vErrors);
         }
@@ -6374,8 +6383,8 @@
       }
 
       if (ok2Render) {
-        cOptions['dataXtra']      = payload;
-        cOptions['dataUrlParams'] = payload;
+        if (!(cOptions.hasOwnProperty('dataXtra') || _isBlank(payload))) { cOptions['dataXtra'] = payload; }
+        if (!(cOptions.hasOwnProperty('dataUrlParams') || _isBlank(payload))) { cOptions['dataUrlParams'] = payload; }
         cOptions['dataParams']    = (cOptions.hasOwnProperty('payload') && !cOptions['payload'])? {} : payload;
         if ('stringify'.equalsIgnoreCase(cOptions['payload'])) {
           cOptions['stringifyPayload'] = true;
