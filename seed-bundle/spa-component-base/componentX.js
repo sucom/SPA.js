@@ -34,7 +34,7 @@ function doSomething () {
 }
 
 /* export local variables or functions as properties accessible through component:componentX as app.componentX.actionX(); */
-var prop = {
+var props = {
 
   actionX: doSomething
 

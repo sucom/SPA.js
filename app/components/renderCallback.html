@@ -4,6 +4,31 @@
 
   <p>A function to be executed immediately after component's render <mark>spa.$render</mark>.</p>
 
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables / functions.
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+ */
+    /* base properties */
+    var _target = '#targetContainer';
+
+    // ... ...
+
+    /* component's events */
+
+    function _renderCallback ( arg ) {
+      // doSomething just after this component is added to the DOM by spa.$render(...) call
+      // arg.model holds the final template data
+      // arg.iOptions holds the options, which are used to render this component
+
+    }
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0
+  </blockquote>
+
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {
 

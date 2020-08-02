@@ -28,6 +28,39 @@
 
   <p>A component can have its custom properties and methods</p>
 
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables / functions.
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+ */
+    /* base properties */
+    var _target = '#targetContainer';
+
+    // ... ...
+
+    /* custom properties and methods */
+    var isActive  = false;
+    var greetings = 'Welcome ';
+
+    function doSomething () {
+      console.log( isActive );
+      console.log( greetings );
+
+      doSomethingElse();
+    },
+
+    function doSomethingElse () {
+
+      //doing something else...
+
+    }
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0
+  </blockquote>
+
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {
 

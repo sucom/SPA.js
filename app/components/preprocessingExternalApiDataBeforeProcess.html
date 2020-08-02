@@ -3,10 +3,52 @@
   <h3><mark>dataPreProcessAsync</mark></h3>
   <p>(<i>v2.63.0+</i>) Get more External (API) Data before render.</p>
   <i>componentX.js</i>
+
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables prefixed with underscore ( _ ).
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+
+    *
+    * prefix the base properties with underscore ( _ ) and define using var or let or const depending on the browser support.
+    *
+    */
+
+    /* base properties -------------------------*/
+
+    function _dataPreProcessAsync (initialData) {
+      //initialData == the data or response of dataUrl of this component;
+
+      var api1 = spa.api.post('@api1UrlKey', payLoadObj),
+          api2 = spa.api.get('@api2UrlKey', payLoadObj),
+          api3 = spa.api.get('@api3UrlKey', payLoadObj);
+
+      return [api1, api2, api3];
+    }
+
+    function _dataProcess ( initialData, api1ResData, api2ResData, api3ResData ) {
+
+      var finalTemplateData = {};
+
+      //construct finalTemplateData from initialData, api1ResData, api2ResData, api3ResData
+
+      return finalTemplateData; //send to template for rendering
+    }
+
+    // ... ...
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0: A function
+      <mark>spa.$( 'componentX' , { } )</mark> is used to define Component's base properties (without underscore ( _ ) prefix like template, target, dataUrl etc.) and extended properties like events
+      and other custom actions to be performed on component UI.
+  </blockquote>
+
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {
 
-      dataPreProcessAsync: function(initialData){
+      dataPreProcessAsync: function (initialData) {
         //initialData == the data or response of dataUrl of this component;
 
         var api1 = spa.api.post('@api1UrlKey', payLoadObj),
@@ -16,7 +58,7 @@
         return [api1, api2, api3];
       },
 
-      dataProcess: function( initialData, api1ResData, api2ResData, api3ResData ) {
+      dataProcess: function ( initialData, api1ResData, api2ResData, api3ResData ) {
 
         var finalTemplateData = {};
 

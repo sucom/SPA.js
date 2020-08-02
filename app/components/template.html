@@ -10,6 +10,30 @@
     Use this 'template' property for a few lines template only. For the larger template use <mark>componentX.html</mark>
   </blockquote>
 
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables prefixed with underscore ( _ ).
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+
+    *
+    * prefix the base properties with underscore ( _ ) and define using var or let or const depending on the browser support.
+    *
+    */
+
+    /* base properties -------------------------*/
+
+    var _template = '<h1>User Profile</h1>';
+
+    // ... ...
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0: A function
+      <mark>spa.$( 'componentX' , { } )</mark> is used to define Component's base properties (without underscore ( _ ) prefix like template, target, dataUrl etc.) and extended properties like events
+      and other custom actions to be performed on component UI.
+  </blockquote>
+
   <strong>Single line template:</strong>
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {

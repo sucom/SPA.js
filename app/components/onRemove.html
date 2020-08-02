@@ -4,6 +4,31 @@
 
   <p>A function to be executed just before the component is to be replaced by another component.</mark>.</p>
 
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables / functions.
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+ */
+    /* base properties */
+    var _target = '#targetContainer';
+
+    // ... ...
+
+    /* component's events */
+
+    function _onRemove ( byCompName ) {
+      // doSomething just before remove this component from DOM
+      // byCompName = name of the component, which attempts to remove this component
+      // optionally, return false; to stop this action
+
+    }
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0
+  </blockquote>
+
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {
 

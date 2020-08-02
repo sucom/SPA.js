@@ -4,6 +4,50 @@
 
   <p>Event-binding to component elements.</p>
 
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables / functions.
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+ */
+    /* base properties */
+    var _target = '#targetContainer';
+
+    // ... ...
+
+    /* component's events */
+
+    var _events = [
+                    { target: '#btnSubmit',
+                      onClick: function(){
+                        //doSomething onClick of element #btnSubmit
+                      }
+                    },
+
+                    { target: '#btnCancel',
+                      onClick: function(){
+                        //doSomething onClick of element #btnCancel
+                      }
+                    },
+
+                    { target: '#userName',
+                      onFocus: function(){
+                      //doSomething onFocus of element #userName
+                      },
+                      onKeyUp_KeyDown: function(){
+                      //doSomething onKeyUp and KeyDown of element #userName
+                      },
+                      onBlur: function(){
+                      //doSomething onBlur of element #userName
+                      }
+                    }
+                  ];
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0
+  </blockquote>
+
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {
 

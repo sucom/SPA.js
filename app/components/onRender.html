@@ -4,6 +4,31 @@
 
   <p>A function to be executed before component's render <mark>spa.$render</mark>.</p>
 
+  <blockquote>
+    NOTE: Starting v2.84.0+, the component structure has been simplified to define its properties using simple independent variables / functions.
+  </blockquote>
+
+  <script type="text/code" class="code trim" data-lang="JavaScript">
+    /* v2.84.0+ */
+    /* base properties */
+    var _target = '#targetContainer';
+
+    // ... ...
+
+    /* component's events */
+
+    function _onRender ( arg ) {
+      // doSomething just before render this component
+      // arg.data contains the finalTemplateData
+      // optionally, return false; to stop the render
+
+    }
+  </script>
+
+  <blockquote>
+    Prior to v2.84.0
+  </blockquote>
+
   <script type="text/code" class="code trim" data-lang="JavaScript">
     spa.$('componentX', {
 

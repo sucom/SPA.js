@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.85.0';
+  var _VERSION = '2.86.0-RC1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -6319,6 +6319,7 @@
     var cOptStr   = forSpec[0].trim();
     var cOptions  = {};
 
+    console.log('forSpec', forSpec);
     if (cOptStr) {
       cOptions = _toObj(cOptStr);
       if (!_isObj(cOptions) || _isBlank(cOptions)) {
@@ -6374,8 +6375,8 @@
       }
 
       if (ok2Render) {
-        cOptions['dataXtra']      = payload;
-        cOptions['dataUrlParams'] = payload;
+        if (!(cOptions.hasOwnProperty('dataXtra') || _isBlank(payload))) { cOptions['dataXtra'] = payload; }
+        if (!(cOptions.hasOwnProperty('dataUrlParams') || _isBlank(payload))) { cOptions['dataUrlParams'] = payload; }
         cOptions['dataParams']    = (cOptions.hasOwnProperty('payload') && !cOptions['payload'])? {} : payload;
         if ('stringify'.equalsIgnoreCase(cOptions['payload'])) {
           cOptions['stringifyPayload'] = true;

@@ -28,7 +28,7 @@ function doSomething () {
 
 
 // export local variables or functions as properties accessible through home component:home as app.home.actionX();
-var prop = {
+var props = {
 
   actionX: doSomething
 
