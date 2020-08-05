@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.86.0';
+  var _VERSION = '2.86.1';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -4015,7 +4015,7 @@
     if ((arguments.length==1) && ((_isStr(contextRoot) && contextRoot[0] == '#') || _isEl(contextRoot) || _is$El(contextRoot) ) ) {
       data = {_:0};
     }
-    // console.log('spaBind>', arguments);
+    //console.log('spaBind>', arguments);
     contextRoot = contextRoot || 'body';
     elFilter = elFilter || '';
 
@@ -4156,7 +4156,7 @@
         }
 
       } else {
-        // console.log(el, templateData);
+        //console.log(el, templateData);
         el.removeAttribute('async-in-progress');
         bindSpecStr = $el.data('bind') || '';
 
@@ -6319,7 +6319,7 @@
     var cOptStr   = forSpec[0].trim();
     var cOptions  = {};
 
-    console.log('forSpec', forSpec);
+    // console.log('forSpec', forSpec);
     if (cOptStr) {
       cOptions = _toObj(cOptStr);
       if (!_isObj(cOptions) || _isBlank(cOptions)) {
@@ -6389,7 +6389,7 @@
         if ('stringify'.equalsIgnoreCase(cOptions['payload'])) {
           cOptions['stringifyPayload'] = true;
         }
-        // console.log('render', cName, cOptions);
+        //console.log('render', cName, cOptions);
         xsr.$render(cName, cOptions);
       }
 
@@ -8329,14 +8329,6 @@
         }
       });
 
-      if (!ajaxOptions['dataType']) {
-        ajaxOptions['dataType'] = 'text';
-      }
-
-      if (('json').equalsIgnoreCase(ajaxOptions['dataType']) && (!ajaxOptions['contentType'])) {
-        ajaxOptions['contentType'] = 'application/json';
-      }
-
       if (ajaxOptions['data'] && _isObj(ajaxOptions['data']) && ajaxOptions['stringifyPayload']) {
         delete ajaxOptions['stringifyPayload'];
         ajaxOptions['data'] = JSON.stringify(ajaxOptions['data']);
@@ -8355,6 +8347,14 @@
           }
           ajaxOptions['data'] = finalReqPayload;
         }
+      }
+
+      // if (!ajaxOptions['dataType']) {
+      //   ajaxOptions['data'] && (ajaxOptions['dataType'] = 'json');
+      // }
+
+      if (ajaxOptions['dataType'] && (('json').equalsIgnoreCase(ajaxOptions['dataType'])) && (!ajaxOptions['contentType'])) {
+        ajaxOptions['contentType'] = 'application/json';
       }
 
       if ((ajaxOptions.url).beginsWithStr(xsr.api.urlKeyIndicator)){
