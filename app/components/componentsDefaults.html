@@ -13,7 +13,8 @@ components: {
   , templateExt    : '.html'                   // template extension ( could be .jsp | .php )
   , scriptExt      : '.js'                     // script extension ( could be .min.js )
   , dataPreRequest : function(){}              // function to be executed before each component's data API call
-  , callback       : function(){}              // function to be executed after each component's render
+  , render         : function(){}              // function to be executed before each component render
+  , callback       : function(){}              // function to be executed after each component render
   , extend$data    : true                      // enable/disable $data for each component
   , templateScript : false                     // allow/deny scripts inside template
   , templateCache  : true                      // enable/disable cache of templates. Recommended to disable during development.
