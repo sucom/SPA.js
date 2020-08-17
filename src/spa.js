@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.86.1';
+  var _VERSION = '2.86.2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady;
@@ -4988,8 +4988,8 @@
         , templateScript: true
         , templateCache: true
         , dataPreRequest: ''
-        , render:''
-        , callback:''
+        , render:''   //before-render
+        , callback:'' //renderCallback
         , extend$data: true
         , offline: false
         , functional: true
@@ -7533,27 +7533,33 @@
                         delete retValue['model']['_this'];
                       }
 
-                      /* Default Global components before-render */
-                      xsr.renderUtils.runCallbackFn(xsr.defaults.components.render, fnBeforeRenderParam, renderCallbackContext);
-
                       //beforeRender
-                      var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView;
-                      if (fnBeforeRender){
-                        var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
-                        fnBeforeRenderRes = xsr.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
-                        if (!_isUndef(fnBeforeRenderRes)) {
-                          switch (_of(fnBeforeRenderRes)) {
-                            case 'string' :
-                              retValue.view = fnBeforeRenderRes;
-                              break;
-                            case 'boolean':
-                              abortRender = !fnBeforeRenderRes;
-                              break;
+                      var fnBeforeRender = _renderOption('dataBeforeRender', 'beforeRender'), fnBeforeRenderRes, abortRender, abortView
+                        , __fnBeforeRender = function () {
+                          if (fnBeforeRender){
+                            var fnBeforeRenderParam = { template: templateContentToBindAndRender, data: retValue['model'], view: retValue.view };
+                            fnBeforeRenderRes = xsr.renderUtils.runCallbackFn(fnBeforeRender, fnBeforeRenderParam, renderCallbackContext);
+                            if (!_isUndef(fnBeforeRenderRes)) {
+                              switch (_of(fnBeforeRenderRes)) {
+                                case 'string' :
+                                  retValue.view = fnBeforeRenderRes;
+                                  abortView = (fnBeforeRenderRes).beginsWithStr( '<!---->' );
+                                  break;
+                                case 'boolean':
+                                  abortRender = !fnBeforeRenderRes;
+                                  break;
+                              }
+                            }
                           }
-                        }
+                        };
+
+                      __fnBeforeRender();
+                      if (!(abortRender || abortView)) {
+                        fnBeforeRender = xsr.defaults.components.render;
+                        /* Default Global components before-render */
+                        __fnBeforeRender();
                       }
 
-                      abortView = (retValue.view).beginsWithStr( '<!---->' );
                       if (abortRender) {
                         retValue = {};
                         _log.warn('Render aborted by '+fnBeforeRender);
@@ -7631,10 +7637,10 @@
                             if ((!(_isBlank(xsr.defaults.components.lang) && _isBlank(spaRVOptions.lang)))
                                 || (xsr.defaults.lang.url && (xsr.defaults.lang.url.indexOf('$')>=0))) {
                               var cDefaultLangSettings = xsr.defaults.components.lang;
-                              var cLangSettings = _mergeDeep({target:viewContainerId},
-                                                             (_isObj(cDefaultLangSettings) && (!_isBlank(cDefaultLangSettings)))? xsr.defaults.components.lang : {},
-                                                             (_isObj(spaRVOptions['lang']) && !_isBlank(spaRVOptions.lang))? spaRVOptions.lang : {}
-                                                             );
+                              var cLangSettings = _mergeDeep( {target:viewContainerId},
+                                                              (_isObj(cDefaultLangSettings) && (!_isBlank(cDefaultLangSettings)))? xsr.defaults.components.lang : {},
+                                                              (_isObj(spaRVOptions['lang']) && !_isBlank(spaRVOptions.lang))? spaRVOptions.lang : {}
+                                                              );
                               var fnArg = {
                                   componentName : rCompName,
                                   componentPath : rCompName.replace(/_/g,'/'),
