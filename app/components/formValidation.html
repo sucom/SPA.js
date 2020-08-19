@@ -208,6 +208,8 @@
 
   <section>
     <h2>Validation using script</h2>
+    <mark>spa.validateForm</mark> function can be used to run all validation rules specified in HTML.
+
     <p><i>componentX.js</i>
       <script type="text/code" class="code trim no-num-tool" data-lang="JavaScript" data-title="componentX.js">
       spa.$('componentX', {
@@ -239,7 +241,13 @@
       <br>
       <p><mark>spa.validateForm( '#FormX', '.mandate' )</mark> Validates only .mandate fields.</p>
     </blockquote>
-  </section>
+
+    <p>
+      It is possible to skip certain validation rules while calling <mark>spa.validateForm</mark>.
+      To skip an validation rule add <mark>offline:false</mark> property in HTML specification along with <i>fn:</i> and <i>msg:</i> properties.<br>
+      Example: <mark>{ <span style="color:gray;">fn:'...', msg:'...',</span> <i>offline:false</i> }</mark>
+      <blockquote>NOTE: by default <i>offline:true</i> for all rules unless explicitly set to false.</blockquote>
+    </p>
 
   <section>
     <h2>Form validation with control(enable/disable) button(s)</h2>
