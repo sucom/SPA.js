@@ -1,0 +1,128 @@
+[
+    {
+        "type": "Group",
+        "name": "( ) JS",
+        "parent_id": null,
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "qxTQkbFjBRMSEcG8",
+        "iconColor": "rgb(0, 128, 0)"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\spa.js",
+        "parent_id": "qxTQkbFjBRMSEcG8",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\spa.js",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "ZWgY4zUXmR1kLBCx"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\spa-validate.js",
+        "parent_id": "qxTQkbFjBRMSEcG8",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\spa-validate.js",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "X9oJfMOniUyWYB85"
+    },
+    {
+        "type": "Group",
+        "name": "> CMD",
+        "parent_id": null,
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "rhULD20tn8VA73Kz",
+        "iconColor": "rgb(192, 192, 192)"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\_build.cmd",
+        "parent_id": "rhULD20tn8VA73Kz",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\_build.cmd",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "sjx3oz8bcY0eHXFa"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\_bundle.cmd",
+        "parent_id": "rhULD20tn8VA73Kz",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\_bundle.cmd",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "pxIyiqsuPD60EfOS"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\_minify.cmd",
+        "parent_id": "rhULD20tn8VA73Kz",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\_minify.cmd",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "tqXsWFQPBNrciI91"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\_toProjects.cmd",
+        "parent_id": "rhULD20tn8VA73Kz",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\_toProjects.cmd",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "GYPVN3SvcXOyr2t7"
+    },
+    {
+        "type": "Group",
+        "name": "{ } VERSION",
+        "parent_id": null,
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "j8aePhpXqriYTOcZ",
+        "iconColor": "rgb(128, 128, 0)"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\spa-hb-helpers.js",
+        "parent_id": "qxTQkbFjBRMSEcG8",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\spa-hb-helpers.js",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "08FZhBvmfQcwKA3p"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\spa-xhr.js",
+        "parent_id": "qxTQkbFjBRMSEcG8",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\spa-xhr.js",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "J1jzhNIf3RgMGrCX"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\package.json",
+        "parent_id": "j8aePhpXqriYTOcZ",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\package.json",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "St3Jyeg4ibRYfnVl"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\bower.json",
+        "parent_id": "j8aePhpXqriYTOcZ",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\bower.json",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "GEbecjMa4N1FXroH"
+    },
+    {
+        "type": "File",
+        "name": "d:\\www\\www.spajs.info\\spa-src\\src\\-version.txt",
+        "parent_id": "j8aePhpXqriYTOcZ",
+        "fsPath": "d:\\www\\www.spajs.info\\spa-src\\src\\-version.txt",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "wdr6acEkmQpD2LvY"
+    }
+]
