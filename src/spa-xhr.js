@@ -77,6 +77,7 @@
   var _extend       = spa.extend;
   var _mergeDeep    = spa.merge;
   var _findInX      = spa.find;
+  var _sanitizeXSS  = spa.sanitizeXSS;
 
 
   /* Util functions */
@@ -1134,6 +1135,11 @@
         }
         if (!_isUndef(dataFilterResponse)) {
           xhrResponse = dataFilterResponse;
+        }
+
+        var _sanitizeApiXss = _reqOptions['sanitizeApiXss']; //ajaxOptions.sanitizeApiXss
+        if (_sanitizeApiXss) {
+          xhrResponse = _isFn(_sanitizeApiXss)? (_sanitizeApiXss.call(xhrResponse, xhrResponse) || xhrResponse) : _sanitizeXSS(xhrResponse);
         }
 
         if (axResType === 'json') {

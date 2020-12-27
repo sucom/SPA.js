@@ -1,6 +1,10 @@
 /*@license SPA.js (Form Validation Extension) [MIT]*/
-(function(){
-  var gContext = this;
+(function(gContext){
+
+  var $ = gContext['jQuery'];
+  if (!(spa.usejQuery && $)) {
+    $ = dom;
+  }
 
   function _clearSpaValidateMsg(forObj){
     spa['_validate']._showValidateMsg(forObj);
@@ -44,7 +48,8 @@
         Noop        : function _fnNoop(){ return true; }
       , CheckXSS    : function _fnCheckXSS(obj) {
                         var elValue = spa.getElValue(obj);
-                        return !( (/<\s*\/?\s*(\bscript\b)/gi).test(elValue) || (/<(.)+\s+on([a-z])+\s*=|javascript:/gi).test(elValue) );
+                        // return !( (/<\s*\/?\s*(\bscript\b)/gi).test(elValue) || (/<(.)+\s*on([a-z])+\s*=|javascript:/gi).test(elValue) );
+                        return !( (/<\s*\/?\s*(\bscript\b)/gi).test(elValue) || (/\s*on([a-z])+\s*=|javascript:/gi).test(elValue) );
                       }
       , Promise     : function _fnPromise(forObj){
                         if (!spa['_validate']._isOnOfflineValidation) {
@@ -401,7 +406,7 @@
                             errClassTargetSelector = $forObj.data('errorClassTarget'),
                             $erClassTarget = (errClassTargetSelector)? $forObj.closest(errClassTargetSelector) : $forObjParent,
                             errElPosition = $forObj.data('errorPosition');
-                        forObj = $forObj.get(0);
+                        forObj = $forObj[0];
 
                         if (!spa['_validate']._isOnOfflineValidation) {
                           $erClassTarget.removeClass('has-error-msg no-error-msg')[(isValid === false)? 'addClass' : 'removeClass']('validation-error '+(!!msg? 'has-error-msg' : 'no-error-msg'));
@@ -508,7 +513,8 @@
   }
 
   spa['initValidation'] = spa['initDataValidation'] = function(context){
-    /* apply same rules if mult-events specified with underscore eg: onFocus_onBlur_onKeyup */
+  /* apply same rules if mult-events specified with underscore eg: onFocus_onBlur_onKeyup */
+    spa.console.group('initValidation');
     spa.console.log('>>>>> initDataValidation request for context:'+context);
 
     var splitValidateEvents = function(eObj) {
@@ -537,6 +543,8 @@
     context = context || "body";
     var $context = $(context);
     var elSelector = $context.data("validateElFilter") || "";
+    spa.console.log('$context', $context);
+    spa.console.log('data-validate-common', $context.data("validateCommon"));
     var commonValidateRules = splitValidateEvents(spa.toJSON($context.data("validateCommon")||"{}"));
     var commonOnFocusRules  = spa.merge({},commonValidateRules['onFocus']);
     var vFormDefaults       = spa.toJSON($context.attr("data-validate-defaults") || {});
@@ -553,7 +561,7 @@
       commonOnFocusRules.push(promiseCheckRule);
     }
     commonValidateRules['onFocus'] = commonOnFocusRules;
-    spa.console.log(commonValidateRules);
+    spa.console.log('commonValidateRules',commonValidateRules);
 
     var addRule2El, addRule2ElDir, overrideOfflineRule2El, elOfflineRule, commonRule2El;
     var offlineValidationKey = ($context.data("validateForm") || $context.data("validateScope")||"").replace(/onRender/i,'').replace(/[^a-zA-Z0-9]/g,'');
@@ -572,10 +580,10 @@
     spa.console.log(offlineValidationKey, spa['_validate']._offlineValidationRules[offlineValidationKey]);
 
     $context.find(elSelector+"[data-validate]").each(function(index, el){
-      var elID = $(el).prop("id");
+      var elID = el.getAttribute("id");
       if (!elID) {
         elID = (el['name'] || el['type']).replace(/[^a-z]/gi,'')+index;
-        $(el).attr('id', elID);
+        el.setAttribute('id', elID);
       }
       var elValidateRules={};
       var elValidateRuleSpec = $(el).data("validate");
@@ -754,6 +762,7 @@
         }
       });
     });
+    spa.console.groupEnd('initValidation');
   };
 
   /*
@@ -779,13 +788,16 @@
 
     if (spa['_validate']._offlineValidationRules[rulesScopeID])
     { var vRules = spa['_validate']._offlineValidationRules[rulesScopeID].rules;
+      spa.console.log('vRules:', vRules);
 
-      var applyRules = function(elID){
-        var $el = $validationScope.find("#"+elID), el=$el[0], errMsg, vFn, vFnResponse, pauseElValidation = el && (el.hasAttribute("data-validate-pause") && spa.toBoolean(((el.getAttribute('data-validate-pause')+'') || 'true')));
+      var applyRules = function (elID) {
+        var $el = $validationScope.find("#" + elID), el = $el[0], errMsg, vFn, vFnResponse, pauseElValidation = el && (el.hasAttribute("data-validate-pause") && spa.toBoolean(((el.getAttribute('data-validate-pause') + '') || 'true')));
+
         //var ignValidation = spa.toBoolean($el.data("ignoreValidationIfInvisible"));
         //var isVisible = $el.is(":visible");
         //if ($el.prop("type") && $el.prop("type").equalsIgnoreCase("hidden")) debugger;
         var retValue = pauseElValidation || (spa.toBoolean($el.data("ignoreValidationIfInvisible")) && !($el.is(":visible")));
+
         if (!retValue) {
           retValue = spa.every(vRules[elID], function(vRule){
             vFn = vRule.fn;
@@ -810,6 +822,7 @@
             return vFnResponse;
           });
         }
+
         return retValue;
       };
 
@@ -892,4 +905,4 @@
 
   gContext['_clearSpaValidateMsg'] = _clearSpaValidateMsg;
   gContext['_check'] = spa['_validate'].expose();
-})();
+})(this);

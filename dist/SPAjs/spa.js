@@ -3,9 +3,9 @@
  * SPA.js is the collection of javascript functions which simplifies
  * the interfaces for Single Page Application (SPA) development.
  *
- * Dependency: (hard)
- * 1. jQuery: http://jquery.com/
- * 2. handlebars: http://handlebarsjs.com/ || https://github.com/wycats/handlebars.js/
+ * Dependency:
+ * handlebars.js: http://handlebarsjs.com/ || https://github.com/wycats/handlebars.js/
+ * sizzle.js (bundled with SPA.js) | source: https://sizzlejs.com/
  *
  * THIS CODE LICENSE: The MIT License (MIT)
 
@@ -32,10 +32,14 @@
  */
 
 (function() {
-  var _VERSION = '2.86.2';
+  var _VERSION = '2.87.0-RC1';
 
   /* Establish the win object, `window` in the browser */
-  var win = this, _doc = document, isSPAReady;
+  var win = this, _doc = document, isSPAReady, docBody = _doc.body;
+  var dQ, jQ=win.jQuery;
+  var useJQReady = 0;
+  var usejQuery  = 1;
+  var $ = win.$ || win.dom;
 
   /* Create SPA */
   var xsr = function(){};
@@ -56,7 +60,10 @@
 //  }
 
   /* *************** SPA begins *************** */
-  xsr.VERSION = _VERSION;
+  usejQuery = docBody.hasAttribute('use-jquery') || docBody.classList.contains('use-jquery') || usejQuery;
+
+  xsr.VERSION  = _VERSION;
+  xsr.usejQuery = usejQuery;
 
   var _objProto = Object.prototype;
   var _arrProto = Array.prototype;
@@ -203,7 +210,7 @@
     , 'trace'         : function(){ cOut('trace',          _argsToArr(arguments)); }
     , 'warn'          : function(){ cOut('warn',           _argsToArr(arguments)); }
   };
-  xsr['console'] = _log;
+  xsr.console = _log;
 
   /* event handler for window.onhashchange */
   xsr.ajaxPreProcess;
@@ -382,8 +389,14 @@
     };
     xsr.sanitizeScript = _sanitizeScript;
 
-    function _sanitizeXSS(str) {
-      return _sanitizeScript(str).replace(/\s+on([a-z])\s*=/gi, ' on=').replace(/javascript:/gi,'js:');
+    function _sanitizeXSS(srcData) {
+      var isSrcString  = (typeof srcData == 'string');
+      var sanitizedStr = (isSrcString? srcData : JSON.stringify(srcData))
+                            .replace(/<\s*script/gi, '<xss-script')
+                            .replace(/\/\s*script/gi, '/xss-script')
+                            .replace(/\s+on([a-z]+)\s*=/gi, ' xss-on$1=')
+                            .replace(/javascript:/gi, 'xss-js:');
+      return isSrcString? sanitizedStr : JSON.parse(sanitizedStr);
     }
     _strProto.sanitizeXSS = function(){
       return _sanitizeXSS(''+this);
@@ -998,7 +1011,7 @@
     });
   }
 
-  /* old dom element ops begins */
+  /* old DOM-element ops begins */
   xsr.getDocObj = function (objId) {
     var jqSelector = ((typeof objId) == "object") ? objId : ((objId.beginsWithStr("#") ? "" : "#") + objId);
     return ((_isEl(jqSelector))? jqSelector : $(jqSelector).get(0) );
@@ -1445,7 +1458,7 @@
       return this.value;
     }).get().join(delimiter));
   };
-  /* old dom element ops ends */
+  /* old DOM-element ops ends */
 
   xsr.sleep = function (sec) {
     var dt = new Date();
@@ -2364,6 +2377,7 @@
       var currChar;
       var phrase = data[0];
       var code = 256;
+
       for (var i=1; i<data.length; i++) {
         currChar=data[i];
         if (dict[phrase + currChar] != null) {
@@ -2793,7 +2807,7 @@
   }
 
   var _baseProps = [
-      'target', 'template', 'templateCache', 'templateScript'
+      'target', 'template', 'templateCache', 'templateScript', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
     , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind'
@@ -2997,6 +3011,7 @@
         xsr.addScriptTag(scriptId, scriptPath);
       }
       else { /* load script script-URL */
+        _log.info('ajaxQ for script: ', scriptPath);
         tAjaxRequests.push(
           _cachedScript(scriptPath, xOptions).done(function (script, textStatus) {
             _log.info("Loaded script [" + scriptId + "] from [" + scriptPath + "]. STATUS: " + textStatus);
@@ -3102,6 +3117,7 @@
       }
       if (getCss) {
         //1st load from the server
+        _log.info('ajaxQ for style:', stylePath);
         tAjaxRequests.push(
           _cachedStyle(styleId, stylePath, {cache: xsr.defaults.components.offline}).done(function (style, textStatus) {
             _log.info("Loaded style [" + styleId + "] from [" + stylePath + "]. STATUS: " + textStatus);
@@ -3196,6 +3212,7 @@
           }
         });
 
+        _log.info('ajaxQ for template: ', tmplPath);
         tAjaxRequests.push(axTemplateRequest);
       } else {
         _log.error("Template[" + tmplId + "] of [" + templateType + "] NOT defined in <script>.");
@@ -3324,6 +3341,7 @@
 
   xsr.i18n = _i18nTextValue;
   xsr.i18n.loaded = false;
+  xsr.i18n.off;
 
   xsr.i18n.settings = {
     reset : true,
@@ -3783,6 +3801,8 @@
 
   xsr.i18n.apply = xsr.i18n.render = function (contextRoot, elSelector) {
 
+    if (xsr.i18n.off) return;
+
     contextRoot = contextRoot || "html";
     elSelector = elSelector || "";
     var isTag = contextRoot.beginsWithStr("<");
@@ -3801,7 +3821,7 @@
       return;
     }
 
-    $i18nElements.each(function (indes, el) {
+    $i18nElements.each(function (index, el) {
       var $el = $(el),
           i18nSpecStr = $el.data("i18n") || '';
       if ((i18nSpecStr) && (!i18nSpecStr.containsStr(':'))) i18nSpecStr = "html:'"+i18nSpecStr+"'";
@@ -4993,6 +5013,7 @@
         , extend$data: true
         , offline: false
         , functional: true
+        , sanitizeApiXss: false
       }
     , routes: {
         base: '#',
@@ -5085,6 +5106,13 @@
     return options;
   }
 
+  function handleOnDomReady (fn) {
+    if ((usejQuery || useJQReady) && jQ) {
+      jQ(fn);
+    } else {
+      _onDomReady(fn);
+    }
+  }
   function _onDomReady(fn) {
     if ( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) ) {
       fn();
@@ -5232,7 +5260,7 @@
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = [ 'target','template','templateCache','templateScript',
+          var baseProps = [ 'target','template','templateCache','templateScript', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind',
@@ -5711,21 +5739,46 @@
   }
 
   //////////////////////////////////////////////////////////////////////////////////
+  var _$storeLocked = {};
+  function lock$render ( key ) {
+    _$storeLocked[key] = 1;
+  }
+  function unlock$render ( key ) {
+    delete _$storeLocked[key];
+  }
+  function is$renderLocked ( key ) {
+    var isLocked = (_isStr(key) && _$storeLocked[key]);
+    if (isLocked) {
+      _log.warn('Component ['+key+'] is locked. Wait or use spa.$unlock('+key+');');
+    }
+    return isLocked;
+  }
+  xsr.$lock   = lock$render;
+  xsr.$unlock = unlock$render;
+  xsr.$Locked = is$renderLocked;
   xsr.renderComponent = xsr.$render = function (componentNameFull, options) {
+    var keyInProgress = componentNameFull;
+    if (is$renderLocked(keyInProgress)) return;
 
     if (!isSPAReady) {
-      $(function(){
+      lock$render(keyInProgress);
+      handleOnDomReady(function(){
+        unlock$render(keyInProgress);
         xsr.renderComponent(componentNameFull, options);
       });
       return;
     }
     if (!( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) )) {
+      lock$render(keyInProgress);
       _log.info('DOM NOT Ready. will render component ['+componentNameFull+'] on DOM Ready.');
       _doc.addEventListener('DOMContentLoaded', function(){
+        unlock$render(keyInProgress);
         xsr.renderComponent(componentNameFull, options);
       });
       return;
     }
+
+    _log.info('>>> spa.$render:', componentNameFull, options);
 
     options = options || {};
     if (!componentNameFull) {
@@ -5894,7 +5947,7 @@
               _log.log('dataCache:true; Using $data and ignored data + dataProcess ...');
             }
           }
-
+          renderOptions['inProgress'] = keyInProgress;
           xsr.render(renderOptions);
         }
       , _parseComp = function(){
@@ -6071,6 +6124,8 @@
   }
 
   xsr.renderComponentsInHtml = function (scope, pComponentName, renderSelf) {
+
+    (scope && (typeof scope === 'object') && scope.length && !scope[0] && (scope = ''));
     scope = scope||'body';
 
     renderOptions  = (typeof pComponentName == 'object')? pComponentName : '';
@@ -6193,6 +6248,7 @@
             spaCompOptions.data = _mergeDeep({}, _find(window, dataPath, {}));
           }
           var $dataInAttr = ($el.attr('data-x-component-$data') || $el.attr('data-x-$data') || $el.attr('data-spa-component-$data') || $el.attr('data-spa-$data') || $el.attr('spa-$data') || '').trim();
+
           if ($dataInAttr) {
             if (/\:\s*\$data/.test($dataInAttr)) {
               $dataInAttr = $dataInAttr.replace(/\:\s*\$data/g, ':app.'+pComponentName+'.$data');
@@ -6353,7 +6409,7 @@
           payload = xEl.hasAttribute('data-nested')? xsr.serializeFormToObject(xElId) : xsr.serializeFormToSimpleObject(xElId);
           formMethod = (xEl.hasAttribute('method') && _attr(xEl,'method')) || '';
           formAction = (xEl.hasAttribute('action') && _attr(xEl,'action')) || '';
-          formTarget = (xEl.hasAttribute('target') && _attr(xEl,'target')) || '';
+          formTarget = (xEl.hasAttribute('data-render-target') && _attr(xEl,'data-render-target')) || '';
           formMethod && (cOptions['dataUrlMethod'] = formMethod);
           formAction && (cOptions['dataUrl'] = formAction);
           formTarget && !cOptions['target'] && (cOptions['target'] = formTarget);
@@ -6383,6 +6439,11 @@
       }
 
       if (ok2Render) {
+        if (!cOptions['target']) {
+          var compTarget = (xEl.hasAttribute('data-render-target') && _attr(xEl,'data-render-target')) || '';
+          compTarget && (cOptions['target'] = compTarget);
+        }
+
         if (!(cOptions.hasOwnProperty('dataXtra') || _isBlank(payload))) { cOptions['dataXtra'] = payload; }
         if (!(cOptions.hasOwnProperty('dataUrlParams') || _isBlank(payload))) { cOptions['dataUrlParams'] = payload; }
         cOptions['dataParams']    = (cOptions.hasOwnProperty('payload') && !cOptions['payload'])? {} : payload;
@@ -6422,6 +6483,12 @@
         }
       }
 
+      var compTarget = ((el.hasAttribute('target') && _attr(el,'target')) || '').trim();
+      if (compTarget && ('#' == compTarget[0])) {
+        _attr(el, 'data-render-target', compTarget);
+        el.removeAttribute('target');
+      }
+
       _attr(el, 'render-on', onEvent);
       el.removeEventListener(onEvent, _renderForComponent);
       el.addEventListener(onEvent, _renderForComponent);
@@ -6429,6 +6496,11 @@
   }
   function _registerEventsForComponentRender(scope) {
     scope = scope || 'body';
+
+    var $hrefTargetElements = $(scope).find('[href][target^="#"]:not([for])');
+    $hrefTargetElements.each(function(i, el){
+      el.setAttribute('for', el.getAttribute('href').replace(/^[#\s]+/, ''));
+    });
 
     //elements with for attribute
     var $forElements = $(scope).find('[for]:not(label):not([render-on])');
@@ -6452,25 +6524,25 @@
   }
 
   /*
-   * xsr.render("#containerID")
-   *
-   * OR
-   *
-   uOption = {
-   data                       : {}      // Data(JSON Object) to be used in templates; for html data-attribute see dataUrl
+    * xsr.render("#containerID")
+    *
+    * OR
+    *
+    uOption = {
+    data                       : {}      // Data(JSON Object) to be used in templates; for html data-attribute see dataUrl
 
-   ,dataUrl                   : ""     // External Data(JSON) URL | local:dataModelVariableName
-   ,dataUrlMethod             : ""     // GET | POST; default:GET
-   ,dataUrlErrorHandle        : ""     // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
-   ,dataUrlHeaders            : {}     // dataUrl Headers (NO EQUIVALENT data-attribute) plain Object
-   ,dataParams                : {}     // dataUrl Params (NO EQUIVALENT data-attribute)
-   ,dataType                  : ""     // dataType text | json
-   ,dataModel                 : ""     // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
-   ,dataCache                 : false  // External Data(JSON) Cache
-   ,dataValidate              : false  // Validate Data before Rendering; boolean or function
-   ,dataProcess               : function or Function name in String
+    ,dataUrl                   : ""     // External Data(JSON) URL | local:dataModelVariableName
+    ,dataUrlMethod             : ""     // GET | POST; default:GET
+    ,dataUrlErrorHandle        : ""     // single javascript function name to run if external data url fails; NOTE: (jqXHR, textStatus, errorThrown) are injected to the function.
+    ,dataUrlHeaders            : {}     // dataUrl Headers (NO EQUIVALENT data-attribute) plain Object
+    ,dataParams                : {}     // dataUrl Params (NO EQUIVALENT data-attribute)
+    ,dataType                  : ""     // dataType text | json
+    ,dataModel                 : ""     // External Data(JSON) "key" for DataObject; default: "data"; may use name-space x.y.z (with the cost of performance)
+    ,dataCache                 : false  // External Data(JSON) Cache
+    ,dataValidate              : false  // Validate Data before Rendering; boolean or function
+    ,dataProcess               : function or Function name in String
 
-   ,dataCollection            : {}    // { urls: [ {
+    ,dataCollection            : {}    // { urls: [ {
    //              name     : 'string:dataApi'; if no (name or target) auto-keys: data0..dataN
    //            , url      : 'string:path-to-data-api'
    //            , urlParams: object: {paramKey1: paramValue1, paramKey2: paramValue2} ==> will replace in url: path-to-api/{paramKey1}/{paramKey2}
@@ -6487,27 +6559,27 @@
    //    , error:fn
    // }
 
-   ,dataTemplates             : {}    // Templates to be used for rendering {tmplID:'inline', tmplID:'script', tmplID:'URL'}
-   ,dataTemplate              : ""    // Primary Template ID ==> content may be inline or <script>
+    ,dataTemplates             : {}    // Templates to be used for rendering {tmplID:'inline', tmplID:'script', tmplID:'URL'}
+    ,dataTemplate              : ""    // Primary Template ID ==> content may be inline or <script>
                                       // dataTemplate = dataTemplates[0]; if dataTemplate is not defined
 
-   ,dataTemplatesCache        : true  // cache of Templates
+    ,dataTemplatesCache        : true  // cache of Templates
 
-   ,dataScripts               : {}    // scripts (js) to be loaded along with templates
-   ,dataScriptsCache          : true  // cache of dataScripts
+    ,dataScripts               : {}    // scripts (js) to be loaded along with templates
+    ,dataScriptsCache          : true  // cache of dataScripts
 
-   ,dataStyles                : {}    // styles (css) to be loaded along with templates
-   ,dataStylesCache           : true  // cache of dataStyles
+    ,dataStyles                : {}    // styles (css) to be loaded along with templates
+    ,dataStylesCache           : true  // cache of dataStyles
 
-   ,dataBeforeRender          : ""    // single javascript functionName to run before render
-   ,dataRenderCallback        : ""    // single javascript functionName to run after render
-   ,dataRenderMode            : ""    // "":Replace target | "append" : Append to target | "prepend" : Prepend to target
+    ,dataBeforeRender          : ""    // single javascript functionName to run before render
+    ,dataRenderCallback        : ""    // single javascript functionName to run after render
+    ,dataRenderMode            : ""    // "":Replace target | "append" : Append to target | "prepend" : Prepend to target
 
-   ,dataRenderId              : ""    // Render Id, may be used to locate in xsr.renderHistory[dataRenderId], auto-generated key if not defined
-   ,saveOptions               : false // Save options in render-container element
-   };
+    ,dataRenderId              : ""    // Render Id, may be used to locate in xsr.renderHistory[dataRenderId], auto-generated key if not defined
+    ,saveOptions               : false // Save options in render-container element
+    };
 
-   xsr.render("#containerID", uOption);
+    xsr.render("#containerID", uOption);
    */
   xsr.render = function (viewContainerId, uOptions) {
     _log.log('xsr.render', viewContainerId, uOptions);
@@ -6615,6 +6687,7 @@
       , dataTemplatesCache: true
       , templateScript: false
       , templateEngine: ''
+      , sanitizeApiXss: false
 
       , dataScripts: {}
       , dataScriptsCache: true
@@ -6654,6 +6727,8 @@
     }
 
     _log.log(rCompName+'.$'+(spaRVOptions['isRefreshCall']?'refresh':'render')+' with options:', spaRVOptions, '$data', _find(app, rCompName+'.$data'));
+
+    lock$render(spaRVOptions['inProgress']);
 
     var $viewContainerId = $(viewContainerId);
     var pCompName  = $viewContainerId.attr('data-rendered-component') || '';
@@ -6715,7 +6790,9 @@
       return ("" + $viewContainerId.data(dataAttrKey)).replace(/undefined/, "");
     };
     var _renderOption = function(optionKey, dataAttrKey) {
-      return (_isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
+      var retValue = (_isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
+      _log.info('{.'+optionKey+'} | [data-'+dataAttrKey+']', retValue);
+      return retValue;
     };
 
     /*Render Id*/
@@ -6836,9 +6913,11 @@
         , viewDataModelName
         , isLocalDataModel = (useParamData || (dataModelUrl.beginsWithStrIgnoreCase("local:")))
         , defaultDataModelName = (dataModelUrl.beginsWithStrIgnoreCase("local:")) ? dataModelUrl.replace(/local:/gi, "") : "data"
-        , defPayLaod = _appApiDefaultPayload()
+        , defPayLoad = _appApiDefaultPayload()
         , dataUrlPayLoad
         , _stringifyPayload = (spaRVOptions && spaRVOptions.hasOwnProperty('stringifyPayload'))? spaRVOptions['stringifyPayload'] : _find(app, 'api.ajaxOptions.stringifyPayload');
+
+      _log.info('dataModelUrl initial:', dataModelUrl);
 
       dataModelName = dataModelName.ifBlankStr(defaultDataModelName);
       viewDataModelName = dataModelName.replace(/\./g, "_");
@@ -6906,13 +6985,14 @@
                   }
 
                   dataUrlPayLoad = _hasKey(dataApi, 'params') ? dataApi.params : (_hasKey(dataApi, 'data') ? dataApi.data : {});
-                  if ((! _hasKey(dataApi, 'defaultPayload')) && (!_isBlank(defPayLaod))) {
-                    dataUrlPayLoad = _mergeDeep({}, defPayLaod, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
+                  if ((! _hasKey(dataApi, 'defaultPayload')) && (!_isBlank(defPayLoad))) {
+                    dataUrlPayLoad = _mergeDeep({}, defPayLoad, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
                   }
                   if (!_isBlank(dataUrlPayLoad) && _stringifyPayload) {
                     dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
                   }
 
+                  _log.info('ajaxQ for dataCollection:', apiDataUrl);
                   spaAjaxRequestsQue.push(
                     $ajax({
                       url: apiDataUrl,
@@ -7007,6 +7087,7 @@
           }
         }
         else {
+          _log.info('dataModelUrl:', dataModelUrl);
           if (dataModelUrl.beginsWithStrIgnoreCase("local:")) { /*Local DataModel*/
             var localDataModelName = dataModelUrl.replace(/local:/gi, "");
             var localDataModelObj = {};
@@ -7033,6 +7114,7 @@
 
           }
           else { /*External Data Source*/
+            _log.info('dataModelUrl without params fill:', dataModelUrl);
             dataModelUrl = xsr.api.url(dataModelUrl, _isBlank(spaRVOptions.dataUrlParams)? {} : spaRVOptions.dataUrlParams);
 
             _log.info("Request Data [" + dataModelName + "] [cache:" + (spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache']) + "] from URL =>" + dataModelUrl);
@@ -7042,8 +7124,8 @@
             }
 
             dataUrlPayLoad = spaRVOptions.dataParams;
-            if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!_isBlank(defPayLaod))) {
-              dataUrlPayLoad = _mergeDeep({}, defPayLaod, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
+            if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!_isBlank(defPayLoad))) {
+              dataUrlPayLoad = _mergeDeep({}, defPayLoad, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
             }
             if (!_isBlank(dataUrlPayLoad) && _stringifyPayload) {
               dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
@@ -7099,6 +7181,8 @@
                   }
                 }
               };
+
+            _log.info('ajaxQ for data:', dataModelUrl);
             spaAjaxRequestsQue.push( $ajax(axOptions) );
           }
         }
@@ -7193,7 +7277,7 @@
           _log.info("Templates of [" + spaTemplateType + "] to be used in view container [" + viewContainerId + "] => " + JSON.stringify(vTemplates));
           var vTemplateNames = _keys(vTemplates);
 
-          _log.group("spaLoadingTemplates");
+          _log.group("spaLoadingTemplates", spaAjaxRequestsQue);
 
           /* Template Cache Begins: if false remove old templates */
           _log.group("spaLoadingTemplatesCache");
@@ -7209,6 +7293,7 @@
           else {
             _log.info("Override [data-templates-cache] with user option [dataTemplatesCache]: " + spaRVOptions.dataTemplatesCache);
           }
+          _log.info('$'+rCompName+'-ajaxRequests', spaAjaxRequestsQue);
           _log.groupEnd("spaLoadingTemplatesCache");
 
           _log.info("Load Templates");
@@ -7237,7 +7322,7 @@
           _log.info("Render TemplateID: "+vTemplate2RenderID);
 
           /* Load Styles Begins */
-          _log.group("spaLoadingViewStyles");
+          _log.group("spaLoadingViewStyles", spaAjaxRequestsQue);
           if (!(useOptions && uOptions.hasOwnProperty('dataStylesCache'))) /* NOT provided in Render Request */
           { /* Read from view container [data-styles-cache='{true|false}'] */
             var stylesCacheInTagData = _renderOptionInAttr("stylesCache"); //("" + $(viewContainerId).data("stylesCache")).replace(/undefined/, "");
@@ -7294,9 +7379,11 @@
           else {
             _log.info("No styles defined [data-styles] in view container [" + viewContainerId + "] to load.");
           }
+          _log.info('$'+rCompName+'-ajaxRequests', spaAjaxRequestsQue);
           _log.groupEnd("spaLoadingViewStyles");
           /* Load Styles Ends */
 
+          _log.group('$'+rCompName+'-ajaxRequests', spaAjaxRequestsQue);
           $ajaxQ.apply($, spaAjaxRequestsQue)
             .then(function () {
 
@@ -7390,6 +7477,12 @@
                     if (fnDataProcess && (_isStr(fnDataProcess))) {
                       fnDataProcess = _find(window, fnDataProcess);
                     }
+
+                    var sanitizeTmplData4XSS = spaRVOptions.sanitizeApiXss || xsr.defaults.components.sanitizeApiXss;
+                    if (sanitizeTmplData4XSS) {
+                      initialTemplateData = _isFn(sanitizeTmplData4XSS)? (sanitizeTmplData4XSS.call(initialTemplateData, initialTemplateData) || initialTemplateData) : _sanitizeXSS(initialTemplateData);
+                    }
+
                     retValue['modelOriginal'] = _clone(initialTemplateData, true);
                     retValue['model'] = initialTemplateData;
                     if (fnDataProcess && _isFn(fnDataProcess)) {
@@ -7408,7 +7501,8 @@
                     }
                     _log.log(rCompName, 'Template Data initial:', retValue['model']);
 
-                    { if (rCompName) {
+                    if (1) {
+                      if (rCompName) {
                         if ((_isObj(app)) && app.hasOwnProperty(rCompName)) {
                           var compLocOrApiData = _mergeDeep({}, (_isObj(retValue['model'])? retValue['model'] : {'_noname' : retValue['model']}) );
                           if (compLocOrApiData.hasOwnProperty('spaComponent')) {
@@ -7602,6 +7696,7 @@
 
                         $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
                         _$renderCountUpdate(rCompName);
+                        unlock$render(spaRVOptions['inProgress']);
                         _log.info("Render: SUCCESS");
                         var rhKeys = _keys(xsr.renderHistory);
                         var rhLen = rhKeys.length;
@@ -7720,6 +7815,7 @@
                     }
                   });
                 }  else { //NOT a valid Data
+                  unlock$render(spaRVOptions['inProgress']);
                   if ( _isFn(app.api['onResError']) ) {
                     app.api.onResError.call(dataApiOptions, orgApiFullRes, 'Invalid-Data', undefined);
                   } else {
@@ -7728,21 +7824,26 @@
                 }
               }
               catch(e){
+                unlock$render(spaRVOptions['inProgress']);
                 console.error(e);
               }
               _log.groupEnd("spaRender[" + spaTemplateEngine + "] - xsr.renderHistory[" + retValue._renderId + "]");
             })
             .fail(function () {
+              unlock$render(spaRVOptions['inProgress']);
               console.error("External Data|Template|Style|Script Loading failed! Unexpected!! Check the template Path / Network. Rendering aborted.");
             });//.done(xsr.runOnceOnRender);
+          _log.groupEnd('ajaxRegister');
         }
         else {
+          unlock$render(spaRVOptions['inProgress']);
           _log.error("No templates defined [data-templates] in view container [" + viewContainerId + "] to render. Check HTML markup.");
         }
         _log.groupEnd("spaView");
       }
 
     }, function _onScriptsLoadFailed(){
+      unlock$render(spaRVOptions['inProgress']);
       console.error("External Scripts Loading Failed! Unexpected!? Check the Script Path/Network.");
     });
 
@@ -7957,222 +8058,230 @@
     return retValue;
   }
 
-  var
-	  rCRLF = /\r?\n/g,
-    rsubmittable = /^(?:input|select|textarea|keygen)/i,
-	  rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
-    rcheckableType = ( /^(?:checkbox|radio)$/i );
-	function _jQserializeArray() {
-		return this.map( function() {
-			// Can add propHook for "elements" to filter or add form elements
-			var elements = $.prop( this, "elements" );
-			return elements ? $.makeArray( elements ) : this;
-		} )
-		.filter( function() {
-			var type = this.type;
-			// Use .is( ":disabled" ) so that fieldset[disabled] works
-			return this.name && !$( this ).is( ":disabled" ) &&
-				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( type ) &&
-				( this.checked || !rcheckableType.test( type ) );
-		} )
-		.map( function( i, elem ) {
-      var val = xsr.getElValue(elem); //$( this ).val();
-			if ( val == null ) {
-				return null;
-			}
-			if ( Array.isArray( val ) ) {
-				return _map( val, function( val ) {
-					return { name: elem.name, value: _isStr(val)? val.replace( rCRLF, "\r\n" ) : val };
-				} );
-			}
-			return { name: elem.name, value: _isStr(val)? val.replace( rCRLF, "\r\n" ) : val };
-		} ).get();
-	}
+  var rCRLF = /\r?\n/g,
+      rsubmittable = /^(?:input|select|textarea|keygen)/i,
+      rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i,
+      rcheckableType = ( /^(?:checkbox|radio)$/i );
+  function _jQserializeArray() {
+    _log.group('_jQserializeArray');
+    var retValue = this.map( function(i, el) {
+      // Can add propHook for "elements" to filter or add form elements
+      var elements = el.elements;
+      var retValue = elements ? [].slice.call(elements) : el;
+      _log.info('Form elements', i, el, retValue);
+      return retValue;
+    } )
+    .filter( function( i, el ) {
+      // Use .is( ":disabled" ) so that fieldset[disabled] works
+      var isOK = el.name && !$( el ).is( ":disabled" ) && rsubmittable.test( el.nodeName ) && !rsubmitterTypes.test( el.type ) && ( el.checked || !rcheckableType.test( el.type ) );
+      _log.info('Filter', i, el, !!isOK);
+      return isOK;
+    } )
+    .map( function(i, el) {
+      _log.info('Final element', i, el);
+      var val = xsr.getElValue(el);
+      if ( val == null ) {
+        return null;
+      }
+      if ( Array.isArray( val ) ) {
+        return _map( val, function( val ) {
+          return { name: el.name, value: _isStr(val)? val.replace( rCRLF, "\r\n" ) : val };
+        } );
+      }
+      return { name: el.name, value: _isStr(val)? val.replace( rCRLF, "\r\n" ) : val };
+    }).get();
+    _log.info('result:', retValue);
+    _log.groupEnd('_jQserializeArray');
+    return retValue;
+  }
 
   //Extend jQuery for custom utils
-  $.fn.extend({
-    serializeToArray             : _jQserializeArray,
-    serializeUncheckedCheckboxes : _serializeUncheckedCheckboxes,
-    serializeFormToJSON          : _serializeFormToObject,
-    serializeFormToObject        : _serializeFormToObject,
-    serializeFormToSimpleJSON    : _serializeFormToSimpleObject,
-    serializeFormToSimpleObject  : _serializeFormToSimpleObject,
+  function extendjQ(){
+    var domExtensions = {
+      serializeToArray             : _jQserializeArray,
+      serializeUncheckedCheckboxes : _serializeUncheckedCheckboxes,
+      serializeFormToJSON          : _serializeFormToObject,
+      serializeFormToObject        : _serializeFormToObject,
+      serializeFormToSimpleJSON    : _serializeFormToSimpleObject,
+      serializeFormToSimpleObject  : _serializeFormToSimpleObject,
 
-    /* $("el-selector").i18n('i18n.key') */
-    i18n: function (opt) {
-      this.each(function () {
-        if (opt) $(this).attr('data-i18n', opt).data('i18n', opt);
-        xsr.i18n.apply(this);
-      });
-      return this;
-    },
-    spaRender: function (opt) {
-      this.each(function () {
-        //__renderView(this, opt);
-        xsr.renderComponentsInHtml(this, opt, true);
-      });
-    },
-    renameAttr: function(oldName, newName){
-      this.each(function(){
-        _attr(this, newName, _attr(this,oldName));
-        this.removeAttribute(oldName);
-      });
-      return this;
-    },
-    spa$: function(){
-      return this.map(function(){ return $(this).closest('[data-rendered-component]'); });
-    },
-    spa$name: function(){
-      var retValue = this.map(function(){ return $(this).closest('[data-rendered-component]').attr('data-rendered-component'); });
-      return (retValue.length == 1)? retValue[0] : retValue;
-    },
-    spaBindData: function(data, elFilter){
-      return xsr.bindData(this, data, elFilter);
-    },
-    inBlockedSpaNavContainer:function(){
-      return !!(this.closest(_blockNavClass).length);
-    },
-    blockNav: function(){
-      _blockSpaNavigation(this);
-      return this;
-    },
-    allowNav: function(){
-      _allowSpaNavigation(this);
-      return this;
-    },
-    isNavBlocked: function(){
-      return _isSpaNavBlocked(this);
-    },
-    isNavAllowed: function(){
-      return _isSpaNavAllowed(this);
-    },
-    disable: function(disable){
-      if ((!!disable) || _isUndef(disable)) {
-        return this.css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
-      } else {
-        return this.enable(true);
-      }
-    },
-    enable: function(enable){
-      if ((!!enable) || _isUndef(enable)) {
-        return this.css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
-      } else {
-        return this.disable(true);
-      }
-    },
-    value:function(newValue, eventAfterUpdate){
-      if (_isUndef(newValue)) {
-        return this.val();
-      } else {
-        this.each(function(){
-          $(this).val(newValue).trigger(eventAfterUpdate || 'change');
+      /* $("el-selector").i18n('i18n.key') */
+      i18n: function (opt) {
+        this.each(function () {
+          if (opt) $(this).attr('data-i18n', opt).data('i18n', opt);
+          xsr.i18n.apply(this);
         });
         return this;
-      }
-    },
-    htm:function(newValue){
-      if (_isUndef(newValue)) {
-        return this.html();
-      } else {
+      },
+      spaRender: function (opt) {
+        this.each(function () {
+          //__renderView(this, opt);
+          xsr.renderComponentsInHtml(this, opt, true);
+        });
+      },
+      renameAttr: function(oldName, newName){
         this.each(function(){
-          $(this).html( xsr.sanitizeScript(newValue) );
+          _attr(this, newName, _attr(this,oldName));
+          this.removeAttribute(oldName);
         });
         return this;
-      }
-    },
-    dataJSON:function(key, newValue, overWrite){
-      var curElData;
-      if (arguments.length) {
-        curElData = _toObj(this.data(key));
-        curElData = _isObj(curElData)? curElData : {};
-        if (!_isUndef(newValue)) {
-          curElData = overWrite? newValue : (_mergeDeep(curElData, newValue));
-          var curElDataStr = JSON.stringify(curElData);
-          var keyDashed = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-          this.attr("data-"+keyDashed, curElDataStr).data(key, curElDataStr);
+      },
+      spa$: function(){
+        return this.map(function(){ return $(this).closest('[data-rendered-component]'); });
+      },
+      spa$name: function(){
+        var retValue = this.map(function(){ return $(this).closest('[data-rendered-component]').attr('data-rendered-component'); });
+        return (retValue.length == 1)? retValue[0] : retValue;
+      },
+      spaBindData: function(data, elFilter){
+        return xsr.bindData(this, data, elFilter);
+      },
+      inBlockedSpaNavContainer:function(){
+        return !!(this.closest(_blockNavClass).length);
+      },
+      blockNav: function(){
+        _blockSpaNavigation(this);
+        return this;
+      },
+      allowNav: function(){
+        _allowSpaNavigation(this);
+        return this;
+      },
+      isNavBlocked: function(){
+        return _isSpaNavBlocked(this);
+      },
+      isNavAllowed: function(){
+        return _isSpaNavAllowed(this);
+      },
+      disable: function(disable){
+        if ((!!disable) || _isUndef(disable)) {
+          return this.css('pointer-events', 'none').addClass('disabled').attr('disabled', 'disabled');
+        } else {
+          return this.enable(true);
         }
-      } else {
-        curElData = this.data();
-      }
-      return curElData;
-    },
-    isDisabled: function(fnCall){
-      var isDisabled = (this.hasClass('disabled') || this.is('[disabled]'));
-      if (isDisabled && fnCall) { fnCall.call(this, this); }
-      return isDisabled;
-    },
-    isEnabled: function(fnCall){
-      var isEnabled = !this.isDisabled();
-      if (isEnabled && fnCall) { fnCall.call(this, this); }
-      return isEnabled;
-    },
-    trackChanges: function(){
-      xsr.trackFormElChange(this);
-    },
-    isChanged: function( anyOrAll ){
-      anyOrAll = ((anyOrAll || 'ANY').toUpperCase());
-      var all = (anyOrAll == 'ALL'),
-          any = (!all),
-          isChanged = false,
-          $elements = this;
-
-      if ($elements.length) {
-        for(var i=0; i < $elements.length; i++){
-          var elType = $elements[i].tagName.toUpperCase();
-          if ('FORM' == elType) {
-            isChanged = $($elements[i]).find('input,textarea,select').isChanged(anyOrAll);
-          } else if ('/INPUT/TEXTAREA/SELECT/'.indexOf(elType) > 0) {
-            isChanged = xsr.isElValueChanged( $elements[i] );
-            if (any && isChanged) break;
-            if (all && !isChanged) break;
-          }
+      },
+      enable: function(enable){
+        if ((!!enable) || _isUndef(enable)) {
+          return this.css('pointer-events', 'auto').removeClass('disabled').removeAttr('disabled');
+        } else {
+          return this.disable(true);
         }
-      }
-
-      return isChanged;
-    },
-    initSpaRoutes: function(){
-      _initRouteHash(this);
-    },
-    initFormValidation: function(){
-      var $forms = this.filter('form');
-      if (!$forms.length) return 'Form Not Found';
-      $forms.each(function(i, form){
-        _initFormValidation(form);
-      });
-    },
-    validateForm: function(elFilter, showMsg, validateAll){
-      var vResponse, $form = this;
-      if ($form.length>1) {
-        vResponse = [{errcode:1, errmsg:"Too many forms to validate."}];
-      } else if ($form.length==1) {
-        var formId = '#'+$form.attr('id'), elType = ($form.prop('tagName')||'').toUpperCase();
-        if ('FORM' == elType) {
-          if (_isStr(elFilter)) {
-            var elIDs = $form.find(elFilter).map(function(){ return this.id; }).get().join();
-            vResponse = xsr.validateForm(formId, elIDs, showMsg, validateAll);
-          } else {
-            vResponse = xsr.validateForm(formId, arguments[0], arguments[1]);
+      },
+      value:function(newValue, eventAfterUpdate){
+        if (_isUndef(newValue)) {
+          return this.val();
+        } else {
+          this.each(function(){
+            $(this).val(newValue).trigger(eventAfterUpdate || 'change');
+          });
+          return this;
+        }
+      },
+      htm:function(newValue){
+        if (_isUndef(newValue)) {
+          return this.html();
+        } else {
+          this.each(function(){
+            $(this).html( xsr.sanitizeScript(newValue) );
+          });
+          return this;
+        }
+      },
+      dataJSON:function(key, newValue, overWrite){
+        var curElData;
+        if (arguments.length) {
+          curElData = _toObj(this.data(key));
+          curElData = _isObj(curElData)? curElData : {};
+          if (!_isUndef(newValue)) {
+            curElData = overWrite? newValue : (_mergeDeep(curElData, newValue));
+            var curElDataStr = JSON.stringify(curElData);
+            var keyDashed = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+            this.attr("data-"+keyDashed, curElDataStr).data(key, curElDataStr);
           }
         } else {
-          vResponse = [{errcode:1, errmsg:"NOT a FORM"}];
+          curElData = this.data();
         }
-      } else {
-        vResponse = [{errcode:1, errmsg:"Form Not Found."}];
+        return curElData;
+      },
+      isDisabled: function(fnCall){
+        var isDisabled = (this.hasClass('disabled') || this.is('[disabled]'));
+        if (isDisabled && fnCall) { fnCall.call(this, this); }
+        return isDisabled;
+      },
+      isEnabled: function(fnCall){
+        var isEnabled = !this.isDisabled();
+        if (isEnabled && fnCall) { fnCall.call(this, this); }
+        return isEnabled;
+      },
+      trackChanges: function(){
+        xsr.trackFormElChange(this);
+      },
+      isChanged: function( anyOrAll ){
+        anyOrAll = ((anyOrAll || 'ANY').toUpperCase());
+        var all = (anyOrAll == 'ALL'),
+            any = (!all),
+            isChanged = false,
+            $elements = this;
+
+        if ($elements.length) {
+          for(var i=0; i < $elements.length; i++){
+            var elType = $elements[i].tagName.toUpperCase();
+            if ('FORM' == elType) {
+              isChanged = $($elements[i]).find('input,textarea,select').isChanged(anyOrAll);
+            } else if ('/INPUT/TEXTAREA/SELECT/'.indexOf(elType) > 0) {
+              isChanged = xsr.isElValueChanged( $elements[i] );
+              if (any && isChanged) break;
+              if (all && !isChanged) break;
+            }
+          }
+        }
+
+        return isChanged;
+      },
+      initSpaRoutes: function(){
+        _initRouteHash(this);
+      },
+      initFormValidation: function(){
+        var $forms = this.filter('form');
+        if (!$forms.length) return 'Form Not Found';
+        $forms.each(function(i, form){
+          _initFormValidation(form);
+        });
+      },
+      validateForm: function(elFilter, showMsg, validateAll){
+        var vResponse, $form = this;
+        if ($form.length>1) {
+          vResponse = [{errcode:1, errmsg:"Too many forms to validate."}];
+        } else if ($form.length==1) {
+          var formId = '#'+$form.attr('id'), elType = ($form.prop('tagName')||'').toUpperCase();
+          if ('FORM' == elType) {
+            if (_isStr(elFilter)) {
+              var elIDs = $form.find(elFilter).map(function(){ return this.id; }).get().join();
+              vResponse = xsr.validateForm(formId, elIDs, showMsg, validateAll);
+            } else {
+              vResponse = xsr.validateForm(formId, arguments[0], arguments[1]);
+            }
+          } else {
+            vResponse = [{errcode:1, errmsg:"NOT a FORM"}];
+          }
+        } else {
+          vResponse = [{errcode:1, errmsg:"Form Not Found."}];
+        }
+
+        return vResponse;
+      },
+      updateValidation: function(isValid, invalidErrMsg){
+        this.each(function(i, el){
+          xsr._validate._showValidateMsg(el, invalidErrMsg, isValid);
+        });
+      },
+      updateValidationPromise: function(promiseNames, isValid, invalidErrMsg){
+        xsr.updateValidationPromise(promiseNames, this, invalidErrMsg, isValid);
       }
-
-      return vResponse;
-    },
-    updateValidation: function(isValid, invalidErrMsg){
-      this.each(function(i, el){
-        xsr._validate._showValidateMsg(el, invalidErrMsg, isValid);
-      });
-    },
-    updateValidationPromise: function(promiseNames, isValid, invalidErrMsg){
-      xsr.updateValidationPromise(promiseNames, this, invalidErrMsg, isValid);
-    }
-  });
-
+    };
+    jQ && jQ.fn.extend(domExtensions);
+    dQ.fn.extend(domExtensions, true);
+  }
 
   xsr.initDataValidation = function () {
     _log.log("include validate framework lib (spa-validate.js) to use this feature!");
@@ -8317,10 +8426,16 @@
         error: apiErroHandle,
         success: function(axResponse, textStatus, jqXHR) {
           axResponse = (_isStr(axResponse) && (String(this.dataType).toLowerCase() != 'html'))? _toObj(axResponse) : axResponse;
+
+          var _sanitizeApiXss = this['sanitizeApiXss']; //api.ajaxOptions.sanitizeApiXss
+          if (_sanitizeApiXss) {
+            axResponse = _isFn(_sanitizeApiXss)? (_sanitizeApiXss.call(axResponse, axResponse) || axResponse) : _sanitizeXSS(axResponse);
+          }
+
           var isCallSuccess;
           if (_isFn(app.api['isCallSuccess'])) {
             isCallSuccess = (app.api['isCallSuccess'].call(this, axResponse, this));
-          } else {
+          } else if (_isFn(xsr.api['isCallSuccess'])) {
             isCallSuccess = (xsr.api['isCallSuccess'].call(this, axResponse, this));
           }
           if (isCallSuccess) {
@@ -8495,6 +8610,9 @@
     //     xsr.i18n.setLanguage(uLang, _mergeDeep({}, xsr.defaults.lang, _find(window, 'app.conf.lang', {}), _find(window, 'app.lang', {}), (options||{}) ));
     //   }
     // }
+
+    xsr.i18n.off = xsr.i18n.off || $('body[i18n-lang="-"]').length;
+    if (xsr.i18n.off) return;
 
     $(document).on("click", "[data-i18n-lang]", function() {
       var elData = $(this).data(),
@@ -9970,6 +10088,25 @@
   }
 
   var xhrLib, $when, $ajax = (win['$'] && $['ajax']) || (win['spaXHR'] && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
+  function _initDOM(){
+    /*onLoad Set xsr.debugger on|off using URL param*/
+    xsr.debug = xsr.urlParam('spa.debug') || xsr.hashParam('spa.debug') || xsr.debug;
+
+    dQ=win['dom']; jQ=win['jQuery'];
+    var $body = dQ('body');
+    var domAlias = $body.attr('dom-alias');
+    usejQuery = $body.hasAttr('use-jquery') || $body.hasClass('use-jquery') || usejQuery;
+
+    $ = (jQ && usejQuery)? jQ : dQ;
+    (domAlias && (win[domAlias] = dQ));
+
+    var jQversion = $.fn.jquery;
+    _log.info("DOM is ready -", new Date());
+    _log.info('DOM-Query using '+((jQversion)? ('jQ-'+jQversion) : ('dom-'+$.version)));
+
+    extendjQ();
+    handleOnDomReady(_beginSPA);
+  }
   function _initXHR(){
     if (win['spaXHR']) {
       xsr.ajax  = spaXHR.ajax;
@@ -10011,16 +10148,12 @@
   }
 
   function _beginSPA(){
-    //init xhrLib
     _initXHR();
 
     xsr.strZip   = !xsr.strZip   && win['LZString'] && LZString.compress;
     xsr.strUnzip = !xsr.strUnzip && win['LZString'] && LZString.decompress;
 
     if (xhrLib) {
-      /*onLoad Set xsr.debugger on|off using URL param*/
-      xsr.debug = xsr.urlParam('spa.debug') || xsr.hashParam('spa.debug') || xsr.debug;
-
       //Read xsr.defaults from body
       _initSpaDefaults();
 
@@ -10038,14 +10171,7 @@
     _doc.removeEventListener('DOMContentLoaded', _beginSPA);
   }
 
-  //onDocumentReady
-  $(function(){
-    if ( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) ) {
-      _beginSPA();
-    } else {
-      _doc.addEventListener('DOMContentLoaded', _beginSPA);
-    }
-  });
+  handleOnDomReady(_initDOM);
 
 })();
-xsr.console.info("SPA.js is loaded.");
+xsr.console.info("SPA.js is loaded.", new Date());
