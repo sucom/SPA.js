@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC1';
+  var _VERSION = '2.87.0-RC2';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -40,6 +40,10 @@
   var useJQReady = 0;
   var usejQuery  = 1;
   var $ = win.$ || win.dom;
+
+  if (!$) {
+    console.error('Missing dependency library jQuery or spa.dom');
+  }
 
   /* Create SPA */
   var xsr = function(){};
