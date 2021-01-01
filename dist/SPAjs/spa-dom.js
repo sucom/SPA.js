@@ -1353,5 +1353,3 @@
 
   return dQ;
 })(this);
-
-//# sourceURL=spa$/D:/www/www.spajs.info/spa-src/src/spa-dom.js
