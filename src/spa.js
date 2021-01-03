@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC3';
+  var _VERSION = '2.87.0-RC4';
 
   /* Establish the win object, `window` in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
