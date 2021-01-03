@@ -6,7 +6,7 @@
   var _undef;
   var _glb             = _global;
   var _doc             = document;
-  var _useSizzle       = 1;
+  var _useSizzle       = !!_glb['Sizzle'];
   var _arrProto        = Array.prototype;
   var _objProto        = Object.prototype;
   var _rxFormElements  = /^(?:input|select|textarea|button)$/i;
@@ -60,7 +60,8 @@
             if (context.querySelectorAll) {
               // console.info('selecting in Context', selector, context);
               var nodes;
-              if (_useSizzle || (/[:!^$*]+/g.test(selector) && _glb['Sizzle'])) {
+              // if (_useSizzle || (/[:!^$*]+/g.test(selector))) {
+              if (_useSizzle) {
                 nodes = Sizzle(selector, context);
                 // console.log('>>>>>>using Sizzle:', nodes);
               } else {
