@@ -5,7 +5,7 @@
  *
  * Dependency:
  * handlebars.js: http://handlebarsjs.com/ || https://github.com/wycats/handlebars.js/
- * sizzle.js (bundled with SPA.js) | source: https://sizzlejs.com/
+ * sizzle.js (bundled with SPA-bundle) | source: https://sizzlejs.com/
  *
  * THIS CODE LICENSE: The MIT License (MIT)
 
@@ -32,9 +32,9 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC4';
+  var _VERSION = '2.87.0-RC5';
 
-  /* Establish the win object, `window` in the browser */
+  /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
   var dQ, jQ=win.jQuery;
   var useJQReady = 0;
@@ -10096,10 +10096,10 @@
     /*onLoad Set xsr.debugger on|off using URL param*/
     xsr.debug = xsr.urlParam('spa.debug') || xsr.hashParam('spa.debug') || xsr.debug;
 
-    dQ=win['dom']; jQ=win['jQuery'];
+    jQ=win['jQuery']; dQ=win['dom'] || jQ;
     var $body = dQ('body');
     var domAlias = $body.attr('dom-alias');
-    usejQuery = $body.hasAttr('use-jquery') || $body.hasClass('use-jquery') || usejQuery;
+    usejQuery = $body.hasClass('use-jquery') || $body[0].hasAttribute('use-jquery') || usejQuery;
 
     $ = (jQ && usejQuery)? jQ : dQ;
     (domAlias && (win[domAlias] = dQ));

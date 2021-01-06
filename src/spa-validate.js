@@ -39,6 +39,8 @@
     , noop        : 'Noop'
   };
 
+  var allowXSS = document.body.classList.contains('allow-xss');
+
   spa['_validate'] = {
     defaults: {offline: true},
     _isOnOfflineValidation : false,
@@ -48,6 +50,8 @@
         Noop        : function _fnNoop(){ return true; }
       , CheckXSS    : function _fnCheckXSS(obj) {
                         var elValue = spa.getElValue(obj);
+                        if (allowXSS || $(obj).hasClass('allow-xss')) return true;
+
                         // return !( (/<\s*\/?\s*(\bscript\b)/gi).test(elValue) || (/<(.)+\s*on([a-z])+\s*=|javascript:/gi).test(elValue) );
                         return !( (/<\s*\/?\s*(\bscript\b)/gi).test(elValue) || (/\s*on([a-z])+\s*=|javascript:/gi).test(elValue) );
                       }
