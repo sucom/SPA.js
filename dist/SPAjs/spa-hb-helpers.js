@@ -31,6 +31,9 @@
  * ===========================================================================
  */
 (function(){
+
+  if (typeof Handlebars == "undefined") return;
+
   var __Array = Array.prototype;
 
   /**

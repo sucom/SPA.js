@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC5';
+  var _VERSION = '2.87.0-RC6';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -42,7 +42,8 @@
   var $ = win.$ || win.dom;
 
   if (!$) {
-    console.error('Missing dependency library jQuery or spa.dom');
+    console.error('Missing dependency library spa.dom or jQuery.');
+    return;
   }
 
   /* Create SPA */
@@ -2811,7 +2812,7 @@
   }
 
   var _baseProps = [
-      'target', 'template', 'templateCache', 'templateScript', 'sanitizeApiXss'
+      'target', 'template', 'templateCache', 'templateScript', 'templateEngine', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
     , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind'
@@ -3863,6 +3864,15 @@
     }
   };
 
+  var compileTemplate;
+  if ((typeof Handlebars != 'undefined') && Handlebars) {
+    compileTemplate = Handlebars.compile.bind(Handlebars);
+  } else if ((typeof doT != 'undefined') && doT) {
+    compileTemplate = doT.compile.bind(doT);
+  } else if ((typeof Tee != 'undefined') && Tee) {
+    compileTemplate = Tee.compile.bind(Tee);
+  }
+
   function _pipeSort(inVal, reverse) {
     var retValue = inVal;
     if (_isArr(inVal)) {
@@ -4099,7 +4109,7 @@
       if (!xsr.compiledTemplates4DataBind.hasOwnProperty(tmplStoreName)) {
         xsr.compiledTemplates4DataBind[tmplStoreName] = {};
       }
-      return xsr.compiledTemplates4DataBind[tmplStoreName][templateId] = (Handlebars.compile( _unmaskHandlebars(template) ));
+      return xsr.compiledTemplates4DataBind[tmplStoreName][templateId] = (compileTemplate( _unmaskHandlebars(template) ));
     }
 
     function _formatBindValue(fnFormat, bindValue, bindKey, el) {
@@ -4453,14 +4463,14 @@
     }
 
     if ((/{{(.+)}}/).test(xContent)) {
-      if ((typeof Handlebars != 'undefined') && Handlebars) {
+      if (compileTemplate) {
         try {
-          xContent = Handlebars.compile(xContent)(data);
+          xContent = compileTemplate(xContent)(data);
         } catch (e) {
-          console.log('Error Handlebars compile/bind.', e);
+          console.log('Error Template compile/bind.', e);
         }
       } else {
-        console.warn('Handlebars Template Library not found!');
+        console.warn('Template Library (Handlebars/doT) not found!');
       }
     }
 
@@ -5264,7 +5274,7 @@
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = [ 'target','template','templateCache','templateScript', 'sanitizeApiXss',
+          var baseProps = [ 'target','template','templateCache','templateScript', 'templateEngine', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind',
@@ -6815,7 +6825,6 @@
     _log.log("Render Mode: <"+targetRenderMode+">");
 
     var spaTemplateType = "x-spa-template";
-    var spaTemplateEngine = (spaRVOptions.templateEngine || xsr.defaults.components.templateEngine || "handlebars").toLowerCase();
 
     /* Load Scripts Begins */
     _log.group("spaLoadingViewScripts");
@@ -7391,7 +7400,7 @@
           $ajaxQ.apply($, spaAjaxRequestsQue)
             .then(function () {
 
-              _log.group("spaRender[" + spaTemplateEngine + "] - xsr.renderHistory[" + retValue._renderId + "]");
+              _log.group("spaRender - xsr.renderHistory[" + retValue._renderId + "]");
               _log.info("Rendering " + viewContainerId + " using master template: " + vTemplate2RenderID);
 
               var dataApiOptions = Array.isArray(this)? this[0] : this;
@@ -7564,6 +7573,29 @@
                       _log.groupEnd('Template Source ...');
                       _log.log("DATA for Template:", spaViewModel);
 
+                      var isSpaTemplate = /<!--\s*#+spa-template/gi.test(templateContentToBindAndRender)? 'spa' : '';
+                      var isDotTemplate = /<!--\s*#+dot-template/gi.test(templateContentToBindAndRender)? 'dot' : '';
+
+                      var $templateEngine = (spaRVOptions.templateEngine || isDotTemplate || isSpaTemplate || xsr.defaults.components.templateEngine);
+                      var spaTemplateEngine = ($templateEngine || 'handlebars').toLowerCase();
+                      var $compileTemplate = compileTemplate;
+                      // console.log('defaultTemplateCompiler:', compileTemplate);
+                      try {
+                        switch(spaTemplateEngine) {
+                          case 'handlebars' :
+                            $compileTemplate = win.Handlebars.compile.bind(win.Handlebars);
+                            break;
+                          case 'dot':
+                            $compileTemplate = win.doT.compile.bind(win.doT);
+                            break;
+                          case 'spa':
+                            $compileTemplate = win.Tee.compile.bind(win.Tee);
+                            break;
+                        }
+                      } catch ( e ) {
+                        _log.warn('Error accessing templateEngine['+$templateEngine+'] for $'+rCompName+':', e);
+                      }
+
                       var skipSpaBind, spaBindData;
                       if (!_isBlank(spaViewModel)) {
                         if (spaRVOptions.skipDataBind) {
@@ -7589,13 +7621,16 @@
                             }
                           }
 
-                          if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('{')>=0) {
-                            if ((typeof Handlebars != "undefined") && Handlebars) {
-                              _log.groupCollapsed("Data bind using handlebars on Template ...");
+                          // if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('dot')>=0 || templateContentToBindAndRender.indexOf('{')>=0) {
+                          if (templateContentToBindAndRender.indexOf('{{')>=0) {
+                            _log.info('Found external template string {{...}} in $'+rCompName);
+                            if ($compileTemplate) {
+                              _log.groupCollapsed("Data bind using "+$templateEngine+" on Template ...");
                               _log.log(templateContentToBindAndRender);
-                              _log.groupEnd("Data bind using handlebars on Template ...");
+                              _log.groupEnd("Data bind using "+$templateEngine+" on Template ...");
                               try{
-                                var preCompiledTemplate = xsr.compiledTemplates[rCompName] || (Handlebars.compile(templateContentToBindAndRender));
+                                if (!xsr.compiledTemplates[rCompName]) { _log.info('Compiling $'+rCompName); }
+                                var preCompiledTemplate = xsr.compiledTemplates[rCompName] || ($compileTemplate(templateContentToBindAndRender));
                                 var data4Template = _isObj(spaViewModel)? _mergeDeep({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                                 spaBindData = data4Template;
                                 if (!xsr.compiledTemplates.hasOwnProperty(rCompName)) xsr.compiledTemplates[rCompName] = preCompiledTemplate;
@@ -7605,7 +7640,7 @@
                                 console.error('Error in Template', e);
                               }
                             } else {
-                              _log.error("handlebars.js is not loaded.");
+                              _log.error("Template Library ("+$templateEngine+") not found!");
                             }
                           }
 
@@ -7616,7 +7651,7 @@
                       _log.groupEnd("Compiled Template ...");
 
                       doDeepRender = false;
-                      retValue.view = compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
+                      retValue.view = compiledTemplate && compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
 
                       //Callback Function's context
                       var renderCallbackContext = rCompName? _mergeDeep({}, (app[rCompName] || {}), { __prop__: _mergeDeep({}, (uOptions||{}) ) }) : {};
@@ -7831,7 +7866,7 @@
                 unlock$render(spaRVOptions['inProgress']);
                 console.error(e);
               }
-              _log.groupEnd("spaRender[" + spaTemplateEngine + "] - xsr.renderHistory[" + retValue._renderId + "]");
+              _log.groupEnd("spaRender - xsr.renderHistory[" + retValue._renderId + "]");
             })
             .fail(function () {
               unlock$render(spaRVOptions['inProgress']);
