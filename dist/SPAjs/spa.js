@@ -2180,9 +2180,11 @@
         path = path || '';
         if (typeof o == 'object') {
           for (var key in o) {
-            xConnectorB = (Array.isArray(o)) ? "[" : ".";
-            xConnectorE = (((path) && (xConnectorB == "[")) ? "]" : "");
-            arguments.callee(o[key], ((path) + (((path) ? xConnectorB : "")) + key + (xConnectorE)));
+            if (o.hasOwnProperty(key)) {
+              xConnectorB = (Array.isArray(o)) ? "[" : ".";
+              xConnectorE = (((path) && (xConnectorB == "[")) ? "]" : "");
+              arguments.callee(o[key], ((path) + (((path) ? xConnectorB : "")) + key + (xConnectorE)));
+            }
           }
         } else {
           path && list.push(path);
@@ -2666,6 +2668,11 @@
         return retObj;
       }
     },
+    '__toJSON': {
+      value: function(){
+        return JSON.stringify(this);
+      }
+    },
     '__unique': {
       value: function() {
         return this.filter(function (value, index, self) {
@@ -2777,6 +2784,11 @@
       }
     },
     '__stringify': {
+      value: function(){
+        return JSON.stringify(this);
+      }
+    },
+    '__toJSON': {
       value: function(){
         return JSON.stringify(this);
       }
