@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC6';
+  var _VERSION = '2.87.0-RC7';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -2175,21 +2175,18 @@
     }
     function _keysDotted(a) {
       a = a || {};
-      var list = [], xConnectorB, xConnectorE, curKey;
-      (function (o, r) {
-        r = r || '';
-        if (typeof o != 'object') {
-          return true;
-        }
-        for (var c in o) {
-          curKey = r.substring(1);
-          xConnectorB = (_isNumStr(c)) ? "[" : ".";
-          xConnectorE = (((curKey) && (xConnectorB == "[")) ? "]" : "");
-          if (arguments.callee(o[c], r + xConnectorB + c + xConnectorE)) {
-            list.push((curKey) + (((curKey) ? xConnectorB : "")) + c + (xConnectorE));
+      var list = [], xConnectorB, xConnectorE;
+      (function (o, path) {
+        path = path || '';
+        if (typeof o == 'object') {
+          for (var key in o) {
+            xConnectorB = (Array.isArray(o)) ? "[" : ".";
+            xConnectorE = (((path) && (xConnectorB == "[")) ? "]" : "");
+            arguments.callee(o[key], ((path) + (((path) ? xConnectorB : "")) + key + (xConnectorE)));
           }
+        } else {
+          path && list.push(path);
         }
-        return false;
       })(a);
       return list;
     }
