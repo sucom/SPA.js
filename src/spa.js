@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC7';
+  var _VERSION = '2.87.0-RC8';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -3874,12 +3874,14 @@
   };
 
   var compileTemplate;
-  if ((typeof Handlebars != 'undefined') && Handlebars) {
-    compileTemplate = Handlebars.compile.bind(Handlebars);
-  } else if ((typeof doT != 'undefined') && doT) {
-    compileTemplate = doT.compile.bind(doT);
-  } else if ((typeof Tee != 'undefined') && Tee) {
-    compileTemplate = Tee.compile.bind(Tee);
+  function setDefaultTmplCompiler () {
+    if ((typeof Handlebars != 'undefined') && Handlebars) {
+      compileTemplate = Handlebars.compile.bind(Handlebars);
+    } else if ((typeof doT != 'undefined') && doT) {
+      compileTemplate = doT.compile.bind(doT);
+    } else if ((typeof Tee != 'undefined') && Tee) {
+      compileTemplate = Tee.compile.bind(Tee);
+    }
   }
 
   function _pipeSort(inVal, reverse) {
@@ -6198,6 +6200,13 @@
         _attr(this, 'data-x-component', _attr(this,'src'));
       });
 
+      // other [src]
+      var altCompSelector = ('[src]'+('audio embed iframe img input script source track video x-script [data-x-component] [data-spa-component]'
+                                      .split(' ').map(function(tag){ return ':not('+tag+')'; }).join('')));
+      $(scope).find(altCompSelector).each(function(){
+        _attr(this, 'data-x-component', _attr(this,'src'));
+      });
+
       $spaCompList = $spaCompList.find('[data-x-component],[data-spa-component]').filter(':not([render-after])');
     }
 
@@ -6387,6 +6396,8 @@
     return (/^(\$)*(dyn)*SPA\$/i.test(cName));
   }
   function _renderForComponent() {
+    event.preventDefault();
+
     var onEvent   = event;
     var xEl       = this;
     var forAttr   = _attr(xEl,'for') || '';
@@ -6513,8 +6524,13 @@
       }
 
       _attr(el, 'render-on', onEvent);
-      el.removeEventListener(onEvent, _renderForComponent);
-      el.addEventListener(onEvent, _renderForComponent);
+      onEvent.split('_').forEach(function(onE){
+        onE = onE.trim();
+        if (onE) {
+          el.removeEventListener(onE, _renderForComponent);
+          el.addEventListener(onE, _renderForComponent);
+        }
+      })
     }
   }
   function _registerEventsForComponentRender(scope) {
@@ -10137,6 +10153,8 @@
 
   var xhrLib, $when, $ajax = (win['$'] && $['ajax']) || (win['spaXHR'] && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
   function _initDOM(){
+    setDefaultTmplCompiler();
+
     /*onLoad Set xsr.debugger on|off using URL param*/
     xsr.debug = xsr.urlParam('spa.debug') || xsr.hashParam('spa.debug') || xsr.debug;
 
