@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0-RC8';
+  var _VERSION = '2.87.0-RC9';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -6427,6 +6427,7 @@
       var formAction = "";
       var formTarget = "";
       var vErrors;
+      var cleanForm;
 
       if ((cName.length<2 && (!cName || /[^a-z]/g.test(cName))) || (_isDynSpa$(cName))) {
         cName = _attr(xEl,'spa-dyn-comp-name');
@@ -6437,8 +6438,11 @@
       }
 
       if (xEl.tagName.toUpperCase() === 'FORM') {
+        cleanForm = xEl.checkValidity();
+        if (!cleanForm) xEl.reportValidity();
+
         vErrors = xsr.validateForm(xElId, true);
-        ok2Render = (_isBlank(vErrors));
+        ok2Render = (_isBlank(vErrors)) && cleanForm;
         if (ok2Render) {
           payload = xEl.hasAttribute('data-nested')? xsr.serializeFormToObject(xElId) : xsr.serializeFormToSimpleObject(xElId);
           formMethod = (xEl.hasAttribute('method') && _attr(xEl,'method')) || '';
@@ -6455,8 +6459,11 @@
         if (xEl.hasAttribute('data-validate')) {
           var xElForm = xEl.closest('form');
           if (xElForm) {
+            cleanForm = xElForm.checkValidity();
+            if (!cleanForm) xElForm.reportValidity();
+
             vErrors = xsr.validateForm('#'+xElForm.id, xElId, true);
-            ok2Render = (_isBlank(vErrors));
+            ok2Render = (_isBlank(vErrors)) && cleanForm;
             if (!ok2Render) {
               _log.info('Element has validation error(s):', vErrors);
             }
@@ -6523,10 +6530,13 @@
         el.removeAttribute('target');
       }
 
+      onEvent = (el.getAttribute('on') || el.getAttribute('render-on') || onEvent).replace(/[^a-z]/gi,'_');
+
       _attr(el, 'render-on', onEvent);
       onEvent.split('_').forEach(function(onE){
-        onE = onE.trim();
-        if (onE) {
+        onE = onE.trim().toLowerCase();
+        if (onE.length>2) {
+          onE = onE.replace(/^on/,'');
           el.removeEventListener(onE, _renderForComponent);
           el.addEventListener(onE, _renderForComponent);
         }
