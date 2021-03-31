@@ -129,8 +129,6 @@
                 + 'try{with(Object(this)){';
     var ctxStrE = '}}catch(e){ console.error("Error in Template:", e); }';
 
-    var fnB = '(function (___p){', fnE1 = '}).call(';
-
     var cse = c.append ? startend.append : startend.split, needhtmlencode, sid = 0, indv,
       tmplFnStr  = (c.rx.use || c.rx.define) ? resolveDefs(c, tmpl, def || {}) : tmpl;
 
@@ -165,13 +163,13 @@
       .replace(c.rx.iterate || skip, function(m, rxMatch, iterateOn, vname, iname) {
         iterateOn=iterateOn && fixVarPath(iterateOn);
         vname = vname || 'value';
-        if (!iterateOn) return "';"+fnE1+"arr"+(sid--)+"item);} } out+='";
+        if (!iterateOn) return "';}}).call(arr"+(sid--)+"item);} } out+='";
         sid+=1; indv=iname || "i"+sid;
-        return "';var arr"+sid+"="+iterateOn+";var arr"+sid+"Len=Object.keys(arr"+sid+").length; "
+        return "';var arr"+sid+"=(Array.isArray("+iterateOn+"))? [].slice.call("+iterateOn+") : "+iterateOn+";var arr"+sid+"Len=Object.keys(arr"+sid+").length; "
               +"if(arr"+sid+"Len){var arr"+sid+"item,"+vname+","+indv+"=-1,l"+sid+"=arr"+sid+"Len-1;while("+indv+"<l"+sid+"){"
               +"arr"+sid+"item=arr"+sid+"["+indv+"+=1];"
-              +fnB
-              +"var ___this="+vname+"=this, ___key="+(iname? (iname+'=') : '')+indv+";"
+              +"(function (___p){"
+              +"var ___this="+vname+"=this, ___index=___key="+(iname? (iname+'=') : '')+indv+";with(Object(this)){"
               +"out+='";
       })
       .replace(c.rx.interpolate || skip, function(m, code) {
