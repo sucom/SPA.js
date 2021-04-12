@@ -208,7 +208,7 @@
         (elTmplSrc && elTmplSrc._bind && (compiledFn = elTmplSrc._bind));
         (!compiledFn && elTmplSrc && (tmplContent = elTmplSrc.innerHTML));
         try {
-          (elTmplSrc && (/handlebar/gi.test(elTmplSrc.getAttribute('type') || '')) && _globals.Handlebars && (compiledFn = Handlebars.compile(tmplContent)));
+          (!compiledFn && elTmplSrc && (/handlebar/gi.test(elTmplSrc.getAttribute('type') || '')) && _globals.Handlebars && (compiledFn = Handlebars.compile(tmplContent)));
         } catch (e) {
           console.error('Handlebars compile failed:', e);
         }
