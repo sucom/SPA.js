@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.0';
+  var _VERSION = '2.87.1';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -7624,6 +7624,7 @@
                             $compileTemplate = win.doT.compile.bind(win.doT);
                             break;
                           case 'spa':
+                          case 'tee':
                             $compileTemplate = win.Tee.compile.bind(win.Tee);
                             break;
                         }
