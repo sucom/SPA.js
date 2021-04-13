@@ -1,16 +1,14 @@
-/*@license SPA.js (Tee: Template Extension) [MIT] - based on doT.js (https://github.com/olado/doT/blob/master/LICENSE-DOT.txt)*/
-(function () {
+/*@license SPA.js (nxT: Template Extension) [MIT] - based on doT.js (https://github.com/olado/doT/blob/master/LICENSE-DOT.txt)*/
+(function (_global) {
   "use strict";
 
-  var _globals;
-
-  function Tee (tmpl, data, target, replaceTarget) {
-    return bind(tmpl, data, target, replaceTarget);
+  function nxT (tmpl, data, target, replaceTarget) {
+    return render(tmpl, data, target, replaceTarget);
   }
-  Tee.version  = "1.0.0";
-  Tee.settings = { scopeName : "data", strip : true };
-  Tee.compile  = compile;
-  Tee.bind     = bind;
+  nxT.version  = "1.0.0";
+  nxT.settings = { scopeName : "data", strip : false };
+  nxT.compile  = compile;
+  nxT.render   = render;
 
   var settings = {
     rx: {
@@ -35,28 +33,27 @@
     doNotSkipEncoded    : false
   };
 
-  Tee.encodeHTMLSource = function(doNotSkipEncoded) {
+  nxT.encodeHTMLSource = function(doNotSkipEncoded) {
     var encodeHTMLRules = { "&": "&#38;", "<": "&#60;", ">": "&#62;", '"': "&#34;", "'": "&#39;", "/": "&#47;" },
       matchHTML = doNotSkipEncoded ? /[&<>"'\/]/g : /&(?!#?\w+;)|<|>|"|'|\//g;
     return function(code) {
       return code ? code.toString().replace(matchHTML, function(m) {return encodeHTMLRules[m] || m;}) : "";
     };
   };
-  Tee.isObj = function ( x ) {
+  nxT.isObj = function ( x ) {
     return ((Object.prototype.toString.call(x).slice(8,-1).toLowerCase()) == 'object');
   };
-  Tee.isValidVar = function ( varName ) {
+  nxT.isValidVar = function ( varName ) {
     return (!/[^0-9a-z]|^[0-9]+/gi.test(varName));
   };
 
-  _globals = (function(){ return this || (0,eval)("this"); }());
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = Tee;
+    module.exports = nxT;
   } else if (typeof define === "function" && define.amd) {
-    define(function(){return Tee;});
+    define(function(){return nxT;});
   } else {
-    _globals.Tee = Tee;
+    _global.nxT = _global.Tee = nxT;
   }
 
   var startend = {
@@ -126,7 +123,7 @@
     var c = settings;
 
     var ctxStrB = 'if (arguments.length) return arguments.callee.call(arguments[0]);'
-                + 'var '+(Tee.settings.scopeName||'data')+'=___rootCtx=___this=this;'
+                + 'var '+(nxT.settings.scopeName||'data')+'=___rootCtx=___this=this;'
                 + 'try{with(Object(this)){';
     var ctxStrE = '}}catch(e){ console.error("Error in Template:", e); }';
 
@@ -134,13 +131,13 @@
       tmplFnStr  = (c.rx.use || c.rx.define) ? resolveDefs(c, tmpl, def || {}) : tmpl;
 
     tmplFnStr = ("var out='"
-      + (Tee.settings.strip ? strip(tmplFnStr) : tmplFnStr)
+      + (nxT.settings.strip ? strip(tmplFnStr) : tmplFnStr)
       .replace(/'|\\/g, "\\$&").replace(/{{\/(~|each)}}/g, '{{~}}')
       .replace(c.rx.blockClose || skip,function(m, block) {
         return "';}out+='";
       })
       .replace(c.rx.evaluate || skip, function(m, code) {
-        code = Tee.settings.strip? code : stripJsComments(code);
+        code = nxT.settings.strip? code : stripJsComments(code);
         return "';" + fixVarPath(code) + ";out+='";
       })
       .replace(c.rx.encode || skip, function(m, rxMatch, code) {
@@ -181,9 +178,9 @@
       .replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''/g, "");
 
     if (needhtmlencode) {
-      if (!c.selfContained && _globals && !_globals._encodeHTML) _globals._encodeHTML = Tee.encodeHTMLSource(c.doNotSkipEncoded);
+      if (!c.selfContained && _global && !_global._encodeHTML) _global._encodeHTML = nxT.encodeHTMLSource(c.doNotSkipEncoded);
       tmplFnStr = "var encodeHTML = typeof _encodeHTML !== 'undefined' ? _encodeHTML : ("
-        + Tee.encodeHTMLSource.toString() + "(" + (c.doNotSkipEncoded || '') + "));"
+        + nxT.encodeHTMLSource.toString() + "(" + (c.doNotSkipEncoded || '') + "));"
         + tmplFnStr;
     }
     try {
@@ -196,48 +193,144 @@
     }
   }
 
-  function bind ( tmpl, data, target, replaceTarget ) {
+  //nxT:        .compile  >> fnT( data )
+  //Handlebars: .compile  >> fnT( data )
+  //Mustache:   .compile  >> fnT( data )
+  //dust:       .compile  >> fnT( data )
+  //doT:        .compile  >> fnT( data )
+  //ejs:        .compile  >> fnT( data )
+  //Template7:  .compile  >> fnT( data )
+  //nunjucks:   .compile  >> fnT.render( data )
+  //_:          .template >> fnT( data )
+  function getTmplType ( tmplStr ) {
+    tmplStr = tmplStr.replace(/\s+/g, '');
+    if (/[^a-z_0-9]/gi.test(tmplStr)) {
+      return (/:[a-z_0-9]+$/i.test(tmplStr) && tmplStr.substring(tmplStr.lastIndexOf(':')+1)) || '';
+    } else {
+      return tmplStr;
+    }
+  }
+
+  function render ( tmpl, data, target, replaceTarget ) {
+    var usePreCompiledFn = true;
+    var isElement = tmpl instanceof Element;
     var compiledFn;
+    var tmplContent, elTmplSrc, tmplType;
 
     if (typeof tmpl == 'function') {
       compiledFn = tmpl;
-    } else if (typeof tmpl == 'string') {
-      var tmplContent = tmpl, elTmplSrc;
-      if ((tmpl.indexOf('{{')<0) && (tmpl[0] == '#')) {
-        elTmplSrc = document.querySelector(tmpl);
-        (elTmplSrc && elTmplSrc._bind && (compiledFn = elTmplSrc._bind));
-        (!compiledFn && elTmplSrc && (tmplContent = elTmplSrc.innerHTML));
-        try {
-          (!compiledFn && elTmplSrc && (/handlebar/gi.test(elTmplSrc.getAttribute('type') || '')) && _globals.Handlebars && (compiledFn = Handlebars.compile(tmplContent)));
-        } catch (e) {
-          console.error('Handlebars compile failed:', e);
-        }
+    } else if (typeof tmpl == 'string' || isElement) {
+
+      if (isElement) {
+        elTmplSrc = tmpl;
+        var newTmplId = ( elTmplSrc.getAttribute('id') || ('tmpl-'+(new Date).getTime()) );
+        tmpl = '#'+newTmplId;
+        elTmplSrc.setAttribute('id', newTmplId);
       }
-      (!compiledFn && (compiledFn = compile(tmplContent)));
-      (elTmplSrc && !elTmplSrc._bind && (elTmplSrc._bind = compiledFn));
+
+      if (tmpl[0] == '#') { /* #template-container :Handlebars */
+
+        if (!isElement) {
+          tmpl = tmpl.replace(/\s+/g, '');
+          tmplType = getTmplType(tmpl);
+          if (tmplType) {
+            tmpl = tmpl.substring(0, tmpl.lastIndexOf(':'));
+          }
+          elTmplSrc = document.querySelector(tmpl);
+        }
+
+        if (elTmplSrc) {
+          usePreCompiledFn = !(elTmplSrc.hasAttribute('recompile') || /live/gi.test(elTmplSrc.getAttribute('type')||''));
+          (usePreCompiledFn && elTmplSrc._render && (compiledFn = elTmplSrc._render));
+          !target && (target = (elTmplSrc.getAttribute('target') || '').trim());
+        }
+
+        if (!compiledFn) {
+          tmplType = tmplType || getTmplType((elTmplSrc && elTmplSrc.getAttribute('type')) || '');
+          tmplContent = elTmplSrc? (elTmplSrc.value || elTmplSrc.innerHTML) : tmpl;
+        }
+      } else {
+        // Xyz: template string ...
+        var idxSplit = tmpl.indexOf(':');
+        tmplType     = tmpl.substring(0, idxSplit).trim();
+        tmplContent  = tmpl.substring(idxSplit+1);
+      }
+
+      tmplType = tmplType || 'nxT';
+      if (tmplType) {
+        try {
+          if (!compiledFn && tmplType && _global[tmplType]) {
+            var fnCompile = _global[tmplType]['compile'] || _global[tmplType]['template'];
+            if (fnCompile) {
+              if (tmplType === 'dust' && _global.dust) {
+                var newDustTmplId = 'dust-'+(new Date).getTime();
+                _global.dust.loadSource( fnCompile(tmplContent, newDustTmplId) );
+                compiledFn = _global.dust.render.bind(_global.dust, newDustTmplId);
+              } else {
+                compiledFn = fnCompile(tmplContent);
+                (compiledFn && compiledFn.render && (compiledFn = compiledFn.render.bind(compiledFn)));
+              }
+            } else if (_global[tmplType]['render']) {
+              compiledFn = _global[tmplType]['render'].bind(_global[tmplType], tmplContent);
+            }
+          }
+        } catch (e) {
+          console.error('Template '+tmplType+'.compile failed:', e);
+        }
+      } else {
+        console.error('Unknown Template Engine', tmpl);
+        return;
+      }
     } else {
       console.error('Invalid Template', tmpl);
       return;
     }
 
     if (typeof compiledFn != 'function') {
-      console.error('Could not compile Template', tmpl);
+      console.error('Could not compile ['+tmplType+'] Template', tmpl);
       return;
     }
+
+    (elTmplSrc && !elTmplSrc._render && (elTmplSrc._render = compiledFn));
 
     if (typeof data != 'object') {
       return compiledFn;
     }
 
-    var processedTmpl = compiledFn( data );
+    var processedTmpl;
+    if (tmplType === 'dust') {
+      compiledFn( data, function (err, out) {
+        if (err) {
+          console.error('Error in dust Template:', err);
+        } else {
+          processedTmpl = _render(target, out, replaceTarget);
+        }
+      } );
+    } else {
+      processedTmpl = _render(target, compiledFn( data ), replaceTarget);
+    }
+
+    return processedTmpl;
+  }
+
+  function _render (target, content, replaceTarget) {
     if (target) {
-      var elTarget = (typeof target == 'string')? document.querySelector(target) : elTarget;
+      var elTarget = target;
+      if (typeof target == 'string') {
+        target = target.trim();
+        if (typeof replaceTarget === 'undefined') {
+          replaceTarget = /:replace$/i.test(target);
+        }
+        target.replace(/:replace$/i,'').trim();
+        elTarget = document.querySelector(target);
+      }
+
       if (elTarget) {
         try {
           if (replaceTarget) {
-            elTarget.outerHTML = processedTmpl;
+            elTarget.outerHTML = content;
           } else {
-            elTarget.innerHTML = processedTmpl;
+            elTarget.innerHTML = content;
           }
         } catch (e) {
           console.error(e);
@@ -246,7 +339,6 @@
         console.error('Invalid Target:', target);
       }
     }
-
-    return processedTmpl;
+    return content;
   }
-}());
+}(this));
