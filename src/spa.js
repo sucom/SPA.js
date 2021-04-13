@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.1';
+  var _VERSION = '2.87.2';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -3881,6 +3881,8 @@
       compileTemplate = doT.compile.bind(doT);
     } else if ((typeof Tee != 'undefined') && Tee) {
       compileTemplate = Tee.compile.bind(Tee);
+    } else if ((typeof nxT != 'undefined') && nxT) {
+      compileTemplate = nxT.compile.bind(nxT);
     }
   }
 
@@ -7625,7 +7627,8 @@
                             break;
                           case 'spa':
                           case 'tee':
-                            $compileTemplate = win.Tee.compile.bind(win.Tee);
+                          case 'nxT':
+                            $compileTemplate = win.nxT.compile.bind(win.nxT);
                             break;
                         }
                       } catch ( e ) {
