@@ -372,17 +372,19 @@
     return content;
   }
 
-  Object.defineProperties(Element.prototype, {
-    render : {
+  if (!Element.prototype.render) {
+    Object.defineProperty(Element.prototype, 'render', {
       value: function (data, target, replaceTarget, rCallback) {
         return nxT(this, data, target, replaceTarget, rCallback);
       }
-    },
-    compile: {
+    });
+  }
+  if (!Element.prototype.compile) {
+    Object.defineProperty(Element.prototype, 'compile', {
       value: function () {
         return nxT(this);
       }
-    }
-  });
+    });
+  }
 
 }(this));
