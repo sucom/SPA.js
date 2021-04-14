@@ -2,8 +2,8 @@
 (function (_global) {
   "use strict";
 
-  function nxT (tmpl, data, target, replaceTarget) {
-    return render(tmpl, data, target, replaceTarget);
+  function nxT (tmpl, data, target, replaceTarget, rCallback) {
+    return render(tmpl, data, target, replaceTarget, rCallback);
   }
   nxT.version  = "1.0.0";
   nxT.settings = { scopeName : "data", strip : false };
@@ -202,6 +202,7 @@
   //Template7:  .compile  >> fnT( data )
   //nunjucks:   .compile  >> fnT.render( data )
   //_:          .template >> fnT( data )
+  var defaultTmplEngine = 'nxT';
   function getTmplType ( tmplStr ) {
     tmplStr = tmplStr.replace(/\s+/g, '');
     if (/[^a-z_0-9]/gi.test(tmplStr)) {
@@ -211,7 +212,26 @@
     }
   }
 
-  function render ( tmpl, data, target, replaceTarget ) {
+  function render ( tmpl, data, target, replaceTarget, rCallback ) {
+
+    var undef;
+    if (typeof rCallback !== 'function') {
+      switch(true) {
+        case (typeof data === 'function'):
+          rCallback = data;
+          data = undef;
+          break;
+        case (typeof target === 'function'):
+          rCallback = target
+          target = undef;
+          break;
+        case (typeof replaceTarget === 'function'):
+          rCallback = replaceTarget;
+          replaceTarget = undef;
+          break;
+      }
+    };
+
     var usePreCompiledFn = true;
     var isElement = tmpl instanceof Element;
     var compiledFn;
@@ -241,8 +261,9 @@
 
         if (elTmplSrc) {
           usePreCompiledFn = !(elTmplSrc.hasAttribute('recompile') || /live/gi.test(elTmplSrc.getAttribute('type')||''));
-          (usePreCompiledFn && elTmplSrc._render && (compiledFn = elTmplSrc._render));
-          !target && (target = (elTmplSrc.getAttribute('target') || '').trim());
+          (usePreCompiledFn && elTmplSrc._compiled && (compiledFn = elTmplSrc._compiled));
+          !target && (target = (elTmplSrc.getAttribute('target') || elTmplSrc.getAttribute('render-target') || '').trim());
+          target && (typeof replaceTarget === 'undefined') && (replaceTarget = elTmplSrc.hasAttribute('replace-target') );
         }
 
         if (!compiledFn) {
@@ -256,11 +277,13 @@
         tmplContent  = tmpl.substring(idxSplit+1);
       }
 
-      tmplType = tmplType || 'nxT';
+      tmplType = tmplType || defaultTmplEngine;
+      var cT0=0, cT=0;
       if (tmplType) {
         try {
           if (!compiledFn && tmplType && _global[tmplType]) {
             var fnCompile = _global[tmplType]['compile'] || _global[tmplType]['template'];
+            cT0 = performance.now();
             if (fnCompile) {
               if (tmplType === 'dust' && _global.dust) {
                 var newDustTmplId = 'dust-'+(new Date).getTime();
@@ -273,6 +296,7 @@
             } else if (_global[tmplType]['render']) {
               compiledFn = _global[tmplType]['render'].bind(_global[tmplType], tmplContent);
             }
+            cT = performance.now() - cT0;
           }
         } catch (e) {
           console.error('Template '+tmplType+'.compile failed:', e);
@@ -291,29 +315,34 @@
       return;
     }
 
-    (elTmplSrc && !elTmplSrc._render && (elTmplSrc._render = compiledFn));
+    (elTmplSrc && !elTmplSrc._compiled && (elTmplSrc._compiled = compiledFn));
+    elTmplSrc && elTmplSrc.setAttribute('compile-time', cT.toFixed(4));
 
     if (typeof data != 'object') {
       return compiledFn;
     }
 
     var processedTmpl;
+    var rT0 = performance.now();
     if (tmplType === 'dust') {
       compiledFn( data, function (err, out) {
         if (err) {
           console.error('Error in dust Template:', err);
         } else {
-          processedTmpl = _render(target, out, replaceTarget);
+          processedTmpl = _updateDOM(target, out, replaceTarget, rT0);
         }
-      } );
+        (typeof rCallback === 'function') && rCallback(processedTmpl);
+        return processedTmpl;
+      });
     } else {
-      processedTmpl = _render(target, compiledFn( data ), replaceTarget);
+      processedTmpl = _updateDOM(target, compiledFn( data ), replaceTarget, rT0);
+      (typeof rCallback === 'function') && rCallback(processedTmpl);
     }
 
     return processedTmpl;
   }
 
-  function _render (target, content, replaceTarget) {
+  function _updateDOM (target, content, replaceTarget, rT0) {
     if (target) {
       var elTarget = target;
       if (typeof target == 'string') {
@@ -332,6 +361,7 @@
           } else {
             elTarget.innerHTML = content;
           }
+          elTarget.setAttribute('render-time', (performance.now() - rT0).toFixed(4));
         } catch (e) {
           console.error(e);
         }
@@ -341,4 +371,18 @@
     }
     return content;
   }
+
+  Object.defineProperties(Element.prototype, {
+    render : {
+      value: function (data, target, replaceTarget, rCallback) {
+        return nxT(this, data, target, replaceTarget, rCallback);
+      }
+    },
+    compile: {
+      value: function () {
+        return nxT(this);
+      }
+    }
+  });
+
 }(this));
