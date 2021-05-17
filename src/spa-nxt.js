@@ -6,7 +6,7 @@
     return render(tmpl, data, target, replaceTarget, rCallback);
   }
   nxT.version  = "1.0.0";
-  nxT.settings = { scopeName : "data", strip : false };
+  nxT.settings = { scopeName : "data", strip : false, log: true };
   nxT.compile  = compile;
   nxT.render   = render;
 
@@ -125,7 +125,7 @@
     var ctxStrB = 'if (arguments.length) return arguments.callee.call(arguments[0]);'
                 + 'var '+(nxT.settings.scopeName||'data')+'=___rootCtx=___this=this;'
                 + 'try{with(Object(this)){';
-    var ctxStrE = '}}catch(e){ console.error("Error in Template:", e); }';
+    var ctxStrE = '}}catch(e){ (nxT.settings.log && console.warn("Error in Template[nxT]:", e)); }';
 
     var cse = c.append ? startend.append : startend.split, needhtmlencode, sid = 0, indv,
       tmplFnStr  = (c.rx.use || c.rx.define) ? resolveDefs(c, tmpl, def || {}) : tmpl;

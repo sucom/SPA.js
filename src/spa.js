@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.87.4';
+  var _VERSION = '2.87.5';
 
   /* Establish the win object, 'window' in the browser */
   var win = this, _doc = document, isSPAReady, docBody = _doc.body;
@@ -2515,7 +2515,7 @@
 
     function _isProto (obj) {
       return (((typeof obj == 'object') &&
-          ( (obj == __proto__) ||
+          ( (obj == window.__proto__) ||
             _hasOwnProp(obj, 'isPrototypeOf') ||
             obj.isPrototypeOf(new Object()) ||
             obj.isPrototypeOf(new Array()) ||
