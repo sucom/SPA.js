@@ -253,7 +253,7 @@
   }
   function _isProto ( obj ) {
     return (((typeof obj == 'object') &&
-        ( (obj == __proto__) ||
+        ( (obj == window.__proto__) ||
           _hasOwnProp(obj, 'isPrototypeOf') ||
           obj.isPrototypeOf(new Object()) ||
           obj.isPrototypeOf(new Array()) ||
