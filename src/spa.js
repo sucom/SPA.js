@@ -32,10 +32,10 @@
  */
 
 (function() {
-  var _VERSION = '2.87.6';
+  var _VERSION = '2.88.0-RC1';
 
   /* Establish the win object, 'window' in the browser */
-  var win = this, _doc = document, isSPAReady, docBody = _doc.body;
+  var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
   var dQ, jQ=win.jQuery;
   var useJQReady = 0;
   var usejQuery  = 1;
@@ -191,6 +191,7 @@
       console[consoleType].apply(null, args);
     }
   }
+
   var _log = {
       'clear'         : function(){ console['clear'](); }
     , 'assert'        : function(){ cOut('assert',         _argsToArr(arguments)); }
@@ -216,6 +217,12 @@
     , 'warn'          : function(){ cOut('warn',           _argsToArr(arguments)); }
   };
   xsr.console = _log;
+  function _logInfoMsg ( msg ) {
+    _log.info('%ci%c '+msg, 'color: white; background: blue;', 'color: grey');
+  }
+  function _cInfoMsg ( msg ) {
+    console.info('%ci%c '+msg, 'color: white; background: blue;', 'color: grey');
+  }
 
   /* event handler for window.onhashchange */
   xsr.ajaxPreProcess;
@@ -2651,7 +2658,13 @@
   Object.defineProperties(_arrProto, {
     '__now' : {
       value : function(){
-        return JSON.parse(JSON.stringify(this));
+        var clonedObj;
+        try {
+          clonedObj = JSON.parse(JSON.stringify(this));
+        } catch (e) {
+          clonedObj = _clone(this, true);
+        }
+        return clonedObj;
       }
     },
     '__clone': {
@@ -2739,7 +2752,13 @@
   Object.defineProperties(_objProto, {
     '__now' : {
       value : function(){
-        return JSON.parse(JSON.stringify(this));
+        var clonedObj;
+        try {
+          clonedObj = JSON.parse(JSON.stringify(this));
+        } catch (e) {
+          clonedObj = _clone(this, true);
+        }
+        return clonedObj;
       }
     },
     '__clone': {
@@ -2824,7 +2843,7 @@
       'target', 'template', 'templateCache', 'templateScript', 'templateEngine', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
-    , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind'
+    , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind'
     , 'dataCollection', 'dataUrl', 'dataUrlMethod', 'dataUrlParams', 'dataUrlHeaders', 'defaultPayload', 'stringifyPayload'
     , 'dataParams', 'dataType', 'dataModel', 'dataCache', 'dataUrlCache'
     , 'dataDefaults', 'onDataUrlError', 'onError'
@@ -4480,7 +4499,7 @@
         try {
           xContent = compileTemplate(xContent)(data);
         } catch (e) {
-          console.log('Error Template compile/bind.', e);
+          console.warn('Error Template compile/bind.', e);
         }
       } else {
         console.warn('Template Library (Handlebars/doT) not found!');
@@ -5041,6 +5060,7 @@
         , offline: false
         , functional: true
         , sanitizeApiXss: false
+        , renderOnDomChange: false
       }
     , routes: {
         base: '#',
@@ -5077,6 +5097,8 @@
       nonce: ''
     }
     , set: function(oNewValues, newValue) {
+        var oldVal = xsr.defaults.components.renderOnDomChange;
+
         if (_isObj(oNewValues)) {
           if (oNewValues.hasOwnProperty('set')) delete oNewValues['set'];
           _mergeDeep(this, oNewValues);
@@ -5087,6 +5109,16 @@
             xsr.setSimpleObjProperty(this, oNewValues, newValue);
           }
         }
+
+
+        if (oldVal !== xsr.defaults.components.renderOnDomChange) {
+          if (xsr.defaults.components.renderOnDomChange) {
+            observeDOM();
+          } else {
+            stopDomObserve();
+          }
+        }
+
         return this;
       }
   };
@@ -5129,7 +5161,7 @@
       options['dataUrl'] = '@$'+componentName;
     }
 
-    _log.log('$ Adj.Options>>>>',componentName, options? options.__now() : options);
+    xsr.debug && _log.log('$ Adj.Options>>>>',componentName, options? options.__now() : options);
     return options;
   }
 
@@ -5290,7 +5322,7 @@
           var baseProps = [ 'target','template','templateCache','templateScript', 'templateEngine', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
-                            'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind',
+                            'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind',
                             'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders','defaultPayload','stringifyPayload',
                             'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
@@ -5522,7 +5554,7 @@
             }
             xsr.renderUtils.runCallbackFn('app.'+cName+'.$dataChangeCallback', app[cName].$data, app[cName]);
           } else {
-            console.log('Component is not visible! Skipped $on$dataChange.');
+            _cInfoMsg('Component is not visible! Skipped $on$dataChange.');
           }
 
           xsr.$dataNotify(cName);
@@ -5766,35 +5798,81 @@
   }
 
   //////////////////////////////////////////////////////////////////////////////////
+  var _onSelfInit;
+  var _isAMD;
   var _$storeLocked = {};
+  var unlockAfterMilliSec = 2000;
   function lock$render ( key ) {
-    _$storeLocked[key] = 1;
+    _$storeLocked[key] = _now();
   }
   function unlock$render ( key ) {
     delete _$storeLocked[key];
   }
-  function is$renderLocked ( key ) {
+  function is$renderLocked ( key, renderTimeout ) {
+    renderTimeout = renderTimeout || unlockAfterMilliSec;
     var isLocked = (_isStr(key) && _$storeLocked[key]);
     if (isLocked) {
-      _log.warn('Component ['+key+'] is locked. Wait or use spa.$unlock('+key+');');
+      var tDiff = (_now()*1) - (isLocked*1);
+      _log.warn('Component ['+key+'] is locked. Wait or use spa.$unlock('+key+'); Last lock', tDiff, 'msec before.');
+      if (tDiff >= renderTimeout) {
+        unlock$render(key);
+        isLocked = false;
+      }
     }
     return isLocked;
+  }
+  function _isRendering ( renderTimeout ) {
+    Object.keys(_$storeLocked).forEach(function (key) {
+      is$renderLocked(key, renderTimeout || 1000);
+    });
+    return Object.keys(_$storeLocked).length;
   }
   xsr.$lock   = lock$render;
   xsr.$unlock = unlock$render;
   xsr.$Locked = is$renderLocked;
+  xsr.isRendering = _isRendering;
   xsr.renderComponent = xsr.$render = function (componentNameFull, options) {
+
+    if (!arguments.length) {
+      var bodyId = _doc.body.id || 'spa-doc-body';
+      _doc.body.id = bodyId;
+      componentNameFull = '#'+bodyId;
+    }
+
+    _log.log('~ renderComponent', componentNameFull, options);
+
     var keyInProgress = componentNameFull;
     if (is$renderLocked(keyInProgress)) return;
+    lock$render(keyInProgress);
 
     if (!isSPAReady) {
-      lock$render(keyInProgress);
+      // lock$render(keyInProgress);
+
+      if (_isAMD) {
+        _logInfoMsg('SPA is not initialized using spa.start() before rendering a component! Attempting to self initialize.');
+
+        if (!_onSelfInit) {
+          _onSelfInit = true;
+          xsr.start();
+        }
+        if (isSPAReady) {
+          _log.log('SPA is self initialized.');
+        } else {
+          _onSelfInit=false;
+          unlock$render(keyInProgress);
+          _cInfoMsg('Fail to self initialize SPA! Try to initialize using spa.start() after all modules are loaded.');
+          return;
+        }
+      }
+
       handleOnDomReady(function(){
-        unlock$render(keyInProgress);
+        _onSelfInit=false;
+        (!_isAMD) && unlock$render(keyInProgress); //if not moduleLoad
         xsr.renderComponent(componentNameFull, options);
       });
       return;
     }
+
     if (!( (_doc.readyState === 'complete') || (!(_doc.readyState === 'loading' || _doc.documentElement.doScroll)) )) {
       lock$render(keyInProgress);
       _log.info('DOM NOT Ready. will render component ['+componentNameFull+'] on DOM Ready.');
@@ -5828,7 +5906,12 @@
       if (componentNameFull[0] == '$') {
         isReq4SpaComponent = true;
       } else if (componentNameFull[0] == '#') {
-        $(componentNameFull).spaRender(options);
+        var el = $(componentNameFull)[0];
+        if (el && !el.hasAttribute('src')) {
+          xsr.renderComponentsInHtml(componentNameFull);
+        } else {
+          $(componentNameFull).spaRender(options);
+        }
         return;
       }
     } else {
@@ -6842,7 +6925,7 @@
     };
     var _renderOption = function(optionKey, dataAttrKey) {
       var retValue = (_isBlank(spaRVOptions[optionKey]))? _renderOptionInAttr(dataAttrKey) : spaRVOptions[optionKey];
-      _log.info('{.'+optionKey+'} | [data-'+dataAttrKey+']', retValue);
+      _log.info('_renderOption: {.'+optionKey+'} | [data-'+dataAttrKey+']', retValue);
       return retValue;
     };
 
@@ -7506,7 +7589,7 @@
                   $ajaxQ.apply($, _dataPreProcessAsync() ).done(function(){
                     var dataPreProcessAsyncRes = _arrProto.slice.call(arguments);
                     if (isPreProcessed) {
-                      _log.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
+                      xsr.debug && _log.log(rCompName,'.dataPreProcessAsync() =>', dataPreProcessAsyncRes.__now());
                       if (isSinlgeAsyncPreProcess && (dataPreProcessAsyncRes.length > 1) && (dataPreProcessAsyncRes[1] == 'success') ){
                         //&& (_isStr(dataPreProcessAsyncRes[0])) && ((/\s*\{/).test(dataPreProcessAsyncRes[0])) ){
                         //if only 1 ajax request with JSON String as response
@@ -7520,7 +7603,7 @@
                           }
                         });
                       }
-                      _log.log(dataPreProcessAsyncRes.__now());
+                      xsr.debug && _log.log(dataPreProcessAsyncRes.__now());
                     }
 
                     var fnDataProcess = _renderOption('dataProcess', 'process'), finalTemplateData;
@@ -7587,6 +7670,12 @@
                       * {@$someComponentName} ==> _global_.app.someComponentName.
                       */
                       //for values
+
+                      spaRVOptions.skipDataBind = spaRVOptions.skipDataBind || spaRVOptions.skipDefaultBind; //Alternate Key for skipDataBind
+                      var skipKoBind = spaRVOptions.skipKoBind || spaRVOptions.useSpaBind || $viewContainerId.is('[skipKoBind]') || $viewContainerId.is('[useSpaBind]');
+                      if (skipKoBind) $viewContainerId.attr('useSpaBind', 'true');
+                      var useKnockOut = !skipKoBind && (typeof ko === 'object' && typeof ko.applyBindings === 'function');
+
                       var componentRefsV = templateContentToBindAndRender.match(/({\s*\@\$(.*?)\s*})/g);
                       if (!spaRVOptions.skipDataBind && componentRefsV) {
                         _each(componentRefsV, function(cRef){
@@ -7632,7 +7721,7 @@
                             break;
                         }
                       } catch ( e ) {
-                        _log.warn('Error accessing templateEngine['+$templateEngine+'] for $'+rCompName+':', e);
+                        _log.warn('Error accessing templateEngine['+$templateEngine+'] for $'+rCompName+' >>>', e, '\nTry defining templateEngine['+$templateEngine+'] in global scope.' );
                       }
 
                       var skipSpaBind, spaBindData;
@@ -7648,17 +7737,24 @@
 
                           if (!xsr.compiledTemplates4DataBind.hasOwnProperty(rCompName)) {
                             if ((/ data-bind\s*=/i).test(templateContentToBindAndRender)) {
-                              templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
-                              _log.log('TemplateBeforeBind', templateContentToBindAndRender);
-                              var data4SpaTemplate = _isObj(spaViewModel)? _mergeDeep({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
-                              _log.log('SPA built-in binding ... ...', data4SpaTemplate);
-                              templateContentToBindAndRender = xsr.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
-                              templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
-                              _log.log('TemplateAfterBind', templateContentToBindAndRender);
-                              if (!xsr.compiledTemplates4DataBind.hasOwnProperty(rCompName)) xsr.compiledTemplates4DataBind[rCompName] = {};
-                              skipSpaBind=true;
+                              if (!useKnockOut) {
+                                _log.log('[Template + Data] bind using SPA [data-bind] ...');
+                                templateContentToBindAndRender = _maskHandlebars(templateContentToBindAndRender);
+                                _log.log('TemplateBeforeBind', templateContentToBindAndRender);
+                                var data4SpaTemplate = _isObj(spaViewModel)? _mergeDeep({}, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
+                                _log.log('SPA built-in binding ... ...', data4SpaTemplate);
+                                templateContentToBindAndRender = xsr.bindData(templateContentToBindAndRender, data4SpaTemplate, '$'+rCompName);
+                                templateContentToBindAndRender = _unmaskHandlebars(templateContentToBindAndRender);
+                                _log.log('TemplateAfterBind', templateContentToBindAndRender);
+                                if (!xsr.compiledTemplates4DataBind.hasOwnProperty(rCompName)) xsr.compiledTemplates4DataBind[rCompName] = {};
+                                skipSpaBind=true;
+                              }
+                            } else {
+                              useKnockOut = false;
                             }
                           }
+
+                          compiledTemplate = templateContentToBindAndRender;
 
                           // if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('dot')>=0 || templateContentToBindAndRender.indexOf('{')>=0) {
                           if (templateContentToBindAndRender.indexOf('{{')>=0) {
@@ -7690,7 +7786,7 @@
                       _log.groupEnd("Compiled Template ...");
 
                       doDeepRender = false;
-                      retValue.view = compiledTemplate && compiledTemplate.replace(/\_\{/g,'{{').replace(/\}\_/g, '}}');
+                      retValue.view = compiledTemplate && compiledTemplate.replace(/\_\{|\<dcb\>/gi,'{{').replace(/\}\_|\<\/dcb\>/gi, '}}');
 
                       //Callback Function's context
                       var renderCallbackContext = rCompName? _mergeDeep({}, (app[rCompName] || {}), { __prop__: _mergeDeep({}, (uOptions||{}) ) }) : {};
@@ -7767,6 +7863,11 @@
                                   $(viewContainerId).prepend(retValue.view);
                                   break;
                                 default: $(viewContainerId).html(retValue.view); break;
+                              }
+
+                              if (useKnockOut) {
+                                _log.log('knockout binding: data | DOM', retValue['model'], $(viewContainerId)[0]);
+                                ko.applyBindings(retValue['model'], $(viewContainerId)[0]);
                               }
                               break;
                           }
@@ -7856,6 +7957,7 @@
 
                         /* component's specific callback */
                         var _fnCallbackAfterRender = _renderOptionInAttr("renderCallback");
+                        var _fnCallbackAfterRenderRes;
                         if (spaRVOptions.dataRenderCallback) {
                           _fnCallbackAfterRender = spaRVOptions.dataRenderCallback;
                         }
@@ -7863,12 +7965,14 @@
                         _log.info("Processing callback: " + _fnCallbackAfterRender);
 
                         if (!isCallbackDisabled) {
-                          xsr.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
+                          _fnCallbackAfterRenderRes = xsr.renderUtils.runCallbackFn(_fnCallbackAfterRender, retValue);
                         }
 
-                        /*run callback if any*/
+                        /* run global callback if any */
                         /* Default Global components callback */
-                        xsr.renderUtils.runCallbackFn(xsr.defaults.components.callback, retValue, renderCallbackContext);
+                        if (!(typeof _fnCallbackAfterRenderRes === 'boolean' && _fnCallbackAfterRenderRes === false)) {
+                          xsr.renderUtils.runCallbackFn(xsr.defaults.components.callback, (_fnCallbackAfterRenderRes && typeof _fnCallbackAfterRenderRes !== 'boolean')? _fnCallbackAfterRenderRes : retValue, renderCallbackContext);
+                        }
 
                         _delayedRenderFor(rCompName);
 
@@ -9225,7 +9329,7 @@
     }
   }
   window.onerror = function(eMsg, source, line){
-    console.warn('Invalid Content: Check the network/path/content.', eMsg, source, line);
+    _log.warn('[window.onerror] Invalid Content: Check the network/path/content.', eMsg, source, line);
   };
 
   function _routeSpaUrlOnHashChange(){
@@ -9939,6 +10043,12 @@
   }
 
   function _onViewDataChange() {
+
+    var foundKo = ((typeof ko === 'object' && typeof ko.applyBindings === 'function'));
+    var useSpa2WayBind = !foundKo || $(this).closest('[useSpaBind]').length;
+
+    if (!useSpa2WayBind) return;
+
     var el = this, $el = $(el)
       , elValue = xsr.getElValue(el), bindData={}
       , $component = $el.spa$()[0], cName=$el.spa$name()
@@ -10113,8 +10223,9 @@
         var compDefaults = {
           components: {
             templateCache: false,
-            callback: function(){
-              console.log('spa$>', this.__prop__.componentName);
+            callback: function( viewProps ){
+              _cInfoMsg('Rendered spa$> ' + this.__prop__.componentName);
+              console.info('$viewProps:', viewProps);
             }
           }};
         xsr.defaults.set(compDefaults);
@@ -10165,8 +10276,15 @@
     _initApiUrls(); //need to run on 1st Component renderCallback as well
   }
 
-  var xhrLib, $when, $ajax = (win['$'] && $['ajax']) || (win['spaXHR'] && spaXHR['ajax']), $ajaxQ, $ajaxSetup, $ajaxPrefilter;
+  var xhrLib, $when, $ajax, $ajaxQ, $ajaxSetup, $ajaxPrefilter;
+  xsr.init = xsr.start = _beginSPA;
   function _initDOM(){
+    _log.log('init SPA DOM.');
+
+    if (!(win['__isSPAReady__'])) {
+      observeDOM();
+    }
+
     setDefaultTmplCompiler();
 
     /*onLoad Set xsr.debugger on|off using URL param*/
@@ -10188,10 +10306,12 @@
     handleOnDomReady(_beginSPA);
   }
   function _initXHR(){
+    $ajax = (win['$'] && $['ajax']) || (win['spaXHR'] && spaXHR['ajax']);
+
     if (win['spaXHR']) {
       xsr.ajax  = spaXHR.ajax;
     }
-    xhrLib = ($['ajax'] && $)  || spaXHR;
+    xhrLib = ($['ajax'] && $)  || (win['spaXHR']);
     if (xhrLib) {
       $when  = xhrLib.when;
       $ajax  = xhrLib.ajax;
@@ -10227,8 +10347,58 @@
     }
   }
 
+  var domObserver;
+  function onDomChange(mutationsList) {
+    if (!_isRendering() && !stoRender) {
+      var pContainer, mutation;
+      for(var i=0; i<mutationsList.length; i++) {
+        mutation = mutationsList[i];
+        if (mutation.type === 'childList' && mutation.addedNodes.length
+            && !mutation.target.hasAttribute('data-rendered-component') && !pContainer) {
+          pContainer = mutation.target;
+          break;
+        }
+      }
+      if (pContainer) {
+        var pContainerId = pContainer.id || (pContainer.tagName+'-'+(_rand(1000, 9999))+'-'+_now());
+        pContainer.id = pContainerId;
+        var stoRender = setTimeout(function( containerId ){
+          clearTimeout(stoRender);
+          xsr.$render(containerId);
+        }, 1, '#'+pContainerId);
+        _log.log('DOM watch: New element(s) added inside Non-SPA component container', pContainer);
+      }
+    }
+  }
+  function observeDOM () {
+    if (!domObserver) {
+      _log.log('Observing DOM for changes.');
+      domObserver = new MutationObserver(onDomChange);
+      domObserver.observe(_doc.body, { attributes: false, childList: true, subtree: true });
+    }
+    xsr.defaults.components.renderOnDomChange = !!domObserver;
+  }
+  function stopDomObserve () {
+    if (domObserver) {
+      domObserver.disconnect();
+      domObserver = null;
+      _log.log('Stopped: Observing DOM for changes.');
+    }
+  }
+
+  function _warnModuleStart() {
+    _isAMD = true;
+    observeDOM();
+    setTimeout(function () {
+      if (!isSPAReady) {
+        _cInfoMsg('Failed to self start SPA! If loading "spa.js" as module using require, start SPA using spa.start() when all modules are loaded.');
+      }
+    }, 2000);
+  }
   function _beginSPA(){
-    _initXHR();
+    _log.log('begin SPA');
+
+    if (!isSPAReady) _initXHR();
 
     xsr.strZip   = !xsr.strZip   && win['LZString'] && LZString.compress;
     xsr.strUnzip = !xsr.strUnzip && win['LZString'] && LZString.decompress;
@@ -10242,10 +10412,10 @@
 
       _initSpaApp();
 
-      isSPAReady = true;
+      xsr.isReady = isSPAReady = true;
       _log.info("Initialized SPA.");
     } else {
-      console.error('Could not find XHR(ajax) module. Use jQuery Full version or include spaXHR module.');
+      _warnModuleStart();
     }
 
     _doc.removeEventListener('DOMContentLoaded', _beginSPA);
