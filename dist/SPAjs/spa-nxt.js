@@ -48,12 +48,11 @@
   };
 
 
+  _global.nxT = _global.Tee = nxT;
   if (typeof module !== "undefined" && module.exports) {
     module.exports = nxT;
   } else if (typeof define === "function" && define.amd) {
     define(function(){return nxT;});
-  } else {
-    _global.nxT = _global.Tee = nxT;
   }
 
   var startend = {
@@ -387,4 +386,4 @@
     });
   }
 
-}(this));
+}(window||globalThis));

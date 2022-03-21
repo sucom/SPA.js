@@ -1322,4 +1322,4 @@
   _fnProps(xhrLib, exportMethods);
   //------------------------
   _gContext['spaXHR'] = xhrLib;
-})(this);
+})(window||globalThis);
