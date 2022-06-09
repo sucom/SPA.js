@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.88.0-RC1';
+  var _VERSION = '2.88.0';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
