@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.88.0';
+  var _VERSION = '2.88.1';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -6502,6 +6502,27 @@
         return;
       }
     }
+
+    var $xElData = $(xEl).data();
+    if (!(_isBlank($xElData.urlParams) || cOptions.hasOwnProperty('dataUrlParams'))) {
+      cOptions['dataUrlParams'] = _toObj($xElData.urlParams);
+    }
+    if (!(_isBlank($xElData.params) || cOptions.hasOwnProperty('dataParams'))) {
+      cOptions['dataParams'] = _toObj($xElData.params);
+    }
+
+    var dataKeysMap = {
+      dataUrl        : "url",
+      dataUrlMethod  : "urlMethod",
+      dataUrlHeaders : "urlHeaders",
+      dataType       : "type",
+      dataModel      : "model"
+    };
+    Object.keys(dataKeysMap).forEach(function(key){
+      if (!(_isBlank($xElData[dataKeysMap[key]]) || cOptions.hasOwnProperty(key))) {
+        cOptions[key] = $xElData[dataKeysMap[key]];
+      }
+    });
 
     var timerX = setTimeout(function(){
       var xElId     = '#'+_attr(xEl,'id');
