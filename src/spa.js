@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.88.1';
+  var _VERSION = '2.89.0';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -2843,7 +2843,7 @@
       'target', 'template', 'templateCache', 'templateScript', 'templateEngine', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
-    , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind'
+    , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh'
     , 'dataCollection', 'dataUrl', 'dataUrlMethod', 'dataUrlParams', 'dataUrlHeaders', 'defaultPayload', 'stringifyPayload'
     , 'dataParams', 'dataType', 'dataModel', 'dataCache', 'dataUrlCache'
     , 'dataDefaults', 'onDataUrlError', 'onError'
@@ -5322,7 +5322,7 @@
           var baseProps = [ 'target','template','templateCache','templateScript', 'templateEngine', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
-                            'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind',
+                            'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh',
                             'dataCollection','dataUrl','dataUrlMethod','dataUrlParams','dataUrlHeaders','defaultPayload','stringifyPayload',
                             'dataParams','dataType','dataModel','dataCache','dataUrlCache',
                             'dataDefaults','data_','dataExtra','dataXtra','onDataUrlError', 'onError',
@@ -7651,7 +7651,7 @@
 
                     retValue['model'] = (_isUndef(finalTemplateData))? initialTemplateData : finalTemplateData;
                     if (typeof retValue['model'] !== 'object') {
-                      retValue['model'] = retValue['modelOriginal'];
+                      retValue['model'] = (_is(retValue['model'], 'function'))? (new retValue['model']) : retValue['modelOriginal'];
                     }
                     _log.log(rCompName, 'Template Data initial:', retValue['model']);
 
@@ -7849,14 +7849,21 @@
                         __fnBeforeRender();
                       }
 
+                      var isKoTypeTmpl = ((/ data-bind\s*=/i).test(compiledTemplate));
+                      var use$domDiff = is$refresh && ((_renderOption('useDataBindRefresh', 'useDataBindRefresh') === false)? false : isKoTypeTmpl);
+
                       if (abortRender) {
                         retValue = {};
                         _log.warn('Render aborted by '+fnBeforeRender);
                       } else if (!abortView) {
                         var prevRenderedComponent = $viewContainerId.attr('data-rendered-component');
-                        if (prevRenderedComponent && !xsr.removeComponent(prevRenderedComponent, rCompName)){
-                          abortRender = true; retValue = {};
-                          _log.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
+                        if (use$domDiff) {
+                          _log.log('Using DOM Diff on prev rendered component', prevRenderedComponent);
+                        } else {
+                          if (prevRenderedComponent && !xsr.removeComponent(prevRenderedComponent, rCompName)){
+                            abortRender = true; retValue = {};
+                            _log.warn('Render $'+rCompName+' aborted by $'+prevRenderedComponent+'.onRemove()');
+                          }
                         }
                       }
 
@@ -7883,11 +7890,19 @@
                                 case (targetRenderMode.equalsIgnoreCase("prepend")):
                                   $(viewContainerId).prepend(retValue.view);
                                   break;
-                                default: $(viewContainerId).html(retValue.view); break;
+                                default:
+                                  _log.log('is$refresh', is$refresh, 'use$domDiff', use$domDiff);
+                                  if (use$domDiff) {
+                                    _log.log('render using existing [data-bind] on $'+rCompName+' target', viewContainerId);
+                                  } else {
+                                    $(viewContainerId).html(retValue.view);
+                                  }
+                                  break;
                               }
 
                               if (useKnockOut) {
                                 _log.log('knockout binding: data | DOM', retValue['model'], $(viewContainerId)[0]);
+                                ko.cleanNode($(viewContainerId)[0]);
                                 ko.applyBindings(retValue['model'], $(viewContainerId)[0]);
                               }
                               break;
