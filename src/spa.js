@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.89.0';
+  var _VERSION = '2.89.1';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -5841,7 +5841,7 @@
 
     _log.log('~ renderComponent', componentNameFull, options);
 
-    var keyInProgress = componentNameFull;
+    var keyInProgress = componentNameFull+((options && options.target) || '');
     if (is$renderLocked(keyInProgress)) return;
     lock$render(keyInProgress);
 
