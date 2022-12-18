@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.89.1';
+  var _VERSION = '2.90.0';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -2840,7 +2840,7 @@
   }
 
   var _baseProps = [
-      'target', 'template', 'templateCache', 'templateScript', 'templateEngine', 'sanitizeApiXss'
+      'target', 'template', 'templateCache', 'templateScript', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
     , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh'
@@ -3902,6 +3902,8 @@
       compileTemplate = Tee.compile.bind(Tee);
     } else if ((typeof nxT != 'undefined') && nxT) {
       compileTemplate = nxT.compile.bind(nxT);
+    } else if ((typeof pug != 'undefined') && pug) {
+      compileTemplate = pug.compile.bind(pug);
     }
   }
 
@@ -5047,6 +5049,7 @@
       alias: '',
       components: {
           templateEngine: 'handlebars'
+        , templateType: 'handlebars'
         , rootPath: 'app/components/'
         , inFolder: true
         , templateExt: '.html'
@@ -5319,7 +5322,7 @@
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = [ 'target','template','templateCache','templateScript', 'templateEngine', 'sanitizeApiXss',
+          var baseProps = [ 'target','template','templateCache','templateScript', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh',
@@ -6841,6 +6844,7 @@
       , dataTemplate: ''
       , dataTemplatesCache: true
       , templateScript: false
+      , templateType: ''
       , templateEngine: ''
       , sanitizeApiXss: false
 
@@ -7720,12 +7724,14 @@
                       _log.groupEnd('Template Source ...');
                       _log.log("DATA for Template:", spaViewModel);
 
-                      var isSpaTemplate = /<!--\s*#+spa-template/gi.test(templateContentToBindAndRender)? 'spa' : '';
-                      var isDotTemplate = /<!--\s*#+dot-template/gi.test(templateContentToBindAndRender)? 'dot' : '';
+                      var isSpaTemplate = /<!--\s*#+(spa-template|spaTemplate|spa|nxt-template|nxtTemplate|nxt)/gi.test(templateContentToBindAndRender)? 'spa' : '';
+                      var isDotTemplate = /<!--\s*#+(dot-template|dotTemplate|dot)/gi.test(templateContentToBindAndRender)? 'dot' : '';
+                      var isPugTemplate = /<!--\s*#+(pug-template|pugTemplate|pug)/gi.test(templateContentToBindAndRender)? 'pug' : '';
 
-                      var $templateEngine = (spaRVOptions.templateEngine || isDotTemplate || isSpaTemplate || xsr.defaults.components.templateEngine);
+                      var $templateEngine = (spaRVOptions.templateType || spaRVOptions.templateEngine || isDotTemplate || isSpaTemplate || isPugTemplate || xsr.defaults.components.templateType || xsr.defaults.components.templateEngine);
                       var spaTemplateEngine = ($templateEngine || 'handlebars').toLowerCase();
                       var $compileTemplate = compileTemplate;
+                      var isPug = false;
                       // console.log('defaultTemplateCompiler:', compileTemplate);
                       try {
                         switch(spaTemplateEngine) {
@@ -7734,6 +7740,9 @@
                             break;
                           case 'dot':
                             $compileTemplate = win.doT.compile.bind(win.doT);
+                            break;
+                          case 'pug':
+                            $compileTemplate = win.pug.compile.bind(win.pug); isPug = true;
                             break;
                           case 'spa':
                           case 'tee':
@@ -7778,7 +7787,7 @@
                           compiledTemplate = templateContentToBindAndRender;
 
                           // if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('dot')>=0 || templateContentToBindAndRender.indexOf('{')>=0) {
-                          if (templateContentToBindAndRender.indexOf('{{')>=0) {
+                          if (templateContentToBindAndRender.indexOf('{{')>=0 || isPug) {
                             _log.info('Found external template string {{...}} in $'+rCompName);
                             if ($compileTemplate) {
                               _log.groupCollapsed("Data bind using "+$templateEngine+" on Template ...");
@@ -7786,7 +7795,17 @@
                               _log.groupEnd("Data bind using "+$templateEngine+" on Template ...");
                               try{
                                 if (!xsr.compiledTemplates[rCompName]) { _log.info('Compiling $'+rCompName); }
-                                var preCompiledTemplate = xsr.compiledTemplates[rCompName] || ($compileTemplate(templateContentToBindAndRender));
+                                var preCompiledTemplate = xsr.compiledTemplates[rCompName];
+                                if (!preCompiledTemplate) {
+                                  if (isPug) {
+                                    var pugOptions = { self: templateContentToBindAndRender.indexOf('self.')>0, filters: spaRVOptions.pugFilters||undefined };
+                                    _log.log("Compiling spa$"+rCompName+"'s pug template using pugOptions", pugOptions);
+                                    preCompiledTemplate = $compileTemplate(templateContentToBindAndRender, pugOptions);
+                                  } else {
+                                    _log.log("Compiling spa$"+rCompName+"'s template...");
+                                    preCompiledTemplate = $compileTemplate(templateContentToBindAndRender);
+                                  }
+                                }
                                 var data4Template = _isObj(spaViewModel)? _mergeDeep({}, retValue, spaRVOptions.dataDefaults, spaRVOptions.data_, spaRVOptions.dataExtra, spaRVOptions.dataXtra, spaRVOptions.dataParams, spaViewModel) : spaViewModel;
                                 spaBindData = data4Template;
                                 if (!xsr.compiledTemplates.hasOwnProperty(rCompName)) xsr.compiledTemplates[rCompName] = preCompiledTemplate;
