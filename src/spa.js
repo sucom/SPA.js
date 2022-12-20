@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.90.0';
+  var _VERSION = '2.91.0';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -2840,7 +2840,7 @@
   }
 
   var _baseProps = [
-      'target', 'template', 'templateCache', 'templateScript', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss'
+      'target', 'template', 'templateCache', 'templateScript', 'templateExt', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
     , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh'
@@ -5128,7 +5128,7 @@
 
   function _adjustComponentOptions(componentName, options){
     var tmplId = '_rtt_'+componentName, tmplBody = '';
-    if (options && _isObj(options)  && xsr.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl') ) {
+    if (options && _isObj(options)  && xsr.hasPrimaryKeys(options, 'template|templateStr|templateString|templateUrl|templateExt') ) {
       if (options.hasOwnProperty('template')) {
         var givenTemplate = options['template'].trim();
         var isContainerId = ((givenTemplate.beginsWithStr('#') && !givenTemplate.containsStr(' ')) || ((givenTemplate=='inline') || (givenTemplate=='.')));
@@ -5140,6 +5140,16 @@
           options['templateStr'] = options['template'];
         }
       }
+
+      if (options.hasOwnProperty('templateExt')) {
+        if (!options.hasOwnProperty('templateUrl')) {
+          options.templateUrl = './'+componentName+'.'+(options.templateExt.trimLeftStr('.'));
+        }
+        if ((/pug/gi.test(options.templateExt)) && (!options.hasOwnProperty('templateType'))) {
+          options.templateType = 'pug';
+        }
+      }
+
       if (xsr.hasPrimaryKeys(options, 'templateStr|templateString')) {
         tmplBody = options['templateStr'] || options['templateString'] || '';
         xsr.updateTemplateScript(tmplId, tmplBody);
@@ -5322,7 +5332,7 @@
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = [ 'target','template','templateCache','templateScript', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss',
+          var baseProps = [ 'target','template','templateCache','templateScript', 'templateExt', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh',
@@ -6001,7 +6011,8 @@
 
     var _cFldrPath   = xsr.defaults.components.rootPath+ ((xsr.defaults.components.inFolder || isChildComponent)? (componentPath+"/"): '')
       , _cFilesPath  = _cFldrPath+componentFileName
-      , _cTmplFile   = _cFilesPath+xsr.defaults.components.templateExt
+      , _cTmplExt    = '.'+((options.templateExt||xsr.defaults.components.templateExt).trimLeftStr('.'))
+      , _cTmplFile   = _cFilesPath+_cTmplExt
       , _cScriptExt  = xsr.defaults.components.scriptExt
       , _cScriptFile = (options && _isObj(options) && options.hasOwnProperty('script'))? options['script'] : ((_cScriptExt)? (_cFilesPath+_cScriptExt) : '')
       , _asyncAttempt= 300
@@ -6845,6 +6856,7 @@
       , dataTemplatesCache: true
       , templateScript: false
       , templateType: ''
+      , templateExt:'.html'
       , templateEngine: ''
       , sanitizeApiXss: false
 
@@ -7726,7 +7738,7 @@
 
                       var isSpaTemplate = /<!--\s*#+(spa-template|spaTemplate|spa|nxt-template|nxtTemplate|nxt)/gi.test(templateContentToBindAndRender)? 'spa' : '';
                       var isDotTemplate = /<!--\s*#+(dot-template|dotTemplate|dot)/gi.test(templateContentToBindAndRender)? 'dot' : '';
-                      var isPugTemplate = /<!--\s*#+(pug-template|pugTemplate|pug)/gi.test(templateContentToBindAndRender)? 'pug' : '';
+                      var isPugTemplate = /(\/\/\s*-*\s*pug)|(<!--\s*#*(pug-template|pugTemplate|pug))/gi.test(templateContentToBindAndRender)? 'pug' : '';
 
                       var $templateEngine = (spaRVOptions.templateType || spaRVOptions.templateEngine || isDotTemplate || isSpaTemplate || isPugTemplate || xsr.defaults.components.templateType || xsr.defaults.components.templateEngine);
                       var spaTemplateEngine = ($templateEngine || 'handlebars').toLowerCase();
