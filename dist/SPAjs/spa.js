@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.91.0';
+  var _VERSION = '2.92.0';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -380,6 +380,13 @@
 
     _strProto.unCapitalize = function () {
       return ((''+this).charAt(0).toLowerCase()) + ((''+this).slice(1));
+    };
+
+    _strProto.test = function (rx, rxOpt) {
+      if (_isStr(rx)) {
+        rx = rxOpt? new RegExp(rx, rxOpt) : new RegExp(rx);
+      }
+      return rx.test(''+this);
     };
 
     function _sanitizeHTML(str) {
@@ -4482,30 +4489,59 @@
     return onVirtualDOM? ($contextRoot.html().replace((new RegExp(blockedScriptTagName, 'g')), "script").replace(/spa-vdom-textarea/g,'textarea') ) : $contextRoot;
   };
 
-  xsr.bindTemplateData = function (xTemplate, data) {
-    var xContent = xTemplate;
+  xsr.bindTemplateData = xsr.bindTemplate = xsr.renderTemplate = function (xTemplate, data) {
+    var xContent = xTemplate, tmplType = '', elTarget, renderTarget = arguments[arguments.length-1];
     if ((/^\s*#[a-z]+/i).test(xTemplate)) {
-      xContent = $(xTemplate).html();
+      elTarget = $(xTemplate)[0];
+      xContent = elTarget.innerHTML.replace(/^\s*/,'');
     }
 
-    if (_isBlank(data)) {
+    if ((arguments.length==1) || (arguments.length==2 && _isObj(data))) {
+      tmplType = elTarget.getAttribute('type');
+      renderTarget = elTarget.getAttribute('target');
+    }
+
+    if (_isStr(data) && arguments.length==3) {
+      tmplType = data.trim();
+      data = arguments[2];
+    }
+    if (!(_isObj(data) || renderTarget)) {
       return xContent;
     }
 
-    if ((/ data-bind\s*=/i).test(xContent)) {
-      xContent = xsr.bindData(xTemplate, data);
+    if (elTarget && !tmplType) {
+      tmplType = elTarget.getAttribute('type');
     }
 
-    if ((/{{(.+)}}/).test(xContent)) {
-      if (compileTemplate) {
-        try {
-          xContent = compileTemplate(xContent)(data);
-        } catch (e) {
-          console.warn('Error Template compile/bind.', e);
-        }
+    (_isUndef(data) && (data={}));
+
+    if (/knockout|ko/gi.test(tmplType)) {
+      var elTarget = $(xTemplate)[0];
+      ko.cleanNode(elTarget);
+      ko.applyBindings(data, elTarget);
+    } else {
+      if (tmplType) {
+        xContent = win[tmplType].compile(xContent)(data);
       } else {
-        console.warn('Template Library (Handlebars/doT) not found!');
+        if ((/ data-bind\s*=/i).test(xContent)) {
+          xContent = xsr.bindData(xTemplate, data);
+        }
+        if ((/{{(.+)}}/).test(xContent)) {
+          if (compileTemplate) {
+            try {
+              xContent = compileTemplate(xContent)(data);
+            } catch (e) {
+              console.warn('Error Template compile/bind.', e);
+            }
+          } else {
+            console.warn('Template Library (Handlebars/doT) not found!');
+          }
+        }
       }
+    }
+
+    if (_isStr(renderTarget) && (/^\s*#[a-z]+/i).test(renderTarget)) {
+      $(renderTarget).html(xContent);
     }
 
     return xContent;
@@ -6494,8 +6530,9 @@
   function _isDynSpa$(cName) {
     return (/^(\$)*(dyn)*SPA\$/i.test(cName));
   }
+
   function _renderForComponent() {
-    event.preventDefault();
+    (event && event.preventDefault());
 
     var onEvent   = event;
     var xEl       = this;
@@ -6690,6 +6727,20 @@
   function _appApiDefaultPayload(){
     var defaultPayload = _find(app, 'api.ajaxOptions.defaultPayload', {});
     return (_isFn(defaultPayload)? defaultPayload() : (_isObj(defaultPayload)? _mergeDeep({}, defaultPayload) : defaultPayload) );
+  }
+
+  function _evalObjProps ( srcObj, asNew ) {
+    var retObj = asNew? {} : srcObj;
+    if (!_isBlank(srcObj)) {
+      Object.keys(srcObj).forEach(function (key) {
+        if (_isFn(srcObj[key])) {
+          retObj[key] = srcObj[key].call(srcObj);
+        } else {
+          retObj[key] = srcObj[key];
+        }
+      })
+    };
+    return retObj;
   }
 
   /*
@@ -7295,7 +7346,7 @@
 
             dataUrlPayLoad = spaRVOptions.dataParams;
             if ((!spaRVOptions.hasOwnProperty('defaultPayload')) && (!_isBlank(defPayLoad))) {
-              dataUrlPayLoad = _mergeDeep({}, defPayLoad, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {}));
+              dataUrlPayLoad = _evalObjProps(_mergeDeep({}, defPayLoad, ((!_isBlank(dataUrlPayLoad) && _isObj(dataUrlPayLoad))? dataUrlPayLoad : {})));
             }
             if (!_isBlank(dataUrlPayLoad) && _stringifyPayload) {
               dataUrlPayLoad = JSON.stringify(dataUrlPayLoad);
@@ -7304,7 +7355,7 @@
             var axOptions = {
                 url: dataModelUrl,
                 method: (''+(_renderOption('dataUrlMethod', 'urlMethod') || 'GET')).toUpperCase(),
-                headers: ((_isFn(ajaxReqHeaders))? ajaxReqHeaders() : ajaxReqHeaders),
+                headers: _evalObjProps(((_isFn(ajaxReqHeaders))? ajaxReqHeaders() : ajaxReqHeaders), true),
                 data: dataUrlPayLoad,
                 cache: spaRVOptions['dataUrlCache'] || spaRVOptions['dataCache'],
                 dataType: spaRVOptions.dataType || _find(window, 'app.api.ajaxOptions.dataType', 'text'),
@@ -7943,6 +7994,7 @@
                         $(viewContainerId).attr('data-rendered-component', rCompName).data('renderedComponent', rCompName);
                         _$renderCountUpdate(rCompName);
                         unlock$render(spaRVOptions['inProgress']);
+                        $(viewContainerId)[0].removeAttribute('render-for-route');
                         _log.info("Render: SUCCESS");
                         var rhKeys = _keys(xsr.renderHistory);
                         var rhLen = rhKeys.length;
@@ -8370,8 +8422,10 @@
       },
       renameAttr: function(oldName, newName){
         this.each(function(){
-          _attr(this, newName, _attr(this,oldName));
-          this.removeAttribute(oldName);
+          if (this.hasAttribute(oldName)) {
+            _attr(this, newName, _attr(this,oldName));
+            this.removeAttribute(oldName);
+          }
         });
         return this;
       },
@@ -8577,23 +8631,24 @@
       var lookupUrl = ((apiKey || '').trim()[0] === xsr.api.urlKeyIndicator);
 
       apiKey = lookupUrl? (apiKey||'').trimLeftStr(xsr.api.urlKeyIndicator) : (apiKey || '');
-      urlReplaceKeyValues = urlReplaceKeyValues || {};
+      urlReplaceKeyValues = _evalObjProps(urlReplaceKeyValues || {}, true);
 
       var apiUrl = _getUrl(apiKey) || apiKey // (xsr.api.urls[apiKey] || apiKey)
         , isStaticUrl = apiUrl.beginsWithStr('!') || xsr.api.mock || app.api.mock
         , forceParamValuesInMockUrls = apiUrl.beginsWithStr('!!') || apiUrl.beginsWithStr('~') || xsr.api.forceParamValuesInMockUrls
-        , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true)
+        , paramsInUrl = apiUrl.extractStrBetweenIn('{', '}', true).concat(((apiUrl).match(/:[a-zA-Z_](\w*)/gi)||[]).__unique())
         , pKey, pValue, skip, vFilters=[], ivFilters=[], filterContext = {url: apiUrl, urlParams: urlReplaceKeyValues}, defaultValue
         , isMockReq = (xsr.api.mock || app.api.mock || apiUrl.beginsWithStr('!'));
 
       if (!isMockReq) {
         apiUrl = _removeMockParams(apiUrl);
       }
+
       if (!_isBlank(paramsInUrl)) {
         _each(paramsInUrl, function(param){
           ivFilters = [];
           vFilters  = [];
-          pKey      = param.replace(/[{}<>]/g, '').trim();
+          pKey      = param.replace(/[{}<>:]/g, '').trim();
           if (pKey) {
             if (pKey.indexOf('|')>0) {
               vFilters = pKey.split('|').map(function(x){ return x.replace(/\(.*\)/g, '').trim(); });
@@ -9635,6 +9690,15 @@
   }
   xsr.parseRoutes = _getNewMatchingRoutes;
 
+  function _routeByEl ( el ) {
+    if (el.matches('[for][data-render-target]')) {
+      var rTargetEl = $(_attr(el, 'data-render-target'))[0];
+      if (!rTargetEl.hasAttribute('render-for-route')) {
+        rTargetEl.setAttribute('render-for-route', 'InProgress');
+        _renderForComponent.call(el);
+      }
+    }
+  }
   function _onRouteElClick(e){
     var spaRoutePath = xsr.urlHash([], _urlHashBase);
     //console.clear();
@@ -9694,6 +9758,7 @@
       //console.log('Dynamic Route URL', routeName);
     }
 
+    setTimeout(_routeByEl, 0, targetEl);
     _triggerClickEventOnAttr(targetEl, 'onrouteclick');
 
     if ($routeEl.hasClass('AUTO-ROUTING')) { //exit if it's still routing ...
