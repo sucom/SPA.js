@@ -32,7 +32,7 @@
  */
 
 (function() {
-  var _VERSION = '2.92.0';
+  var _VERSION = '2.93.0-RC1-'+(_now('.'));
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -40,6 +40,7 @@
   var useJQReady = 0;
   var usejQuery  = 1;
   var $ = win.$ || win.dom;
+  var _isLocEnv = /localhost|127\.0\.0\.1/gi.test(win.location.host || '');
 
   if (!$) {
     console.error('Missing dependency library spa.dom or jQuery.');
@@ -233,6 +234,22 @@
   xsr.onUrlHashChange;
   xsr.onReload;
 
+
+
+  function _yyyymmdd(sep) {
+    var mm = this.getMonth() + 1, dd = this.getDate();
+    return ([this.getFullYear(),
+            (mm>9 ? '' : '0') + mm,
+            (dd>9 ? '' : '0') + dd
+            ].join(sep||''));
+  }
+  function _hhmmss(sep) {
+    var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
+    return ([ (hh>9 ? '' : '0') + hh,
+              (mm>9 ? '' : '0') + mm,
+              (ss>9 ? '' : '0') + ss
+            ].join(sep||''));
+  }
   if (_dtProto) {
     /* **********************Date prototypes*********************** */
     /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
@@ -241,26 +258,14 @@
      * now.yyyymmdd('/') => '2010/03/01'
      * now.yyyymmdd('-') => '2010-03-01'
      */
-    _dtProto.yyyymmdd = function(sep) {
-      var mm = this.getMonth() + 1, dd = this.getDate();
-      return ([this.getFullYear(),
-              (mm>9 ? '' : '0') + mm,
-              (dd>9 ? '' : '0') + dd
-              ].join(sep||''));
-    };
+    _dtProto.yyyymmdd = _yyyymmdd;
     /* var now = new Date(); //if Mon Mar 01 2010 10:20:30
      *
      * now.hhmmss()    => '102030'
      * now.hhmmss(':') => '10:20:30'
      * now.hhmmss('-') => '10-20-30'
      */
-    _dtProto.hhmmss = function(sep) {
-      var hh = this.getHours(), mm = this.getMinutes(), ss = this.getSeconds();
-      return ([ (hh>9 ? '' : '0') + hh,
-                (mm>9 ? '' : '0') + mm,
-                (ss>9 ? '' : '0') + ss
-              ].join(sep||''));
-    };
+    _dtProto.hhmmss = _hhmmss;
   }
 
   if (_strProto) {
@@ -600,7 +605,7 @@
     if (!xsr.jsonDataSanityCheck) return true;
     var idxOfB = str.indexOf('(');
     if ( (idxOfB>=0) && (str.indexOf(')', idxOfB)>idxOfB) ){
-      console.warn('Insecured String with braces():', str);
+      console.warn('Insecure String with braces():', str);
       return false;
     }
     return true;
@@ -853,8 +858,9 @@
   };
 
   /* now: Browser's current timestamp */
-  function _now() {
-    return ("" + ((new Date()).getTime()));
+  function _now(dt) {
+    var cDt = (new Date());
+    return ('' + ((arguments.length)? (_yyyymmdd.call(cDt)+dt+_hhmmss.call(cDt)) : (cDt.getTime())));
   }
   /* year: Browser's current year +/- N */
   function _year(n) {
@@ -3354,12 +3360,12 @@
     }
     return retValue;
   };
-  function _getAboluteUrl(base, url){
+  function _getAbsoluteUrl(base, url){
     return ((base || '').trimRightStr('/'))+'/'+((url || '').trimLeftStr('/'));
   }
   xsr.urlHashFull = function(urlHashBase) {
     urlHashBase = urlHashBase || '#';
-    return _getAboluteUrl(urlHashBase, xsr.urlHash('', urlHashBase));
+    return _getAbsoluteUrl(urlHashBase, xsr.urlHash('', urlHashBase));
   };
   /*Similar to xsr.urlParam on HashParams*/
   xsr.hashParam = function (name) {
@@ -5148,7 +5154,7 @@
             xsr.setSimpleObjProperty(this, oNewValues, newValue);
           }
         }
-
+        xsr.defaults.components.rootPath = xsr.defaults.components.rootPath.trimRightStr('/')+'/';
 
         if (oldVal !== xsr.defaults.components.renderOnDomChange) {
           if (xsr.defaults.components.renderOnDomChange) {
@@ -5847,6 +5853,7 @@
   }
 
   //////////////////////////////////////////////////////////////////////////////////
+  var _routeOnAmdLoad;
   var _onSelfInit;
   var _isAMD;
   var _$storeLocked = {};
@@ -5902,6 +5909,7 @@
 
         if (!_onSelfInit) {
           _onSelfInit = true;
+          _setOjEnv();
           xsr.start();
         }
         if (isSPAReady) {
@@ -6292,6 +6300,7 @@
     pComponentName = (typeof pComponentName == 'string')? pComponentName.trim() : '';
 
     var $spaCompList = $(scope);
+    var retVal;
 
     if (!renderSelf) {
       /*Register Events *for* in a, button, form elements */
@@ -6346,6 +6355,7 @@
     }
 
     if ($spaCompList.length){
+      retVal = $spaCompList;
 
       var $el, spaCompNameWithOpt, spaCompName, spaCompOpt, spaCompOptions, newElId, $elData;
       $spaCompList.each(function( index, el ) {
@@ -6443,6 +6453,8 @@
         }
       });
     }
+
+    return retVal;
   };
 
   xsr.renderUtils = {
@@ -6742,6 +6754,9 @@
     };
     return retObj;
   }
+
+
+  var _innerComponentsToRender = 0;
 
   /*
     * xsr.render("#containerID")
@@ -8070,6 +8085,9 @@
                           //i18n ends
 
                           if (_routeReloadUrl(rCompName)) return (retValue); //Routing-Request-On-Reload
+
+                          //Fix SPA root hash if route is enabled.
+                          _routeRootHash();
                         }
 
                         _log.log(retValue);
@@ -8097,17 +8115,15 @@
 
                         /*Deep/Child Render*/
                         if (doDeepRender && !abortView) {
-                          $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender();
+                          $(viewContainerId).find("[rel='spaRender'],[data-render],[data-sparender],[data-spa-render]").spaRender(); //Legacy deprecated approach: To be removed in 3.x
 
-                          // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
-                          // if (spaRVOptions.hasOwnProperty('mountComponent')) {
-                          //   _log.info('mounting defered component', spaRVOptions.mountComponent);
-                          //   $(viewContainerId).removeAttr('data-spa-component');//ToAvoid Self Render Loop
-                          //   xsr.renderComponentsInHtml(spaRVOptions.mountComponent.scope, spaRVOptions.mountComponent.name, true);
-                          // };
-                          // Deprecated----- DONOT - Enable as the renderComponentsInHtml options are used for something else***
-
-                          xsr.renderComponentsInHtml(viewContainerId, rCompName);
+                          var innerComponents = xsr.renderComponentsInHtml(viewContainerId, rCompName);
+                          _innerComponentsToRender += (innerComponents && innerComponents.length) || -1;
+                          _log.log('🚀 ~ innerComponents in', rCompName, innerComponents, '| Pending ComponentsToRender:', _innerComponentsToRender);
+                          if (_innerComponentsToRender<1) {
+                            _log.log('... ... ... ALL DONE. Last rendered component:', rCompName);
+                            _routeAmdPageUrl();
+                          }
                         }
 
                       }//if !abortRender
@@ -9473,6 +9489,7 @@
       _log.log('Triggering next hash... by href:', _routeByHref, 'autoRoute:',_onAutoRoute, 'byClick', _routeOnClick);
       _triggerNextHash( _onAutoRoute || !_routeOnClick);
     }
+    _routeRootHash(true);
   }
 
   var _dynHashProcessed = [];
@@ -9607,7 +9624,7 @@
         _log.log( newAddress );
         newAddress = (newAddress.trimLeftStr('/'));
         if (newAddress[0] != '#') {
-          newAddress = '//' + window.location.host + _getAboluteUrl('/', newAddress);
+          newAddress = '//' + window.location.host + _getAbsoluteUrl('/', newAddress);
           _log.log('updating the address bar with >>>>>', newAddress);
         }
         _log.log('>>>>>>>>>>>>>>>>> '+ newAddress );
@@ -9690,19 +9707,75 @@
   }
   xsr.parseRoutes = _getNewMatchingRoutes;
 
+  var rootRouteAlert;
+  function _routeRootHash ( onRouteChange ) {
+    var _curUrl  = win.location.href;
+    var _curHash = win.location.hash;
+
+    _log.log('🚀 ~ _routeRootHash', onRouteChange? 'onRouteChange' : 'by$', '_curHash:', _curHash);
+    var isOnRootHash = (_curUrl.indexOf('#')<0) || _curHash == '#/';
+    if (isOnRootHash) {
+      var elRootRoute = $('[root-route]')[0];
+      if (elRootRoute) {
+        var triggerRootRoute = !onRouteChange || (isOnRootHash || !_attr(elRootRoute, 'root-route'));
+        _attr(elRootRoute, 'root-route', triggerRootRoute? 'inProgress' : '');
+        if (triggerRootRoute) {
+          _log.log('trigger [root-route] el', elRootRoute);
+          $(elRootRoute).trigger('click');
+        }
+      } else {
+        if (_isLocEnv && !rootRouteAlert) {
+          var _routeAttr = (_find(spa, 'defaults.routes.attr.route', '') || 'data-spa-route').trim();
+          if ($('['+_routeAttr+']').length) {
+            rootRouteAlert = true;
+            console.warn('Missing app root route. use [root-route] attribute for default root routing.');
+          }
+        }
+      }
+    }
+  }
   function _routeByEl ( el ) {
     if (el.matches('[for][data-render-target]')) {
       var rTargetEl = $(_attr(el, 'data-render-target'))[0];
-      if (!rTargetEl.hasAttribute('render-for-route')) {
+      if (rTargetEl && !rTargetEl.hasAttribute('render-for-route')) {
         rTargetEl.setAttribute('render-for-route', 'InProgress');
         _renderForComponent.call(el);
       }
     }
   }
+  function _routeAmdPageUrl() {
+    if (domObserver && !_routeOnAmdLoad) {
+      _log.log('AMD page load routing ... ... ...');
+
+      var curRoute = win.location.hash;
+      var isOnRootHash = _isBlank(curRoute) || curRoute == '#/';
+      var routeEl, routeDomSelector;
+      if (!isOnRootHash) {
+        // find route element by url route
+        routeEl;
+        routeDomSelector = '['+(_attrSpaRoute)+'*="'+curRoute+'"]';
+        routeEl = $(routeDomSelector)[0];
+
+        if (!routeEl) {
+          // TODO: find route element on complex route-path!
+        }
+
+        if (routeEl) {
+          _log.log('Routing', curRoute, 'through element' , routeEl);
+          _routeOnAmdLoad = true;
+          $(routeEl).trigger('click');
+        } else {
+          console.warn('Unable to find ['+_attrSpaRoute+'] element for', curRoute);
+        }
+      } else {
+        _routeOnAmdLoad = true;
+      }
+    }
+  }
   function _onRouteElClick(e){
     var spaRoutePath = xsr.urlHash([], _urlHashBase);
-    //console.clear();
-    //console.log('Current Route:', spaRoutePath);
+    _log.log('_onRouteElClick: Current Route:', spaRoutePath, e);
+
     var targetEl = this
       , $routeEl = $(targetEl)
       , routeData
@@ -9712,6 +9785,10 @@
       , routeName
       , newHashUrl
       , continueAutoRoute;
+
+    if (e) {
+      _attr(targetEl, 'route-initiator', e.isTrusted? 'user':'auto');
+    }
 
     if ($routeEl.hasClass('disabled') || $routeEl.is(':disabled')) {
       e.stopImmediatePropagation();
@@ -9805,7 +9882,7 @@
     }
 
     if (!usePrevHash) {
-      newHashUrl = _getAboluteUrl(_urlHashBase, spaRoutePath.join('/'));
+      newHashUrl = _getAbsoluteUrl(_urlHashBase, spaRoutePath.join('/'));
     }
 
     if (_blockNav) {
@@ -9897,7 +9974,7 @@
           routes = [routePath];
           break;
       }
-      return _getAboluteUrl(_urlHashBase, routes.join('/'));
+      return _getAbsoluteUrl(_urlHashBase, routes.join('/'));
     }
   }
 
@@ -10375,12 +10452,43 @@
     $when( runSpaEvent('onInit') ).done( initSpaModules );
   }
 
+
+  var _isInReact;
+  var _isInOjEnv;
+  var _isInExtEnv;
+  function _setReactEnv ( skipStart ) {
+    try {
+      if (!_isInReact) {
+        _isInExtEnv = _isInReact = win.__reactRefreshInjected;
+        if (_isInReact) {
+          (_isLocEnv && console.info('Found SPA in React env! Setting default SPA-components folder to "public/components" instead of "app/components". NOTE: This message will not appear in production env.'));
+          xsr.defaults.components.rootPath = 'components/';
+          observeDOM();
+        }
+
+        (!skipStart && xsr.start());
+      }
+    } catch (e) {}
+  }
+  function _setOjEnv () {
+    try {
+      _isInExtEnv = _isInOjEnv = (win['oj'] && _spa_hasPrimaryKeys(oj, 'version&revision&Model&Router'));
+      if (_isInOjEnv) {
+        (_isLocEnv && console.info('Found SPA in OJet env! Setting default SPA-components folder to "src/js/components" instead of "app/components". NOTE: This message will not appear in production env.'));
+        xsr.defaults.components.rootPath = 'js/components/';
+      }
+    } catch(e){}
+  }
+
   function _initSpaDefaults(){
     var defaultsInTag
       , $body  = $('body')
       , elBody = $body[0]
       , dataInBody = $body.data()
       , tcKey, dfValue;
+
+    // React Hook
+    _setReactEnv(true);
 
     if (!_isBlank(dataInBody)) {
       dataInBody['spaDefaults'] = _toObj(_attr(elBody,'data-spa-defaults') || _attr(elBody,'data-app-defaults') || {});
@@ -10480,7 +10588,7 @@
   }
 
   var domObserver;
-  function onDomChange(mutationsList) {
+    function onDomChange(mutationsList) {
     if (!_isRendering() && !stoRender) {
       var pContainer, mutation;
       for(var i=0; i<mutationsList.length; i++) {
@@ -10517,13 +10625,17 @@
       _log.log('Stopped: Observing DOM for changes.');
     }
   }
+  xsr.startDomObserve = observeDOM;
+  xsr.stopDomObserve = xsr.stop = stopDomObserve;
 
   function _warnModuleStart() {
     _isAMD = true;
     observeDOM();
+
     setTimeout(function () {
       if (!isSPAReady) {
-        _cInfoMsg('Failed to self start SPA! If loading "spa.js" as module using require, start SPA using spa.start() when all modules are loaded.');
+        _setReactEnv();
+        (!_isInExtEnv && _cInfoMsg('Failed to self start SPA! If loading "spa.js" as module using require, start SPA using spa.start() when all modules are loaded.'));
       }
     }, 2000);
   }
