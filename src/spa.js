@@ -32,7 +32,8 @@
  */
 
 (function() {
-  var _VERSION = '2.93.0-RC1-'+(_now('.'));
+  // var _VERSION = '2.93.0-RC1-'+(_now('.'));
+  var _VERSION = '2.93.0-RC2';
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
