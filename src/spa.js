@@ -32,8 +32,9 @@
  */
 
 (function() {
-  // var _VERSION = '2.93.0-RC1-'+(_now('.'));
-  var _VERSION = '2.93.0-RC2';
+
+  var _VERSION = '2.93.0-RC3';
+  var _version = _VERSION+'-'+(_now('.'));
 
   /* Establish the win object, 'window' in the browser */
   var win = window||globalThis, _doc = document, isSPAReady, docBody = _doc.body;
@@ -69,7 +70,8 @@
   /* *************** SPA begins *************** */
   usejQuery = docBody.hasAttribute('use-jquery') || docBody.classList.contains('use-jquery') || usejQuery;
 
-  xsr.VERSION  = _VERSION;
+  xsr.VERSION   = _VERSION;
+  xsr.version   = _version;
   xsr.usejQuery = usejQuery;
 
   var _objProto = Object.prototype;
@@ -5910,7 +5912,7 @@
 
         if (!_onSelfInit) {
           _onSelfInit = true;
-          _setOjEnv();
+          _checkExtEnv();
           xsr.start();
         }
         if (isSPAReady) {
@@ -10457,28 +10459,29 @@
   var _isInReact;
   var _isInOjEnv;
   var _isInExtEnv;
-  function _setReactEnv ( skipStart ) {
-    try {
-      if (!_isInReact) {
-        _isInExtEnv = _isInReact = win.__reactRefreshInjected;
+
+  function _checkExtEnv () {
+    if (!_isInExtEnv) {
+      _isInReact  = win.__reactRefreshInjected;
+      _isInOjEnv  = (win['oj'] && _spa_hasPrimaryKeys(oj, 'version&revision&Model&Router'));
+      _isInExtEnv = _isInReact || _isInOjEnv;
+
+      if (_isInExtEnv) {
+
         if (_isInReact) {
           (_isLocEnv && console.info('Found SPA in React env! Setting default SPA-components folder to "public/components" instead of "app/components". NOTE: This message will not appear in production env.'));
           xsr.defaults.components.rootPath = 'components/';
-          observeDOM();
         }
 
-        (!skipStart && xsr.start());
+        if (_isInOjEnv) {
+          (_isLocEnv && console.info('Found SPA in OJet env! Setting default SPA-components folder to "src/js/components" instead of "app/components". NOTE: This message will not appear in production env.'));
+          xsr.defaults.components.rootPath = 'js/components/';
+        }
+
       }
-    } catch (e) {}
-  }
-  function _setOjEnv () {
-    try {
-      _isInExtEnv = _isInOjEnv = (win['oj'] && _spa_hasPrimaryKeys(oj, 'version&revision&Model&Router'));
-      if (_isInOjEnv) {
-        (_isLocEnv && console.info('Found SPA in OJet env! Setting default SPA-components folder to "src/js/components" instead of "app/components". NOTE: This message will not appear in production env.'));
-        xsr.defaults.components.rootPath = 'js/components/';
-      }
-    } catch(e){}
+
+      observeDOM();
+    }
   }
 
   function _initSpaDefaults(){
@@ -10488,8 +10491,7 @@
       , dataInBody = $body.data()
       , tcKey, dfValue;
 
-    // React Hook
-    _setReactEnv(true);
+      _checkExtEnv();
 
     if (!_isBlank(dataInBody)) {
       dataInBody['spaDefaults'] = _toObj(_attr(elBody,'data-spa-defaults') || _attr(elBody,'data-app-defaults') || {});
@@ -10629,16 +10631,23 @@
   xsr.startDomObserve = observeDOM;
   xsr.stopDomObserve = xsr.stop = stopDomObserve;
 
+  var _trySelfStart = 20;
   function _warnModuleStart() {
     _isAMD = true;
-    observeDOM();
+    _checkExtEnv();
 
-    setTimeout(function () {
-      if (!isSPAReady) {
-        _setReactEnv();
-        (!_isInExtEnv && _cInfoMsg('Failed to self start SPA! If loading "spa.js" as module using require, start SPA using spa.start() when all modules are loaded.'));
-      }
-    }, 2000);
+    if (_trySelfStart) {
+      _trySelfStart--;
+
+      setTimeout(function () {
+        if (!isSPAReady) {
+          _beginSPA();
+        }
+      }, 500);
+
+    } else {
+      _cInfoMsg('Failed to self start SPA! In an external environment, start SPA using spa.start() when all modules are loaded.');
+    }
   }
   function _beginSPA(){
     _log.log('begin SPA');
@@ -10649,6 +10658,7 @@
     xsr.strUnzip = !xsr.strUnzip && win['LZString'] && LZString.decompress;
 
     if (xhrLib) {
+
       //Read xsr.defaults from body
       _initSpaDefaults();
 
