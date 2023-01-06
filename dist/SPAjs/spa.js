@@ -33,7 +33,7 @@
 
 (function() {
 
-  var _VERSION = '2.93.0-RC3';
+  var _VERSION = '2.93.0-RC4';
   var _version = _VERSION+'-'+(_now('.'));
 
   /* Establish the win object, 'window' in the browser */
@@ -6294,67 +6294,28 @@
     }
   }
 
-  xsr.renderComponentsInHtml = function (scope, pComponentName, renderSelf) {
-
-    (scope && (typeof scope === 'object') && scope.length && !scope[0] && (scope = ''));
+  function _parseAndRenderDomForSpaElements (scope, force) {
+    if (_isBool(scope)) {
+      force = scope;
+      scope = '';
+    }
     scope = scope||'body';
 
-    renderOptions  = (typeof pComponentName == 'object')? pComponentName : '';
-    pComponentName = (typeof pComponentName == 'string')? pComponentName.trim() : '';
+    $spaCompList = _getSpa$Elements(scope, !force);
 
-    var $spaCompList = $(scope);
+    return _renderSpaDomElements($spaCompList);
+  }
+  xsr.refresh = _parseAndRenderDomForSpaElements;
+  xsr.refreshAll = xsr.renderAll = function (scope) {
+    return _parseAndRenderDomForSpaElements(scope, true);
+  };
+
+  function _renderSpaDomElements ($spaCompList, pComponentName, renderOptions) {
     var retVal;
 
-    if (!renderSelf) {
-      /*Register Events *for* in a, button, form elements */
-      _registerEventsForComponentRender(scope);
-
-      // <spa-template src=""> <x-template src="">
-      var templateTags = _spaTagsSelector('spa-template,x-template');
-      $(scope).find(templateTags).each(function(){
-        // _attr(this, 'data-spa-component', _attr(this,'src'));
-        _attr(this, 'data-x-component', _attr(this,'src'));
-        _attr(this, 'data-skip-data-bind', 'true');
-        _attr(this, 'data-template-script', 'true');
-        this.style.display = 'none';
-      });
-
-      // <spa-html src=""> <x-html src=""> with optional [data] attribute
-      var htmlTags = _spaTagsSelector('spa-html,x-html');
-      $(scope).find(htmlTags).each(function(){
-        var htmlSrc = _attr(this,'src');
-        var isSpaComponent = ((htmlSrc[0] === '$') || !(/[^a-z0-9]/ig).test( htmlSrc ));
-        if (isSpaComponent && !xsr.components[htmlSrc.replace(/[^a-z0-9]/gi,'_')]) {
-          var cOptions = {
-            templateScript: true
-          };
-          var skipDataBind = (!(this.hasAttribute('data') || this.hasAttribute('data-url')));
-          if (skipDataBind) {
-            cOptions['skipDataBind'] = true;
-          } else if (!this.hasAttribute('data-url')) {
-            cOptions['data'] = this.hasAttribute('data')? _toObj(_attr(this,'data')) : {};
-          }
-          xsr.$(htmlSrc, cOptions);
-        }
-        // _attr(this, 'data-spa-component', htmlSrc);
-        _attr(this, 'data-x-component', htmlSrc);
-      });
-
-      // <spa-component src=""> <x-component src="">
-      var componentTags = _spaTagsSelector('spa-component,x-component');
-      $(scope).find(componentTags).each(function(){
-        // _attr(this, 'data-spa-component', _attr(this,'src'));
-        _attr(this, 'data-x-component', _attr(this,'src'));
-      });
-
-      // other [src]
-      var altCompSelector = ('[src]'+('audio embed iframe img input script source track video x-script [data-x-component] [data-spa-component]'
-                                      .split(' ').map(function(tag){ return ':not('+tag+')'; }).join('')));
-      $(scope).find(altCompSelector).each(function(){
-        _attr(this, 'data-x-component', _attr(this,'src'));
-      });
-
-      $spaCompList = $spaCompList.find('[data-x-component],[data-spa-component]').filter(':not([render-after])');
+    if (arguments.length==1) {
+      pComponentName = '';
+      renderOptions = {};
     }
 
     if ($spaCompList.length){
@@ -6458,6 +6419,84 @@
     }
 
     return retVal;
+  }
+
+  function _prepareSpaElements (scope) {
+    /*Register Events *for* in a, button, form elements */
+    _registerEventsForComponentRender(scope);
+
+    // <spa-template src=""> <x-template src="">
+    var templateTags = _spaTagsSelector('spa-template,x-template');
+    $(scope).find(templateTags).each(function(){
+      // _attr(this, 'data-spa-component', _attr(this,'src'));
+      _attr(this, 'data-x-component', _attr(this,'src'));
+      _attr(this, 'data-skip-data-bind', 'true');
+      _attr(this, 'data-template-script', 'true');
+      this.style.display = 'none';
+    });
+
+    // <spa-html src=""> <x-html src=""> with optional [data] attribute
+    var htmlTags = _spaTagsSelector('spa-html,x-html');
+    $(scope).find(htmlTags).each(function(){
+      var htmlSrc = _attr(this,'src');
+      var isSpaComponent = ((htmlSrc[0] === '$') || !(/[^a-z0-9]/ig).test( htmlSrc ));
+      if (isSpaComponent && !xsr.components[htmlSrc.replace(/[^a-z0-9]/gi,'_')]) {
+        var cOptions = {
+          templateScript: true
+        };
+        var skipDataBind = (!(this.hasAttribute('data') || this.hasAttribute('data-url')));
+        if (skipDataBind) {
+          cOptions['skipDataBind'] = true;
+        } else if (!this.hasAttribute('data-url')) {
+          cOptions['data'] = this.hasAttribute('data')? _toObj(_attr(this,'data')) : {};
+        }
+        xsr.$(htmlSrc, cOptions);
+      }
+      // _attr(this, 'data-spa-component', htmlSrc);
+      _attr(this, 'data-x-component', htmlSrc);
+    });
+
+    // <spa-component src=""> <x-component src="">
+    var componentTags = _spaTagsSelector('spa-component,x-component');
+    $(scope).find(componentTags).find(':not([data-x-component])').each(function(){
+      // _attr(this, 'data-spa-component', _attr(this,'src'));
+      _attr(this, 'data-x-component', _attr(this,'src'));
+    });
+
+    // other [src]
+    var altCompSelector = ('[src]'+('audio embed iframe img input script source track video x-script [data-x-component] [data-spa-component]'
+                                    .split(' ').map(function(tag){ return ':not('+tag+')'; }).join('')));
+    $(scope).find(altCompSelector).each(function(){
+      _attr(this, 'data-x-component', _attr(this,'src'));
+    });
+  }
+
+  function _getSpa$Elements (scope, forMissedOnly) {
+    _prepareSpaElements(scope);
+
+    var $spaCompList = $(scope);
+    var forMissed    = forMissedOnly? ':not([data-rendered-component])' : '';
+
+    $spaCompList = $spaCompList.find('[data-x-component],[data-spa-component]').filter(':not([render-after])'+forMissed);
+
+    return $spaCompList;
+  }
+
+  xsr.renderComponentsInHtml = function (scope, pComponentName, renderSelf) {
+
+    (scope && (typeof scope === 'object') && scope.length && !scope[0] && (scope = ''));
+    scope = scope||'body';
+
+    renderOptions  = (typeof pComponentName == 'object')? pComponentName : '';
+    pComponentName = (typeof pComponentName == 'string')? pComponentName.trim() : '';
+
+    var $spaCompList = $(scope);
+
+    if (!renderSelf) {
+      $spaCompList = _getSpa$Elements(scope);
+    }
+
+    return _renderSpaDomElements($spaCompList, pComponentName, renderOptions);
   };
 
   xsr.renderUtils = {
@@ -6822,7 +6861,12 @@
   xsr.render = function (viewContainerId, uOptions) {
     _log.log('xsr.render', viewContainerId, uOptions);
 
-    if (!arguments.length) return;
+    if ((!arguments.length) ||
+        (_isBool(viewContainerId)) ||
+        (_isBool(uOptions)) ||
+        (_isStr(viewContainerId) && !/^#/.test(viewContainerId.trim()) && !_isObj(uOptions))) {
+      return _parseAndRenderDomForSpaElements.apply(xsr, ([]).slice.call(arguments));
+    }
 
     //render with single argument with target
     if ((arguments.length===1) && (typeof viewContainerId === "object")) {
@@ -10457,34 +10501,40 @@
 
 
   var _isInReact;
+  var _isInReactSet;
   var _isInOjEnv;
+  var _isInOjEnvSet;
+  var _isAMDenv;
   var _isInExtEnv;
 
   function _checkExtEnv () {
-    if (!_isInExtEnv) {
-      _isInReact  = win.__reactRefreshInjected;
-      _isInOjEnv  = (win['oj'] && _spa_hasPrimaryKeys(oj, 'version&revision&Model&Router'));
-      _isInExtEnv = _isInReact || _isInOjEnv;
+    _log.log('Checking external environments ...');
 
-      if (_isInExtEnv) {
+    _isAMDenv   = !!(win['require'] && win['define']);
+    _isInReact  = !!win['__reactRefreshInjected'];
+    _isInOjEnv  = !!(win['oj'] && _spa_hasPrimaryKeys(oj, 'version&revision&Model&Router'));
+    _isInExtEnv = _isInReact || _isInOjEnv || _isAMDenv;
+    _log.log('🚀 ~ _isInExtEnv:',_isInExtEnv,' _isInReact:',_isInReact,' _isInOjEnv:',_isInOjEnv,' _isAMDenv:',_isAMDenv);
 
-        if (_isInReact) {
-          (_isLocEnv && console.info('Found SPA in React env! Setting default SPA-components folder to "public/components" instead of "app/components". NOTE: This message will not appear in production env.'));
-          xsr.defaults.components.rootPath = 'components/';
-        }
+    if (_isInExtEnv) {
 
-        if (_isInOjEnv) {
-          (_isLocEnv && console.info('Found SPA in OJet env! Setting default SPA-components folder to "src/js/components" instead of "app/components". NOTE: This message will not appear in production env.'));
-          xsr.defaults.components.rootPath = 'js/components/';
-        }
+      if (_isInReact && !_isInReactSet) {
+        (_isLocEnv && console.info('Found SPA in React env! Setting default SPA-components folder to "public/components" instead of "app/components". NOTE: This message will not appear in production env.'));
+        xsr.defaults.components.rootPath = 'components/';
+        _isInReactSet=true;
+      }
 
+      if (_isInOjEnv && !_isInOjEnvSet) {
+        (_isLocEnv && console.info('Found SPA in OJet env! Setting default SPA-components folder to "src/js/components" instead of "app/components". NOTE: This message will not appear in production env.'));
+        xsr.defaults.components.rootPath = 'js/components/';
+        _isInOjEnvSet = true;
       }
 
       observeDOM();
     }
   }
 
-  function _initSpaDefaults(){
+  function _initSpaDefaults(cfgObj){
     var defaultsInTag
       , $body  = $('body')
       , elBody = $body[0]
@@ -10513,6 +10563,10 @@
     }
     if (xsr.defaults['alias']) {
       win[xsr.defaults.alias] = xsr;
+    }
+
+    if (cfgObj && _isObj(cfgObj)) {
+      xsr.defaults.set(cfgObj);
     }
 
     _initRoutesDefaults(); //run_once
@@ -10591,7 +10645,20 @@
   }
 
   var domObserver;
-    function onDomChange(mutationsList) {
+  var stoRenderMissingEl;
+  function deferLookupOnDomChange () {
+    _log.log('deferring scan for SPA elements to render on DOM change.');
+    clearTimeout(stoRenderMissingEl);
+    stoRenderMissingEl = setTimeout(function() {
+      if (_isRendering()) {
+        deferLookupOnDomChange();
+      } else {
+        _log.log('looking for SPA elements to render on DOM Change ...');
+        _parseAndRenderDomForSpaElements();
+      }
+    },200);
+  }
+  function onDomChange(mutationsList) {
     if (!_isRendering() && !stoRender) {
       var pContainer, mutation;
       for(var i=0; i<mutationsList.length; i++) {
@@ -10602,6 +10669,7 @@
           break;
         }
       }
+
       if (pContainer) {
         var pContainerId = pContainer.id || (pContainer.tagName+'-'+(_rand(1000, 9999))+'-'+_now());
         pContainer.id = pContainerId;
@@ -10611,6 +10679,8 @@
         }, 1, '#'+pContainerId);
         _log.log('DOM watch: New element(s) added inside Non-SPA component container', pContainer);
       }
+    } else {
+      deferLookupOnDomChange();
     }
   }
   function observeDOM () {
@@ -10649,7 +10719,7 @@
       _cInfoMsg('Failed to self start SPA! In an external environment, start SPA using spa.start() when all modules are loaded.');
     }
   }
-  function _beginSPA(){
+  function _beginSPA(cfgObj){
     _log.log('begin SPA');
 
     if (!isSPAReady) _initXHR();
@@ -10660,7 +10730,7 @@
     if (xhrLib) {
 
       //Read xsr.defaults from body
-      _initSpaDefaults();
+      _initSpaDefaults(cfgObj);
 
       /* ajaxPrefilter */
       $ajaxPrefilter(_ajaxPrefilter);
