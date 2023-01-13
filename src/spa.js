@@ -33,7 +33,7 @@
 
 (function() {
 
-  var _VERSION = '2.93.0-RC4';
+  var _VERSION = '2.93.0';
   var _version = _VERSION+'-'+(_now('.'));
 
   /* Establish the win object, 'window' in the browser */
