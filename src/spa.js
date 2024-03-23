@@ -33,7 +33,7 @@
 
 (function() {
 
-  var _VERSION = '2.93.0';
+  var _VERSION = '2.94.0';
   var _version = _VERSION+'-'+(_now('.'));
 
   /* Establish the win object, 'window' in the browser */
@@ -2856,7 +2856,7 @@
   }
 
   var _baseProps = [
-      'target', 'template', 'templateCache', 'templateScript', 'templateExt', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss'
+      'target', 'template', 'templateCache', 'templateScript', 'templateExt', 'templateType', 'templateEngine', 'pugFilters', 'ejsOptions', 'sanitizeApiXss'
     , 'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError'
     , 'style', 'styleCache', 'styles', 'stylesCache'
     , 'scripts', 'scriptsCache', 'require', 'dataPreRequest', 'data', 'skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh'
@@ -3910,16 +3910,22 @@
 
   var compileTemplate;
   function setDefaultTmplCompiler () {
-    if ((typeof Handlebars != 'undefined') && Handlebars) {
-      compileTemplate = Handlebars.compile.bind(Handlebars);
-    } else if ((typeof doT != 'undefined') && doT) {
-      compileTemplate = doT.compile.bind(doT);
-    } else if ((typeof Tee != 'undefined') && Tee) {
-      compileTemplate = Tee.compile.bind(Tee);
-    } else if ((typeof nxT != 'undefined') && nxT) {
-      compileTemplate = nxT.compile.bind(nxT);
-    } else if ((typeof pug != 'undefined') && pug) {
-      compileTemplate = pug.compile.bind(pug);
+    try {
+      if ((typeof Handlebars != 'undefined') && Handlebars) {
+        compileTemplate = Handlebars.compile.bind(Handlebars);
+      } else if ((typeof ejs != 'undefined') && ejs) {
+        compileTemplate = ejs.compile.bind(ejs);
+      } else if ((typeof doT != 'undefined') && doT) {
+        compileTemplate = doT.compile.bind(doT);
+      } else if ((typeof Tee != 'undefined') && Tee) {
+        compileTemplate = Tee.compile.bind(Tee);
+      } else if ((typeof nxT != 'undefined') && nxT) {
+        compileTemplate = nxT.compile.bind(nxT);
+      } else if ((typeof pug != 'undefined') && pug) {
+        compileTemplate = pug.compile.bind(pug);
+      }
+    } catch (e) {
+      _log.warn('Failed to set default template compiler.', e);
     }
   }
 
@@ -5377,7 +5383,7 @@
 
           options = _adjustComponentOptions(componentName, options);
 
-          var baseProps = [ 'target','template','templateCache','templateScript', 'templateExt', 'templateType', 'templateEngine', 'pugFilters', 'sanitizeApiXss',
+          var baseProps = [ 'target','template','templateCache','templateScript', 'templateExt', 'templateType', 'templateEngine', 'pugFilters', 'ejsOptions', 'sanitizeApiXss',
                             'templateUrl', 'templateUrlMethod', 'templateUrlParams', 'templateUrlPayload', 'templateUrlHeaders', 'onTemplateUrlError',
                             'style','styleCache','styles','stylesCache',
                             'scripts','scriptsCache','require','dataPreRequest','data','skipDataBind', 'skipDefaultBind', 'skipKoBind', 'useSpaBind', 'useDataBindRefresh',
@@ -7806,6 +7812,7 @@
                       _log.log(rCompName, 'Template Data Final:', retValue['model']);
 
                       var templateContentToBindAndRender = ($(vTemplate2RenderID).html() || "").replace(/_LINKTAGINTEMPLATE_/g,"link");
+                      _log.log('templateContentToBindAndRender', templateContentToBindAndRender);
                       var allowScriptsInTemplates = spaRVOptions.templateScript || xsr.defaults.components.templateScript;
                       if (allowScriptsInTemplates){
                         templateContentToBindAndRender = templateContentToBindAndRender.replace(/_BlockedScript_ src-ref="([^"])*"/g, 'script').replace(/_BlockedScript_/g, "script");
@@ -7851,17 +7858,22 @@
 
                       var isSpaTemplate = /<!--\s*#+(spa-template|spaTemplate|spa|nxt-template|nxtTemplate|nxt)/gi.test(templateContentToBindAndRender)? 'spa' : '';
                       var isDotTemplate = /<!--\s*#+(dot-template|dotTemplate|dot)/gi.test(templateContentToBindAndRender)? 'dot' : '';
+                      var isEjsTemplate = /<!--\s*#+(ejs-template|ejsTemplate|ejs)/gi.test(templateContentToBindAndRender)? 'ejs' : '';
                       var isPugTemplate = /(\/\/\s*-*\s*pug)|(<!--\s*#*(pug-template|pugTemplate|pug))/gi.test(templateContentToBindAndRender)? 'pug' : '';
 
-                      var $templateEngine = (spaRVOptions.templateType || spaRVOptions.templateEngine || isDotTemplate || isSpaTemplate || isPugTemplate || xsr.defaults.components.templateType || xsr.defaults.components.templateEngine);
+                      var $templateEngine = (spaRVOptions.templateType || spaRVOptions.templateEngine || isDotTemplate || isSpaTemplate || isPugTemplate || isEjsTemplate || xsr.defaults.components.templateType || xsr.defaults.components.templateEngine);
                       var spaTemplateEngine = ($templateEngine || 'handlebars').toLowerCase();
                       var $compileTemplate = compileTemplate;
                       var isPug = false;
+                      var isEjs = false;
                       // console.log('defaultTemplateCompiler:', compileTemplate);
                       try {
                         switch(spaTemplateEngine) {
                           case 'handlebars' :
                             $compileTemplate = win.Handlebars.compile.bind(win.Handlebars);
+                            break;
+                          case 'ejs' :
+                            $compileTemplate = win.ejs.compile.bind(win.ejs); isEjs = true;
                             break;
                           case 'dot':
                             $compileTemplate = win.doT.compile.bind(win.doT);
@@ -7910,10 +7922,20 @@
                           }
 
                           compiledTemplate = templateContentToBindAndRender;
+                          _log.log('compiledTemplate:', compiledTemplate, 'isEjs:', isEjs);
+
+                          var ejsOptions = _mergeDeep({}, ejsOptions||{}, spaRVOptions.ejsOptions||{});
+                          var ejsB = (ejsOptions.openDelimiter || '<')+(ejsOptions.delimiter || '%'); //'<%'
+                          var ejsE = (ejsOptions.delimiter || '%') + (ejsOptions.closeDelimiter||'>'); //'%>'
+                          isEjs = isEjs || (templateContentToBindAndRender.indexOf(ejsB)>=0 && templateContentToBindAndRender.indexOf(ejsE)>1);
 
                           // if (spaTemplateEngine.indexOf('handlebar')>=0 || spaTemplateEngine.indexOf('dot')>=0 || templateContentToBindAndRender.indexOf('{')>=0) {
-                          if (templateContentToBindAndRender.indexOf('{{')>=0 || isPug) {
-                            _log.info('Found external template string {{...}} in $'+rCompName);
+                          if (templateContentToBindAndRender.indexOf('{{')>=0 || isPug || isEjs) {
+                            if (isEjs) {
+                              _log.info('Found external template string '+ejsB+'...'+ejsE+' in $'+rCompName);
+                            } else {
+                              _log.info('Found external template string {{...}} in $'+rCompName);
+                            }
                             if ($compileTemplate) {
                               _log.groupCollapsed("Data bind using "+$templateEngine+" on Template ...");
                               _log.log(templateContentToBindAndRender);
@@ -7926,6 +7948,9 @@
                                     var pugOptions = { self: templateContentToBindAndRender.indexOf('self.')>0, filters: spaRVOptions.pugFilters||undefined };
                                     _log.log("Compiling spa$"+rCompName+"'s pug template using pugOptions", pugOptions);
                                     preCompiledTemplate = $compileTemplate(templateContentToBindAndRender, pugOptions);
+                                  } if (isEjs) {
+                                    _log.log("Compiling spa$"+rCompName+"'s ejs template using ejsOptions", ejsOptions);
+                                    preCompiledTemplate = $compileTemplate(templateContentToBindAndRender, ejsOptions)
                                   } else {
                                     _log.log("Compiling spa$"+rCompName+"'s template...");
                                     preCompiledTemplate = $compileTemplate(templateContentToBindAndRender);
