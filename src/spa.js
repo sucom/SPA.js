@@ -33,7 +33,7 @@
 
 (function() {
 
-  var _VERSION = '2.94.0';
+  var _VERSION = '2.95.0';
   var _version = _VERSION+'-'+(_now('.'));
 
   /* Establish the win object, 'window' in the browser */
@@ -8935,6 +8935,9 @@
     },
     del : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
       return xsr.api._call(_extend(xsr.api._params2AxOptions.apply(undefined, arguments), {method:'DELETE'}));
+    },
+    patch : function(){ //Params: url:String, data:Object, onSuccess:Function, forceWaitForResponse:Boolean
+      return xsr.api._call(_extend(xsr.api._params2AxOptions.apply(undefined, arguments), {method:'PATCH'}));
     },
     mix : function(){
       var apiQue=[], fnWhenDone = arguments[arguments.length-1];
