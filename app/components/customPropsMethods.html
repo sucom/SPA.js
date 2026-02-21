@@ -39,7 +39,7 @@
 
     // ... ...
 
-    /* custom properties and methods */
+    /* define custom properties and methods */
     var isActive  = false;
     var greetings = 'Welcome ';
 
@@ -48,12 +48,17 @@
       console.log( greetings );
 
       doSomethingElse();
-    },
+    }
 
     function doSomethingElse () {
 
       //doing something else...
 
+    }
+
+    /* export custom properties and methods to use in view html */
+    var props = {
+      doSomething
     }
   </script>
 
