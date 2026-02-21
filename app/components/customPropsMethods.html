@@ -39,7 +39,7 @@
 
     // ... ...
 
-    /* define custom properties and methods */
+    /* define Component's Extended (custom) properties and methods */
     var isActive  = false;
     var greetings = 'Welcome ';
 
@@ -58,9 +58,12 @@
 
     // ... ...
     
-    /* export custom properties and methods to use in view html or other component's js */
+    /* export(expose) Component's Extended (custom) properties and methods to use in view html or other component's js */
     var props = {
-      doSomething
+      doSomething,
+
+      // ...
+
     };
   </script>
 
