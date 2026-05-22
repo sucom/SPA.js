@@ -373,7 +373,7 @@
         <link rel="stylesheet" href="app/styles/styles.css" />
       </_head>
 
-      <_body data-spa-routes="base:'/'"> <!-- or base:'/my-app-context/' -->
+      <_body data-spa-defaults-routes="base:'/'"> <!-- or base:'/my-app-context/' -->
 
         ...
 
@@ -413,7 +413,7 @@
         <link rel="stylesheet" href="app/styles/styles.css" />
       </_head>
 
-      <_body data-spa-routes="attr:{route:'href'}">
+      <_body data-spa-defaults-routes="attr:{route:'href'}">
 
         ...
 
@@ -467,8 +467,8 @@
         <link rel="stylesheet" href="app/styles/styles.css" />
       </_head>
 
-      <_body data-spa-routes="base:'/', attr:{route:'href'}">
-        <!-- or data-spa-routes="base:'/my-app-context/', attr:{route:'href'}" -->
+      <_body data-spa-defaults-routes="base:'/', attr:{route:'href'}">
+      <!-- or data-spa-defaults-routes="base:'/my-app-context/', attr:{route:'href'}" -->
 
         ...
 
